@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load dict_filters %}
+{% load custom_filters %}
+{% load note_filters %}
+{% load static %}
+
+{% block content %}
+<style>
+/* Estilos adicionales para un look más profesional */
+:root {
+    --edu-acudiente-primary: #28a745; /* Verde éxito de Bootstrap como primario */
+    --edu-acudiente-primary-light: #d1e7dd; /* Verde claro para fondos */
+    --edu-acudiente-bg: #f8f9fa; /* Fondo general */
+    --edu-acudiente-card-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+    --edu-acudiente-radius: 0.75rem; /* Bordes más redondeados */
+}
+
+body {
+    background-color: var(--edu-acudiente-bg);
+}
+
+.acudiente-header {
+    padding: 2.5rem 1.5rem;
+    background: linear-gradient(135deg, var(--edu-acudiente-primary), #208a38); /* Gradiente sutil */
+    color: white;
+    border-radius: var(--edu-acudiente-radius);
+    margin-bottom: 2.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.3);
+}
+
+.acudiente-header i {
+    opacity: 0.8;
+}
+
+.nav-tabs .nav-link {
+    color: var(--edu-acudiente-primary);
+    font-weight: 500;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.8rem 1.5rem;
+    margin-bottom: -1px; /* Alinea con el borde del contenido */
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--edu-acudiente-primary);
+    font-weight: 600;
+    background-color: transparent; /* Fondo transparente */
+    border-bottom: 3px solid var(--edu-acudiente-primary);
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    border-bottom: 3px solid #a6d9b3; /* Verde muy claro para hover */
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.tab-content {
+    background-color: white;
+    padding: 2rem;
+    border: 1px solid #dee2e6;
+    border-top: none; /* El borde superior lo simulan las tabs */
+    border-radius: 0 0 var(--edu-acudiente-radius) var(--edu-acudiente-radius);
+    box-shadow: var(--edu-acudiente-card-shadow);
+}
+
+/* Ajustes para el contenido incluido */
+.tab-pane .card {
+    box-shadow: none !important; /* Quitar sombras anidadas si las hay */
+    border: 1px solid #eee; /* Añadir un borde sutil si es necesario */
+}
+
+</style>
+
+<div class="container mt-4 py-4">
+    <div class="acudiente-header text-center shadow-sm">
+        <i class="fas fa-user-shield fa-4x mb-3"></i>
+        <h2 class="fw-bold">Panel del Acudiente</h2>
+        <p class="lead mb-0">Bienvenido, {{ acudiente.get_full_name|default:acudiente.username }}.</p>
+    </div>
+
+    {% if estudiantes_data %}
+        {% if estudiantes_data|length > 1 %}
+            <ul class="nav nav-tabs nav-fill mb-0" id="studentTab" role="tablist">
+                {% for data in estudiantes_data %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if forloop.first %}active{% endif %}"
+                                id="tab-{{ data.estudiante.id }}"
+                                data-bs-toggle="tab"
+                                data-bs-target="#content-{{ data.estudiante.id }}"
+                                type="button" role="tab"
+                                aria-controls="content-{{ data.estudiante.id }}"
+                                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                            <i class="fas fa-user-graduate me-2"></i>{{ data.estudiante.get_full_name }}
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="tab-content {% if estudiantes_data|length == 1 %}mt-4{% endif %}" id="studentTabContent"> {# Añade margen superior si solo hay 1 estudiante #}
+            {% for data in estudiantes_data %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                     id="content-{{ data.estudiante.id }}" role="tabpanel"
+                     aria-labelledby="tab-{{ data.estudiante.id }}">
+
+                    {# Solo muestra este encabezado si hay MÁS de un estudiante (ya que el general ya da el contexto si es solo uno) #}
+                    {% if estudiantes_data|length > 1 %}
+                    <div class="student-report-header mb-4 p-3 rounded" style="background-color: var(--edu-acudiente-primary-light);">
+                        <h4 class="mb-0 fw-semibold text-success d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-chart-line me-2"></i>
+                                Reporte de: {{ data.estudiante.get_full_name }}
+                            </span>
+                            {% if data.curso %}
+                                <span class="badge bg-success fw-normal">{{ data.curso.nombre }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark fw-normal">Sin Matrícula Activa</span>
+                            {% endif %}
+                        </h4>
+                    </div>
+                    {% endif %}
+
+                    {# Pasa todas las variables específicas de este estudiante al template 'include' #}
+                    {% with estudiante=data.estudiante perfil=data.perfil curso=data.curso matricula=data.matricula periodos_disponibles=data.periodos_disponibles materias_con_notas=data.materias_con_notas comentarios_docente=data.comentarios_docente actividades_semanales=data.actividades_semanales logros_por_materia_por_periodo=data.logros_por_materia_por_periodo convivencia_notas=data.convivencia_notas %}
+
+                        {% include "dashboard_estudiante.html" %}
+
+                    {% endwith %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center shadow-sm">
+            <i class="fas fa-info-circle fa-2x me-2 align-middle"></i>
+            <span class="align-middle fs-5">No tienes estudiantes vinculados a tu perfil. Por favor, contacta a la administración.</span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

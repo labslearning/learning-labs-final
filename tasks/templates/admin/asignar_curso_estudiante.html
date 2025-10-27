@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+<div class="card p-5">
+<h1 class="text-center mb-4">Asignar Curso a Estudiante</h1>
+
+<form method="POST" class="mb-4">
+    {% csrf_token %}
+    <div class="row">
+    <div class="col-md-5">
+        <label for="estudiante_select" class="form-label">Seleccionar Estudiante</label>
+        <select name="estudiante" id="estudiante_select" class="form-select" required>
+            <option value="">Seleccionar estudiante</option>
+            {# Usamos la nueva variable 'todos_los_estudiantes' para el menú #}
+            {% for estudiante in todos_los_estudiantes %}
+                <option value="{{ estudiante.id }}">{{ estudiante.get_full_name|default:estudiante.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-5">
+        <label for="curso_select" class="form-label">Seleccionar Curso</label>
+        <select name="curso" id="curso_select" class="form-select" required>
+            <option value="">Seleccionar curso</option>
+            {% for curso in cursos %}
+                <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">Asignar</button>
+    </div>
+    </div>
+</form>
+
+<h3 class="mt-5">Estudiantes y sus Cursos</h3>
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Estudiante</th>
+            <th>Usuario</th>
+            <th>Acudiente</th>
+            <th>Curso Actual</th>
+            <th>Rol</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in estudiantes_con_curso %}
+        <tr>
+            {# Mostramos el nombre completo #}
+            <td>{{ item.user.get_full_name|default:item.user.username }}</td>
+            {# Nueva columna para el nombre de usuario #}
+            <td>{{ item.user.username }}</td>
+            {# Nueva columna para el nombre del acudiente #}
+            <td>{{ item.acudiente_nombre }}</td>
+            {# Mostramos el curso #}
+            <td>{{ item.curso.nombre|default:"Sin asignar" }}</td>
+            <td>{{ item.rol }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No hay estudiantes matriculados para mostrar.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
+</div>
+</div>
+</div>
+{% endblock %}

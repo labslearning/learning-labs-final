@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+        <h1 class="fw-bold">Panel de Administración</h1>
+        <p class="text-muted">Gestiona los recursos académicos y los usuarios de la plataforma.</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="card text-center bg-primary text-white h-100">
+                <div class="card-body">
+                    <h2 class="fw-bold">{{ total_estudiantes }}</h2>
+                    <p class="mb-0">Estudiantes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card text-center bg-success text-white h-100">
+                <div class="card-body">
+                    <h2 class="fw-bold">{{ total_docentes }}</h2>
+                    <p class="mb-0">Docentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card text-center bg-info text-white h-100">
+                <div class="card-body">
+                    <h2 class="fw-bold">{{ total_cursos }}</h2>
+                    <p class="mb-0">Cursos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card text-center bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h2 class="fw-bold">{{ total_materias }}</h2>
+                    <p class="mb-0">Materias</p>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <h3 class="text-center mb-4">Herramientas de Gestión</h3>
+    <div class="row g-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-school fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title fw-bold">Gestión de Cursos</h5>
+                    <p class="card-text text-muted small">Crear, ver y administrar los cursos académicos.</p>
+                    <a href="{% url 'gestionar_cursos' %}" class="btn btn-primary mt-auto">Gestionar Cursos</a>
+                </div>
+            </div>
+        </div>
+      
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-user-plus fa-2x text-success mb-3"></i>
+                    <h5 class="card-title fw-bold">Asignar Estudiantes</h5>
+                    <p class="card-text text-muted small">Asignar estudiantes a cursos específicos.</p>
+                    <a href="{% url 'asignar_curso_estudiante' %}" class="btn btn-success mt-auto">Asignar Cursos</a>
+                </div>
+            </div>
+        </div>
+      
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-chalkboard-teacher fa-2x text-info mb-3"></i>
+                    <h5 class="card-title fw-bold">Asignar Materias</h5>
+                    <p class="card-text text-muted small">Asignar materias a los docentes correspondientes.</p>
+                    <a href="{% url 'asignar_materia_docente' %}" class="btn btn-info mt-auto text-white">Asignar Materias</a>
+                </div>
+            </div>
+        </div>
+      
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-file-csv fa-2x text-warning mb-3"></i>
+                    <h5 class="card-title fw-bold">Registro Masivo</h5>
+                    <p class="card-text text-muted small">Matricular alumnos y acudientes desde un archivo CSV.</p>
+                    <a href="{% url 'registrar_alumnos_masivo_form' %}" class="btn btn-warning mt-auto text-dark">Registrar Alumnos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-user-edit fa-2x text-dark mb-3"></i>
+                    <h5 class="card-title fw-bold">Registro Individual</h5>
+                    <p class="card-text text-muted small">Matricular un solo alumno de forma manual.</p>
+                    <a href="{% url 'mostrar_registro_individual' %}" class="btn btn-dark mt-auto">Registrar Alumno</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-users-cog fa-2x text-secondary mb-3"></i>
+                    <h5 class="card-title fw-bold">Gestión de Perfiles</h5>
+                    <p class="card-text text-muted small">Buscar usuarios y resetear sus contraseñas.</p>
+                    <a href="{% url 'gestion_perfiles' %}" class="btn btn-secondary mt-auto">Gestionar Perfiles</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-sitemap fa-2x text-info mb-3"></i>
+                    <h5 class="card-title fw-bold">Mapa Visual (DB)</h5>
+                    <p class="card-text text-muted small">Ver relación entre cursos, estudiantes y acudientes.</p>
+                    <a href="{% url 'admin_db_visual' %}" class="btn btn-info mt-auto text-white">Ver Mapa Visual</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.shadow-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.shadow-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-users-cog fa-3x text-primary mb-3"></i>
+                        <h2 class="card-title fw-bold">Registro Masivo de Alumnos</h2>
+                        <p class="text-muted">
+                            Sube un archivo para crear perfiles de estudiantes y acudientes de forma automática.
+                        </p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|lower }} alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'registrar_alumnos_masivo' %}" enctype="multipart/form-data" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.csv_file.id_for_label }}" class="form-label fw-bold">{{ form.csv_file.label }}</label>
+                            {{ form.csv_file }}
+                            <div class="form-text">{{ form.csv_file.help_text }}</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.anio_escolar.id_for_label }}" class="form-label fw-bold">{{ form.anio_escolar.label }}</label>
+                            <input type="text" name="anio_escolar" class="form-control" id="{{ form.anio_escolar.id_for_label }}" value="{{ anio_escolar }}">
+                            <div class="form-text">{{ form.anio_escolar.help_text }}</div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="alert alert-info mt-4">
+                            <h5 class="alert-heading"><i class="fas fa-file-csv me-2"></i>Formato del Archivo CSV</h5>
+                            <p>Asegúrate de que tu archivo CSV tenga las siguientes columnas en el encabezado (sin mayúsculas ni tildes):</p>
+                            <ul class="list-unstyled">
+                                <li>✅ <strong>Estudiante:</strong> <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>grado</code></li>
+                                <li>✅ <strong>Acudiente:</strong> <code>acudiente_first_name</code>, <code>acudiente_last_name</code>, <code>acudiente_email</code></li>
+                                {# CORRECCIÓN: Se eliminó 'acudiente_cedula' para reflejar la lógica corregida en views.py #}
+                            </ul>
+                            <hr>
+                            <p class="mb-0 small text-muted">El archivo debe estar codificado en UTF-8.</p>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-upload me-2"></i> Subir y Procesar Archivo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Pequeño script para añadir clases de Bootstrap a los campos del formulario de Django
+document.addEventListener('DOMContentLoaded', function() {
+    const csvInput = document.getElementById('{{ form.csv_file.id_for_label }}');
+    if (csvInput) {
+        csvInput.classList.add('form-control');
+    }
+});
+</script>
+
+{% endblock %}

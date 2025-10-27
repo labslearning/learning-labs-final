@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    :root {
+        /* Paleta de Colores Refinada */
+        --ll-primary: #3A50A2; /* Azul profundo y profesional, inspirado en el logo */
+        --ll-primary-light: #5D77C4;
+        --ll-primary-dark: #2A3A7A;
+        --ll-secondary: #F0A04B; /* Naranja/ámbar como acento cálido, del logo */
+        --ll-secondary-light: #F7C781;
+        --ll-bg-main: #F8F9FC; /* Fondo de página muy claro y neutro */
+        --ll-bg-card: #FFFFFF;
+        --ll-text-dark: #212529;
+        --ll-text-medium: #495057;
+        --ll-text-light: #6C757D;
+        --ll-border-color: #DEE2E6;
+        --ll-success: #198754; /* Bootstrap success, para consistencia si se usa en otros lados */
+        --ll-light: #f8f9fa; /* Bootstrap light */
+
+        /* Tipografía */
+        --ll-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        
+        /* Sombras */
+        --ll-shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --ll-shadow-md: 0 5px 15px rgba(0,0,0,0.08);
+        --ll-shadow-lg: 0 10px 30px rgba(58, 80, 162, 0.12); /* Sombra con tinte azulado */
+
+        /* Radios y Transiciones */
+        --ll-radius-md: 0.75rem; /* 12px */
+        --ll-radius-lg: 1rem;   /* 16px */
+        --ll-transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    body {
+        background-color: var(--ll-bg-main);
+        font-family: var(--ll-font-sans);
+        color: var(--ll-text-dark);
+    }
+
+    /* Estilos para la tarjeta principal */
+    .ll-hero-card {
+        background-color: var(--ll-bg-card);
+        border-radius: var(--ll-radius-lg);
+        box-shadow: var(--ll-shadow-lg);
+        position: relative;
+        overflow: hidden; /* Para los elementos decorativos */
+        padding: 3rem 2rem; /* Ajustar padding */
+    }
+
+    /* Elementos decorativos de fondo */
+    .ll-hero-card::before,
+    .ll-hero-card::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.08; /* Más sutil */
+        z-index: 0;
+        pointer-events: none; /* Para que no interfieran con el contenido */
+    }
+
+    .ll-hero-card::before { /* Círculo superior */
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, var(--ll-primary-light) 0%, transparent 70%);
+        top: -100px;
+        left: -100px;
+        filter: blur(10px);
+    }
+
+    .ll-hero-card::after { /* Círculo inferior */
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, var(--ll-secondary-light) 0%, transparent 70%);
+        bottom: -150px;
+        right: -150px;
+        filter: blur(15px);
+    }
+
+    .ll-hero-content { /* Contenedor para el contenido real, para que esté sobre los decorativos */
+        position: relative;
+        z-index: 1;
+    }
+
+    .ll-logo {
+        width: 150px; /* Ajustar tamaño del logo */
+        height: 150px;
+        border-radius: 50%;
+        margin-bottom: 2rem;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1); /* Sombra más suave para el logo */
+        border: 4px solid var(--ll-bg-card); /* Borde del color del fondo de la tarjeta para efecto "incrustado" */
+        object-fit: cover; /* Asegurar que el logo se vea bien si no es cuadrado perfecto */
+        transition: var(--ll-transition-smooth);
+    }
+    .ll-logo:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .ll-hero-title {
+        font-size: 3rem; /* Ajustar según necesidad */
+        font-weight: 700; /* Inter bold */
+        color: var(--ll-primary);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        margin-bottom: 0.75rem;
+    }
+
+    .ll-hero-subtitle {
+        font-size: 1.5rem; /* Ajustar según necesidad */
+        color: var(--ll-text-medium);
+        font-weight: 400;
+        margin-bottom: 1.5rem;
+    }
+
+    .ll-lead-text {
+        font-size: 1.125rem; /* Ajustar según necesidad */
+        color: var(--ll-text-light);
+        max-width: 700px; /* Limitar ancho para mejor lectura */
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    /* Botón "Quiénes somos" */
+    .ll-btn-about {
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--ll-radius-md);
+        transition: var(--ll-transition-smooth);
+        background-color: transparent;
+        color: var(--ll-primary);
+        border: 2px solid var(--ll-primary);
+    }
+    .ll-btn-about:hover {
+        background-color: var(--ll-primary);
+        color: var(--ll-bg-card) !important; /* Forzar color de texto blanco */
+        transform: translateY(-2px);
+        box-shadow: var(--ll-shadow-md);
+    }
+     .ll-btn-about i {
+        transition: transform 0.3s ease;
+    }
+    .ll-btn-about:hover i {
+        transform: rotate(10deg) scale(1.1);
+    }
+
+
+    /* Tarjetas de Categorías */
+    .ll-category-card {
+        background-color: var(--ll-bg-card);
+        border: 1px solid var(--ll-border-color);
+        border-radius: var(--ll-radius-md);
+        box-shadow: var(--ll-shadow-sm);
+        transition: var(--ll-transition-smooth);
+        height: 100%; /* Para que todas tengan la misma altura en una fila */
+        display: flex;
+        flex-direction: column;
+    }
+    .ll-category-card:hover {
+        transform: translateY(-6px);
+        box-shadow: var(--ll-shadow-lg);
+        border-color: var(--ll-primary-light);
+    }
+    .ll-category-card .card-body {
+        flex-grow: 1; /* Asegurar que el contenido ocupe el espacio */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2rem 1.5rem;
+    }
+    .ll-category-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--ll-primary-light), var(--ll-primary));
+        color: var(--ll-bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 10px rgba(58, 80, 162, 0.3);
+        transition: var(--ll-transition-smooth);
+    }
+    .ll-category-card:hover .ll-category-icon-wrapper {
+        transform: scale(1.1) rotate(-5deg);
+        background: linear-gradient(135deg, var(--ll-secondary-light), var(--ll-secondary));
+    }
+    .ll-category-icon-wrapper i {
+        font-size: 2.25rem; /* Iconos más grandes */
+    }
+    .ll-category-title {
+        font-size: 1.25rem; /* Ajustar según necesidad */
+        font-weight: 600;
+        color: var(--ll-primary-dark);
+        margin-bottom: 0.5rem;
+    }
+    .ll-category-desc {
+        font-size: 0.9rem;
+        color: var(--ll-text-light);
+        flex-grow: 1; /* Para que ocupe espacio si las descripciones varían */
+    }
+
+    /* Botones de Acción Principales (Sign In, Sign Up) */
+    .ll-action-btn {
+        font-weight: 600;
+        padding: 0.85rem 2rem; /* Botones más grandes */
+        border-radius: var(--ll-radius-md);
+        min-width: 180px; /* Ancho mínimo */
+        text-transform: uppercase; /* Opcional, para más impacto */
+        letter-spacing: 0.5px; /* Opcional */
+        transition: var(--ll-transition-smooth);
+        box-shadow: var(--ll-shadow-sm);
+    }
+    .ll-action-btn:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: var(--ll-shadow-md);
+    }
+
+    .ll-btn-primary-main { /* Para el Sign In */
+        background-color: var(--ll-primary);
+        border-color: var(--ll-primary);
+        color: var(--ll-bg-card);
+    }
+    .ll-btn-primary-main:hover {
+        background-color: var(--ll-primary-dark);
+        border-color: var(--ll-primary-dark);
+        color: var(--ll-bg-card);
+    }
+    .ll-btn-secondary-main { /* Para el Sign Up, usando el acento */
+        background-color: var(--ll-secondary);
+        border-color: var(--ll-secondary);
+        color: var(--ll-text-dark); /* O blanco, según contraste */
+    }
+    .ll-btn-secondary-main:hover {
+        background-color: #D98234; /* Un naranja más oscuro */
+        border-color: #D98234;
+        color: var(--ll-bg-card);
+    }
+    .ll-action-btn i {
+        margin-right: 0.75rem; /* Más espacio para el icono */
+    }
+
+    /* Footer */
+    .ll-footer {
+        font-size: 0.875rem;
+        color: var(--ll-text-light);
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        border-top: 1px solid var(--ll-border-color);
+    }
+
+    /* Modal */
+    .ll-modal .modal-content {
+        border-radius: var(--ll-radius-lg); /* Consistencia */
+        border: none;
+        box-shadow: var(--ll-shadow-xl); /* Sombra fuerte para el modal */
+    }
+    .ll-modal .modal-header {
+        background-color: var(--ll-primary);
+        color: var(--ll-bg-card);
+        border-bottom: none; /* Sin borde inferior en la cabecera */
+        padding: 1.25rem 1.5rem;
+    }
+    .ll-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    .ll-modal .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(200%); /* Hacer el icono de cerrar más visible */
+        font-size: 0.8rem;
+    }
+    .ll-modal .modal-body {
+        padding: 0; /* El ratio se encarga del padding del video */
+    }
+     .ll-modal .modal-footer {
+        background-color: var(--ll-bg-main);
+        border-top: 1px solid var(--ll-border-color);
+        padding: 1rem 1.5rem;
+    }
+    .ll-modal .btn-secondary { /* Botón cerrar del modal */
+        background-color: var(--ll-text-light);
+        border-color: var(--ll-text-light);
+        color: var(--ll-text-dark);
+        font-weight: 500;
+    }
+    .ll-modal .btn-secondary:hover {
+        background-color: var(--ll-border-color);
+        border-color: var(--ll-border-color);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .ll-hero-title { font-size: 2.25rem; }
+        .ll-hero-subtitle { font-size: 1.25rem; }
+        .ll-logo { width: 120px; height: 120px; }
+        .ll-hero-card { padding: 2rem 1.5rem; }
+        .ll-action-btn { padding: 0.75rem 1.5rem; min-width: 150px; }
+        .ll-category-icon-wrapper { width: 60px; height: 60px; }
+        .ll-category-icon-wrapper i { font-size: 1.75rem; }
+    }
+
+</style>
+
+<main class="container py-5">
+    <section class="ll-hero-card">
+        <div class="ll-hero-content"> <div class="text-center mb-5">
+                <img src="https://res.cloudinary.com/diarfrbzp/image/upload/v1745919577/logo_lab_qserfl.png" 
+                     alt="Learning Labs Logo" 
+                     class="ll-logo img-fluid">
+                
+                <h1 class="ll-hero-title">Learning Labs</h1>
+                <h2 class="ll-hero-subtitle">Plataforma educativa privada y acelerada</h2>
+                
+                <button type="button" class="btn ll-btn-about mt-4" 
+                        data-bs-toggle="modal" data-bs-target="#videoModal">
+                    <i class="fas fa-info-circle"></i>¿Quiénes somos?
+                </button>
+            </div>
+            
+            <p class="ll-lead-text text-center mb-5">
+                Domina Inglés, Matemáticas, Física, Química, Desarrollo de Videojuegos, Programación e IA con nuestros cursos especializados.
+            </p>
+            
+            <div class="row justify-content-center g-4 mb-5">
+                {% for category in categories %}
+                <div class="col-md-6 col-lg-4 d-flex"> <div class="ll-category-card"> <div class="card-body">
+                            <div class="ll-category-icon-wrapper">
+                                <i class="fas {{ category.icon }} fa-fw"></i> </div>
+                            <h3 class="ll-category-title">{{ category.title }}</h3>
+                            <p class="ll-category-desc">{{ category.desc }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="d-flex justify-content-center flex-wrap gap-3 mb-4"> <a class="btn ll-action-btn ll-btn-primary-main" href="/signin/">
+                    <i class="fas fa-sign-in-alt"></i>Sign In
+                </a>
+                <a class="btn ll-action-btn ll-btn-secondary-main" href="/signup/">
+                    <i class="fas fa-user-plus"></i>Sign Up
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="ll-footer text-center mt-5">
+        <p>&copy; 2025 Todos los derechos reservados. Producto de Hydra School</p>
+    </footer>
+</main>
+
+<div class="modal fade ll-modal" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">¿Quiénes somos?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <video id="videoPlayer" controls class="w-100" style="border-radius: 0 0 var(--ll-radius-lg) var(--ll-radius-lg);"> <source id="videoSource" src="https://res.cloudinary.com/diarfrbzp/video/upload/v1741045726/Clase_34_parte_2_ADVERBIOS_DE_FRECUENCIA_lztg8l.mp4" type="video/mp4">
+                        Tu navegador no soporta la etiqueta de video.
+                    </video>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoModal = document.getElementById('videoModal');
+        const videoPlayer = document.getElementById('videoPlayer');
+        
+        if (videoModal && videoPlayer) {
+            videoModal.addEventListener('hidden.bs.modal', function () {
+                videoPlayer.pause();
+                // No es necesario resetear currentTime a 0 siempre, a menos que sea un requisito específico.
+                // videoPlayer.currentTime = 0; 
+            });
+        }
+        
+        // Los efectos hover de los botones ahora se manejan principalmente con CSS
+        // para mejor rendimiento y simplicidad. El JS que tenías para esto se puede eliminar
+        // si las transiciones CSS son suficientes.
+        // Si necesitas manipulaciones más complejas en hover que CSS no pueda hacer, mantenlo.
+        // Por ahora, lo comentaré ya que CSS cubre el transform y box-shadow.
+        /*
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                // Estos estilos ahora están en CSS :hover
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                // Estos estilos ahora están en CSS
+            });
+        });
+        */
+    });
+</script>
+
+{% endblock %}

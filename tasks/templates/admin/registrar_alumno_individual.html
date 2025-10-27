@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="card p-5 shadow-lg">
+        <h1 class="text-center mb-4">Registro Individual de Alumno</h1>
+        <p class="lead text-center">
+            Usa este formulario para registrar un nuevo alumno y asignarlo a un curso específico.
+        </p>
+        <hr>
+
+        <form method="POST" action="{% url 'registrar_alumno_individual' %}">
+            {% csrf_token %}
+
+            <!-- Año escolar -->
+            <div class="mb-3">
+                <label for="anio_escolar" class="form-label">Año escolar</label>
+                <input type="text" class="form-control" id="anio_escolar" name="anio_escolar" 
+                       placeholder="2025-2026" required>
+            </div>
+
+            <!-- Datos del alumno -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="username" class="form-label">Usuario (username)</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">Apellido</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name">
+                </div>
+            </div>
+
+            <!-- Selección de curso -->
+            <div class="mb-3">
+                <label for="curso_id" class="form-label">Curso</label>
+                <select class="form-select" id="curso_id" name="curso_id" required>
+                    <option value="" disabled selected>Seleccione un curso...</option>
+                    {% for c in cursos %}
+                        <option value="{{ c.id }}">
+                            {{ c.get_grado_display }} {{ c.seccion }} ({{ c.anio_escolar }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botón -->
+            <button type="submit" class="btn btn-success mt-3 w-100">
+                <i class="fas fa-user-plus me-2"></i> Registrar Alumno
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
