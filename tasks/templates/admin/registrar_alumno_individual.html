@@ -4,21 +4,20 @@
     <div class="card p-5 shadow-lg">
         <h1 class="text-center mb-4">Registro Individual de Alumno</h1>
         <p class="lead text-center">
-            Usa este formulario para registrar un nuevo alumno y asignarlo a un curso específico.
+            Usa este formulario para registrar un nuevo alumno, su acudiente, y asignarlo a un curso.
         </p>
         <hr>
 
         <form method="POST" action="{% url 'registrar_alumno_individual' %}">
             {% csrf_token %}
 
-            <!-- Año escolar -->
             <div class="mb-3">
                 <label for="anio_escolar" class="form-label">Año escolar</label>
                 <input type="text" class="form-control" id="anio_escolar" name="anio_escolar" 
                        placeholder="2025-2026" required>
             </div>
 
-            <!-- Datos del alumno -->
+            <h4 class="mt-4 mb-3 text-primary">Datos del Estudiante</h4>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="username" class="form-label">Usuario (username)</label>
@@ -41,7 +40,27 @@
                 </div>
             </div>
 
-            <!-- Selección de curso -->
+            <h4 class="mt-5 mb-3 text-success">Datos del Acudiente</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="acudiente_first_name" class="form-label">Nombre del Acudiente</label>
+                    <input type="text" class="form-control" id="acudiente_first_name" name="acudiente_first_name" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="acudiente_last_name" class="form-label">Apellido del Acudiente</label>
+                    <input type="text" class="form-control" id="acudiente_last_name" name="acudiente_last_name" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="acudiente_email" class="form-label">Correo del Acudiente (Usuario)</label>
+                    <input type="email" class="form-control" id="acudiente_email" name="acudiente_email" required>
+                    <div class="form-text">
+                        Este email se usará como el nombre de usuario del acudiente. Si ya existe, se vinculará la cuenta existente.
+                    </div>
+                </div>
+            </div>
+            <h4 class="mt-4 mb-3 text-secondary">Asignación de Curso</h4>
             <div class="mb-3">
                 <label for="curso_id" class="form-label">Curso</label>
                 <select class="form-select" id="curso_id" name="curso_id" required>
@@ -54,9 +73,8 @@
                 </select>
             </div>
 
-            <!-- Botón -->
-            <button type="submit" class="btn btn-success mt-3 w-100">
-                <i class="fas fa-user-plus me-2"></i> Registrar Alumno
+            <button type="submit" class="btn btn-success mt-4 w-100 btn-lg">
+                <i class="fas fa-user-plus me-2"></i> Registrar Alumno y Acudiente
             </button>
         </form>
     </div>

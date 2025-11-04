@@ -45,6 +45,20 @@
   
     <h3 class="text-center mb-4">Herramientas de Gestión</h3>
     <div class="row g-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-building-columns fa-2x text-danger mb-3"></i>
+                    <h5 class="card-title fw-bold">Gestión Institucional</h5>
+                    <p class="card-text text-muted small">Administrar datos del colegio (logo, NIT, lema, etc.)</p>
+                    
+                    <a href="{% url 'admin:tasks_institucion_changelist' %}" class="btn btn-danger mt-auto">
+                        Gestionar Institución
+                    </a>
+                </div>
+            </div>
+        </div>
         <div class="col-md-4 mb-3">
             <div class="card h-100 text-center shadow-hover">
                 <div class="card-body">
@@ -122,7 +136,17 @@
             </div>
         </div>
 
-    </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center shadow-hover">
+                <div class="card-body">
+                    <i class="fas fa-archive fa-2x text-danger mb-3"></i>
+                    <h5 class="card-title fw-bold">Archivo de Exalumnos</h5>
+                    <p class="card-text text-muted small">Consultar boletines de estudiantes retirados.</p>
+                    <a href="{% url 'admin_ex_estudiantes' %}" class="btn btn-danger mt-auto">Consultar Archivo</a>
+                </div>
+            </div>
+        </div>
+        </div>
 </div>
 
 <style>

@@ -21,37 +21,45 @@
         
         <div class="card-body p-0">
             {% if pack.grupo %}
-            <ul class="list-group list-group-flush">
-                {% for item in pack.grupo %}
-                <li class="list-group-item px-3 py-2">
-                    <div class="row align-items-center g-2">
-                        <div class="col-lg-6 border-end-lg">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-graduate text-primary fa-fw me-3"></i>
-                                <div>
-                                    <div class="fw-semibold">{{ item.estudiante.last_name }}, {{ item.estudiante.first_name }}</div>
-                                    <small class="text-muted">Usuario: <code>{{ item.estudiante.username }}</code></small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-6">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-shield text-success fa-fw me-3"></i>
-                                <div>
-                                    {% if item.acudiente %}
-                                        <div class="fw-semibold">{{ item.acudiente.last_name }}, {{ item.acudiente.first_name }}</div>
-                                        <small class="text-muted">Usuario: <code>{{ item.acudiente.username }}</code></small>
-                                    {% else %}
-                                        <div class="text-muted fst-italic">— Sin acudiente asignado —</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="py-3 px-4" style="width: 50%;">
+                                <i class="fas fa-user-graduate me-2 text-primary opacity-75"></i>Estudiante
+                            </th>
+                            <th scope="col" class="py-3 px-4" style="width: 50%;">
+                                <i class="fas fa-user-shield me-2 text-success opacity-75"></i>Acudiente
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pack.grupo %}
+                        <tr>
+                            <td class="px-4">
+                                <div class="fw-semibold">{{ item.estudiante.last_name }}, {{ item.estudiante.first_name }}</div>
+                                <small class="text-muted">Usuario:</small>
+                                <span class="badge bg-secondary bg-opacity-10 text-dark-emphasis rounded-pill fw-normal ms-1">
+                                    {{ item.estudiante.username }}
+                                </span>
+                            </td>
+                            
+                            <td class="px-4">
+                                {% if item.acudiente %}
+                                    <div class="fw-semibold">{{ item.acudiente.last_name }}, {{ item.acudiente.first_name }}</div>
+                                    <small class_S="text-muted">Usuario:</small>
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark-emphasis rounded-pill fw-normal ms-1">
+                                        {{ item.acudiente.username }}
+                                    </span>
+                                {% else %}
+                                    <div class="text-muted fst-italic">— Sin acudiente asignado —</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
             <div class="text-muted text-center p-4">
                 <i class="fas fa-info-circle me-2"></i>No hay estudiantes matriculados en este curso.
@@ -67,12 +75,4 @@
     {% endfor %}
 </div>
 
-<style>
-/* Estilo para la línea vertical en pantallas grandes */
-@media (min-width: 992px) {
-    .border-end-lg {
-        border-right: 1px solid #dee2e6;
-    }
-}
-</style>
 {% endblock %}

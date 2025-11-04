@@ -1,4 +1,4 @@
-# tasks/urls.py (VERSIÓN COMPLETA Y CORRECTA)
+# tasks/urls.py (VERSIÓN CORREGIDA Y PROFESIONAL)
 
 from django.urls import path
 from . import views
@@ -9,9 +9,6 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('signin/', views.signin, name='signin'),
     path('signout/', views.signout, name='signout'),
-    
-    # CORRECCIÓN: Se añade la ruta 'logout/' para evitar el 404,
-    # apuntando a la misma vista que 'signout'.
     path('logout/', views.signout, name='logout'), 
 
     # --- RUTAS DE CURSOS DEMO / CONTENIDO ---
@@ -55,9 +52,42 @@ urlpatterns = [
     path('director/guardar-convivencia/<int:curso_id>/', views.guardar_convivencia, name='guardar_convivencia'),
     path('director/generar-boletin/<int:curso_id>/', views.generar_boletin, name='director_generar_boletin'),
     
-    # --- Gestión de Perfiles y Seguridad (con prefijo 'panel/') ---
+    
+    # --- GESTIÓN DE PERFILES, BOLETINES Y SEGURIDAD (PREFIJO 'PANEL/') ---
+
+    # ===================================================================
+    # 🩺 INICIO DE CIRUGÍA 1: Mover 'admin/eliminar-estudiante/' a 'panel/'
+    # ===================================================================
+    path('panel/eliminar-estudiante/', views.admin_eliminar_estudiante, name='panel_eliminar_estudiante'),
+    # ===================================================================
+    # 🩺 FIN DE CIRUGÍA 1
+    # ===================================================================
+    
+    # ===================================================================
+    # 🩺 INICIO DE CIRUGÍA 2: Mover 'admin/generar-boletin/' a 'panel/'
+    # ===================================================================
+    path('panel/generar-boletin/<int:estudiante_id>/', views.generar_boletin_pdf_admin, name='panel_generar_boletin'),
+    # ===================================================================
+    # 🩺 FIN DE CIRUGÍA 2
+    # ===================================================================
+    
+    # Ruta de Acudiente (Esta no genera conflicto, se queda igual)
+    path('acudiente/generar-boletin/<int:estudiante_id>/', 
+         views.generar_boletin_pdf_acudiente, 
+         name='generar_boletin_acudiente'),
+    
+    # ===================================================================
+    # 🩺 INICIO DE CIRUGÍA 3: Mover 'admin/api/toggle-boletin-permiso/' a 'panel/'
+    # ===================================================================
+    path('panel/api/toggle-boletin-permiso/', views.toggle_boletin_permiso, name='panel_api_toggle_boletin_permiso'),
+    # ===================================================================
+    # 🩺 FIN DE CIRUGÍA 3
+    # ===================================================================
+
+    # Rutas del panel que ya estaban correctas
     path('panel/gestion-perfiles/', views.gestion_perfiles, name='gestion_perfiles'),
     path('panel/resetear-contrasena/', views.admin_reset_password, name='admin_reset_password'),
     path('panel/db-visual/', views.admin_db_visual, name='admin_db_visual'),
     path('cuenta/cambiar-clave/', views.cambiar_clave, name='cambiar_clave'),
+    path('panel/ex-alumnos/', views.admin_ex_estudiantes, name='admin_ex_estudiantes'),
 ]

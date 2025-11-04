@@ -6,8 +6,14 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 # 1. IMPORTACIONES AÑADIDAS
 from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+# --- INICIO DE CIRUGÍA 1: Importar Avg (Sin cambios) ---
+from django.db.models import Q, Avg
+# --- FIN DE CIRUGÍA 1 ---
 from django.http import JsonResponse, HttpResponseNotAllowed
+# --- INICIO DE MODIFICACIÓN 1: Añadir Importaciones ---
+from django.http import HttpResponse, Http404
+from django.template.loader import render_to_string
+# --- FIN DE MODIFICACIÓN 1 ---
 from django.contrib import messages
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -25,14 +31,26 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from operator import itemgetter
 from django.urls import reverse
+from django.core.paginator import Paginator # Añadido en paso anterior
 
 # --- Modelos: Se añade Acudiente ---
 from .models import (
     Question, Answer, Perfil, Curso, Nota, Materia,
     Periodo, AsignacionMateria, Matricula, ComentarioDocente,
     ActividadSemanal, LogroPeriodo, Convivencia, GRADOS_CHOICES,
-    Acudiente
+    Acudiente, Institucion
 )
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA: Importaciones añadidas para el Plan
+# (Añadidas en pasos anteriores )
+# ===================================================================
+from .models import BoletinArchivado
+from django.core.files.base import ContentFile
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA
+# ===================================================================
+
 # --- Formularios: Se añaden los nuevos formularios ---
 from .forms import BulkCSVForm, PasswordChangeFirstLoginForm, ProfileSearchForm, QuestionForm, AnswerForm
 
@@ -43,12 +61,25 @@ from .utils import generar_username_unico, generar_contrasena_temporal, asignar_
 # --- Decoradores: Se añade el nuevo decorador ---
 from .decorators import role_required
 
+# --- INICIO DE MODIFICACIÓN 1 (continuación): Añadir Importaciones ---
+from .services import get_student_report_context # Usamos el nuevo servicio
+# --- FIN DE MODIFICACIÓN 1 ---
+
 
 # Obtener el modelo de usuario de forma segura
 User = get_user_model()
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
+
+# --- INICIO DE MODIFICACIÓN 1 (continuación): Importar WeasyPrint ---
+try:
+    from weasyprint import HTML
+except ImportError:
+    HTML = None
+    logger.error("WeasyPrint no está instalado. La generación de PDF fallará.")
+# --- FIN DE MODIFICACIÓN 1 ---
+
 
 # Historial Matricula puede que aún no esté en tu models.py; lo usamos si existe
 try:
@@ -387,37 +418,119 @@ def dashboard_estudiante(request):
     return render(request, 'dashboard_estudiante.html', context)
 
 
+# ===================================================================
+# --- INICIO DE CIRUGÍA 2: FUNCIÓN dashboard_docente MODIFICADA ---
+# ===================================================================
 @role_required('DOCENTE')
 def dashboard_docente(request):
     docente = request.user
+    # Ordenamos por materia primero, para facilitar la nueva agrupación
     asignaciones = AsignacionMateria.objects.filter(docente=docente, activo=True)\
-        .select_related('materia', 'curso').order_by('curso__grado', 'curso__seccion')
+        .select_related('materia', 'curso').order_by('materia__nombre', 'curso__grado', 'curso__seccion')
+    
+    # --- ESTRUCTURA PARA PESTAÑA 1 (MIS MATERIAS) ---
+    # Esta lógica se queda intacta, solo cambia el orden de 'asignaciones'
     materias_por_curso = {}
     total_estudiantes_unicos = set()
+    
+    # --- INICIO DE CIRUGÍA: NUEVA ESTRUCTURA PARA PESTAÑA 2 (ESTADÍSTICAS) ---
+    # { materia_id: { 'materia_obj': obj, 'cursos': { curso_id: { 'curso_obj': obj, 'periodos': { periodo_id: {...} } } } } }
+    estadisticas_por_materia = {}
+    
+    # --- FIN DE CIRUGÍA ---
+
+    # Usamos un set para controlar qué estudiantes hemos contado
+    estudiantes_contados = set()
+
     for asignacion in asignaciones:
         curso = asignacion.curso
+        materia_actual = asignacion.materia
+        
         if not curso:
             continue
+            
         curso_key = f"{curso.get_grado_display()} {curso.seccion}"
+        
+        # --- Lógica para PESTAÑA 1 (MIS MATERIAS) ---
         if curso_key not in materias_por_curso:
             materias_por_curso[curso_key] = {
                 'curso_obj': curso,
-                'materias': [],
+                'materias': [], 
                 'es_director': (getattr(curso, 'director', None) == docente),
+                'estudiantes': Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante'),
             }
-        estudiantes = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante')
-        materias_por_curso[curso_key]['estudiantes'] = estudiantes
-        for m in estudiantes:
-            total_estudiantes_unicos.add(m.estudiante.id)
-        materias_por_curso[curso_key]['materias'].append(asignacion.materia)
+        
+        # Contar estudiantes únicos (solo una vez por estudiante)
+        for m in materias_por_curso[curso_key]['estudiantes']:
+             total_estudiantes_unicos.add(m.estudiante.id)
+
+        # Añadir materia a la lista de la Pestaña 1
+        if materia_actual not in materias_por_curso[curso_key]['materias']:
+            materias_por_curso[curso_key]['materias'].append(materia_actual)
+        
+        # --- FIN LÓGICA PESTAÑA 1 ---
+
+        # --- INICIO DE CIRUGÍA: LÓGICA PARA PESTAÑA 2 (ESTADÍSTICAS) ---
+        
+        # 1. Asegurar que la materia existe en el dict
+        if materia_actual.id not in estadisticas_por_materia:
+            estadisticas_por_materia[materia_actual.id] = {
+                'materia_obj': materia_actual,
+                'cursos': {}
+            }
+        
+        # 2. Asegurar que el curso existe dentro de la materia
+        if curso.id not in estadisticas_por_materia[materia_actual.id]['cursos']:
+            # Obtenemos los estudiantes de este curso (ya los tenemos en materias_por_curso)
+            estudiantes_del_curso = materias_por_curso[curso_key]['estudiantes']
+            estudiante_ids = [m.estudiante_id for m in estudiantes_del_curso]
+            periodos_curso = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
+            
+            estadisticas_por_materia[materia_actual.id]['cursos'][curso.id] = {
+                'curso_obj': curso,
+                'periodos': {} # Se llenará ahora
+            }
+
+            # 3. Calcular estadísticas para CADA periodo
+            for periodo in periodos_curso:
+                # Calcular promedio de ESTA materia en ESTE curso en ESTE periodo
+                promedio_materia_periodo = Nota.objects.filter(
+                    estudiante_id__in=estudiante_ids,
+                    materia=materia_actual,
+                    periodo=periodo,
+                    numero_nota=5 # Promedio ponderado
+                ).aggregate(promedio=Avg('valor'))['promedio']
+
+                # Obtener logros de ESTA materia en ESTE curso en ESTE periodo
+                logros_periodo = LogroPeriodo.objects.filter(
+                    curso=curso, 
+                    docente=docente,
+                    materia=materia_actual, # <-- Filtro clave
+                    periodo=periodo
+                ).order_by('-fecha_creacion')
+
+                # REQUISITO: Si hay notas O hay logros, SÍ se añade el periodo
+                if promedio_materia_periodo is not None or logros_periodo.exists():
+                    estadisticas_por_materia[materia_actual.id]['cursos'][curso.id]['periodos'][periodo.id] = {
+                        'periodo_obj': periodo,
+                        'promedio': promedio_materia_periodo,
+                        'logros': logros_periodo
+                    }
+        
+        # --- FIN DE CIRUGÍA ---
+
     context = {
         'docente': docente,
-        'materias_por_curso': materias_por_curso,
-        'total_cursos': len(materias_por_curso),
-        'total_materias': asignaciones.count(),
+        'materias_por_curso': materias_por_curso, # Para la Pestaña 1
+        'estadisticas_por_materia': estadisticas_por_materia, # Para la Pestaña 2
+        'total_cursos': len(materias_por_curso), # Total de cursos únicos
+        'total_materias': len(estadisticas_por_materia), # Total de materias únicas
         'total_estudiantes': len(total_estudiantes_unicos),
     }
     return render(request, 'dashboard_docente.html', context)
+# ===================================================================
+# --- FIN DE CIRUGÍA 2 ---
+# ===================================================================
 
 def get_description_nota(numero_nota):
     return {
@@ -428,6 +541,9 @@ def get_description_nota(numero_nota):
         5: 'Promedio ponderado'
     }.get(numero_nota, f'Nota {numero_nota}')
 
+# ===================================================================
+# INICIO DE LA FUNCIÓN CORREGIDA
+# ===================================================================
 @role_required('DOCENTE')
 def subir_notas(request, materia_id):
     asignacion = get_object_or_404(AsignacionMateria, materia_id=materia_id, docente=request.user, activo=True)
@@ -435,6 +551,8 @@ def subir_notas(request, materia_id):
     curso = asignacion.curso
     estudiantes_matriculados = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante')
     periodos = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
+
+    # Lógica para crear periodos si no existen (sin cambios)
     if not periodos.exists():
         nombres = ['Primer Periodo', 'Segundo Periodo', 'Tercer Periodo', 'Cuarto Periodo']
         for nombre in nombres:
@@ -446,8 +564,10 @@ def subir_notas(request, materia_id):
             )
         periodos = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
         messages.info(request, f'Se crearon {len(periodos)} periodos automaticamente para el curso.')
+
     if request.method == 'POST':
         with transaction.atomic():
+            # Lógica de Actividades Semanales (sin cambios)
             actividad_ids_a_mantener = [int(i) for i in request.POST.getlist('actividad_id[]') if i and i.isdigit()]
             ActividadSemanal.objects.filter(curso=curso, materia=materia, docente=request.user)\
                 .exclude(id__in=actividad_ids_a_mantener).delete()
@@ -487,6 +607,8 @@ def subir_notas(request, materia_id):
                             fecha_inicio=fecha_inicio,
                             fecha_fin=fecha_fin,
                         )
+
+            # Lógica de Logros (sin cambios)
             logros_json_data = request.POST.get('logros_json_data', '')
             if logros_json_data:
                 try:
@@ -518,6 +640,8 @@ def subir_notas(request, materia_id):
                 except json.JSONDecodeError as e:
                     logger.exception("JSONDecodeError en logros_json_data: %s", e)
                     messages.error(request, "Error al procesar los logros. Formato de datos no válido.")
+
+            # Lógica de Notas (sin cambios, ya estaba correcta)
             for m in estudiantes_matriculados:
                 estudiante = m.estudiante
                 for periodo in periodos:
@@ -541,6 +665,8 @@ def subir_notas(request, materia_id):
                                     messages.error(request, f'Nota ({get_description_nota(i)}) inválida para {estudiante.get_full_name() or estudiante.username}.')
                             except (ValueError, decimal.InvalidOperation):
                                 messages.error(request, f'Nota ({get_description_nota(i)}) inválida para {estudiante.get_full_name() or estudiante.username}.')
+
+            # Lógica de Promedio (sin cambios, ya estaba correcta)
             usuario_sistema, _ = User.objects.get_or_create(
                 username='sistema',
                 defaults={'email': 'sistema@tuproyecto.com', 'is_active': False, 'is_staff': False, 'is_superuser': False}
@@ -565,30 +691,54 @@ def subir_notas(request, materia_id):
                                 'registrado_por': usuario_sistema
                             }
                         )
+
+            # ======================================================
+            # INICIO DE LA CORRECCIÓN (Guardar Comentarios)
+            # ======================================================
+            #
+            # Ahora iteramos por cada periodo DENTRO de cada estudiante
+            # para guardar el comentario específico de ese periodo.
+            #
             for m in estudiantes_matriculados:
                 estudiante = m.estudiante
-                comentario_key = f'comentario_{estudiante.id}'
-                texto = request.POST.get(comentario_key)
-                if texto and texto.strip():
-                    ComentarioDocente.objects.update_or_create(
-                        docente=request.user, estudiante=estudiante, materia=materia,
-                        defaults={'comentario': texto.strip()}
-                    )
-                elif not (texto or "").strip():
-                    ComentarioDocente.objects.filter(docente=request.user, estudiante=estudiante, materia=materia).delete()
+                for periodo in periodos:
+                    # La clave ahora debe incluir el ID del periodo
+                    comentario_key = f'comentario_{estudiante.id}_{periodo.id}'
+                    texto = request.POST.get(comentario_key)
+
+                    if texto and texto.strip():
+                        # Añadimos 'periodo=periodo' al 'update_or_create'
+                        ComentarioDocente.objects.update_or_create(
+                            docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo,
+                            defaults={'comentario': texto.strip()}
+                        )
+                    elif not (texto or "").strip():
+                        # Añadimos 'periodo=periodo' al filtro 'delete'
+                        ComentarioDocente.objects.filter(docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo).delete()
+            #
+            # ======================================================
+            # FIN DE LA CORRECCIÓN
+            # ======================================================
+
             messages.success(request, 'Cambios guardados: Notas, comentarios, actividades y logros.')
             return redirect('subir_notas', materia_id=materia.id)
 
+    # --- Lógica de Carga (GET) ---
+
     estudiante_ids = [m.estudiante_id for m in estudiantes_matriculados]
     periodo_ids = [p.id for p in periodos]
+
+    # Lógica de Notas (sin cambios, ya estaba correcta)
     notas_qs = Nota.objects.filter(
         estudiante_id__in=estudiante_ids,
         materia=materia,
         periodo_id__in=periodo_ids
     ).values('estudiante_id', 'periodo_id', 'numero_nota', 'valor')
+
     notas_data = {}
     for m in estudiantes_matriculados:
         notas_data[m.estudiante.id] = {'estudiante': m.estudiante, 'periodos': {p.id: {} for p in periodos}}
+
     for nota in notas_qs:
         estudiante_id = nota['estudiante_id']
         periodo_id = nota['periodo_id']
@@ -596,21 +746,57 @@ def subir_notas(request, materia_id):
         valor = nota['valor']
         if estudiante_id in notas_data and periodo_id in notas_data[estudiante_id]['periodos']:
             notas_data[estudiante_id]['periodos'][periodo_id][numero_nota] = valor
-    comentarios_data = {c.estudiante_id: c.comentario for c in ComentarioDocente.objects.filter(docente=request.user, materia=materia)}
+
+    # ======================================================
+    # INICIO DE LA CORRECCIÓN (Cargar Comentarios)
+    # ======================================================
+    #
+    # Reemplazamos la consulta simple por una consulta que
+    # carga todos los comentarios y los organiza en un
+    # diccionario anidado, igual que las notas.
+    #
+    comentarios_qs = ComentarioDocente.objects.filter(
+        docente=request.user,
+        materia=materia,
+        estudiante_id__in=estudiante_ids
+    ).select_related('periodo')
+
+    # Inicializamos: {estudiante_id: {periodo_id: "comentario", ...}}
+    comentarios_data = {}
+    for m in estudiantes_matriculados:
+        comentarios_data[m.estudiante.id] = {p.id: "" for p in periodos}
+
+    # Poblamos el diccionario con los comentarios que existen
+    for c in comentarios_qs:
+        if c.estudiante_id in comentarios_data and c.periodo_id in comentarios_data[c.estudiante_id]:
+            comentarios_data[c.estudiante_id][c.periodo.id] = c.comentario
+    #
+    # ======================================================
+    # FIN DE LA CORRECCIÓN
+    # ======================================================
+
+    # Lógica de Actividades y Logros (sin cambios)
     actividades_semanales_existentes = ActividadSemanal.objects.filter(curso=curso, materia=materia).order_by('-fecha_creacion')
     logros_existentes = LogroPeriodo.objects.filter(curso=curso, docente=request.user, materia=materia).order_by('periodo__id', '-fecha_creacion')
     logros_por_periodo = {}
     for logro in logros_existentes:
         logros_por_periodo.setdefault(logro.periodo.id, []).append({'id': logro.id, 'descripcion': logro.descripcion, 'periodo_id': logro.periodo.id})
+
+    # Contexto final
     context = {
         'materia': materia, 'curso': curso, 'estudiantes_matriculados': estudiantes_matriculados,
-        'periodos': periodos, 'notas_data': notas_data, 'comentarios_data': comentarios_data,
+        'periodos': periodos,
+        'notas_data': notas_data,
+        'comentarios_data': comentarios_data, # <--- 'comentarios_data' ahora está anidado
         'actividades_semanales': actividades_semanales_existentes,
         'logros_por_periodo': json.dumps(logros_por_periodo),
         'rango_notas': NUM_NOTAS, 'escala_min': ESCALA_MIN, 'escala_max': ESCALA_MAX, 'nota_aprobacion': NOTA_APROBACION,
         'grados': GRADOS_CHOICES, 'secciones': _secciones_disponibles()
     }
     return render(request, 'subir_notas.html', context)
+# ===================================================================
+# FIN DE LA FUNCIÓN CORREGIDA
+# ===================================================================
 
 @role_required('ADMINISTRADOR')
 def admin_dashboard(request):
@@ -937,7 +1123,7 @@ def gestionar_profesores(request):
                 messages.error(request, 'Esta asignación ya existe.')
             except Exception as e:
                 messages.error(request, f'Ocurrió un error: {e}')
-        return redirect('asignar_materia_docente')
+            return redirect('asignar_materia_docente')
 
     context = {
         'docentes': profesores,
@@ -1134,82 +1320,174 @@ def registrar_alumnos_masivo(request):
     return redirect('admin_dashboard')
 
 
+# ===================================================================
+# ===================================================================
+#
+# 🩺 INICIO DE LA CIRUGÍA: registrar_alumno_individual
+#
+# ===================================================================
+# ===================================================================
+
 @role_required('ADMINISTRADOR')
 @require_POST
 @csrf_protect
 def registrar_alumno_individual(request):
-    anio_escolar = request.POST.get('anio_escolar') or _anio_escolar_actual()
-    first_name = (request.POST.get('first_name') or "").strip()
-    last_name = (request.POST.get('last_name') or "").strip()
-    email = (request.POST.get('email') or "").strip()
+    """
+    Procesa el registro individual de un estudiante Y su acudiente,
+    replicando la lógica de seguridad y vinculación del registro masivo.
+    """
+
+    # --- 1. Obtención de Datos del Formulario ---
+    # Datos del Estudiante
+    est_username = (request.POST.get('username') or "").strip()
+    est_email = (request.POST.get('email') or "").strip().lower()
+    est_first = (request.POST.get('first_name') or "").strip().title()
+    est_last = (request.POST.get('last_name') or "").strip().title()
     curso_id = request.POST.get('curso_id')
-    # NUEVO: Obtener username explícito
-    username = (request.POST.get('username') or "").strip()
 
-    # Validación básica (incluyendo username)
-    if not all([username, first_name, last_name, email, curso_id]):
-        messages.error(request, 'Usuario, nombre, apellido, email y curso son obligatorios.')
-        return redirect('mostrar_registro_individual')
+    # Datos del Acudiente (Nuevos - del formulario actualizado)
+    acu_email = (request.POST.get('acudiente_email') or "").strip().lower()
+    acu_first = (request.POST.get('acudiente_first_name') or "").strip().title()
+    acu_last = (request.POST.get('acudiente_last_name') or "").strip().title()
+
+    # --- 2. Validación Rigurosa ---
     try:
-        validate_email(email)
-    except ValidationError:
-        messages.error(request, 'Email inválido.')
+        # Validar que todos los campos nuevos y viejos estén presentes
+        if not all([est_username, est_email, est_first, est_last, curso_id, acu_email, acu_first, acu_last]):
+            raise ValueError('Todos los campos (Estudiante y Acudiente) son obligatorios.')
+        
+        # Validar ambos emails
+        validate_email(est_email)
+        validate_email(acu_email)
+        
+        if est_email == acu_email:
+            raise ValueError("El email del estudiante y del acudiente no pueden ser el mismo.")
+
+        # Validar curso y obtener el año escolar desde el curso (más seguro)
+        curso = get_object_or_404(Curso, id=curso_id, activo=True)
+        anio_escolar = curso.anio_escolar
+
+        if _curso_esta_completo(curso):
+            raise ValueError(f'El curso {curso.nombre} está lleno.')
+
+    except (ValidationError, ValueError) as e:
+        messages.error(request, f'Error de validación: {e}')
+        return redirect('mostrar_registro_individual')
+    except Http404:
+        messages.error(request, 'El curso seleccionado no es válido o no está activo.')
         return redirect('mostrar_registro_individual')
 
+    # --- 3. Cirugía: Transacción Atómica (Como en el registro masivo) ---
     try:
         with transaction.atomic():
-            # Crear o obtener usuario
-            user, created = User.objects.get_or_create(
-                username=username, # Usar username explícito
+            
+            # --- A. Procesar Acudiente (Lógica de registro masivo) ---
+            # Usamos el email como identificador único para el acudiente
+            acudiente_user, created_acu_user = User.objects.get_or_create(
+                email=acu_email,
                 defaults={
-                    'email': email,
-                    'first_name': first_name,
-                    'last_name': last_name,
+                    'username': generar_username_unico(acu_first, acu_last), # de utils.py
+                    'first_name': acu_first,
+                    'last_name': acu_last
                 }
             )
-            if created:
-                user.set_password(DEFAULT_TEMP_PASSWORD)
-                user.save()
-                Perfil.objects.create(user=user, rol='ESTUDIANTE', requiere_cambio_clave=True)
-                messages.success(request, f'Alumno creado con usuario {username}. Contraseña temporal: {DEFAULT_TEMP_PASSWORD}')
+            
+            perfil_acudiente, created_perfil_acu = Perfil.objects.get_or_create(
+                user=acudiente_user, defaults={'rol': 'ACUDIENTE'}
+            )
+
+            # Asignar contraseña temporal y flag de cambio (Igual que en registro masivo)
+            if created_acu_user or created_perfil_acu or not perfil_acudiente.requiere_cambio_clave:
+                acudiente_user.set_password(DEFAULT_TEMP_PASSWORD)
+                acudiente_user.save()
+                perfil_acudiente.rol = 'ACUDIENTE'
+                perfil_acudiente.requiere_cambio_clave = True
+                perfil_acudiente.save(update_fields=['rol', 'requiere_cambio_clave'])
+                if created_acu_user:
+                    # ✅ Retroalimentación para el admin
+                    messages.info(request, f'Nuevo acudiente creado: {acudiente_user.username}. Contraseña: {DEFAULT_TEMP_PASSWORD}')
             else:
-                # Si el usuario ya existe, actualizamos sus datos (excepto username)
-                user.email = email
-                user.first_name = first_name
-                user.last_name = last_name
-                user.save(update_fields=['email', 'first_name', 'last_name'])
-                # Asegurarnos de que tenga perfil de estudiante
-                perfil, p_created = Perfil.objects.get_or_create(user=user, defaults={'rol': 'ESTUDIANTE'})
-                if not p_created and perfil.rol != 'ESTUDIANTE':
-                    perfil.rol = 'ESTUDIANTE'
-                    perfil.save(update_fields=['rol'])
-                messages.info(request, f'El alumno con usuario {username} ya existía. Sus datos han sido actualizados.')
+                perfil_acudiente.rol = 'ACUDIENTE'
+                perfil_acudiente.save(update_fields=['rol'])
+                # ✅ Retroalimentación para el admin
+                messages.info(request, f'Acudiente existente vinculado: {acudiente_user.username}.')
 
 
-            # Matrícula
-            curso = get_object_or_404(Curso, id=curso_id, activo=True)
-            if _curso_esta_completo(curso):
-                raise IntegrityError(f'El curso {curso} está lleno.')
+            # --- B. Procesar Estudiante (Lógica de registro individual) ---
+            # Usamos el username (del formulario) como identificador único
+            estudiante_user, created_est_user = User.objects.get_or_create(
+                username=est_username,
+                defaults={
+                    'email': est_email,
+                    'first_name': est_first,
+                    'last_name': est_last,
+                }
+            )
+            
+            if created_est_user:
+                estudiante_user.set_password(DEFAULT_TEMP_PASSWORD)
+                estudiante_user.save()
+                Perfil.objects.create(user=estudiante_user, rol='ESTUDIANTE', requiere_cambio_clave=True)
+                # ✅ Retroalimentación para el admin
+                messages.success(request, f'Estudiante creado: {est_username}. Contraseña: {DEFAULT_TEMP_PASSWORD}')
+            else:
+                # Si ya existía, actualizamos datos y perfil
+                estudiante_user.email = est_email
+                estudiante_user.first_name = est_first
+                estudiante_user.last_name = est_last
+                estudiante_user.save(update_fields=['email', 'first_name', 'last_name'])
+                
+                perfil_est, p_created = Perfil.objects.get_or_create(user=estudiante_user, defaults={'rol': 'ESTUDIANTE'})
+                if not p_created and perfil_est.rol != 'ESTUDIANTE':
+                    perfil_est.rol = 'ESTUDIANTE'
+                    perfil_est.save(update_fields=['rol'])
+                messages.info(request, f'Estudiante {est_username} ya existía. Sus datos han sido actualizados.')
 
+            # --- C. Vincular Acudiente y Estudiante (Lógica de registro masivo) ---
+            Acudiente.objects.update_or_create(
+                acudiente=acudiente_user,
+                estudiante=estudiante_user,
+                defaults={}
+            )
+
+            # --- D. Matricular Estudiante (Lógica de registro individual) ---
             Matricula.objects.update_or_create(
-                estudiante=user,
-                anio_escolar=curso.anio_escolar, # Usar el año del curso seleccionado
+                estudiante=estudiante_user,
+                anio_escolar=anio_escolar, # Usar el año del curso seleccionado
                 defaults={'curso': curso, 'activo': True}
             )
-            messages.success(request, f'Alumno matriculado/actualizado en {curso}.')
+            messages.success(request, f'Estudiante matriculado en {curso.nombre}.')
+
+            # ¡Éxito! Redirigir al dashboard de admin.
             return redirect('admin_dashboard')
 
+    # --- 4. Manejo de Errores (Como en el registro masivo) ---
     except IntegrityError as e:
-        # Captura error si el username ya existe pero con otro email (o viceversa)
-        if 'username' in str(e):
-             messages.error(request, f'El nombre de usuario "{username}" ya está en uso.')
+        if 'username' in str(e) and est_username in str(e):
+            messages.error(request, f'El nombre de usuario del estudiante "{est_username}" ya está en uso. Elige otro.')
+        elif 'email' in str(e):
+                if est_email in str(e):
+                    messages.error(request, f'El email de estudiante "{est_email}" ya está en uso.')
+                elif acu_email in str(e):
+                    messages.error(request, f'El email de acudiente "{acu_email}" ya está en uso y vinculado a otro usuario.')
+                else:
+                    messages.error(request, f'Error de email duplicado: {e}')
         else:
-             messages.error(request, f'Error al matricular. {e}')
+            messages.error(request, f'Error de integridad en la base de datos: {e}')
         return redirect('mostrar_registro_individual')
+        
     except Exception as e:
-        logger.exception("Error al registrar alumno individual: %s", e)
+        logger.exception(f"Error inesperado en registro individual: {e}")
         messages.error(request, f'Ocurrió un error inesperado: {e}')
         return redirect('mostrar_registro_individual')
+
+# ===================================================================
+# ===================================================================
+#
+# 🩺 FIN DE LA CIRUGÍA: registrar_alumno_individual
+#
+# ===================================================================
+# ===================================================================
 
 
 @role_required('ADMINISTRADOR')
@@ -1229,27 +1507,30 @@ def asignar_curso_estudiante(request):
     cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
 
     if request.method == 'POST':
-        estudiante_id = request.POST.get('estudiante')
-        curso_id = request.POST.get('curso')
+        # 🩺 CIRUGÍA B (admin_eliminar_estudiante) se ejecutará si se presiona el botón 'Eliminar'
+        # Esta parte maneja la asignación de curso (botón 'Asignar')
+        if 'estudiante' in request.POST and 'curso' in request.POST:
+            estudiante_id = request.POST.get('estudiante')
+            curso_id = request.POST.get('curso')
 
-        if not estudiante_id or not curso_id:
-            messages.error(request, 'Debes seleccionar tanto un estudiante como un curso.')
-            return redirect('asignar_curso_estudiante')
+            if not estudiante_id or not curso_id:
+                messages.error(request, 'Debes seleccionar tanto un estudiante como un curso.')
+                return redirect('asignar_curso_estudiante')
 
-        try:
-            estudiante = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE')
-            curso = get_object_or_404(Curso, id=curso_id, activo=True)
+            try:
+                estudiante = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE')
+                curso = get_object_or_404(Curso, id=curso_id, activo=True)
 
-            if _curso_esta_completo(curso):
-                messages.error(request, f'El curso {curso} está lleno.')
-            else:
-                Matricula.objects.update_or_create(
-                    estudiante=estudiante, anio_escolar=curso.anio_escolar,
-                    defaults={'curso': curso, 'activo': True}
-                )
-                messages.success(request, f'{estudiante.get_full_name() or estudiante.username} fue asignado a {curso}.')
-        except Exception as e:
-            messages.error(request, f"Ocurrió un error al procesar la asignación: {e}")
+                if _curso_esta_completo(curso):
+                    messages.error(request, f'El curso {curso} está lleno.')
+                else:
+                    Matricula.objects.update_or_create(
+                        estudiante=estudiante, anio_escolar=curso.anio_escolar,
+                        defaults={'curso': curso, 'activo': True}
+                    )
+                    messages.success(request, f'{estudiante.get_full_name() or estudiante.username} fue asignado a {curso}.')
+            except Exception as e:
+                messages.error(request, f"Ocurrió un error al procesar la asignación: {e}")
 
         return redirect('asignar_curso_estudiante')
 
@@ -1273,15 +1554,23 @@ def asignar_curso_estudiante(request):
         estudiante = matricula.estudiante
         acudiente = acudiente_map.get(estudiante.id)
 
+        # ===================================================================
+        # 🩺 INICIO DE CIRUGÍA: Añadir 'acudiente_username' al contexto
+        # ===================================================================
         estudiantes_con_curso.append({
             'user': estudiante,
             'curso': matricula.curso,
             'rol': 'Estudiante',
-            'acudiente_nombre': acudiente.get_full_name() if acudiente else "Sin asignar"
+            'acudiente_nombre': acudiente.get_full_name() if acudiente else "Sin asignar",
+            'acudiente_username': acudiente.username if acudiente else "-", # 👈 LÍNEA AÑADIDA
+            'matricula': matricula
         })
+        # ===================================================================
+        # 🩺 FIN DE CIRUGÍA
+        # ===================================================================
 
-    # Para el menú desplegable, obtenemos todos los estudiantes sin importar si tienen matrícula
-    todos_los_estudiantes = User.objects.filter(perfil__rol='ESTUDIANTE').order_by('last_name')
+    # Para el menú desplegable, obtenemos todos los estudiantes ACTIVOS sin importar si tienen matrícula
+    todos_los_estudiantes = User.objects.filter(perfil__rol='ESTUDIANTE', is_active=True).order_by('last_name')
 
     context = {
         'todos_los_estudiantes': todos_los_estudiantes, # Para el menú desplegable de asignación
@@ -1294,6 +1583,129 @@ def asignar_curso_estudiante(request):
 # ########################################################################## #
 # ############### FIN DEL BLOQUE DE CÓDIGO CORREGIDO ######################### #
 # ########################################################################## #
+
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA B: Vista de "Retiro" Profesional (AÑADIDA)
+# (Plan )
+# ===================================================================
+@role_required('ADMINISTRADOR')
+@require_POST
+@csrf_protect
+def admin_eliminar_estudiante(request):
+    """
+    "Retira" a un estudiante (Soft Delete) y archiva sus boletines.
+    1. Genera un boletín por CADA AÑO (matrícula) cursado.
+    2. Guarda los PDFs en BoletinArchivado.
+    3. Desactiva al Estudiante (User.is_active = False).
+    4. Desactiva al Acudiente (si queda huérfano).
+    """
+    estudiante_id = request.POST.get('estudiante_id')
+    if not estudiante_id:
+        messages.error(request, "No se proporcionó un ID de estudiante.")
+        return redirect('asignar_curso_estudiante')
+
+    try:
+        estudiante_a_retirar = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE', is_active=True)
+        estudiante_nombre = estudiante_a_retirar.get_full_name() or estudiante_a_retirar.username
+
+        # 2. Encontrar TODAS sus matrículas (pasadas y presente)
+        todas_las_matriculas = Matricula.objects.filter(
+            estudiante=estudiante_a_retirar
+        ).select_related('curso').order_by('anio_escolar')
+
+        if not todas_las_matriculas.exists():
+            messages.warning(request, f"El estudiante {estudiante_nombre} no tiene matrículas. Se procederá a desactivar.")
+
+        boletines_generados = 0
+        boletines_fallidos = 0
+
+        # Usamos una transacción para todo el proceso de retiro
+        with transaction.atomic():
+
+            # --- 3. Generación de Boletines Históricos ---
+            for matricula in todas_las_matriculas:
+                try:
+                    # Usamos el service refactorizado para obtener el contexto de CADA matrícula
+                    contexto_historico = get_student_report_context(matricula.id)
+
+                    if not contexto_historico:
+                        logger.warning(f"No se pudo obtener contexto para {estudiante_nombre} en {matricula.anio_escolar}. Omitiendo boletín.")
+                        boletines_fallidos += 1
+                        continue
+
+                    # (Re-usamos la lógica de _generar_boletin_pdf_logica pero sin la respuesta HTTP)
+                    contexto_historico['request'] = request
+                    html_string = render_to_string('pdf/boletin_template.html', contexto_historico)
+                    base_url = request.build_absolute_uri('/')
+                    pdf_content = HTML(string=html_string, base_url=base_url).write_pdf()
+
+                    pdf_file = ContentFile(pdf_content, name=f"boletin_{estudiante_nombre}_{matricula.anio_escolar}.pdf")
+
+                    curso_obj = contexto_historico.get('curso')
+
+                    # Guardar en el modelo BoletinArchivado
+                    BoletinArchivado.objects.create(
+                        nombre_estudiante=estudiante_nombre,
+                        username_estudiante=estudiante_a_retirar.username,
+                        grado_archivado=curso_obj.grado,
+                        seccion_archivada=curso_obj.seccion,
+                        anio_lectivo_archivado=curso_obj.anio_escolar,
+                        eliminado_por=request.user,
+                        archivo_pdf=pdf_file
+                    )
+                    boletines_generados += 1
+
+                except Exception as e:
+                    logger.exception(f"Fallo al generar boletín histórico para {estudiante_nombre} (Año: {matricula.anio_escolar}): {e}")
+                    boletines_fallidos += 1
+
+            # --- 4. Desactivación (Retiro) ---
+
+            # Desactivar todas las matrículas
+            todas_las_matriculas.update(activo=False)
+
+            # Desactivar el usuario Estudiante (Soft Delete)
+            estudiante_a_retirar.is_active = False
+            estudiante_a_retirar.save(update_fields=['is_active'])
+
+            # Desactivar Acudiente (si queda huérfano)
+            acudientes_retirados_nombres = []
+            vinculos = Acudiente.objects.filter(estudiante=estudiante_a_retirar).select_related('acudiente')
+            acudiente_users_a_revisar = [v.acudiente for v in vinculos]
+
+            for acudiente_user in acudiente_users_a_revisar:
+                # Revisar si el acudiente tiene OTROS estudiantes *ACTIVOS*
+                if not Matricula.objects.filter(
+                    estudiante__acudientes_asignados__acudiente=acudiente_user,
+                    activo=True
+                ).exists():
+                    # Si no tiene más estudiantes ACTIVOS, desactivamos al acudiente
+                    acudiente_nombre = acudiente_user.get_full_name() or acudiente_user.username
+                    acudiente_user.is_active = False
+                    acudiente_user.save(update_fields=['is_active'])
+                    acudientes_retirados_nombres.append(acudiente_nombre)
+
+            # 5. Mensajes de Éxito
+            messages.success(request, f"Estudiante '{estudiante_nombre}' retirado y movido a 'Ex Alumnos' exitosamente.")
+            if boletines_generados > 0:
+                messages.info(request, f"Se generaron y archivaron {boletines_generados} boletines de respaldo (uno por año cursado).")
+            if boletines_fallidos > 0:
+                messages.warning(request, f"Falló la generación de {boletines_fallidos} boletines históricos (revisar logs).")
+            if acudientes_retirados_nombres:
+                messages.info(request, f"Acudientes retirados (por no tener más estudiantes activos): {', '.join(acudientes_retirados_nombres)}")
+
+    except Http404:
+        messages.error(request, "El estudiante seleccionado no existe o ya no está activo.")
+    except Exception as e:
+        logger.exception(f"Error al retirar estudiante {estudiante_id}: {e}")
+        messages.error(request, f"Ocurrió un error inesperado al retirar al estudiante: {e}")
+
+    return redirect('asignar_curso_estudiante')
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA B
+# ===================================================================
+
 
 @role_required('ADMINISTRADOR')
 def asignar_materia_docente(request):
@@ -1322,38 +1734,52 @@ def asignar_materia_docente(request):
                     else:
                         messages.info(request, f'La materia "{nombre}" ya existía para el curso {curso_obj}.')
                 except IntegrityError:
-                     messages.error(request, f'Ya existe una materia con el nombre "{nombre}" en ese curso.')
+                    messages.error(request, f'Ya existe una materia con el nombre "{nombre}" en ese curso.')
                 except Exception as e:
-                     messages.error(request, f'Ocurrió un error: {e}')
+                    messages.error(request, f'Ocurrió un error: {e}')
             else:
                 messages.error(request, "Nombre de materia y curso son obligatorios.")
 
         elif 'asignar_docente' in request.POST:
             materia_id = request.POST.get('materia_id')
             docente_id = request.POST.get('docente_id')
-            curso_id = request.POST.get('curso_id') # Este viene del selector de curso en la sección de asignación
+            
+            # 🚨 INICIO DE LA CORRECCIÓN 🚨
+            # Eliminamos la variable 'curso_id' que viene del formulario,
+            # ya que estaba causando el conflicto de validación.
+            # curso_id = request.POST.get('curso_id') # <-- LÍNEA ELIMINADA
+
             try:
                 materia_obj = get_object_or_404(Materia, id=materia_id)
                 docente_obj = get_object_or_404(User, id=docente_id)
-                # Validamos que el curso seleccionado coincida con el curso de la materia
-                if materia_obj.curso_id != int(curso_id):
-                     messages.error(request, f"La materia '{materia_obj.nombre}' no pertenece al curso seleccionado.")
-                     return redirect('asignar_materia_docente')
 
-                curso_obj = get_object_or_404(Curso, id=curso_id)
+                # Obtenemos el curso correcto DIRECTAMENTE desde la materia seleccionada.
+                curso_obj = materia_obj.curso
+                
+                # Ya no necesitamos la validación, porque el curso
+                # SIEMPRE coincidirá con la materia.
+                # if materia_obj.curso_id != int(curso_id): # <-- BLOQUE ELIMINADO
 
+                # Esta lógica (que corregimos la vez anterior) ahora funcionará
+                # porque 'curso_obj' es el correcto.
                 AsignacionMateria.objects.update_or_create(
                     materia=materia_obj,
                     curso=curso_obj,
-                    docente=docente_obj, # El docente es el identificador único aquí
-                    defaults={'activo': True} # Aseguramos que esté activa
+                    defaults={
+                        'docente': docente_obj, 
+                        'activo': True
+                    }
                 )
+                
                 messages.success(request, f'Materia "{materia_obj.nombre}" asignada a {docente_obj.get_full_name()} en el curso {curso_obj}.')
             except IntegrityError:
                 messages.error(request, 'Esta asignación ya existe.')
             except Exception as e:
+                logger.error(f"Error en asignar_materia_docente: {e}") # Añadido para mejor depuración
                 messages.error(request, f'Ocurrió un error al asignar la materia: {e}')
-
+            
+            # 🚨 FIN DE LA CORRECCIÓN 🚨
+            
         return redirect('asignar_materia_docente')
 
     context = {
@@ -1362,7 +1788,9 @@ def asignar_materia_docente(request):
         'materias': materias,
         'asignaciones': asignaciones
     }
-    return render(request, 'admin/asignar_materias_docentes.html', context)
+    
+    # Esta ruta de plantilla es correcta según tu primer archivo
+    return render(request, 'admin/asignar_materia_docente.html', context)
 
 
 @role_required('ADMINISTRADOR')
@@ -1712,7 +2140,7 @@ def admin_db_visual(request):
     """
     Prepara y ordena los datos de estudiantes/acudientes por curso.
     """
-    # 1. ESTUDIANTES Y ACUDIENTES (AGRUPADOS POR CURSO)
+    # 1. ESTUDIANTES E ACUDIENTES (AGRUPADOS POR CURSO)
     # Consulta para cursos activos, ordenados por jerarquía académica.
     cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
 
@@ -1792,3 +2220,215 @@ def admin_db_visual(request):
     }
 
     return render(request, 'admin/db_visual.html', context)
+
+
+# ===================================================================
+# INICIO FASE 3: VISTAS DE GENERACIÓN DE BOLETINES (AÑADIDAS)
+# ===================================================================
+
+# ===================================================================
+# 🩺 CIRUGÍA A: (REEMPLAZO) LÓGICA DE PDF REFACTORIZADA 
+# ===================================================================
+
+def _generar_boletin_pdf_logica(request, matricula_id: int):
+    """
+    Función interna que contiene la lógica de renderizado de PDF
+    para una MATRÍCULA específica.
+    """
+    if HTML is None:
+        raise Exception("El módulo de generación de PDF (WeasyPrint) no está instalado.")
+
+    # Llama al service refactorizado con el ID de la matrícula
+    context = get_student_report_context(matricula_id)
+    if not context:
+        raise Http404(f"No se encontró contexto para la matrícula_id: {matricula_id}")
+
+    context['request'] = request
+
+    html_string = render_to_string('pdf/boletin_template.html', context)
+
+    # WeasyPrint necesita una base_url para encontrar archivos estáticos (CSS, logo)
+    base_url = request.build_absolute_uri('/')
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    # 'inline' abre el PDF en el navegador, 'attachment' lo descarga
+    response['Content-Disposition'] = f'inline; filename="boletin_{context["estudiante"].username}_{context["curso"].anio_escolar}.pdf"'
+    return response
+
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA A
+# ===================================================================
+
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA C: (REEMPLAZO) Vistas de PDF actualizadas 
+# ===================================================================
+
+@login_required
+@role_required('ADMINISTRADOR')
+def generar_boletin_pdf_admin(request, estudiante_id):
+    """
+    Vista para que el Administrador genere un boletín en PDF.
+    (Versión modificada que usa la matrícula ACTIVA)
+    """
+    try:
+        # Encontrar la matrícula ACTIVA de este estudiante
+        matricula = get_object_or_404(Matricula, estudiante_id=estudiante_id, activo=True)
+        return _generar_boletin_pdf_logica(request, matricula.id) # 👈 Pasa el matricula_id
+
+    except Exception as e:
+        logger.exception(f"Error al generar boletín PDF (Admin) para estudiante {estudiante_id}: {e}")
+        messages.error(request, f"No se pudo generar el boletín. Error: {e}")
+        return redirect('admin_dashboard') # Redirige a un lugar seguro
+
+
+@login_required
+@role_required('ACUDIENTE')
+def generar_boletin_pdf_acudiente(request, estudiante_id):
+    """
+    Vista para que el Acudiente genere un boletín.
+    Verifica el permiso en la matrícula.
+    (Versión modificada que usa la matrícula ACTIVA)
+    """
+    
+    # 1. Verificar que el acudiente tiene permiso sobre este estudiante
+    try:
+        vinculo = Acudiente.objects.get(acudiente=request.user, estudiante_id=estudiante_id)
+    except Acudiente.DoesNotExist:
+        messages.error(request, "No tienes permisos para ver el boletín de este estudiante.")
+        return redirect('dashboard_acudiente')
+
+    # 2. Verificar si la matrícula existe y tiene el permiso activado
+    matricula = Matricula.objects.filter(estudiante=vinculo.estudiante, activo=True).first()
+    
+    if not matricula:
+        messages.error(request, "El estudiante no tiene una matrícula activa.")
+        return redirect('dashboard_acudiente')
+
+    if not matricula.puede_generar_boletin:
+        messages.warning(request, "La generación del boletín no está habilitada. Por favor, contacta a la administración.")
+        return redirect('dashboard_acudiente')
+
+    # 3. Si todo es correcto, llama a la LÓGICA INTERNA
+    try:
+        return _generar_boletin_pdf_logica(request, matricula.id) # 👈 Pasa el matricula_id
+        
+    except Exception as e:
+        # 4. Si falla, registra el error y redirige al dashboard de ACUDIENTE
+        logger.exception(f"Error al generar boletín PDF (Acudiente) para estudiante {estudiante_id}: {e}")
+        messages.error(request, f"No se pudo generar el boletín. Error: {e}")
+        return redirect('dashboard_acudiente')
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA C
+# ===================================================================
+
+
+@login_required
+@role_required('ADMINISTRADOR')
+@require_POST
+@csrf_protect
+def toggle_boletin_permiso(request):
+    """
+    Vista API (JSON) para activar/desactivar el permiso de boletín
+    desde el panel de administración.
+    """
+    try:
+        # Leemos el JSON enviado por Fetch
+        data = json.loads(request.body)
+        estudiante_id = data.get('estudiante_id')
+        nuevo_estado = bool(data.get('estado'))
+        
+        matricula = Matricula.objects.filter(estudiante_id=estudiante_id, activo=True).first()
+        
+        if not matricula:
+            return JsonResponse({'status': 'error', 'message': 'Matrícula no encontrada'}, status=404)
+            
+        matricula.puede_generar_boletin = nuevo_estado
+        matricula.save(update_fields=['puede_generar_boletin'])
+        
+        return JsonResponse({
+            'status': 'ok', 
+            'nuevo_estado_texto': 'Disponible' if nuevo_estado else 'Bloqueado'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Solicitud inválida (JSON)'}, status=400)
+    except Exception as e:
+        # Usamos logger para registrar el error real en el servidor
+        logger.exception(f"Error en toggle_boletin_permiso: {e}")
+        # Enviamos un mensaje genérico al cliente
+        return JsonResponse({'status': 'error', 'message': 'Error interno del servidor'}, status=500)
+# ===================================================================
+# FIN FASE 3
+# ===================================================================
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA: PASO 3 (Plan 6 Pasos) 
+# (Añadido en el paso anterior )
+# ===================================================================
+
+@login_required
+@role_required('ADMINISTRADOR')
+def admin_ex_estudiantes(request):
+    """
+    Vista para que el Administrador vea, filtre y descargue
+    los boletines de los estudiantes retirados (Exalumnos).
+    """
+    
+    # 1. Obtener todos los boletines, optimizados con 'select_related'
+    #    para traer los datos del admin que eliminó 
+    boletines_list = BoletinArchivado.objects.select_related('eliminado_por').all()
+
+    # 2. Aplicar filtros de búsqueda (GET params) 
+    query = request.GET.get('q', '').strip()
+    grado_filtro = request.GET.get('grado', '').strip()
+    anio_filtro = request.GET.get('anio', '').strip()
+
+    if query:
+        # Búsqueda por nombre o username
+        boletines_list = boletines_list.filter(
+            Q(nombre_estudiante__icontains=query) |
+            Q(username_estudiante__icontains=query)
+        )
+    
+    if grado_filtro:
+        boletines_list = boletines_list.filter(grado_archivado=grado_filtro)
+        
+    if anio_filtro:
+        boletines_list = boletines_list.filter(anio_lectivo_archivado=anio_filtro)
+
+    # 3. Obtener los valores únicos para los menús desplegables de filtro
+    #    Optimizamos esto para que solo consulte los valores distintos
+    anios_disponibles = BoletinArchivado.objects.order_by('-anio_lectivo_archivado') \
+                                              .values_list('anio_lectivo_archivado', flat=True).distinct()
+    
+    # Usamos los GRADOS_CHOICES para los grados
+    grados_disponibles = GRADOS_CHOICES
+
+    # 4. Paginación (Escalabilidad) 
+    #    Mostramos 25 resultados por página
+    paginator = Paginator(boletines_list, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'total_boletines': paginator.count,
+        
+        # Valores para los filtros
+        'anios_disponibles': anios_disponibles,
+        'grados_disponibles': grados_disponibles,
+        
+        # Valores actuales para mantenerlos en el formulario
+        'current_q': query,
+        'current_grado': grado_filtro,
+        'current_anio': anio_filtro,
+    }
+    
+    # Usaremos una nueva plantilla que crearemos en el Paso 5
+    return render(request, 'admin/ex_estudiantes.html', context)
+
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA: PASO 3
+# ===================================================================

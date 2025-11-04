@@ -77,6 +77,7 @@
                 <thead>
                     <tr>
                         <th>Docente</th>
+                        <th>Usuario</th>
                         <th>Materia</th>
                         <th>Curso</th>
                     </tr>
@@ -85,13 +86,14 @@
                     {% for asignacion in asignaciones %}
                     <tr>
                         <td>{{ asignacion.docente.get_full_name|default:asignacion.docente.username }}</td>
+                        <td><code>{{ asignacion.docente.username }}</code></td>
                         <td>{{ asignacion.materia.nombre }}</td>
                         <td>{{ asignacion.curso.nombre }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" class="text-center">No hay asignaciones de materias registradas.</td>
-                    </tr>
+                        <td colspan="4" class="text-center">No hay asignaciones de materias registradas.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>

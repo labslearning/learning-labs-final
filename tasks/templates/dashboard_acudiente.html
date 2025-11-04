@@ -103,6 +103,20 @@ body {
                      id="content-{{ data.estudiante.id }}" role="tabpanel"
                      aria-labelledby="tab-{{ data.estudiante.id }}">
 
+                    <div class="text-end mb-3 border-bottom pb-3">
+                        
+                        {% if data.matricula and data.matricula.puede_generar_boletin %}
+                            
+                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
+                                <i class="fas fa-file-pdf me-2"></i>Generar Boletín
+                            </a>
+                        {% else %}
+                            
+                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada para este estudiante. Por favor, contacte a la administración.">
+                                <i class="fas fa-file-pdf me-2"></i>Generar Boletín (Desactivado)
+                            </button>
+                        {% endif %}
+                    </div>
                     {# Solo muestra este encabezado si hay MÁS de un estudiante (ya que el general ya da el contexto si es solo uno) #}
                     {% if estudiantes_data|length > 1 %}
                     <div class="student-report-header mb-4 p-3 rounded" style="background-color: var(--edu-acudiente-primary-light);">

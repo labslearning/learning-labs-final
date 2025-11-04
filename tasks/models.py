@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.conf import settings
+import os # <-- 🩺 CIRUGÍA: Importación añadida para la ruta del archivo
 
 # Constantes para definir los grados y roles, centralizados para evitar duplicación.
 GRADOS_CHOICES = (
@@ -78,10 +79,41 @@ class Curso(models.Model):
         ordering = ['grado', 'seccion']
 
     def __str__(self):
-        return f"{self.get_grado_display()}° {self.seccion} - {self.anio_escolar}"
+        # Corregido para manejar 'get_grado_display' que devuelve el nombre completo
+        return f"{self.get_grado_display()} {self.seccion} - {self.anio_escolar}"
 
     def esta_completo(self):
         return self.matriculados.filter(activo=True).count() >= self.capacidad_maxima
+
+
+# ===================================================================
+# 1. AÑADIDO: MODELO 'INSTITUCION'
+# ===================================================================
+class Institucion(models.Model):
+    """
+    Almacena la información de la institución para los encabezados del boletín.
+    """
+    nombre = models.CharField(max_length=150)
+    logo = models.ImageField(upload_to="logos_institucion/", null=True, blank=True)
+    direccion = models.CharField(max_length=150)
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+    correo = models.EmailField(blank=True, null=True)
+    nit = models.CharField(max_length=50, blank=True, null=True)
+    ciudad = models.CharField(max_length=100, blank=True, null=True)
+    departamento = models.CharField(max_length=100, blank=True, null=True)
+    resolucion = models.CharField(max_length=200, blank=True, null=True)
+    lema = models.CharField(max_length=200, blank=True, null=True)
+    anio_lectivo = models.CharField(max_length=10, default="2025")
+
+    class Meta:
+        verbose_name = "Institución"
+        verbose_name_plural = "Información Institucional"
+
+    def __str__(self):
+        return self.nombre
+# ===================================================================
+# FIN DEL MODELO 'INSTITUCION'
+# ===================================================================
 
 
 class Materia(models.Model):
@@ -144,6 +176,9 @@ class Nota(models.Model):
         return f'Nota {self.numero_nota} de {self.estudiante.username} en {self.materia.nombre} ({self.valor})'
 
 
+# ===================================================================
+# INICIO DE LA CORRECCIÓN
+# ===================================================================
 class ComentarioDocente(models.Model):
     """
     Permite a los docentes dejar comentarios para los estudiantes.
@@ -154,14 +189,26 @@ class ComentarioDocente(models.Model):
     comentario = models.TextField(verbose_name='Comentario')
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Creación')
   
+    # --- CAMPO AÑADIDO ---
+    periodo = models.ForeignKey(Periodo, on_delete=models.CASCADE, null=True, blank=True)
+    # --- FIN DEL CAMPO AÑADIDO ---
+
     class Meta:
         verbose_name = 'Comentario del Docente'
         verbose_name_plural = 'Comentarios de los Docentes'
-        unique_together = ('docente', 'estudiante', 'materia')
+        # --- RESTRICCIÓN MODIFICADA ---
+        unique_together = ('docente', 'estudiante', 'materia', 'periodo')
+        # --- FIN DE LA MODIFICACIÓN ---
         ordering = ['-fecha_creacion']
 
     def __str__(self):
-        return f"Comentario de {self.docente.username} para {self.estudiante.username} en {self.materia.nombre}"
+        # --- MÉTODO __STR__ MODIFICADO ---
+        if self.periodo:
+            return f"Comentario de {self.docente.username} para {self.estudiante.username} en {self.materia.nombre} ({self.periodo.nombre})"
+        return f"Comentario de {self.docente.username} para {self.estudiante.username} en {self.materia.nombre} (Sin periodo)"
+# ===================================================================
+# FIN DE LA CORRECCIÓN
+# ===================================================================
 
 
 class Matricula(models.Model):
@@ -173,6 +220,18 @@ class Matricula(models.Model):
     anio_escolar = models.CharField(max_length=9, default='2025-2026', verbose_name='Año Escolar')
     fecha_matricula = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Matrícula')
     activo = models.BooleanField(default=True)
+
+    # ===================================================================
+    # 2. AÑADIDO: CAMPO 'puede_generar_boletin'
+    # ===================================================================
+    puede_generar_boletin = models.BooleanField(
+        default=True,
+        verbose_name="Acudiente puede generar boletín",
+        help_text="Si está desactivado, el acudiente no podrá generar boletín desde su panel."
+    )
+    # ===================================================================
+    # FIN DEL CAMPO AÑADIDO
+    # ===================================================================
 
     class Meta:
         unique_together = ['estudiante', 'anio_escolar']
@@ -390,3 +449,93 @@ class Convivencia(models.Model):
 
     def __str__(self):
         return f"Convivencia de {self.estudiante.username} en {self.curso.nombre} ({self.periodo.nombre})"
+
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA: PASO 1 (Añadido al final)
+# ===================================================================
+
+def ruta_archivo_boletin(instance, filename):
+    """
+    Genera una ruta de archivo organizada para los boletines archivados:
+    media/boletines_archivados/AÑO_LECTIVO/GRADO/archivo.pdf
+    """
+    # Normaliza el nombre del grado para usarlo en la ruta
+    grado_folder = instance.grado_archivado.replace(' ', '_').lower()
+    anio_folder = instance.anio_lectivo_archivado.replace('-', '_')
+    
+    # Limpia el nombre de usuario para que sea seguro
+    username_limpio = "".join(c for c in instance.username_estudiante if c.isalnum() or c in ('-', '_')).rstrip()
+    
+    # Asegura un nombre de archivo único
+    filename = f"boletin_{username_limpio}_{anio_folder}.pdf"
+    
+    return os.path.join('boletines_archivados', anio_folder, grado_folder, filename)
+
+class BoletinArchivado(models.Model):
+    """
+    Almacena el PDF de un boletín generado en el momento en que
+    un estudiante es "retirado" (Soft Delete).
+    Guarda una copia por cada año que el estudiante cursó.
+    """
+    # Datos para búsqueda y filtrado
+    nombre_estudiante = models.CharField(
+        max_length=255, 
+        db_index=True, 
+        help_text="Nombre completo del estudiante al momento del retiro."
+    )
+    username_estudiante = models.CharField(
+        max_length=150, 
+        db_index=True, 
+        help_text="Username (documento) del estudiante para referencia."
+    )
+    grado_archivado = models.CharField(
+        max_length=20, 
+        choices=GRADOS_CHOICES, 
+        db_index=True,
+        help_text="El grado que cursaba el estudiante en este boletín."
+    )
+    seccion_archivada = models.CharField(
+        max_length=100, 
+        help_text="La sección (ej. 'A') que cursaba."
+    )
+    anio_lectivo_archivado = models.CharField(
+        max_length=9, 
+        db_index=True, 
+        help_text="El año escolar de este boletín (ej. '2024-2025')."
+    )
+    
+    # Datos de auditoría
+    fecha_eliminado = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Fecha y hora en que se generó este archivo (retiro)."
+    )
+    eliminado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='boletines_archivados_por_mi',
+        help_text="Administrador que realizó el retiro."
+    )
+    
+    # El archivo PDF
+    archivo_pdf = models.FileField(
+        upload_to=ruta_archivo_boletin,
+        help_text="El archivo PDF del boletín."
+    )
+
+    class Meta:
+        verbose_name = "Boletín Archivado (Exalumno)"
+        verbose_name_plural = "Boletines Archivados (Exalumnos)"
+        ordering = ['-anio_lectivo_archivado', 'grado_archivado', 'nombre_estudiante']
+        # Asegura que no podamos archivar dos veces el boletín
+        # del mismo estudiante para el mismo año.
+        unique_together = ('username_estudiante', 'anio_lectivo_archivado')
+
+    def __str__(self):
+        return f"Boletín de {self.nombre_estudiante} ({self.anio_lectivo_archivado})"
+
+# ===================================================================
+# 🩺 FIN DE CIRUGÍA: PASO 1
+# ===================================================================

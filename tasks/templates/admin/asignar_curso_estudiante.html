@@ -39,29 +39,58 @@
     <thead>
         <tr>
             <th>Estudiante</th>
-            <th>Usuario</th>
+            <th>Usuario (Est.)</th>
             <th>Acudiente</th>
+            <th>Usuario (Acud.)</th>
             <th>Curso Actual</th>
             <th>Rol</th>
+            <th>Boletín (PDF)</th> 
+            <th>Acceso Acudiente</th>
+            <th class="text-center">Acciones</th>
         </tr>
     </thead>
     <tbody>
         {% for item in estudiantes_con_curso %}
         <tr>
-            {# Mostramos el nombre completo #}
             <td>{{ item.user.get_full_name|default:item.user.username }}</td>
-            {# Nueva columna para el nombre de usuario #}
-            <td>{{ item.user.username }}</td>
-            {# Nueva columna para el nombre del acudiente #}
+            <td><code>{{ item.user.username }}</code></td> {# 👈 Añadí <code> para consistencia #}
             <td>{{ item.acudiente_nombre }}</td>
-            {# Mostramos el curso #}
+            <td><code>{{ item.acudiente_username }}</code></td>
             <td>{{ item.curso.nombre|default:"Sin asignar" }}</td>
             <td>{{ item.rol }}</td>
+            <td>
+                <a href="{% url 'panel_generar_boletin' item.user.id %}" class="btn btn-sm btn-info" target="_blank" title="Generar PDF">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
+                </td>
+            <td>
+                {% if item.matricula %}
+                <div class="form-check form-switch">
+                    <input class="form-check-input toggle-boletin" type="checkbox" 
+                           data-estudiante-id="{{ item.user.id }}" 
+                           {% if item.matricula.puede_generar_boletin %}checked{% endif %}>
+                    <label class="form-check-label small" id="label-boletin-{{ item.user.id }}">
+                        {% if item.matricula.puede_generar_boletin %}Disponible{% else %}Bloqueado{% endif %}
+                    </label>
+                </div>
+                {% else %}
+                <span class="badge bg-secondary">Sin Matrícula</span>
+                {% endif %}
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger btn-retirar"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalRetirarEstudiante"
+                        data-estudiante-id="{{ item.user.id }}"
+                        data-estudiante-nombre="{{ item.user.get_full_name|default:item.user.username }}">
+                    <i class="fas fa-user-minus me-1"></i> Retirar
+                </button>
+            </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="text-center">No hay estudiantes matriculados para mostrar.</td>
-        </tr>
+            <td colspan="9" class="text-center">No hay estudiantes matriculados para mostrar.</td>
+            </tr>
         {% endfor %}
     </tbody>
     </table>
@@ -72,4 +101,120 @@
 </div>
 </div>
 </div>
+
+
+<div class="modal fade" id="modalRetirarEstudiante" tabindex="-1" aria-labelledby="modalRetirarLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="modalRetirarLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Retiro de Estudiante
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Estás a punto de **retirar** (desactivar) al estudiante:</p>
+        <h4 class="text-center fw-bold" id="nombreEstudianteModal"></h4>
+        
+        <div class="alert alert-warning mt-3">
+            <strong>¡Esto es un "Borrado Suave" profesional!</strong>
+            <ul class="mb-0 mt-2">
+                <li>El estudiante será movido al archivo de "Ex Alumnos".</li>
+                <li>Se generará un **respaldo en PDF** de su boletín por cada año cursado.</li>
+                <li>Su cuenta y la de su acudiente (si no tiene más estudiantes) serán desactivadas.</li>
+            </ul>
+        </div>
+        <p class="mt-3">¿Estás seguro de que deseas continuar?</p>
+        </div>
+      <div class="modal-footer">
+        <form method="POST" action="{% url 'panel_eliminar_estudiante' %}">
+        {% csrf_token %}
+            <input type="hidden" name="estudiante_id" id="idEstudianteRetirar">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger">Sí, Retirar Estudiante</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Lógica de Toggle (Existente) ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    const toggles = document.querySelectorAll('.toggle-boletin');
+    
+    toggles.forEach(switchEl => {
+        switchEl.addEventListener('change', async function(e) {
+            const estudianteId = e.target.dataset.estudianteId;
+            const nuevoEstado = e.target.checked;
+            const label = document.getElementById(`label-boletin-${estudianteId}`);
+            
+            label.textContent = 'Actualizando...';
+            
+            try {
+                const response = await fetch(`{% url 'panel_api_toggle_boletin_permiso' %}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        'estudiante_id': estudianteId,
+                        'estado': nuevoEstado
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'ok') {
+                    label.textContent = data.nuevo_estado_texto;
+                } else {
+                    e.target.checked = !nuevoEstado;
+                    label.textContent = nuevoEstado ? 'Bloqueado' : 'Disponible';
+                    alert('Error: ' + (data.message || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error en fetch:', error);
+                e.target.checked = !nuevoEstado;
+                label.textContent = nuevoEstado ? 'Bloqueado' : 'Disponible';
+                alert('Error de conexión al actualizar el permiso.');
+            }
+        });
+    });
+
+    // --- Lógica de Modal de Retiro (Nueva) ---
+    const modalRetirarEstudiante = document.getElementById('modalRetirarEstudiante');
+    if (modalRetirarEstudiante) {
+        modalRetirarEstudiante.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const estudianteId = button.dataset.estudianteId;
+            const estudianteNombre = button.dataset.estudianteNombre;
+            
+            const modalNombre = modalRetirarEstudiante.querySelector('#nombreEstudianteModal');
+            const modalInputId = modalRetirarEstudiante.querySelector('#idEstudianteRetirar');
+            
+            modalNombre.textContent = estudianteNombre;
+            modalInputId.value = estudianteId;
+        });
+    }
+
+});
+</script>
+
 {% endblock %}

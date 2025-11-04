@@ -1,5 +1,5 @@
 # ===================================================================
-# tasks/admin.py (COMPLETO Y CORREGIDO)
+# tasks/admin.py (COMPLETO Y CORREGIDO + Institucion)
 # ===================================================================
 
 """
@@ -26,7 +26,8 @@ from .models import (
     ActividadSemanal,
     LogroPeriodo,
     Convivencia,
-    Acudiente,  # AÑADIDO: Se importa el nuevo modelo
+    Acudiente,
+    Institucion,  # <-- 1. AÑADIDO SEGÚN EL PLAN
     # Task,    # Descomenta esta línea si tienes un modelo llamado Task
 )
 
@@ -46,4 +47,5 @@ admin.site.register(AsignacionMateria)
 admin.site.register(ActividadSemanal)
 admin.site.register(LogroPeriodo)
 admin.site.register(Convivencia)
-admin.site.register(Acudiente)  # AÑADIDO: Se registra el modelo Acudiente
+admin.site.register(Acudiente)
+admin.site.register(Institucion)  # <-- 2. AÑADIDO SEGÚN EL PLAN

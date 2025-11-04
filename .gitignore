@@ -1,8 +1,25 @@
-venv/
-env/
-*.env
-.env
-db.sqlite3
+# Entorno virtual
+/venv/
+/env/
+
+# Archivos de Python
 __pycache__/
 *.pyc
+
+# Base de datos
+*.sqlite3
+db.sqlite3
+
+# Archivos de Logs y Media
+*.log
+/media/
+
+# Archivos de IDE
 .vscode/
+.idea/
+
+# Archivos sensibles (¡IMPORTANTE!)
+.env
+
+# Archivos estáticos recolectados
+/staticfiles/
