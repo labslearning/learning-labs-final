@@ -1,0 +1,1162 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load widget_tweaks %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js"></script>
+
+<style>
+    /* ... (Estilos CSS anteriores - 100% conservados) ... */
+    :root {
+        --feed-bg: #f0f2f5;
+        --card-bg: #ffffff;
+        --text-primary: #050505;
+        --text-secondary: #65676b;
+        --action-hover: #e4e6eb; /* Hover sutil */
+        --divider: #dadde1;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --edu-primary: #4361ee; /* Azul primario */
+        --edu-success: #38b000; /* Verde para Check */
+        --edu-accent: #4cc9f0; /* Color de acento para calendario */
+    }
+
+    body {
+        background-color: var(--feed-bg);
+    }
+
+    .feed-container {
+        max-width: 1300px; /* Ancho para las 3 columnas */
+        margin: 0 auto;
+        padding-top: 20px;
+        padding-bottom: 40px;
+    }
+
+    /* === SIDEBARS (Izquierda/Derecha) === */
+    .sidebar-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        padding: 15px;
+        position: sticky;
+        top: 80px;
+        margin-bottom: 20px;
+    }
+    
+    /* Left Sidebar Groups */
+    .group-item {
+        display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; transition: background-color 0.2s;
+    }
+    .group-item:hover { background-color: #fafafa; border-radius: 8px; }
+    .group-img-sidebar { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; margin-right: 10px; background-color: #ddd; flex-shrink: 0; }
+    .group-info-sidebar h6 { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+    .btn-join-group { font-size: 0.75rem; padding: 4px 12px; border-radius: 18px; font-weight: 600; white-space: nowrap; background-color: var(--edu-primary); color: white; border: none; }
+    .btn-join-group:hover { background-color: var(--edu-secondary); color: white; }
+
+    /* Right Sidebar Video/Calendar */
+    .video-responsive {
+        position: relative; overflow: hidden; width: 100%; 
+        border-radius: 8px; margin-bottom: 15px;
+    }
+    /* Estilo para el video nativo */
+    .video-responsive video {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+    }
+    
+    /* CALENDAR STYLE */
+    .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; }
+    .calendar-day { display: inline-block; width: 14.28%; text-align: center; padding: 5px 0; font-size: 0.8rem; }
+    .calendar-date { font-weight: 600; color: var(--text-primary); }
+    .calendar-today { background-color: var(--edu-accent); color: white !important; border-radius: 50%; }
+
+
+    /* --- Post Cards & Input --- */
+    .create-post-card, .post-card {
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 20px;
+        background: var(--card-bg);
+    }
+    .create-post-card { padding: 12px 16px; }
+    .post-input-trigger { background: #f0f2f5; border-radius: 24px; padding: 10px 15px; flex-grow: 1; color: var(--text-secondary); cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
+    .post-input-trigger:hover { background: #e4e6eb; }
+
+    .post-header { padding: 16px; display: flex; align-items: center; gap: 10px; }
+    .user-avatar-sm { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .post-content { padding: 4px 16px 16px; font-size: 1.0rem; white-space: pre-line; }
+
+    /* Stats */
+    .post-stats { padding: 10px 16px; border-bottom: 1px solid var(--divider); }
+    .reaction-icon-group i { color: white; background: var(--edu-primary); padding: 4px; border-radius: 50%; font-size: 0.65rem; border: 2px solid white; }
+
+    /* ACTIONS - ESTILOS PROFESIONALES */
+    .post-actions { 
+        padding: 4px 16px; 
+        display: flex; 
+        gap: 4px; 
+        border-top: 1px solid var(--divider);
+    }
+    .action-btn {
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        gap: 6px; padding: 8px; border-radius: 8px; cursor: pointer;
+        color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
+        transition: background 0.2s, color 0.2s; background-color: transparent;
+        border: none;
+    }
+    .action-btn:hover { background-color: var(--action-hover); }
+    
+    /* Estado para Me Gusta activo */
+    .action-btn.active-primary {
+        color: var(--edu-primary) !important;
+        font-weight: 700;
+    }
+
+    /* Comments - Facebook/LinkedIn Style */
+    .comments-section { padding: 12px 16px 16px; background-color: #ffffff; border-radius: 0 0 12px 12px; }
+    
+    .comment-item { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+    .comment-bubble { 
+        background-color: #f0f2f5; 
+        padding: 8px 12px; 
+        border-radius: 18px; 
+        line-height: 1.3; 
+    }
+    .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-right: 5px; white-space: nowrap;}
+    .comment-text { font-size: 0.9rem; }
+    .comment-content-wrapper { flex-grow: 1; min-width: 0; }
+    
+    .comment-meta { 
+        font-size: 0.75rem; 
+        color: var(--text-secondary); 
+        margin-left: 50px; 
+        margin-top: 2px;
+    }
+    .comment-meta > span { cursor: pointer; }
+    .comment-meta span:not(:last-child)::after { content: "•"; margin: 0 5px; }
+
+    .comment-input-area { margin-top: 15px; align-items: center; }
+    .comment-input-area form {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .comment-input {
+        flex-grow: 1;
+        border: none;
+        border-radius: 20px;
+        background-color: #f0f2f5;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        height: 38px; /* Altura adecuada */
+    }
+    .comment-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--edu-primary);
+        background-color: #fff;
+    }
+    
+    /* === MODAL DE VIDEO YOUTUBE === */
+    .video-modal-iframe-wrapper {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    }
+    .video-modal-iframe-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* ESTILO PARA LOS INPUTS DE ARCHIVO DENTRO DEL MODAL */
+    .custom-file-upload {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        padding: 8px 15px;
+        border: 1px solid var(--divider);
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+    .custom-file-upload:hover {
+        background-color: var(--action-hover);
+    }
+    .custom-file-upload input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0; /* Oculta el input, pero permite el clic */
+        cursor: pointer;
+        font-size: 0; /* Asegura que no estorbe */
+        width: 100%;
+        height: 100%;
+    }
+    .file-name-display {
+        font-size: 0.75rem;
+        color: var(--edu-primary);
+        margin-left: 10px;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    /* Estilo adicional para reproductores de video incrustados */
+    .post-video-container {
+        max-width: 100%;
+        margin: 10px 0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* --- ARREGLO DE IMÁGENES EN POSTS --- */
+    .post-media {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        overflow: hidden; /* Corta lo que se salga del borde redondeado */
+        background-color: #000000; /* Fondo negro para resaltar la foto (estilo cine) */
+        
+        /* Centrado Flexbox */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        /* Límite de altura: vital para que no rompa el diseño vertical */
+        max-height: 500px; 
+        width: 100%;
+    }
+
+    .post-media img {
+        /* Asegura que la imagen nunca sea más ancha que el contenedor */
+        max-width: 100%; 
+        
+        /* Asegura que la imagen nunca sea más alta que el límite */
+        max-height: 500px; 
+        
+        /* Mantiene la proporción original (no la estira ni aplasta) */
+        width: auto; 
+        height: auto;
+        
+        /* 'contain' muestra toda la foto. Usa 'cover' si prefieres que llene todo el espacio aunque recorte bordes */
+        object-fit: contain; 
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .col-right-sidebar { display: none; }
+        .col-main-feed { max-width: 66.66%; flex: 0 0 66.66%; }
+    }
+    @media (max-width: 992px) {
+        .col-sidebar { display: none; }
+        .col-main-feed { max-width: 100%; flex: 0 0 100%; }
+    }
+    /* FIX: Aumentar el tamaño del textarea en el modal */
+    #post-content-textarea {
+        min-height: 150px; /* Aumentado para mejor UX */
+        resize: vertical; /* Permitir que el usuario lo ajuste verticalmente */
+    }
+    /* Estilo para el buscador */
+    .search-card {
+        /* Eliminamos el padding y shadow para que el sidebar-search-card lo maneje */
+        margin-bottom: 20px;
+    }
+    
+    /* ESTILOS PARA EL BUSCADOR EN EL SIDEBAR (Cambiado a sidebar-search-card) */
+    .sidebar-search-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .sidebar-search-input {
+        border-radius: 24px;
+        border: 1px solid var(--divider);
+        padding: 8px 15px 8px 40px;
+        background-color: #f0f2f5;
+        height: 40px;
+        width: 100%;
+    }
+    .sidebar-search-button {
+        width: 100%;
+        height: 40px;
+        border-radius: 8px;
+        margin-top: 10px;
+        background-color: var(--edu-primary);
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    /* Fin Estilos Buscador Sidebar */
+    
+    .search-icon-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 40px;
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+</style>
+
+<div class="container feed-container">
+    <div class="row">
+        
+        <div class="col-md-4 col-lg-3 col-sidebar">
+            
+            <div class="sidebar-search-card">
+                <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
+                    <div class="position-relative">
+                        <div class="search-icon-container" style="top: 0px; left: 0px;">
+                            <i class="fas fa-search text-secondary"></i>
+                        </div>
+                        <input type="text" 
+                               name="q" 
+                               class="form-control sidebar-search-input" 
+                               placeholder="Buscar publicaciones..." 
+                               value="{{ request.GET.q|default:'' }}"
+                               aria-label="Buscar publicaciones">
+                    </div>
+                    <button type="submit" class="sidebar-search-button">
+                        Buscar en el Feed
+                    </button>
+                </form>
+            </div>
+            <div class="sidebar-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-layer-group me-1"></i> Explorar Grupos</h5>
+                    {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'DOCENTE' %}
+                    <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-light text-primary rounded-circle" title="Crear Grupo">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                {% if grupos_sugeridos %}
+                    {% for grupo in grupos_sugeridos %}
+                    <div class="group-item">
+                        {% if grupo.image %}
+                            <img src="{{ grupo.image.url }}" alt="{{ grupo.name }}" class="group-img-sidebar">
+                        {% else %}
+                            <div class="group-img-sidebar d-flex align-items-center justify-content-center bg-secondary text-white">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="group-info-sidebar flex-grow-1">
+                            <a href="{% url 'detalle_grupo' grupo.id %}" class="text-decoration-none">
+                                <h6>{{ grupo.name|truncatechars:18 }}</h6>
+                            </a>
+                            <small class="text-muted">{{ grupo.members.count }} miembros</small>
+                        </div>
+
+                        <form action="{% url 'unirse_grupo' grupo.id %}" method="POST" class="ms-2">
+                            {% csrf_token %}
+                            {% if request.user in grupo.members.all %}
+                                <a href="{% url 'detalle_grupo' grupo.id %}" class="btn btn-sm btn-outline-success btn-join-group" style="font-size: 0.7rem; color: var(--edu-success); border-color: var(--edu-success);">
+                                    <i class="fas fa-check"></i> Ver
+                                </a>
+                            {% else %}
+                                <button type="submit" class="btn btn-primary btn-join-group">
+                                    Unirse
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="text-center mt-3 pt-2 border-top">
+                        <a href="{% url 'lista_grupos' %}" class="small fw-bold text-decoration-none text-primary">Ver todos los grupos</a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted small mb-2">No se encontraron grupos.</p>
+                        <a href="{% url 'lista_grupos' %}" class="btn btn-outline-primary btn-sm">Explorar todos</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-6 col-main-feed">
+            
+            <div class="create-post-card">
+                <div class="create-post-top d-flex align-items-center gap-2">
+                    {% if user.perfil.foto_perfil %}
+                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm">
+                    {% else %}
+                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        ¿Qué estás pensando, {{ user.first_name }}?
+                    </div>
+                </div>
+                <div class="create-post-actions d-flex justify-content-around mt-2 pt-2 border-top">
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-video text-danger"></i> Video
+                    </button>
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-images text-success"></i> Foto
+                    </button>
+                    <button class="cp-action-btn" id="emoji-trigger-main">
+                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Sentimiento
+                    </button>
+                </div>
+            </div>
+
+            <div id="posts-list">
+                {% for post in page_obj %}
+                <div class="post-card" id="post-{{ post.id }}">
+                    <div class="post-header">
+                        <a href="{% url 'ver_perfil_social' post.autor.username %}" class="d-flex align-items-center text-decoration-none">
+                            {% if post.autor.perfil.foto_perfil %}
+                                <img src="{{ post.autor.perfil.foto_perfil.url }}" alt="{{ post.autor.username }}" class="user-avatar-sm">
+                            {% else %}
+                                <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-primary text-white fw-bold">
+                                    {{ post.autor.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                        </a>
+                        <div class="post-info flex-grow-1">
+                            <h6>
+                                <a href="{% url 'ver_perfil_social' post.autor.username %}" class="text-decoration-none text-primary">
+                                    {{ post.autor.get_full_name|default:post.autor.username }}
+                                </a>
+                                {% if post.tipo == 'ANUNCIO' %}
+                                    <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">ANUNCIO</span>
+                                {% endif %}
+                                {% if post.grupo %}
+                                    <span class="text-muted fw-normal" style="font-size: 0.85rem;">
+                                        ▶ <a href="{% url 'detalle_grupo' post.grupo.id %}" class="text-decoration-none fw-bold text-dark">{{ post.grupo.name }}</a>
+                                    </span>
+                                {% endif %}
+                            </h6>
+                            <div class="post-time">
+                                <span class="text-secondary" title="{{ post.creado_en }}">
+                                    {{ post.creado_en|naturaltime }}
+                                </span>
+                                <i class="fas fa-globe-americas ms-1 text-secondary" style="font-size: 0.7rem;"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                {% if request.user == post.autor or request.user.perfil.rol == 'ADMINISTRADOR' %}
+                                    <li>
+                                        <button class="dropdown-item text-danger" onclick="moderarContenidoDirecto({{ post.id }}, 'post')">
+                                            <i class="far fa-trash-alt me-2"></i> Eliminar
+                                        </button>
+                                    </li>
+                                {% else %}
+                                     <li><a class="dropdown-item" href="#"><i class="far fa-flag me-2"></i> Reportar</a></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="post-content">
+                        {{ post.contenido|linebreaksbr|urlize|safe }}
+                    </div>
+
+                    {% if post.imagen %}
+                    <div class="post-media">
+                        <img src="{{ post.imagen.url }}" alt="Imagen del post" loading="lazy">
+                    </div>
+                    {% endif %}
+                    
+                    {% if post.archivo %}
+                        {% with extension=post.archivo.url|slice:"-4:"|lower %}
+                            {% if extension == ".mp4" or extension == "webm" or extension == ".ogg" %}
+                                <div class="post-media p-3 post-video-container">
+                                    <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
+                                        <source src="{{ post.archivo.url }}" type="video/{{ extension|slice:"1:" }}">
+                                        Tu navegador no soporta el formato de video.
+                                    </video>
+                                </div>
+                            {% else %}
+                                <div class="post-media p-3">
+                                    <a href="{{ post.archivo.url }}" target="_blank" class="text-decoration-none d-block p-3 border rounded text-dark bg-light" style="max-width: 300px;">
+                                        <i class="fas fa-file-download me-2 text-danger"></i> Descargar archivo adjunto
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+
+                    <div class="post-stats">
+                        <div class="d-flex align-items-center">
+                            {% if post.total_reacciones > 0 %}
+                                <div class="reaction-icon-group">
+                                    <i class="fas fa-thumbs-up text-primary"></i>
+                                </div>
+                                <div class="liked-by-container ms-2">
+                                    <span id="liked-by-text-{{ post.id }}" class="liked-by-text">
+                                        {% with reactions=post.reacciones.all %}
+                                            {% if reactions|length == 1 %}
+                                                <strong>{{ reactions.0.usuario.first_name|default:reactions.0.usuario.username }}</strong>
+                                            {% elif reactions|length == 2 %}
+                                                <strong>{{ reactions.0.usuario.first_name|default:reactions.0.usuario.username }}</strong> y <strong>{{ reactions.1.usuario.first_name|default:reactions.1.usuario.username }}</strong>
+                                            {% elif reactions|length > 2 %}
+                                                <strong>{{ reactions.0.usuario.first_name|default:reactions.0.usuario.username }}</strong> y {{ reactions|length|add:"-1" }} más
+                                            {% endif %}
+                                        {% endwith %}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
+                            {% endif %}
+                        </div>
+                        <div class="comments-count">
+                            {{ post.total_comentarios }} comentarios
+                        </div>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="action-btn {% if post.user_has_liked %}active-primary{% endif %}" id="like-btn-{{ post.id }}" onclick="toggleReactionDirecto({{ post.id }}, 'post', this)">
+                            <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-thumbs-up me-2"></i> Me gusta
+                        </button>
+                        <button class="action-btn" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
+                            <i class="far fa-comment-alt me-2"></i> Comentar
+                        </button>
+                        <button class="action-btn" onclick="compartirPost({{ post.id }})">
+                            <i class="fas fa-share me-2"></i> Compartir
+                        </button>
+                    </div>
+
+                    <div class="collapse show" id="comments-{{ post.id }}">
+                        <div class="comments-section">
+                            {% for comentario in post.comentarios.all %}
+                                <div class="comment-item" id="comment-{{ comentario.id }}">
+                                    <a href="{% url 'ver_perfil_social' comentario.autor.username %}">
+                                        {% if comentario.autor.perfil.foto_perfil %}
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+                                        {% else %}
+                                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-info text-white fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                                {{ comentario.autor.username|slice:":1"|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </a>
+                                    <div class="comment-content-wrapper">
+                                        <div class="comment-bubble">
+                                            <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="comment-author text-decoration-none">
+                                                {{ comentario.autor.get_full_name|default:comentario.autor.username }}
+                                            </a>
+                                            <div class="comment-text d-inline-block">
+                                                {{ comentario.contenido|urlize|safe }}
+                                            </div>
+                                        </div>
+                                        <div class="comment-meta">
+                                            <span class="text-secondary cursor-pointer" onclick="toggleReactionDirecto({{ comentario.id }}, 'comment', this)">
+                                                Me gusta 
+                                                <span id="reaction-count-comment-{{ comentario.id }}" class="ms-1 fw-bold">
+                                                    {% if comentario.reacciones.count > 0 %}{{ comentario.reacciones.count }}{% endif %}
+                                                </span>
+                                            </span>
+                                            <span>{{ comentario.creado_en|naturaltime }}</span>
+                                            {% if request.user == comentario.autor or request.user == post.autor or request.user.perfil.rol == 'ADMINISTRADOR' %}
+                                                <span class="text-danger ms-2" onclick="moderarContenidoDirecto({{ comentario.id }}, 'comment')" title="Eliminar">
+                                                    Eliminar
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            <div class="comment-input-area">
+                                {% if user.perfil.foto_perfil %}
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+                                {% else %}
+                                    <div class="user-avatar-sm bg-secondary" style="width: 32px; height: 32px;"></div>
+                                {% endif %}
+                                
+                                <form method="POST" action="." class="w-100 d-flex gap-2 align-items-center">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="publicar_comentario" value="1">
+                                    <input type="hidden" name="post_id" value="{{ post.id }}">
+                                    
+                                    <input type="text" name="contenido" class="comment-input" placeholder="Escribe un comentario..." required autocomplete="off">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-circle p-0" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-paper-plane" style="font-size: 0.9rem;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-stream fa-3x text-muted mb-3"></i>
+                        <h4>¡Bienvenido a tu Muro Social!</h4>
+                        <p class="text-muted">Aún no hay publicaciones.</p>
+                        {% if request.GET.q %}
+                            <p class="text-muted small">No se encontraron resultados para "{{ request.GET.q }}".</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if page_obj.has_other_pages %}
+            <nav class="my-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-3 d-none d-lg-block col-right-sidebar">
+            <div class="sidebar-card">
+                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-video me-1"></i> Video Destacado</h6>
+                <div class="video-responsive">
+                    <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
+                        <source src="https://res.cloudinary.com/do9orhb4k/video/upload/v1739634103/WhatsApp_Video_2025-02-15_at_8.34.38_AM_v0bpfq.mp4" type="video/mp4">
+                        Tu navegador no soporta el video.
+                    </video>
+                </div>
+                <p class="small text-muted mt-2 mb-0">Video: Claves para el éxito en el aprendizaje.</p>
+            </div>
+
+            <div class="sidebar-card">
+                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-calendar-alt me-1"></i> Calendario</h6>
+                
+                <div class="calendar-header">Diciembre 2025</div>
+                <div class="calendar-body">
+                    <div class="d-flex small fw-bold text-muted border-bottom mb-1">
+                        <span class="calendar-day">Lu</span>
+                        <span class="calendar-day">Ma</span>
+                        <span class="calendar-day">Mi</span>
+                        <span class="calendar-day">Ju</span>
+                        <span class="calendar-day">Vi</span>
+                        <span class="calendar-day">Sá</span>
+                        <span class="calendar-day">Do</span>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap">
+                        {% for i in "1234567890123455678901234567890"|make_list %}
+                            {% with num=forloop.counter %}
+                                <span class="calendar-day calendar-date {% if num == 11 %}calendar-today{% endif %}">
+                                    {{ num }}
+                                </span>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                    
+                </div>
+                <div class="small mt-3 pt-2 border-top">
+                    <strong class="text-danger">15/Dic:</strong> Entrega Proyecto Final.
+                </div>
+            </div>
+        </div>
+    </div></div><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">Video Incrustado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="video-modal-iframe-wrapper">
+                    <iframe id="youtube-player" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div></div><div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 text-center">
+                <h5 class="modal-title w-100 fw-bold">Crear publicación</h5>
+                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" enctype="multipart/form-data" novalidate id="form-publicar">
+                    {% csrf_token %}
+                    <input type="hidden" name="publicar_post" value="1">
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        {% if user.perfil.foto_perfil %}
+                            <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm me-2">
+                        {% else %}
+                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold me-2">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <span class="fw-bold">{{ user.get_full_name }}</span>
+                            <div class="badge bg-light text-dark border"><i class="fas fa-globe-americas me-1"></i> Público</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 position-relative">
+                        <button type="button" id="emoji-trigger-modal" class="btn btn-sm btn-light position-absolute end-0 top-0 mt-1 me-1 rounded-circle" style="z-index: 10;">
+                            <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i>
+                        </button>
+                        {{ post_form.contenido|add_class:"form-control"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..." }} 
+                    </div>
+
+                    <div class="border rounded p-3 mb-3 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">Agregar a tu post</span>
+                        <div class="d-flex gap-2">
+                            <label for="id_imagen" class="custom-file-upload text-success">
+                                <i class="fas fa-images me-1"></i> Foto
+                                {{ post_form.imagen }}
+                            </label>
+                            <label for="id_archivo" class="custom-file-upload text-danger">
+                                <i class="fas fa-file-pdf me-1"></i> Archivo/Video
+                                {{ post_form.archivo }}
+                            </label>
+                            <span id="file-name-display" class="file-name-display"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-none">
+                        </div>
+                    
+                    {% if user.perfil.rol == 'ADMINISTRADOR' %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="es_anuncio" id="esAnuncioCheck">
+                        <label class="form-check-label" for="esAnuncioCheck">
+                            Marcar como Anuncio Oficial
+                        </label>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary fw-bold">Publicar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div></div><script>
+    // 1. Get CSRF Token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    window.csrftoken_local = getCookie('csrftoken'); // Hacerlo global para las funciones inline
+    
+    // Función para manejar el feedback del nombre del archivo
+    function handleFileInput(event) {
+        const input = event.target;
+        const display = document.getElementById('file-name-display');
+        
+        let filename = '';
+        if (input.files.length > 0) {
+            filename = input.files[0].name;
+            // Si ya hay un nombre de archivo, lo establecemos
+            display.textContent = filename;
+        }
+        
+        // Limpiar el campo del otro archivo si se selecciona uno nuevo
+        // Esto asume que solo quieres una imagen O un archivo/video por post
+        const otherInputId = input.id === 'id_imagen' ? 'id_archivo' : 'id_imagen';
+        const otherInput = document.getElementById(otherInputId);
+        if (otherInput && otherInput.files.length > 0 && input.files.length > 0) {
+             otherInput.value = ''; // Limpia el valor del input de archivo
+        }
+
+        // Si no hay archivos en ninguno, limpiar display
+        const imgInput = document.getElementById('id_imagen');
+        const fileInput = document.getElementById('id_archivo');
+        if (imgInput && fileInput && imgInput.files.length === 0 && fileInput.files.length === 0) {
+             display.textContent = '';
+        }
+        
+    }
+
+
+    // Función auxiliar para detectar si es un link de YouTube
+    function isYouTubeLink(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    // Función CRÍTICA: Simplemente redirige el enlace a una nueva pestaña
+    function openYouTubeInNewTab(event, url) {
+        event.preventDefault(); // Previene el comportamiento por defecto de la navegación
+        
+        // Muestra una notificación rápida o alerta (Opcional, pero buena UX)
+        alert("Abriendo el video en una nueva pestaña..."); 
+        
+        window.open(url, '_blank');
+    }
+    
+    // Función para detener el video (Se mantiene por si se usa en el modal, pero no será llamada aquí)
+    function stopVideo() {
+        const iframe = document.getElementById('youtube-player');
+        // Detiene el video al resetear el src
+        iframe.src = ''; 
+    }
+
+    // 2. Toggle Reaction Function (MEJORADA PARA FEEDBACK INSTANTÁNEO)
+    async function toggleReactionDirecto(id, tipo, btn) {
+        const icon = btn.querySelector('i');
+        const isLiked = btn.classList.contains('active-primary');
+
+        // Aplicar feedback visual INSTANTÁNEO
+        if (tipo === 'post') {
+            if (isLiked) {
+                btn.classList.remove('active-primary');
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+            } else {
+                btn.classList.add('active-primary');
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+            }
+        }
+        
+        // Llamada a la API
+        try {
+            const response = await fetch('/api/social/reaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken_local
+                },
+                body: JSON.stringify({
+                    'id': id,
+                    'type': tipo,
+                    'reaction': 'LIKE'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (tipo === 'post') {
+                    location.reload(); 
+                } else {
+                    const counterSpan = document.getElementById(`reaction-count-comment-${id}`);
+                    if (counterSpan) {
+                        counterSpan.innerText = data.total > 0 ? data.total : ''; 
+                    }
+                    if (data.action === 'added') {
+                        btn.classList.add('text-primary', 'fw-bold', 'comment-liked');
+                    } else {
+                        btn.classList.remove('text-primary', 'fw-bold', 'comment-liked');
+                    }
+                }
+            } else {
+                console.error('Error en reacción:', data.error);
+                alert("Error al dar like: " + data.error);
+                // Revertir el feedback instantáneo si la API falla
+                if (tipo === 'post') {
+                    if (isLiked) {
+                        btn.classList.add('active-primary');
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        btn.classList.remove('active-primary');
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error de red:', error);
+            alert("Error de red al dar like.");
+            // Revertir el feedback instantáneo si hay error de red
+            if (tipo === 'post') {
+                if (isLiked) {
+                    btn.classList.add('active-primary');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                } else {
+                    btn.classList.remove('active-primary');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
+            }
+        }
+    }
+
+    // 3. Share Function
+    function compartirPost(id) {
+        const url = window.location.origin + "/social/feed/#post-" + id;
+        navigator.clipboard.writeText(url).then(() => {
+            alert("¡Enlace copiado al portapapeles!\n" + url);
+        }).catch(err => {
+            console.error('Error al copiar: ', err);
+            prompt("Copia este enlace:", url);
+        });
+    }
+
+    // 4. Moderate Function
+    async function moderarContenidoDirecto(id, tipo) {
+        if (!confirm("¿Estás seguro de eliminar este contenido permanentemente?")) return;
+
+        try {
+            const response = await fetch('/api/social/moderate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken_local
+                },
+                body: JSON.stringify({
+                    'id': id,
+                    'type': tipo,
+                    'motivo': "Eliminado por el usuario/admin desde el feed"
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const elemento = document.getElementById(`${tipo}-${id}`);
+                if (elemento) {
+                    elemento.style.transition = "opacity 0.5s";
+                    elemento.style.opacity = "0";
+                    setTimeout(() => elemento.remove(), 500);
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert("Error al eliminar: " + data.error);
+            }
+        } catch (error) {
+            console.error('Error de moderación:', error);
+        }
+    }
+
+    // 🔥 5. LÓGICA DE SINCRONIZACIÓN DE NOTIFICACIONES 🔥
+    
+    // Nueva función JS para llamar a la API y resetear el contador
+    async function resetNotificationCounter() {
+        // Obtenemos el token CSRF necesario
+        const csrftoken = getCookie('csrftoken');
+        // Asumimos que el span que muestra el número de notificaciones tiene el ID 'notification-counter'
+        const counterElement = document.getElementById('notification-counter'); 
+
+        // Si el contador ya está a cero, salimos
+        if (counterElement && parseInt(counterElement.textContent) === 0) {
+            return;
+        }
+
+        try {
+            // Llama al endpoint de Django para marcar como leídas
+            // ASEGÚRATE de que esta URL esté definida en tu urls.py: name='mark_all_notifications_read'
+            const response = await fetch('{% url "mark_all_notifications_read" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                if (counterElement) {
+                    // Si el servidor confirma la actualización, reseteamos el contador visual
+                    counterElement.textContent = '0';
+                    counterElement.style.display = 'none'; 
+                    console.log(`Contador de notificaciones reseteado. ${data.updated_items} elementos actualizados.`);
+                }
+            } else {
+                console.warn('El servidor no pudo marcar las notificaciones como leídas.');
+            }
+        } catch (error) {
+            console.error('Error de red al sincronizar notificaciones:', error);
+        }
+    }
+    
+    // 6. Initialize Scripts (Añadimos la llamada de sincronización)
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Asocia los manejadores de eventos de archivo ---
+        const imagenInput = document.getElementById('id_imagen');
+        const archivoInput = document.getElementById('id_archivo');
+
+        if (imagenInput) imagenInput.addEventListener('change', handleFileInput);
+        if (archivoInput) archivoInput.addEventListener('change', handleFileInput);
+
+        // --- Aplicar la lógica de NUEVA PESTAÑA a todos los enlaces de YouTube ---
+        document.querySelectorAll('.post-content a, .comment-content-wrapper a').forEach(link => {
+            const href = link.getAttribute('href');
+            // Busca URLs que parezcan ser de YouTube
+            if (isYouTubeLink(href)) {
+                // Sobreescribe el comportamiento normal del click para abrir en nueva pestaña
+                link.onclick = (event) => openYouTubeInNewTab(event, href);
+                // Asegura el target en caso de fallo de JS
+                link.setAttribute('target', '_blank'); 
+                
+                // Añade un ícono para que el usuario sepa que es un video
+                if (!link.querySelector('.fa-video')) {
+                     link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`; 
+                }
+            }
+        });
+
+
+        // --- Emoji Picker Logic (ULTRA-FIXED) ---
+        const picker = new EmojiButton({
+            position: 'bottom-start',
+            zIndex: 1060
+        });
+        
+        const triggerModal = document.querySelector('#emoji-trigger-modal');
+        const triggerMain = document.querySelector('#emoji-trigger-main');
+        const modalEl = document.getElementById('createPostModal'); // Referencia al modal
+        
+        // --- FUNCIÓN DE INSERCIÓN GARANTIZADA ---
+        function insertEmoji(emoji) {
+            // USAMOS EL ID FORZADO ABAJO PARA MÁXIMA FIABILIDAD
+            const postInput = document.getElementById('post-content-textarea');
+
+            if (postInput) {
+                // MÉTODO ROBUSTO: setRangeText (respeta cursor)
+                try {
+                    // Forzar el foco justo antes de escribir es crucial si se pierde por el modal
+                    postInput.focus(); 
+                    
+                    const start = postInput.selectionStart;
+                    const end = postInput.selectionEnd;
+                    postInput.setRangeText(emoji, start, end, 'end');
+                    postInput.focus();
+                } catch (e) {
+                    // FALLBACK: Si setRangeText falla (incompatibilidad de editor), usamos append:
+                    postInput.value += emoji;
+                    postInput.focus(); 
+                }
+            } else {
+                 console.error("Fallo CRÍTICO: El textarea no fue encontrado por ID.");
+            }
+        }
+
+        picker.on('emoji', selection => {
+            insertEmoji(selection.emoji);
+        });
+
+        // A. Trigger desde dentro del Modal (Carita feliz pequeña)
+        if (triggerModal) {
+            triggerModal.addEventListener('click', () => {
+                picker.togglePicker(triggerModal);
+            });
+        }
+
+        // B. Trigger desde el botón "Sentimiento" (Tarjeta principal)
+        if (triggerMain) {
+            
+            // 1. Abrir el modal.
+            triggerMain.addEventListener('click', () => {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            });
+
+            // 2. Usamos el evento 'shown.bs.modal' para garantizar que el DOM ya está visible
+            modalEl.addEventListener('shown.bs.modal', () => {
+                // Selector simple para anclar el picker
+                const modalTrigger = document.querySelector('#emoji-trigger-modal');
+                
+                if (modalTrigger) {
+                    picker.showPicker(modalTrigger); // Abre el selector anclado al botón
+                    
+                    // CRÍTICO: Forzar el foco al textarea justo después de abrir el picker
+                    // Esto debe ejecutarse SIEMPRE para asegurar que el input esté listo para la función insertEmoji
+                    const postInput = document.querySelector('#post-content-textarea');
+                    if(postInput) postInput.focus();
+                }
+            });
+        }
+        // --- Fin Emoji Picker Logic ---
+
+
+        // --- Post Button Feedback ---
+        const formPublicar = document.getElementById('form-publicar');
+        if(formPublicar) {
+            formPublicar.addEventListener('submit', function() {
+                const btn = this.querySelector('button[type="submit"]');
+                if(btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+                }
+            });
+        }
+        
+        // --- SINCRONIZACIÓN DE NOTIFICACIONES ---
+        // Asumimos que el botón de la campana tiene ID='notification-dropdown-toggle' en base.html
+        const notificationToggle = document.querySelector('#notification-dropdown-toggle');
+        
+        // Agregamos la lógica para los mensajes (si la campana es también el botón de mensajes)
+        // Si tienes un ícono de mensajes SEPARADO (ej: ID='message-dropdown-toggle'), también debes conectarlo.
+        const messageToggle = document.querySelector('#message-dropdown-toggle'); // ID de ejemplo para mensajes
+        
+        if (notificationToggle) {
+             // Llama a la función de sincronización de Notificaciones al hacer clic
+             // Esto marcará como leídas las notificaciones generales.
+             notificationToggle.addEventListener('click', resetNotificationCounter);
+        }
+        
+        // Si el contador de mensajes está separado, debes llamar a una función similar para mensajes
+        // Ejemplo de cómo conectarías un botón de mensajes si existiera:
+        /*
+        if (messageToggle) {
+             messageToggle.addEventListener('click', resetMessageCounter); 
+        }
+        
+        // Necesitarías una función y un endpoint para resetear mensajes
+        async function resetMessageCounter() {
+            // ... Lógica para llamar a /api/messages/mark-read/ y resetear el contador de mensajes.
+        }
+        */
+    });</script><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">Video Incrustado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="video-modal-iframe-wrapper">
+                    <iframe id="youtube-player" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div></div>
+
+{% endblock %}

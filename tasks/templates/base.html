@@ -1,13 +1,19 @@
+{% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Labs - Plataforma Educativa</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
         :root {
             /* Sistema de diseño educativo */
@@ -34,6 +40,9 @@
             background-color: var(--edu-bg-light);
             line-height: 1.6;
             padding-top: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -42,11 +51,23 @@
             color: var(--edu-dark);
         }
 
-        /* ========== BARRA DE NAVEGACIÓN MEJORADA ========== */
+        /* Estilos personalizados para SimpleMDE */
+        .editor-toolbar {
+            border-color: #ced4da;
+            background-color: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+        .CodeMirror {
+            border-color: #ced4da;
+            border-radius: 0 0 8px 8px;
+            min-height: 150px;
+        }
+
+        /* ========== BARRA DE NAVEGACIÓN MEJORADA (PROFESIONAL) ========== */
         .navbar {
-            background: linear-gradient(135deg, var(--edu-primary), var(--edu-secondary));
-            padding: 0.8rem 2rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(120deg, var(--edu-primary), var(--edu-secondary));
+            padding: 0.6rem 2rem;
+            box-shadow: 0 4px 20px rgba(63, 55, 201, 0.25);
             font-family: 'Poppins', sans-serif;
             position: relative;
             z-index: 1000;
@@ -54,102 +75,169 @@
 
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: white !important;
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .navbar-brand img {
-            height: 40px;
-            width: auto;
+        .navbar-brand i {
+            font-size: 1.8rem;
+            background: rgba(255,255,255,0.2);
+            padding: 8px;
+            border-radius: 10px;
         }
 
         .navbar-brand:hover {
-            opacity: 0.9;
+            opacity: 1;
+            transform: scale(1.02);
+            transition: var(--edu-transition);
         }
 
         .nav-item {
-            margin: 0 0.25rem;
+            margin: 0 0.15rem;
         }
 
         .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: rgba(255, 255, 255, 0.95) !important;
             font-weight: 500;
-            font-size: 0.95rem;
-            padding: 0.75rem 1.25rem;
-            border-radius: var(--edu-border-radius);
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem !important;
+            border-radius: 8px;
             transition: var(--edu-transition);
             position: relative;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            letter-spacing: 0.3px;
         }
 
         .nav-link i {
             font-size: 1.1rem;
+            opacity: 0.9;
         }
 
-        .nav-link:hover, .nav-link:focus {
+        .nav-link:hover, .nav-link:focus, .nav-link.show {
             color: white !important;
             background-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2) !important;
+            background-color: rgba(255, 255, 255, 0.25) !important;
             font-weight: 600;
             color: white !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
         }
 
-        .nav-link::after {
-            content: '';
+        /* Dropdowns más estéticos */
+        .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 0.5rem;
+            margin-top: 0.5rem !important;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            transition: var(--edu-transition);
+            color: var(--edu-text-primary);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--edu-bg-light);
+            color: var(--edu-primary);
+            transform: translateX(3px);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+
+        /* Badges de notificación mejorados */
+        .badge-notification {
             position: absolute;
-            width: 0;
-            height: 3px;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: white;
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover::after, .nav-link.active::after {
-            width: 60%;
+            top: 2px;
+            right: 2px;
+            background-color: var(--edu-danger);
+            border: 2px solid var(--edu-secondary); 
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transform: translate(25%, -25%);
         }
 
         .navbar-toggler {
             border: none;
             padding: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 8px;
         }
 
         .navbar-toggler:focus {
-            box-shadow: none;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
         }
 
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        /* Avatar en Navbar */
+        .nav-avatar-img {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: var(--edu-transition);
+        }
+        
+        .nav-avatar-placeholder {
+            width: 38px;
+            height: 38px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 2px solid rgba(255,255,255,0.5);
         }
 
+        .nav-link:hover .nav-avatar-img {
+            border-color: white;
+            transform: scale(1.05);
+        }
+        
         @media (max-width: 991.98px) {
             .navbar-collapse {
-                background-color: rgba(63, 55, 201, 0.98);
+                background-color: var(--edu-secondary);
                 margin-top: 1rem;
                 border-radius: var(--edu-border-radius);
                 padding: 1rem;
-                box-shadow: var(--edu-box-shadow);
-                backdrop-filter: blur(10px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             }
 
             .nav-link {
-                padding: 0.8rem 1rem;
+                padding: 0.8rem 1rem !important;
                 margin: 0.25rem 0;
-            }
-
-            .nav-link::after {
-                display: none;
+                justify-content: flex-start;
             }
         }
 
@@ -216,262 +304,6 @@
 
         .edu-card-body {
             padding: 1.5rem;
-        }
-
-        /* ========== CHAT DE IA MEJORADO ========== */
-        .ai-chat-button {
-            position: fixed;
-            right: 30px;
-            bottom: 30px;
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--edu-primary), var(--edu-secondary));
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(67, 97, 238, 0.3);
-            z-index: 1050;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 1.8rem;
-            border: none;
-        }
-
-        .ai-chat-button:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 12px 28px rgba(67, 97, 238, 0.4);
-        }
-
-        .ai-chat-container {
-            font-family: 'Open Sans', sans-serif;
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 400px;
-            max-width: 90%;
-            height: 100%;
-            background-color: white;
-            border-radius: 0;
-            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            z-index: 1060;
-            overflow: hidden;
-            transform: translateX(100%);
-            opacity: 0;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-        }
-
-        .ai-chat-container.active {
-            transform: translateX(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .ai-chat-header {
-            padding: 1.25rem;
-            background: linear-gradient(135deg, var(--edu-primary), var(--edu-secondary));
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .ai-chat-title {
-            font-weight: 600;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .ai-chat-actions {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .ai-chat-action {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.3rem;
-            opacity: 0.8;
-            transition: all 0.2s ease;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ai-chat-action:hover {
-            opacity: 1;
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .ai-chat-messages {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            background-color: #f5f7fb;
-        }
-
-        .ai-message {
-            max-width: 85%;
-            padding: 1rem 1.25rem;
-            border-radius: 1.25rem;
-            line-height: 1.6;
-            animation: fadeIn 0.35s ease-out;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            display: flex;
-            gap: 0.75rem;
-            position: relative;
-        }
-
-        .ai-message-icon {
-            flex-shrink: 0;
-            margin-top: 3px;
-            color: var(--edu-primary);
-        }
-
-        .ai-message-user {
-            align-self: flex-end;
-            background: linear-gradient(135deg, var(--edu-primary), var(--edu-secondary));
-            color: white;
-            border-bottom-right-radius: 0.5rem;
-        }
-
-        .ai-message-bot {
-            align-self: flex-start;
-            background-color: white;
-            color: var(--edu-text-primary);
-            border: 1px solid #e1e8ed;
-            border-bottom-left-radius: 0.5rem;
-        }
-
-        .ai-message-time {
-            font-size: 0.7rem;
-            color: var(--edu-text-secondary);
-            opacity: 0.8;
-            margin-top: 0.5rem;
-            text-align: right;
-        }
-
-        .ai-chat-input-container {
-            padding: 1.25rem;
-            border-top: 1px solid #e1e8ed;
-            background-color: white;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .ai-chat-input {
-            width: 100%;
-            padding: 1rem 3.5rem 1rem 1.25rem;
-            border: 1px solid #e1e8ed;
-            border-radius: var(--edu-border-radius);
-            resize: none;
-            outline: none;
-            font-family: 'Open Sans', sans-serif;
-            font-size: 0.95rem;
-            min-height: 60px;
-            max-height: 120px;
-            line-height: 1.5;
-            color: var(--edu-text-primary);
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        }
-
-        .ai-chat-input:focus {
-            border-color: var(--edu-primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-        }
-
-        .ai-chat-send {
-            position: absolute;
-            right: 1.5rem;
-            bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--edu-primary), var(--edu-secondary));
-            color: white;
-            border: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            font-size: 1.1rem;
-        }
-
-        .ai-chat-send:hover {
-            transform: scale(1.1);
-        }
-
-        .ai-typing-indicator {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            align-self: flex-start;
-            padding: 0.75rem 1rem;
-            border-radius: 1.25rem;
-            background-color: white;
-            border: 1px solid #e1e8ed;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            color: var(--edu-text-secondary);
-            font-size: 0.85rem;
-            font-style: italic;
-        }
-
-        .ai-typing-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--edu-text-secondary);
-            border-radius: 50%;
-            animation: typingAnimation 1.4s infinite ease-in-out both;
-        }
-
-        .ai-model-selector {
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            padding: 0.4rem 0.75rem;
-            font-size: 0.75rem;
-            margin-left: 0.75rem;
-            background-color: rgba(255, 255, 255, 0.15);
-            color: white;
-            font-family: 'Open Sans', sans-serif;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        .ai-model-selector:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .ai-model-selector option {
-            background-color: white;
-            color: var(--edu-text-primary);
-        }
-
-        @keyframes typingAnimation {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-            40% { transform: scale(1.0); opacity: 1; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         /* ========== MODAL DE VIDEO MEJORADO ========== */
@@ -632,76 +464,179 @@
             }
             
             .navbar-brand {
-                font-size: 1.5rem;
-            }
-            
-            .ai-chat-button {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-                right: 20px;
-                bottom: 20px;
-            }
-            
-            .nav-link {
-                font-size: 0.9rem;
-                padding: 0.6rem 0.8rem;
+                font-size: 1.4rem;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-atom"></i>
                 <span>Learning Labs</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
+                
+                <div class="navbar-nav ms-auto align-items-lg-center">
                     <a href="/" class="nav-link"><i class="fas fa-home"></i> Inicio</a>
-                    <a href="/ai" class="nav-link"><i class="fas fa-robot"></i> AI</a>
                     
                     {% if user.is_authenticated %}
-                        {% if user.perfil.rol == 'DOCENTE' %}
-                        <a href="{% url 'dashboard_docente' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i> Notas
+
+                        <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
+                            <i class="fas fa-envelope"></i>
+                            {% if mensajes_no_leidos_count > 0 %}
+                            <span class="badge-notification">
+                                {{ mensajes_no_leidos_count }}
+                            </span>
+                            {% endif %}
                         </a>
+
+                        <li class="nav-item dropdown mx-lg-1">
+                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
+                                <i class="fas fa-bell"></i>
+                                <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
+                                    {{ notificaciones_count }}
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 320px; max-height: 450px; overflow-y: auto;">
+                                <li class="dropdown-header fw-bold text-uppercase text-muted small px-3 py-2 bg-light">
+                                    <i class="fas fa-bell me-1"></i> Notificaciones
+                                </li>
+                                {% for n in mis_notificaciones %}
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-start py-2 border-bottom" href="{% if n.link_destino %}{{ n.link_destino }}{% else %}{% url 'historial_notificaciones' %}{% endif %}">
+                                        <div class="me-3 mt-1">
+                                            {% if n.tipo == 'ASISTENCIA' %}<i class="fas fa-clock text-warning fa-lg"></i>
+                                            {% elif n.tipo == 'OBSERVADOR' %}<i class="fas fa-exclamation-triangle text-danger fa-lg"></i>
+                                            {% elif n.tipo == 'ACTIVIDAD' %}<i class="fas fa-book-open text-info fa-lg"></i>
+                                            {% elif n.tipo == 'MENSAJE' %}<i class="fas fa-envelope text-success fa-lg"></i>
+                                            {% else %}<i class="fas fa-info-circle text-secondary fa-lg"></i>{% endif %}
+                                        </div>
+                                        <div style="white-space: normal; line-height: 1.3;">
+                                            <strong class="d-block text-dark mb-1">{{ n.titulo }}</strong>
+                                            <span class="d-block text-muted small">{{ n.mensaje|truncatechars:45 }}</span>
+                                            <small class="text-primary mt-1 d-block" style="font-size: 0.7rem;">{{ n.fecha_creacion|timesince }}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                                {% empty %}
+                                <li class="text-center py-4 text-muted">
+                                    <i class="far fa-bell-slash fa-2x mb-2"></i>
+                                    <p class="mb-0 small">Sin notificaciones nuevas</p>
+                                </li>
+                                {% endfor %}
+                                
+                                <li><hr class="dropdown-divider my-0"></li>
+                                <li>
+                                    <a class="dropdown-item text-center small py-2 fw-bold text-primary bg-light" href="{% url 'historial_notificaciones' %}">
+                                        Ver historial completo <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <a href="{% url 'social_feed' %}" class="nav-link"><i class="fas fa-users"></i> Comunidad</a>
+                        
+                        <a href="{% url 'lista_grupos' %}" class="nav-link"><i class="fas fa-layer-group"></i> Grupos</a>
+
+                        {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'PSICOLOGO' or user.perfil.rol == 'COORD_ACADEMICO' or user.perfil.rol == 'COORD_CONVIVENCIA' %}
+                            <a href="{% url 'dashboard_bienestar' %}" class="nav-link">
+                                <i class="fas fa-chart-line"></i> Bienestar
+                            </a>
                         {% endif %}
                         
-                        <a href="/english" class="nav-link"><i class="fas fa-language"></i> Inglés</a>
-                        <a href="/english2" class="nav-link"><i class="fas fa-square-root-alt"></i> Matemáticas</a>
-                        <a href="/english3" class="nav-link"><i class="fas fa-code"></i> Programación</a>
-                        <a href="/english4" class="nav-link"><i class="fas fa-gamepad"></i> Juegos</a>
-                        <a href="/forum" class="nav-link"><i class="fas fa-comments"></i> Foro</a>
-                        
+                        {% if user.perfil.rol != 'ADMINISTRADOR' %}
+                    
+                            {% if user.perfil.rol == 'DOCENTE' %}
+                            <a href="{% url 'dashboard_docente' %}" class="nav-link">
+                                <i class="fas fa-clipboard-list"></i> Notas
+                            </a>
+                            
+                            {% elif user.perfil.rol == 'ESTUDIANTE' or user.perfil.rol == 'ACUDIENTE' %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-book-reader"></i> Mis Cursos
+                                </a>
+                                <ul class="dropdown-menu shadow-sm">
+                                    <li><a class="dropdown-item" href="/english"><i class="fas fa-language"></i> Inglés</a></li>
+                                    <li><a class="dropdown-item" href="/english2"><i class="fas fa-square-root-alt"></i> Matemáticas</a></li>
+                                    <li><a class="dropdown-item" href="/english3"><i class="fas fa-code"></i> Programación</a></li>
+                                    <li><a class="dropdown-item" href="/english4"><i class="fas fa-gamepad"></i> Juegos</a></li>
+                                </ul>
+                            </li>
+                            {% endif %}
+                            
+                        {% endif %}
+
                         {% if user.perfil.rol == 'ESTUDIANTE' %}
-                        <a href="{% url 'dashboard_estudiante' %}" class="nav-link">
+                        <a href="{% url 'dashboard_estudiante' %}" class="nav-link btn btn-sm btn-outline-light border-0 ms-lg-2">
                             <i class="fas fa-user-graduate"></i> Mi Panel
                         </a>
                         {% elif user.perfil.rol == 'DOCENTE' %}
-                        <a href="{% url 'dashboard_docente' %}" class="nav-link">
+                        <a href="{% url 'dashboard_docente' %}" class="nav-link btn btn-sm btn-outline-light border-0 ms-lg-2">
                             <i class="fas fa-chalkboard-teacher"></i> Panel Docente
                         </a>
+                        
                         {% elif user.perfil.rol == 'ADMINISTRADOR' %}
+                        
                         <a href="{% url 'admin_dashboard' %}" class="nav-link">
                             <i class="fas fa-user-tie"></i> Admin
                         </a>
-                        {% elif user.perfil.rol == 'ACUDIENTE' %} {# Añadido para acudiente #}
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-tools"></i> Gestión
+                            </a>
+                            <ul class="dropdown-menu shadow-sm">
+                                <li><a class="dropdown-item" href="{% url 'admin:tasks_institucion_changelist' %}">Institución</a></li>
+                                <li><a class="dropdown-item" href="{% url 'gestionar_cursos' %}">Cursos</a></li>
+                                <li><a class="dropdown-item" href="{% url 'asignar_curso_estudiante' %}">Asignar Estudiantes</a></li>
+                                <li><a class="dropdown-item" href="{% url 'asignar_materia_docente' %}">Asignar Materias</a></li>
+                                <li><a class="dropdown-item" href="{% url 'gestion_perfiles' %}">Perfiles</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin_ex_estudiantes' %}">Archivo</a></li>
+                            </ul>
+                        </li>
+                        
+                        {% elif user.perfil.rol == 'ACUDIENTE' %} 
                         <a href="{% url 'dashboard_acudiente' %}" class="nav-link">
                              <i class="fas fa-user-shield"></i> Panel Acudiente
                         </a>
                         {% endif %}
                         
-                        <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Salir</a>
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" id="navbarDropdownProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.perfil.foto_perfil %}
+                                    <img src="{{ user.perfil.foto_perfil.url }}" alt="Avatar" class="rounded-circle nav-avatar-img" width="38" height="38">
+                                {% else %}
+                                    <div class="rounded-circle bg-secondary nav-avatar-placeholder">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <span class="d-lg-none ms-2">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="navbarDropdownProfile">
+                                <li class="text-center py-2 bg-light rounded-top">
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Sesión iniciada como</small>
+                                    <h6 class="mb-0 fw-bold text-primary">{{ user.get_full_name|default:user.username }}</h6>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item" href="{% url 'ver_perfil_social' user.username %}"><i class="fas fa-user-circle text-primary"></i> Mi Perfil Social</a></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'signout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+
                     {% else %}
-                        <a href="/signup" class="nav-link"><i class="fas fa-user-plus"></i> Registro</a>
-                        <a href="/signin" class="nav-link"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
+                        <a href="/signin" class="nav-link ms-lg-3 btn btn-edu-primary text-white shadow-sm px-4">
+                            <i class="fas fa-sign-in-alt"></i> Ingresar
+                        </a>
                     {% endif %}
                 </div>
+                
             </div>
         </div>
     </nav>
@@ -709,40 +644,7 @@
     {# El contenido específico de cada página se inserta aquí #}
     {% block content %}
     {% endblock %}
-
-    <button class="ai-chat-button edu-pulse" id="aiChatButton">
-        <i class="fas fa-comment-dots"></i>
-    </button>
     
-    <div class="ai-chat-container" id="aiChatContainer">
-        <div class="ai-chat-header">
-            <div class="ai-chat-title">
-                <i class="fas fa-robot"></i>
-                <span>Asistente Educativo</span>
-                <select class="ai-model-selector" id="aiModelSelector">
-                    <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
-                    <option value="gemini-1.0-pro-latest">Gemini 1.0</option>
-                </select>
-            </div>
-            <div class="ai-chat-actions">
-                <button class="ai-chat-action" id="aiChatNewChat" title="Nueva conversación">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <button class="ai-chat-action" id="aiChatClose" title="Cerrar chat">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <div class="ai-chat-messages" id="aiChatMessages">
-            </div>
-        <div class="ai-chat-input-container">
-            <textarea class="ai-chat-input" id="aiChatInput" placeholder="Escribe tu pregunta educativa..."></textarea>
-            <button class="ai-chat-send" id="aiChatSend" title="Enviar mensaje">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
     <div class="video-modal" id="videoModal">
         <div class="video-modal-content-wrapper">
             <div class="video-modal-header">
@@ -752,7 +654,7 @@
                 </button>
             </div>
             <div class="video-modal-body" id="videoModalBody">
-                </div>
+            </div>
             <div class="video-modal-footer">
                 <button class="btn btn-edu btn-edu-secondary" id="videoModalCloseBtn">
                     <i class="fas fa-times"></i> Cerrar
@@ -761,30 +663,14 @@
         </div>
     </div>
 
-    {# --- ORDEN DE SCRIPT CORREGIDO --- #}
-    
     {# 1. Cargar la biblioteca de Bootstrap PRIMERO #}
-    {#    Esto define `window.bootstrap` para que otros scripts puedan usarlo. #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {# 2. Cargar librería de editor Markdown (SimpleMDE) #}
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 
-    {# 2. Cargar tu script personalizado DESPUÉS #}
-    {#    Ahora este script se ejecutará y encontrará `window.bootstrap` ya definido. #}
+    {# 3. Lógica Global (Video y Notificaciones - IA ELIMINADA) #}
     <script>
-        // Configuración de Gemini y lógica del Chat AI y Modal (todo tu script personalizado)
-        const API_KEY_CHAT = "AIzaSyCnJVShlWjEe428W0hD24Jzr9GVDeMsajQ"; // Considera mover esto a un lugar más seguro
-        let currentAiModel = "gemini-1.5-pro-latest";
-        let aiChatHistory = [];
-
-        // Elementos del DOM del Chat AI
-        const aiChatButtonEl = document.getElementById('aiChatButton');
-        const aiChatContainerEl = document.getElementById('aiChatContainer');
-        const aiChatCloseEl = document.getElementById('aiChatClose');
-        const aiChatNewChatEl = document.getElementById('aiChatNewChat');
-        const aiChatMessagesEl = document.getElementById('aiChatMessages');
-        const aiChatInputEl = document.getElementById('aiChatInput');
-        const aiChatSendEl = document.getElementById('aiChatSend');
-        const aiModelSelectorEl = document.getElementById('aiModelSelector');
-
         // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
@@ -792,326 +678,68 @@
         const videoModalCloseHeaderEl = document.getElementById('videoModalClose');
         const videoModalCloseFooterBtnEl = document.getElementById('videoModalCloseBtn');
 
-        // Estado del chat
-        let isAiChatOpen = false;
-        let isAiSending = false;
-
         // --- Event Listeners ---
         function setupEventListeners() {
             console.log("Base.html: Setting up event listeners...");
-            if (aiChatButtonEl) aiChatButtonEl.addEventListener('click', toggleAiChat);
-            if (aiChatCloseEl) aiChatCloseEl.addEventListener('click', closeAiChat);
-            if (aiChatNewChatEl) aiChatNewChatEl.addEventListener('click', newAiChat);
-            if (aiChatSendEl) aiChatSendEl.addEventListener('click', sendAiMessage);
-            if (aiModelSelectorEl) aiModelSelectorEl.addEventListener('change', updateAiModel);
-            if (aiChatInputEl) {
-                aiChatInputEl.addEventListener('keydown', handleChatInputKeydown);
-                aiChatInputEl.addEventListener('input', autoResizeChatInput); // Añadido para auto-resize
-            }
-
             if (videoModalCloseHeaderEl) videoModalCloseHeaderEl.addEventListener('click', closeVideoModal);
             if (videoModalCloseFooterBtnEl) videoModalCloseFooterBtnEl.addEventListener('click', closeVideoModal);
 
-            // Escuchar tecla Escape para cerrar modal/chat
+            // Escuchar tecla Escape para cerrar modal
             document.addEventListener('keydown', handleGlobalKeydown);
 
-             // Guardar historial al cerrar la ventana/pestaña
-             window.addEventListener('beforeunload', saveAiChatHistory);
+             // --- ✅ SCRIPT DE NOTIFICACIONES ---
+             const notifToggle = document.getElementById('notification-dropdown-toggle');
+             if(notifToggle) {
+                 notifToggle.addEventListener('click', resetNotificationCounter);
+             }
+             
              console.log("Base.html: Event listeners setup complete.");
         }
-
-        // --- Funciones del Chat AI ---
-        function toggleAiChat() {
-            console.log("Toggling AI Chat");
-            isAiChatOpen = !isAiChatOpen;
-            aiChatContainerEl.classList.toggle('active');
-            if (isAiChatOpen && aiChatInputEl) aiChatInputEl.focus();
-        }
-
-        function closeAiChat() {
-            console.log("Closing AI Chat");
-            isAiChatOpen = false;
-            aiChatContainerEl.classList.remove('active');
-        }
-
-        function newAiChat() {
-            console.log("Starting new AI Chat");
-            aiChatHistory = [];
-            if (aiChatMessagesEl) {
-                aiChatMessagesEl.innerHTML = "";
-                addAiMessage('bot', '¡Hola! Soy tu asistente educativo. ¿En qué puedo ayudarte hoy?');
+        
+        // --- FUNCIÓN DE RESETEO DE NOTIFICACIONES ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
             }
-            // Limpiar también el input
-            if(aiChatInputEl) {
-                aiChatInputEl.value = "";
-                aiChatInputEl.style.height = 'auto';
-            }
+            return cookieValue;
         }
 
-        function updateAiModel() {
-            currentAiModel = aiModelSelectorEl.value;
-            console.log("AI Model changed to:", currentAiModel);
-            addAiMessage('bot', `Modelo cambiado a: ${aiModelSelectorEl.options[aiModelSelectorEl.selectedIndex].text}`, true);
-        }
+        async function resetNotificationCounter() {
+            const csrftoken = getCookie('csrftoken');
+            const counterElement = document.getElementById('notification-badge');
 
-        function addAiMessage(role, content, isSystem = false) {
-            if (!aiChatMessagesEl) {
-                console.error("aiChatMessagesEl not found");
+            // Si no hay contador o ya es 0, no hacemos nada
+            if (!counterElement || counterElement.style.display === 'none' || parseInt(counterElement.innerText) === 0) {
                 return;
             }
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `ai-message ai-message-${role}`;
-
-            let iconHtml = '';
-            if (role === 'bot' && !isSystem) {
-                iconHtml = `<span class="ai-message-icon"><i class="fas fa-robot"></i></span>`;
-            } else if (isSystem) {
-                 iconHtml = `<span class="ai-message-icon"><i class="fas fa-info-circle"></i></span>`;
-            }
-
-            // Usar 'marked' si está disponible, si no, texto plano
-            let parsedContent = content;
-            if (typeof marked !== 'undefined' && !isSystem) {
-                try {
-                    parsedContent = marked.parse(content);
-                } catch (e) {
-                    console.error("Error parsing markdown:", e, "Original content:", content);
-                    // Dejar parsedContent como el texto original si hay error
-                }
-            } else if (typeof marked === 'undefined' && !isSystem){
-                 console.warn("Marked library not found. Displaying raw bot response.");
-            }
-
-
-            messageDiv.innerHTML = `
-                ${iconHtml}
-                <div>
-                    ${parsedContent}
-                    <div class="ai-message-time">${formatChatTime()}</div>
-                </div>
-            `;
-
-            aiChatMessagesEl.appendChild(messageDiv);
-            scrollAiToBottom();
-
-            if (!isSystem) {
-                // Adaptado para historial compatible con la API (role: user/model, parts: [{text: content}])
-                aiChatHistory.push({ role: role === 'user' ? 'user' : 'model', parts: [{ text: content }], timestamp: new Date().toISOString() }); 
-            }
-        }
-
-
-        async function sendAiMessage() {
-            if (!aiChatInputEl || !aiChatSendEl || !aiChatMessagesEl) return;
-            const message = aiChatInputEl.value.trim();
-            if (!message || isAiSending) return;
-
-            console.log("Sending message to AI:", message);
-            isAiSending = true;
-            aiChatSendEl.disabled = true;
-            aiChatSendEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-            aiChatInputEl.disabled = true; // Deshabilitar input mientras envía
-
-            // Añadir mensaje del usuario al historial y UI ANTES de la llamada API
-            addAiMessage('user', message); // Esto ya añade al historial con el rol correcto 'user'
-            aiChatInputEl.value = "";
-            aiChatInputEl.style.height = 'auto'; // Resetear altura
-
-            // Mostrar indicador de "pensando"
-            const typingIndicatorEl = document.createElement('div');
-            typingIndicatorEl.className = 'ai-typing-indicator';
-            typingIndicatorEl.innerHTML = `
-                <div class="ai-typing-dot" style="animation-delay: 0s;"></div>
-                <div class="ai-typing-dot" style="animation-delay: .2s;"></div>
-                <div class="ai-typing-dot" style="animation-delay: .4s;"></div>
-                <span>Asistente está pensando...</span>
-            `;
-            aiChatMessagesEl.appendChild(typingIndicatorEl);
-            scrollAiToBottom();
-
-            // Preparar historial para la API (usando la versión actualizada de aiChatHistory)
-            const apiHistory = aiChatHistory.slice(-21, -1).map(msg => ({ // Enviar hasta 20 mensajes anteriores (excluyendo el actual del user)
-                role: msg.role, // 'user' o 'model' ya están correctos en el historial
-                parts: msg.parts
-            }));
-
-            // El mensaje actual del usuario
-             const currentUserMessage = { role: 'user', parts: [{ text: message }] };
 
             try {
-                const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${currentAiModel}:generateContent?key=${API_KEY_CHAT}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            // Enviar el historial adaptado más el mensaje actual al final
-                            contents: [...apiHistory, currentUserMessage], 
-                            generationConfig: {
-                                temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 2048
-                            },
-                            safetySettings: [ // Configuración de seguridad recomendada
-                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
-                            ]
-                        })
-                    }
-                );
+                const response = await fetch('{% url "mark_all_notifications_read" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({})
+                });
 
-                // Quitar indicador SIEMPRE
-                if(typingIndicatorEl && typingIndicatorEl.parentNode) {
-                    typingIndicatorEl.remove();
+                if (response.ok) {
+                    counterElement.innerText = '0';
+                    counterElement.style.display = 'none';
+                    console.log('Notificaciones marcadas como leídas visualmente.');
                 }
-
-                if (!response.ok) {
-                    const errorText = await response.text(); // Leer como texto para ver el error exacto
-                    console.error("API Error Response Text:", errorText);
-                    let errorMsg = `Error HTTP ${response.status}`;
-                    try {
-                        const errorData = JSON.parse(errorText);
-                        errorMsg = errorData.error?.message || errorMsg;
-                    } catch(e) { /* Ignorar error de parseo si no es JSON */ }
-                    throw new Error(errorMsg);
-                }
-
-                const data = await response.json();
-                console.log("API Response Data:", data); // Log para ver la respuesta completa
-
-                // Validar la estructura de la respuesta
-                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) {
-                    const botResponse = data.candidates[0].content.parts[0].text;
-                    addAiMessage('bot', botResponse); // Esto añade la respuesta del bot al historial
-                } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-                     const blockReason = data.promptFeedback.blockReason;
-                     const safetyRatings = data.promptFeedback.safetyRatings ? JSON.stringify(data.promptFeedback.safetyRatings) : 'N/A';
-                     console.warn(`Respuesta bloqueada por: ${blockReason}. Ratings: ${safetyRatings}`);
-                     addAiMessage('bot', `Mi respuesta fue bloqueada debido a políticas de seguridad (${blockReason}). Por favor, reformula tu pregunta.`, true);
-                     // No añadir mensaje bloqueado al historial persistente
-                     aiChatHistory.pop(); // Quitar el mensaje del usuario que causó el bloqueo
-                } else {
-                    // Si no hay candidatos ni bloqueo claro, mostrar mensaje genérico
-                    console.warn("Respuesta inesperada de la API:", data);
-                    addAiMessage('bot', 'No se pudo obtener una respuesta clara del asistente en este momento.', true);
-                     // No añadir respuesta inesperada al historial persistente
-                     aiChatHistory.pop(); // Quitar el mensaje del usuario
-                }
-
             } catch (error) {
-                console.error('Error en sendAiMessage:', error); // Log detallado del error
-                if(typingIndicatorEl && typingIndicatorEl.parentNode) typingIndicatorEl.remove(); // Asegurar quitar indicador en error
-                addAiMessage('bot', `Lo siento, ocurrió un error al procesar tu solicitud: ${error.message}`, true);
-                 // No añadir error al historial persistente
-                 aiChatHistory.pop(); // Quitar el mensaje del usuario que causó el error
-            } finally {
-                isAiSending = false;
-                aiChatSendEl.disabled = false;
-                aiChatSendEl.innerHTML = `<i class="fas fa-paper-plane"></i>`;
-                if (aiChatInputEl) {
-                    aiChatInputEl.disabled = false; // Habilitar input de nuevo
-                    aiChatInputEl.focus();
-                }
+                console.error('Error al resetear notificaciones:', error);
             }
         }
-
-
-        function scrollAiToBottom() {
-            // Usar setTimeout para asegurar que el DOM se haya actualizado
-            setTimeout(() => {
-                if(aiChatMessagesEl) {
-                    aiChatMessagesEl.scrollTop = aiChatMessagesEl.scrollHeight;
-                }
-            }, 50); // Un pequeño delay
-        }
-
-        function formatChatTime(dateString = null) {
-             const date = dateString ? new Date(dateString) : new Date();
-             // Verificar si la fecha es válida
-             if (isNaN(date.getTime())) {
-                return "--:--"; // Retornar placeholder si la fecha no es válida
-             }
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); // Formato AM/PM
-        }
-
-       function loadAiChatHistory() {
-            console.log("Loading AI Chat History...");
-            const savedHistory = localStorage.getItem('geminiAiChatHistory_v2');
-            aiChatMessagesEl.innerHTML = ""; // Limpiar siempre al inicio
-
-            if (savedHistory) {
-                try {
-                    let parsedHistory = JSON.parse(savedHistory);
-                    // Asegurarse que es un array
-                    if (!Array.isArray(parsedHistory)) {
-                        throw new Error("Saved history is not an array.");
-                    }
-                    
-                    aiChatHistory = parsedHistory; // Asignar al historial global
-                    console.log(`Loaded ${aiChatHistory.length} messages from history.`);
-                    
-                    aiChatHistory.forEach(msg => {
-                        // Re-validar estructura al cargar
-                        if (!msg || !msg.role || !msg.parts || !msg.parts[0] || typeof msg.parts[0].text === 'undefined') {
-                            console.warn("Skipping invalid message from history:", msg);
-                            return; // Saltar mensaje inválido
-                        }
-                        const content = msg.parts[0].text;
-                        const role = msg.role === 'user' ? 'user' : 'bot'; // Mapear rol API a rol UI
-                        const timestamp = msg.timestamp || new Date().toISOString(); // Usar timestamp guardado o actual
-
-                        const messageDiv = document.createElement('div');
-                        messageDiv.className = `ai-message ai-message-${role}`;
-                        let iconHtml = '';
-                        if (role === 'bot') {
-                            iconHtml = `<span class="ai-message-icon"><i class="fas fa-robot"></i></span>`;
-                        }
-
-                        let parsedContent = content;
-                        if (typeof marked !== 'undefined' && role === 'bot') { // Solo parsear mensajes del bot
-                            try {
-                                parsedContent = marked.parse(content);
-                            } catch (e) {
-                                console.error("Error parsing markdown from history:", e, "Original content:", content);
-                                // Mantener contenido original si falla el parseo
-                            }
-                        }
-
-                        messageDiv.innerHTML = `
-                            ${iconHtml}
-                            <div>
-                                ${parsedContent}
-                                <div class="ai-message-time">${formatChatTime(timestamp)}</div>
-                            </div>
-                        `;
-                        aiChatMessagesEl.appendChild(messageDiv);
-                    });
-                    scrollAiToBottom();
-                } catch (e) {
-                     console.error("Error parsing chat history from localStorage:", e);
-                     localStorage.removeItem('geminiAiChatHistory_v2'); // Eliminar historial corrupto
-                     aiChatHistory = []; // Resetear historial en memoria
-                     addAiMessage('bot', 'Hubo un problema al cargar el historial. Iniciando nueva conversación.', true);
-                }
-            } else {
-                console.log("No chat history found. Starting fresh.");
-                addAiMessage('bot', '¡Hola! Soy tu asistente educativo. ¿En qué puedo ayudarte hoy?', false); // Mensaje inicial no es del sistema
-            }
-        }
-
-        function saveAiChatHistory() {
-             console.log("Saving AI Chat History...");
-             try {
-                 // Guardar solo mensajes válidos
-                 const validHistory = aiChatHistory.filter(msg => msg && msg.role && msg.parts && msg.parts[0] && typeof msg.parts[0].text !== 'undefined');
-                localStorage.setItem('geminiAiChatHistory_v2', JSON.stringify(validHistory));
-                console.log(`Saved ${validHistory.length} valid messages.`);
-             } catch (e) {
-                 console.error("Error saving chat history to localStorage:", e);
-                 // Considerar notificar al usuario si el localStorage está lleno o hay otro error
-             }
-        }
-
 
         // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
@@ -1122,7 +750,7 @@
             console.log(`Opening video modal for: ${videoTitle} (URL: ${videoUrl})`);
 
             videoModalTitleEl.textContent = videoTitle;
-            videoModalBodyEl.innerHTML = ""; // Limpiar contenido anterior
+            videoModalBodyEl.innerHTML = "";
 
             if (!videoUrl || videoUrl.trim() === '' || videoUrl.toUpperCase() === 'TU_URL_AQUI') {
                  console.warn("Video URL is missing or invalid.");
@@ -1134,42 +762,38 @@
                     </div>`;
                 videoModalBodyEl.innerHTML = errorHtml;
             } else {
-                // Crear elemento de video
                 const videoElement = document.createElement('video');
                 videoElement.setAttribute('width', '100%');
                 videoElement.setAttribute('controls', '');
                 videoElement.setAttribute('autoplay', '');
                 videoElement.setAttribute('playsinline', '');
                 videoElement.style.display = 'block';
-                videoElement.style.maxHeight = 'calc(90vh - 130px)'; // Ajustar según altura de header/footer
+                videoElement.style.maxHeight = 'calc(90vh - 130px)';
                 videoElement.style.backgroundColor = '#000';
 
                 const sourceElement = document.createElement('source');
                 sourceElement.setAttribute('src', videoUrl);
-                // Determinar tipo basado en extensión (simple)
+                
                 if (videoUrl.toLowerCase().endsWith('.mp4')) {
                     sourceElement.setAttribute('type', 'video/mp4');
                 } else if (videoUrl.toLowerCase().endsWith('.webm')) {
                      sourceElement.setAttribute('type', 'video/webm');
                 } else if (videoUrl.toLowerCase().endsWith('.ogv')) {
                      sourceElement.setAttribute('type', 'video/ogg');
-                } // Añadir más tipos si es necesario
+                } 
                 else {
                      console.warn("Tipo de video desconocido para:", videoUrl, ". Intentando sin 'type'.");
                 }
 
                 videoElement.appendChild(sourceElement);
-                videoElement.appendChild(document.createTextNode('Tu navegador no soporta la etiqueta de video.')); // Fallback text
+                videoElement.appendChild(document.createTextNode('Tu navegador no soporta la etiqueta de video.'));
 
                 videoModalBodyEl.appendChild(videoElement);
 
-                // Intentar reproducir (autoplay puede fallar)
                 videoElement.play().catch(error => {
                     console.log("Autoplay fue prevenido por el navegador:", error);
-                    // No es un error crítico, el usuario puede darle play manualmente
                 });
 
-                 // Manejo de errores de carga del video
                 videoElement.addEventListener('error', (e) => {
                     console.error("Error al cargar el video:", videoUrl, e);
                     videoModalBodyEl.innerHTML = `
@@ -1182,7 +806,7 @@
             }
 
             videoModalEl.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Evitar scroll de fondo
+            document.body.style.overflow = 'hidden';
         }
 
 
@@ -1191,51 +815,31 @@
             const videoElement = videoModalBodyEl.querySelector('video');
             if (videoElement) {
                 videoElement.pause();
-                // Limpiar source para detener descarga
                 while (videoElement.firstChild) {
                     videoElement.removeChild(videoElement.firstChild);
                 }
-                videoElement.load(); // Importante para liberar recursos
-                // Opcional: Eliminar el elemento video completamente
+                videoElement.load();
                  videoElement.remove();
             }
 
             videoModalEl.classList.remove('active');
-            document.body.style.overflow = ''; // Restaurar scroll
+            document.body.style.overflow = '';
 
-            // Limpiar contenido después de la transición para evitar flashes
             setTimeout(() => {
                 if (videoModalBodyEl && !videoModalEl.classList.contains('active')) {
-                    videoModalBodyEl.innerHTML = ""; // Limpiar body por si quedó algo
+                    videoModalBodyEl.innerHTML = "";
                 }
-            }, 350); // Coincidir con la duración de la transición CSS
+            }, 350);
         }
 
 
         // --- Handlers de Eventos Globales ---
-        function handleChatInputKeydown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Prevenir salto de línea
-                sendAiMessage();
-            }
-            // El auto-resize se maneja con 'input'
-        }
-
-        function autoResizeChatInput() {
-             // Ajustar altura del textarea
-            this.style.height = 'auto'; // Resetear altura
-            this.style.height = (this.scrollHeight) + 'px'; // Ajustar a contenido
-        }
-
         function handleGlobalKeydown(event) {
             if (event.key === "Escape" || event.key === "Esc") {
                  console.log("Escape key pressed.");
                 if (videoModalEl && videoModalEl.classList.contains('active')) {
                     console.log("Closing video modal via Escape key.");
                     closeVideoModal();
-                } else if (aiChatContainerEl && aiChatContainerEl.classList.contains('active')) {
-                     console.log("Closing AI chat via Escape key.");
-                     closeAiChat();
                 }
             }
         }
@@ -1243,10 +847,8 @@
         // --- Inicialización al Cargar el DOM ---
         console.log("Base.html: Script principal iniciando...");
         if (document.readyState === 'loading') {
-            // Esperar a que el DOM esté listo
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
-            // Si el DOM ya está listo (raro, pero posible)
             initializeApp();
         }
 
@@ -1254,28 +856,397 @@
             console.log("Base.html: DOMContentLoaded event fired. Running initializeApp().");
             setupEventListeners();
 
-            // Cargar historial del chat AI si el contenedor existe
-            if (aiChatContainerEl) {
-                loadAiChatHistory();
-            } else {
-                 console.log("Chat AI container not found on this page.");
-            }
-
             // Configurar Marked si está disponible
             if (typeof marked !== 'undefined') {
-                 console.log("Marked library found. Setting options.");
                  marked.setOptions({
-                    breaks: true, // Interpretar saltos de línea simples como <br>
-                    gfm: true, // Habilitar GitHub Flavored Markdown
-                    sanitize: false // ¡CUIDADO! Deshabilitar sanitización.
+                    breaks: true,
+                    gfm: true,
+                    sanitize: false
                 });
-            } else {
-                 console.warn("Marked library is not loaded. AI responses will be shown as plain text.");
             }
+
+            // Inicializar Editor Markdown (SimpleMDE) Automáticamente
+            const editorIds = ["id_content", "id_contenido", "id_descripcion", "id_cuerpo"];
+            editorIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && typeof SimpleMDE !== 'undefined') {
+                     new SimpleMDE({ 
+                        element: element,
+                        spellChecker: false,
+                        placeholder: element.getAttribute("placeholder") || "Escribe aquí con formato...",
+                        status: false,
+                        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"]
+                    });
+                }
+            });
+
+            // === SCRIPT DE INICIALIZACIÓN Y AUTO-REPARACIÓN DE FORMULARIOS ===
+            const formsWithEditors = document.querySelectorAll('form');
+            formsWithEditors.forEach(form => {
+                const hasEditor = form.querySelector('.CodeMirror'); 
+                if (hasEditor) {
+                    form.setAttribute('novalidate', 'true');
+                    console.log("Auto-reparación: Formulario desbloqueado (novalidate añadido).");
+
+                    form.addEventListener('submit', function() {
+                        const btn = form.querySelector('button[type="submit"]');
+                        if(btn) {
+                            btn.style.opacity = '0.7';
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                        }
+                    });
+                }
+            });
+
             console.log("Base.html: initializeApp() complete.");
         }
 
     </script>
 
-</body>
+
+<div id="mentor-chat-window" class="mentor-window shadow-lg">
+    <div class="mentor-header bg-gradient-primary">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-graduation-cap me-2 text-white-50"></i>
+            <span class="fw-bold text-white">Mentor Institucional</span>
+        </div>
+        <div class="mentor-controls">
+            <button onclick="startNewChat()" class="btn-control" title="Nueva Clase / Limpiar" data-bs-toggle="tooltip">
+                <i class="fas fa-eraser"></i>
+            </button>
+            <button onclick="toggleExpand()" class="btn-control" title="Expandir/Contraer">
+                <i class="fas fa-expand" id="icon-expand"></i>
+                <i class="fas fa-compress" id="icon-compress" style="display: none;"></i>
+            </button>
+            <button onclick="toggleMentorChat()" class="btn-control" title="Minimizar">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button onclick="closeMentorWidget()" class="btn-control btn-close-x" title="Cerrar sesión">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="widget-chat-box" class="mentor-body custom-scrollbar">
+        </div>
+
+    <div id="widget-loading" class="text-center small text-muted py-2" style="display: none;">
+        <i class="fas fa-circle-notch fa-spin"></i> Preparando la clase...
+    </div>
+
+    <div class="mentor-footer">
+        <form id="widget-chat-form" class="d-flex gap-2">
+            <input type="text" id="widget-user-input" class="form-control form-control-sm rounded-pill" placeholder="Escribe aquí tu duda..." autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="mentor-trigger-btn" class="mentor-trigger animate__animated animate__fadeInUp">
+    <button id="btn-mentor-action" class="btn-mentor-main shadow-lg">
+        <i class="fas fa-comment-dots" id="icon-closed"></i>
+        <i class="fas fa-chevron-down" id="icon-open" style="display: none;"></i>
+        <span class="online-badge"></span>
+    </button>
+</div>
+
+<div id="mentor-backdrop" onclick="toggleExpand()" class="mentor-backdrop"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+    /* Trigger Button Wrapper */
+    .mentor-trigger { 
+        position: fixed; 
+        bottom: 30px; 
+        right: 30px; 
+        z-index: 10000;
+        /* Cursor de movimiento para indicar que se puede arrastrar */
+        cursor: grab; 
+        touch-action: none; /* Mejora para móviles */
+    }
+    
+    .mentor-trigger:active {
+        cursor: grabbing;
+    }
+
+    .btn-mentor-main {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: linear-gradient(135deg, #0d6efd, #0043a8);
+        border: 2px solid rgba(255,255,255,0.2); color: white; font-size: 24px;
+        /* Quitamos cursor pointer aquí para que lo maneje el wrapper */
+        cursor: inherit; 
+        transition: transform 0.1s; /* Transición más rápida para el drag */
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: none; /* Permite que el click pase al div padre si es necesario, o lo manejamos en JS */
+    }
+    
+    /* Reactivamos eventos de puntero solo para el botón interno */
+    .btn-mentor-main { pointer-events: auto; }
+
+    .btn-mentor-main:hover { transform: scale(1.05); }
+
+    .online-badge {
+        position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
+        background-color: #2ecc71; border: 2px solid #fff; border-radius: 50%;
+    }
+
+    /* Window Styles */
+    .mentor-window {
+        position: fixed; bottom: 100px; right: 30px; width: 380px; height: 500px;
+        background: #fff; border-radius: 16px; z-index: 10001; display: none;
+        flex-direction: column; border: 1px solid rgba(0,0,0,0.1);
+        transition: opacity 0.3s, transform 0.3s; /* Quitamos transition de bottom/right para evitar conflictos */
+        transform-origin: bottom right; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .mentor-window.expanded {
+        width: 90vw; height: 85vh; bottom: 50% !important; right: 50% !important;
+        transform: translate(50%, 50%) !important; border-radius: 12px;
+    }
+    .mentor-backdrop {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 10000; display: none;
+        backdrop-filter: blur(2px); transition: opacity 0.3s;
+    }
+
+    /* Internals */
+    .mentor-header { background: linear-gradient(135deg, #0d6efd, #0b5ed7); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .mentor-controls .btn-control {
+        background: rgba(255,255,255,0.2); border: none; color: white;
+        width: 28px; height: 28px; border-radius: 6px; font-size: 12px;
+        cursor: pointer; margin-left: 5px;
+    }
+    .mentor-controls .btn-control:hover { background: rgba(255,255,255,0.4); }
+    .mentor-controls .btn-close-x:hover { background: #dc3545; }
+    
+    .mentor-body { flex: 1; padding: 15px; overflow-y: auto; background-color: #f8f9fa; font-size: 0.95rem; }
+    .mentor-footer { padding: 12px; background: #fff; border-top: 1px solid #eee; }
+
+    /* Chat Bubbles */
+    .chat-bubble-ai {
+        background: #fff; border: 1px solid #e9ecef; border-radius: 12px 12px 12px 0;
+        padding: 12px 16px; max-width: 85%; color: #333; line-height: 1.6;
+    }
+    .chat-bubble-user {
+        background: #0d6efd; color: white; border-radius: 12px 12px 0 12px;
+        padding: 12px 16px; max-width: 85%; margin-left: auto;
+    }
+    /* Markdown Styling */
+    .chat-bubble-ai h3 { font-size: 1.1rem; color: #0d6efd; margin-top: 10px; border-bottom: 1px solid #eee; }
+    .chat-bubble-ai ul { padding-left: 18px; }
+    .chat-bubble-ai blockquote { border-left: 4px solid #198754; background: #f0fff4; padding: 8px 12px; margin: 8px 0; font-style: italic;}
+</style>
+
+<script>
+    const widgetWindow = document.getElementById('mentor-chat-window');
+    const backdrop = document.getElementById('mentor-backdrop');
+    const iconClosed = document.getElementById('icon-closed');
+    const iconOpen = document.getElementById('icon-open');
+    const widgetInput = document.getElementById('widget-user-input');
+    const widgetBox = document.getElementById('widget-chat-box');
+    const iconExpand = document.getElementById('icon-expand');
+    const iconCompress = document.getElementById('icon-compress');
+    
+    // Variables para el Drag & Drop
+    const dragItem = document.getElementById('mentor-trigger-btn');
+    const actionBtn = document.getElementById('btn-mentor-action');
+    let active = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+    let hasMoved = false; // Para diferenciar click de drag
+
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        startNewChat(false);
+    });
+
+    // ==========================================
+    // LÓGICA DE ARRASTRAR (DRAG & DROP)
+    // ==========================================
+    
+    dragItem.addEventListener("mousedown", dragStart, false);
+    document.addEventListener("mouseup", dragEnd, false);
+    document.addEventListener("mousemove", drag, false);
+
+    // Eventos Touch (Móvil)
+    dragItem.addEventListener("touchstart", dragStart, false);
+    document.addEventListener("touchend", dragEnd, false);
+    document.addEventListener("touchmove", drag, false);
+
+    function dragStart(e) {
+        if (e.type === "touchstart") {
+            initialX = e.touches[0].clientX - xOffset;
+            initialY = e.touches[0].clientY - yOffset;
+        } else {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        }
+
+        if (e.target === actionBtn || actionBtn.contains(e.target)) {
+            active = true;
+            hasMoved = false; // Reiniciamos contador de movimiento
+        }
+    }
+
+    function dragEnd(e) {
+        initialX = currentX;
+        initialY = currentY;
+        active = false;
+    }
+
+    function drag(e) {
+        if (active) {
+            e.preventDefault();
+        
+            if (e.type === "touchmove") {
+                currentX = e.touches[0].clientX - initialX;
+                currentY = e.touches[0].clientY - initialY;
+            } else {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+            }
+
+            // Si se mueve más de 2 pixeles, consideramos que está arrastrando, no haciendo click
+            if (Math.abs(currentX - xOffset) > 2 || Math.abs(currentY - yOffset) > 2) {
+                hasMoved = true;
+            }
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            setTranslate(currentX, currentY, dragItem);
+        }
+    }
+
+    function setTranslate(xPos, yPos, el) {
+        el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+    }
+
+    // ==========================================
+    // LÓGICA DE CHAT (CLICK INTELIGENTE)
+    // ==========================================
+
+    // Solo abrimos el chat si NO se movió el botón (fue un click limpio)
+    actionBtn.addEventListener('click', function(e) {
+        if (!hasMoved) {
+            toggleMentorChat();
+        }
+    });
+
+    // 1. NUEVO CHAT (LIMPIAR)
+    function startNewChat(forceClear = true) {
+        if (forceClear) {
+            widgetBox.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-magic fa-2x mb-3 animate__animated animate__fadeOut"></i><br>Limpiando pizarra...</div>';
+            setTimeout(() => { _injectWelcome(); }, 600);
+        } else {
+            if (widgetBox.innerHTML.trim() === "") _injectWelcome();
+        }
+    }
+
+    function _injectWelcome() {
+        widgetBox.innerHTML = `
+            <div class="d-flex justify-content-start mb-3 animate__animated animate__fadeIn">
+                <div class="chat-bubble-ai shadow-sm">
+                    <strong><i class="fas fa-robot"></i> Mentor Institucional:</strong>
+                    <p class="mb-0 mt-2">¡Hola! Soy tu tutor pedagógico.</p>
+                    <p class="mb-0 small text-muted">¿Qué tema quieres dominar hoy?</p>
+                </div>
+            </div>
+        `;
+        widgetInput.value = '';
+        widgetInput.focus();
+    }
+
+    // 2. TOGGLES DE VENTANA
+    function toggleMentorChat() {
+        if (widgetWindow.classList.contains('expanded')) toggleExpand();
+
+        if (widgetWindow.style.display === 'none' || widgetWindow.style.display === '') {
+            widgetWindow.style.display = 'flex';
+            iconClosed.style.display = 'none';
+            iconOpen.style.display = 'block';
+            setTimeout(() => widgetInput.focus(), 100);
+        } else {
+            widgetWindow.style.display = 'none';
+            iconClosed.style.display = 'block';
+            iconOpen.style.display = 'none';
+        }
+    }
+
+    function toggleExpand() {
+        widgetWindow.classList.toggle('expanded');
+        if (widgetWindow.classList.contains('expanded')) {
+            backdrop.style.display = 'block';
+            iconExpand.style.display = 'none';
+            iconCompress.style.display = 'inline';
+        } else {
+            backdrop.style.display = 'none';
+            iconExpand.style.display = 'inline';
+            iconCompress.style.display = 'none';
+        }
+    }
+
+    function closeMentorWidget() {
+        if (widgetWindow.classList.contains('expanded')) toggleExpand();
+        widgetWindow.style.display = 'none';
+        document.getElementById('mentor-trigger-btn').style.display = 'none';
+    }
+
+    // 3. ENVÍO DE MENSAJES
+    document.getElementById('widget-chat-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const text = widgetInput.value.trim();
+        if (!text) return;
+
+        appendWidgetMessage('user', text);
+        widgetInput.value = '';
+
+        const loading = document.getElementById('widget-loading');
+        loading.style.display = 'block';
+        widgetBox.scrollTop = widgetBox.scrollHeight;
+
+        try {
+            const url = `{% url 'ai_engine' %}?action=chat_socratico&user_query=${encodeURIComponent(text)}&format=json`;
+            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+            const data = await response.json();
+            
+            loading.style.display = 'none';
+            if (data.success) appendWidgetMessage('ai', data.content);
+            else appendWidgetMessage('ai', `⚠️ Error: ${data.content}`);
+        } catch (error) {
+            loading.style.display = 'none';
+            appendWidgetMessage('ai', "❌ Error de conexión.");
+        }
+    });
+
+    function appendWidgetMessage(role, text) {
+        const div = document.createElement('div');
+        div.className = `d-flex justify-content-${role === 'user' ? 'end' : 'start'} mb-3 animate__animated animate__fadeIn`;
+        const content = role === 'user' 
+            ? `<div class="chat-bubble-user shadow-sm">${text}</div>`
+            : `<div class="chat-bubble-ai shadow-sm">${marked.parse(text)}</div>`;
+        div.innerHTML = content;
+        widgetBox.appendChild(div);
+        widgetBox.scrollTop = widgetBox.scrollHeight;
+    }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+    
+    </body>
 </html>

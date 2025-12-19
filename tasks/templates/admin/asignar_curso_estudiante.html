@@ -2,106 +2,137 @@
 
 {% block content %}
 <div class="container py-5">
-<div class="card p-5">
-<h1 class="text-center mb-4">Asignar Curso a Estudiante</h1>
+    <div class="card p-5 shadow-sm">
+        <h2 class="text-center mb-4"><i class="fas fa-chalkboard-teacher me-2"></i>Asignar Curso a Estudiante</h2>
 
-<form method="POST" class="mb-4">
-    {% csrf_token %}
-    <div class="row">
-    <div class="col-md-5">
-        <label for="estudiante_select" class="form-label">Seleccionar Estudiante</label>
-        <select name="estudiante" id="estudiante_select" class="form-select" required>
-            <option value="">Seleccionar estudiante</option>
-            {# Usamos la nueva variable 'todos_los_estudiantes' para el menú #}
-            {% for estudiante in todos_los_estudiantes %}
-                <option value="{{ estudiante.id }}">{{ estudiante.get_full_name|default:estudiante.username }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-5">
-        <label for="curso_select" class="form-label">Seleccionar Curso</label>
-        <select name="curso" id="curso_select" class="form-select" required>
-            <option value="">Seleccionar curso</option>
-            {% for curso in cursos %}
-                <option value="{{ curso.id }}">{{ curso.nombre }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-success w-100">Asignar</button>
-    </div>
-    </div>
-</form>
-
-<h3 class="mt-5">Estudiantes y sus Cursos</h3>
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>Estudiante</th>
-            <th>Usuario (Est.)</th>
-            <th>Acudiente</th>
-            <th>Usuario (Acud.)</th>
-            <th>Curso Actual</th>
-            <th>Rol</th>
-            <th>Boletín (PDF)</th> 
-            <th>Acceso Acudiente</th>
-            <th class="text-center">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in estudiantes_con_curso %}
-        <tr>
-            <td>{{ item.user.get_full_name|default:item.user.username }}</td>
-            <td><code>{{ item.user.username }}</code></td> {# 👈 Añadí <code> para consistencia #}
-            <td>{{ item.acudiente_nombre }}</td>
-            <td><code>{{ item.acudiente_username }}</code></td>
-            <td>{{ item.curso.nombre|default:"Sin asignar" }}</td>
-            <td>{{ item.rol }}</td>
-            <td>
-                <a href="{% url 'panel_generar_boletin' item.user.id %}" class="btn btn-sm btn-info" target="_blank" title="Generar PDF">
-                    <i class="fas fa-file-pdf"></i>
-                </a>
-                </td>
-            <td>
-                {% if item.matricula %}
-                <div class="form-check form-switch">
-                    <input class="form-check-input toggle-boletin" type="checkbox" 
-                           data-estudiante-id="{{ item.user.id }}" 
-                           {% if item.matricula.puede_generar_boletin %}checked{% endif %}>
-                    <label class="form-check-label small" id="label-boletin-{{ item.user.id }}">
-                        {% if item.matricula.puede_generar_boletin %}Disponible{% else %}Bloqueado{% endif %}
-                    </label>
+        <form method="POST" class="mb-4">
+            {% csrf_token %}
+            <div class="row align-items-end">
+                <div class="col-md-5">
+                    <label for="estudiante_select" class="form-label">Seleccionar Estudiante</label>
+                    <select name="estudiante" id="estudiante_select" class="form-select select2" required>
+                        <option value="">Seleccionar estudiante</option>
+                        {% for estudiante in todos_los_estudiantes %}
+                            <option value="{{ estudiante.id }}">{{ estudiante.last_name }} {{ estudiante.first_name }} ({{ estudiante.username }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                {% else %}
-                <span class="badge bg-secondary">Sin Matrícula</span>
-                {% endif %}
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-danger btn-retirar"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalRetirarEstudiante"
-                        data-estudiante-id="{{ item.user.id }}"
-                        data-estudiante-nombre="{{ item.user.get_full_name|default:item.user.username }}">
-                    <i class="fas fa-user-minus me-1"></i> Retirar
-                </button>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="9" class="text-center">No hay estudiantes matriculados para mostrar.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-    </table>
-</div>
+                <div class="col-md-5">
+                    <label for="curso_select" class="form-label">Seleccionar Curso</label>
+                    <select name="curso" id="curso_select" class="form-select select2" required>
+                        <option value="">Seleccionar curso</option>
+                        {% for curso in cursos %}
+                            <option value="{{ curso.id }}">{{ curso.get_grado_display }} {{ curso.seccion }} ({{ curso.matriculados.count }}/{{ curso.capacidad_maxima }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-plus-circle"></i> Asignar
+                    </button>
+                </div>
+            </div>
+        </form>
 
-<div class="text-center mt-4">
-    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
-</div>
-</div>
-</div>
+        <hr class="my-5">
 
+        <h3 class="mb-3">Estudiantes Matriculados ({{ anio_escolar }})</h3>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Usuario</th>
+                        <th>Acudiente</th>
+                        <th>Curso</th>
+                        <th class="text-center">PDFs</th> 
+                        <th class="text-center">Bol. (Visib.)</th> <th class="text-center">Obs. (Visib.)</th> <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in estudiantes_con_curso %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.user.last_name }} {{ item.user.first_name }}</strong>
+                        </td>
+                        <td><code>{{ item.user.username }}</code></td>
+                        <td>
+                            {{ item.acudiente_nombre }}<br>
+                            <small class="text-muted">{{ item.acudiente_username }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                {{ item.curso.get_grado_display }} {{ item.curso.seccion }}
+                            </span>
+                        </td>
+                        
+                        <td class="text-center text-nowrap">
+                            <a href="{% url 'panel_generar_boletin' item.user.id %}" class="btn btn-sm btn-info me-1" target="_blank" title="Generar Boletín PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <a href="{% url 'generar_observador_pdf' item.user.id %}" class="btn btn-sm btn-warning me-1" target="_blank" title="Generar Observador PDF">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            {% if item.matricula %}
+                            <div class="form-check form-switch d-inline-block">
+                                <input class="form-check-input toggle-permiso" type="checkbox" 
+                                       data-tipo="boletin" 
+                                       data-estudiante-id="{{ item.user.id }}"
+                                       id="bol-switch-{{ item.user.id }}"
+                                       {% if item.matricula.puede_generar_boletin %}checked{% endif %}>
+                                <label class="form-check-label small d-block" for="bol-switch-{{ item.user.id }}" id="label-boletin-{{ item.user.id }}">
+                                    {% if item.matricula.puede_generar_boletin %}Visible{% else %}Bloq.{% endif %}
+                                </label>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-secondary">--</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if item.matricula %}
+                            <div class="form-check form-switch d-inline-block">
+                                <input class="form-check-input toggle-permiso" type="checkbox" 
+                                       data-tipo="observador" 
+                                       data-estudiante-id="{{ item.user.id }}"
+                                       id="obs-switch-{{ item.user.id }}"
+                                       {% if item.matricula.puede_ver_observador %}checked{% endif %}>
+                                <label class="form-check-label small d-block" for="obs-switch-{{ item.user.id }}" id="label-observador-{{ item.user.id }}">
+                                    {% if item.matricula.puede_ver_observador %}Visible{% else %}Bloq.{% endif %}
+                                </label>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-secondary">--</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-retirar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalRetirarEstudiante"
+                                    data-estudiante-id="{{ item.user.id }}"
+                                    data-estudiante-nombre="{{ item.user.get_full_name|default:item.user.username }}"
+                                    title="Retirar y Archivar">
+                                <i class="fas fa-user-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay estudiantes matriculados activos para mostrar.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="modalRetirarEstudiante" tabindex="-1" aria-labelledby="modalRetirarLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -125,10 +156,10 @@
             </ul>
         </div>
         <p class="mt-3">¿Estás seguro de que deseas continuar?</p>
-        </div>
+      </div>
       <div class="modal-footer">
         <form method="POST" action="{% url 'panel_eliminar_estudiante' %}">
-        {% csrf_token %}
+            {% csrf_token %}
             <input type="hidden" name="estudiante_id" id="idEstudianteRetirar">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="submit" class="btn btn-danger">Sí, Retirar Estudiante</button>
@@ -138,10 +169,16 @@
   </div>
 </div>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- Lógica de Toggle (Existente) ---
+    // Inicializar Select2 con tema Bootstrap 5 (si disponible) o default
+    $('.select2').select2({ width: '100%' });
+
+    // --- LÓGICA DE TOGGLE UNIFICADA (Boletín y Observador) ---
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -157,18 +194,32 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
     const csrftoken = getCookie('csrftoken');
-    const toggles = document.querySelectorAll('.toggle-boletin');
+
+    const toggles = document.querySelectorAll('.toggle-permiso');
     
     toggles.forEach(switchEl => {
         switchEl.addEventListener('change', async function(e) {
             const estudianteId = e.target.dataset.estudianteId;
             const nuevoEstado = e.target.checked;
-            const label = document.getElementById(`label-boletin-${estudianteId}`);
+            const tipo = e.target.dataset.tipo; // 'boletin' o 'observador'
             
-            label.textContent = 'Actualizando...';
+            // Determinamos ID del label y URL según el tipo
+            let labelId = '';
+            let urlApi = '';
+
+            if (tipo === 'boletin') {
+                labelId = `label-boletin-${estudianteId}`;
+                urlApi = "{% url 'panel_api_toggle_boletin_permiso' %}";
+            } else if (tipo === 'observador') {
+                labelId = `label-observador-${estudianteId}`;
+                urlApi = "{% url 'panel_api_toggle_observador' %}";
+            }
+
+            const label = document.getElementById(labelId);
+            if(label) label.textContent = '...';
             
             try {
-                const response = await fetch(`{% url 'panel_api_toggle_boletin_permiso' %}`, {
+                const response = await fetch(urlApi, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -183,22 +234,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
 
                 if (response.ok && data.status === 'ok') {
-                    label.textContent = data.nuevo_estado_texto;
+                    if(label) label.textContent = data.nuevo_estado_texto;
                 } else {
-                    e.target.checked = !nuevoEstado;
-                    label.textContent = nuevoEstado ? 'Bloqueado' : 'Disponible';
+                    e.target.checked = !nuevoEstado; // Revertir visualmente
+                    if(label) label.textContent = nuevoEstado ? 'Bloqueado' : 'Visible'; // Restaurar texto aprox
                     alert('Error: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
                 console.error('Error en fetch:', error);
                 e.target.checked = !nuevoEstado;
-                label.textContent = nuevoEstado ? 'Bloqueado' : 'Disponible';
+                if(label) label.textContent = nuevoEstado ? 'Bloqueado' : 'Visible';
                 alert('Error de conexión al actualizar el permiso.');
             }
         });
     });
 
-    // --- Lógica de Modal de Retiro (Nueva) ---
+    // --- LÓGICA DE MODAL DE RETIRO (INTACTA) ---
     const modalRetirarEstudiante = document.getElementById('modalRetirarEstudiante');
     if (modalRetirarEstudiante) {
         modalRetirarEstudiante.addEventListener('show.bs.modal', function (event) {

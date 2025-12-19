@@ -1,25 +1,36 @@
-# Entorno virtual
-/venv/
-/env/
-
-# Archivos de Python
+# --- Python y Compilados ---
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
-# Base de datos
+# --- Entornos Virtuales (Varias formas de nombrarlos) ---
+venv/
+env/
+.venv/
+.env_chat/
+
+# --- Base de Datos (Nunca subir la DB local) ---
 *.sqlite3
 db.sqlite3
 
-# Archivos de Logs y Media
-*.log
-/media/
+# --- Variables de Entorno y Secretos (CRÍTICO) ---
+.env
+.env.*
+.env.local
 
-# Archivos de IDE
+# --- Archivos Estáticos y Media ---
+# staticfiles: Se genera automáticamente en Railway
+staticfiles/
+# media: Son archivos subidos por usuarios (fotos, pdfs), no es código
+media/
+
+# --- Logs y Errores ---
+*.log
+celerybeat-schedule
+celerybeat.pid
+
+# --- Sistema Operativo y Editores ---
+.DS_Store
 .vscode/
 .idea/
-
-# Archivos sensibles (¡IMPORTANTE!)
-.env
-
-# Archivos estáticos recolectados
-/staticfiles/
+*.swp

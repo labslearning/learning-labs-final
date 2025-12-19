@@ -240,7 +240,7 @@
         .materia-detalle-tabla tbody tr:last-child td {
             border-bottom: none;
         }
-        
+
         .materia-detalle-tabla thead th {
             font-weight: 500; /* Medium */
             background-color: #fafafa;
@@ -248,7 +248,7 @@
             font-size: 9pt;
             color: #333;
         }
-        
+
         /* Definir anchos de columna */
         .materia-detalle-tabla .col-periodo { width: 18%; }
         .materia-detalle-tabla .col-nota { width: 10%; text-align: center; }
@@ -377,16 +377,24 @@
             {% endif %}
         </div>
         <div class="header-right">
-            <h1>{{ institucion.nombre|upper }}</h1>
-            <p>{{ institucion.lema|default_if_none:"" }}</p>
-            <p>{{ institucion.resolucion|default_if_none:"" }}</p>
-            <p>{{ institucion.direccion|default_if_none:"" }} | {{ institucion.ciudad|default_if_none:"" }}</p>
-            <p>Tel: {{ institucion.telefono|default_if_none:"" }} | Email: {{ institucion.correo|default_if_none:"" }} | NIT: {{ institucion.nit|default_if_none:"" }}</p>
+            <h1>{{ institucion.nombre|upper|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
+            
+            <p>{{ institucion.lema|default:"[Lema Institucional]" }}</p>
+            <p>{{ institucion.resolucion|default:"[Resolución Oficial]" }}</p>
+            <p>
+                {{ institucion.direccion|default:"[Dirección]" }} | 
+                {{ institucion.ciudad|default:"[Ciudad]" }}
+            </p>
+            <p>
+                Tel: {{ institucion.telefono|default:"N/A" }} | 
+                Email: {{ institucion.correo|default:"N/A" }} | 
+                NIT: {{ institucion.nit|default:"N/A" }}
+            </p>
         </div>
     </header>
 
     <section class="info">
-        <h2>BOLETÍN ACADÉMICO - AÑO LECTIVO {{ institucion.anio_lectivo }}</h2>
+        <h2>BOLETÍN ACADÉMICO - AÑO LECTIVO {{ institucion.anio_lectivo|default:"[Sin Año]" }}</h2>
         <table>
             <tr>
                 <td><strong>ESTUDIANTE:</strong></td>
@@ -399,7 +407,7 @@
                 <td>{{ estudiante.username }}</td>
                 <td><strong>ACUDIENTE:</strong></td>
                 <td>{{ acudiente.get_full_name|upper|default:"-" }}</td>
-                </tr>
+            </tr>
             <tr>
                 <td><strong>FECHA DE EMISIÓN:</strong></td>
                 <td>{{ fecha_emision|date:"d/m/Y" }}</td>

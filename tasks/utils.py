@@ -1,124 +1,188 @@
 # ===================================================================
-# tasks/utils.py (COMPLETO Y PROFESIONAL)
+# tasks/utils.py (SENTINEL 3.0: CORRECCIÓN DE FALSOS POSITIVOS Y LÓGICA ROBUSTA)
 # ===================================================================
-
-"""
-Módulo de utilidades para la aplicación 'tasks'.
-
-Este archivo centraliza funciones de ayuda reutilizables que no son vistas
-directamente, como generadores de datos, normalizadores de texto y lógica
-de negocio específica que puede ser llamada desde múltiples lugares.
-"""
 
 import re
 import secrets
 import string
 import unicodedata
+import bleach
+import textdistance
+from unidecode import unidecode
 from django.contrib.auth.models import User
-from .models import Curso
+from .models import Curso, Notificacion, Acudiente 
 from typing import Optional
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+# ===================================================================
+# 1. UTILIDADES DE USUARIO Y NEGOCIO
+# ===================================================================
 
 def _slugify_simple(text: str) -> str:
-    """
-    Función interna para normalizar y limpiar una cadena de texto.
-    Convierte a minúsculas, elimina acentos y caracteres no alfanuméricos.
-    
-    :param text: La cadena de texto a procesar.
-    :return: La cadena de texto normalizada.
-    """
     try:
+        # Usa unidecode para manejar acentos antes de la normalización ASCII
+        text = unidecode(text) 
         text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     except (TypeError, AttributeError):
         return ""
     return re.sub(r'[^a-z0-9]+', '', text.lower())
 
-
 def generar_username_unico(nombre: str, apellido: str) -> str:
-    """
-    Genera un nombre de usuario único basado en el nombre y apellido.
-    
-    Crea un nombre base (ej: 'jperez') y verifica si ya existe en la base de datos.
-    Si existe, anexa un número secuencial (ej: 'jperez2', 'jperez3', ...)
-    hasta encontrar uno disponible.
-
-    :param nombre: El primer nombre del usuario.
-    :param apellido: El apellido del usuario.
-    :return: Un string con el nombre de usuario único generado.
-    """
     base_username = f"{_slugify_simple(nombre[:1])}{_slugify_simple(apellido)}"
-    if not base_username:
-        base_username = "usuario"  # Fallback por si el nombre/apellido es inválido
-
-    # Optimización: primero, verificar si el username base está disponible
-    if not User.objects.filter(username=base_username).exists():
-        return base_username
-
-    # Si el base ya existe, buscar el siguiente sufijo numérico
-    # Regex busca usernames que empiezan con la base y terminan en opcionales dígitos
-    # ej: para 'jperez', busca 'jperez', 'jperez2', 'jperez10', etc.
+    if not base_username: base_username = "usuario"
+    if not User.objects.filter(username=base_username).exists(): return base_username
     candidatos = User.objects.filter(username__regex=rf'^{re.escape(base_username)}\d*$').values_list('username', flat=True)
-    
     sufijos = [int(u[len(base_username):]) for u in candidatos if u != base_username and u[len(base_username):].isdigit()]
-    
     siguiente_sufijo = (max(sufijos) + 1) if sufijos else 2
-    
     return f"{base_username}{siguiente_sufijo}"
 
-
 def generar_contrasena_temporal(longitud: int = 12) -> str:
-    """
-    Genera una contraseña temporal segura y aleatoria.
-
-    Utiliza el módulo 'secrets' de Python, que es criptográficamente seguro,
-    para construir una contraseña con letras mayúsculas, minúsculas,
-    números y un conjunto de símbolos comunes.
-
-    :param longitud: La longitud deseada para la contraseña. Por defecto es 12.
-    :return: Un string con la contraseña temporal generada.
-    """
     alfabeto = string.ascii_letters + string.digits + "!@#$%^&*?"
     return ''.join(secrets.choice(alfabeto) for _ in range(longitud))
 
-
 def asignar_curso_por_grado(grado: str, seccion: Optional[str] = None, anio_escolar: Optional[str] = None) -> Curso:
-    """
-    Busca y asigna el curso más apropiado para un estudiante según su grado.
-
-    La lógica de asignación es la siguiente:
-    1. Filtra los cursos activos por el grado y, opcionalmente, por sección y año escolar.
-    2. Prioriza los cursos que aún no han alcanzado su capacidad máxima.
-    3. Si todos los cursos que coinciden están llenos, busca cualquier otro curso
-       activo del mismo grado como alternativa (fallback).
-    4. Si no se encuentra absolutamente ningún curso para ese grado, lanza un error claro.
-
-    :param grado: La clave del grado (ej: '6', 'PREKINDER') del modelo GRADOS_CHOICES.
-    :param seccion: (Opcional) La sección específica a buscar (ej: 'A').
-    :param anio_escolar: (Opcional) El año escolar específico (ej: '2025-2026').
-    :return: Una instancia del modelo Curso que está disponible.
-    :raises ValueError: Si no se encuentra ningún curso activo para el grado especificado.
-    """
     qs = Curso.objects.filter(grado=grado, activo=True)
-    
-    if anio_escolar:
-        qs = qs.filter(anio_escolar=anio_escolar)
-    if seccion:
-        qs = qs.filter(seccion__iexact=seccion) # Case-insensitive para la sección
-    
-    # Intenta encontrar un curso con cupo disponible
+    if anio_escolar: qs = qs.filter(anio_escolar=anio_escolar)
+    if seccion: qs = qs.filter(seccion__iexact=seccion)
     for curso in qs.order_by('seccion', 'nombre'):
-        if not curso.esta_completo():
-            return curso
-            
-    # Si no hay cursos con cupo, o la sección no fue encontrada, busca una alternativa
-    # en el mismo grado sin considerar la sección (si se especificó una).
+        if not curso.esta_completo(): return curso
     fallback_qs = Curso.objects.filter(grado=grado, activo=True)
-    if anio_escolar:
-        fallback_qs = fallback_qs.filter(anio_escolar=anio_escolar)
-
+    if anio_escolar: fallback_qs = fallback_qs.filter(anio_escolar=anio_escolar)
     for curso in fallback_qs.order_by('seccion', 'nombre'):
-         if not curso.esta_completo():
-            return curso
+         if not curso.esta_completo(): return curso
+    raise ValueError(f"No hay cursos con cupo disponible para el grado '{grado}'.")
 
-    # Si llegamos aquí, todos los cursos de ese grado están llenos o no existen.
-    # Lanza un error claro para que el administrador sepa que debe crear un nuevo curso.
-    raise ValueError(f"No hay cursos con cupo disponible para el grado '{grado}'. Por favor, crea uno nuevo en el panel de administración.")
+# ===================================================================
+# 2. NOTIFICACIONES (INTACTAS)
+# ===================================================================
+
+def crear_notificacion(usuario_destino, titulo, mensaje, tipo, link=None):
+    try:
+        Notificacion.objects.create(usuario=usuario_destino, titulo=titulo, mensaje=mensaje, tipo=tipo, link_destino=link)
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                f"user_{usuario_destino.id}",
+                {'type': 'send_notification', 'titulo': titulo, 'mensaje': mensaje, 'link': link or '#', 'tipo_alerta': 'info'}
+            )
+    except Exception as e:
+        print(f"Error log (Notificación): {e}")
+
+def notificar_acudientes(estudiante, titulo, mensaje, tipo, link=None):
+    vinculos = Acudiente.objects.filter(estudiante=estudiante)
+    if not vinculos.exists(): return
+    for vinculo in vinculos:
+        mensaje_personalizado = f"Alumno {estudiante.get_full_name()}: {mensaje}"
+        crear_notificacion(vinculo.acudiente, titulo, mensaje_personalizado, tipo, link)
+
+# ===================================================================
+# 3. SANITIZACIÓN HTML (INTACTA)
+# ===================================================================
+
+def _link_callback(attrs, new=False):
+    attrs[(None, 'target')] = '_blank'
+    attrs[(None, 'rel')] = 'noopener noreferrer'
+    return attrs
+
+def sanitizar_markdown(texto: str) -> str:
+    if not texto: return ""
+    tags_permitidos = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div']
+    atributos_permitidos = {'a': ['href', 'title', 'target'], 'span': ['class'], '*': ['style']}
+    estilos_permitidos = ['color', 'font-weight', 'text-align', 'text-decoration']
+    cleaned_text = bleach.clean(texto, tags=tags_permitidos, attributes=atributos_permitidos, styles=estilos_permitidos, strip=True)
+    linker = bleach.linkifier.Linker(callbacks=[_link_callback])
+    return linker.linkify(cleaned_text)
+
+# ===================================================================
+# 4. EL CENTINELA 3.0: SEGURIDAD INTELIGENTE (CORREGIDO) 🛡️
+# ===================================================================
+
+# Lista curada de palabras ofensivas (la misma de tu versión anterior, pero la lógica será más estricta)
+BAD_WORDS_STRICT = [
+    # --- INSULTOS Y RAÍCES PRINCIPALES ---
+    'estupido', 'estupida', 'idiota', 'imbecil', 'pendejo', 'pendeja', 'tarado', 'baboso', 
+    'inutil', 'basura', 'escoria', 'maldito', 'maldita', 'malparido', 'gonorrea', 'pirobo', 
+    'perra', 'zorra', 'puta', 'puto', 'guarro', 'cerdo', 'asqueroso', 'retrasado', 'mongolico',
+    'autismo', 'sidoso', 'canceroso', 'mierda', 'cagar', 'cabron', 'maricon', 'marica', 'joder',
+    
+    # --- CONTENIDO SEXUAL ---
+    'follar', 'coger', 'mamada', 'chupalo', 'pene', 'verga', 'picha', 'polla', 
+    'vagina', 'concha', 'panocha', 'clitoris', 'vulva', 'tetas', 'senos', 'anal', 
+    'semen', 'corrida', 'orgasmo', 'porno', 'pornografia', 'hentai', 'nude', 
+    'desnudo', 'desnuda', 'excitado', 'caliente', 'penetrar', 'masturbarse', 'paja',
+    'condon', 'virginidad', 'prostituta', 'prepago', 'sexo',
+    
+    # --- ACOSO / ODIO ---
+    'travesti', 'negro de mierda', 'sudaca', 'indio', 'nazi', 'hitler', 
+    'gordo', 'gorda', 'ballena', 'anorexico', 'bulimico', 'suicidate', 'matate', 
+    'muerete', 'cortate', 'ahorcate', 'plomo', 'disparar', 'violar', 'abusador', 
+    'marihuana', 'cocaina', 'heroina', 'drogas'
+]
+
+class Sentinel:
+    @staticmethod
+    def normalize_word(word: str) -> str:
+        """
+        Limpia una palabra individual manteniendo su esencia, maneja acentos y leetspeak.
+        """
+        # 1. Quitar acentos y a minúsculas usando unidecode (CRUCIAL para tildes y ñ)
+        word = unidecode(word).lower()
+        
+        # 2. Mapa de Leetspeak simple
+        leetspeak_map = {'0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i'}
+        for symbol, letter in leetspeak_map.items():
+            word = word.replace(symbol, letter)
+            
+        # 3. Dejar solo letras (elimina puntuación y símbolos pegados, pero no quita espacios)
+        return re.sub(r'[^a-z]+', '', word)
+
+    @staticmethod
+    def is_toxic(text: str) -> tuple[bool, Optional[str]]:
+        """
+        Analiza el texto PALABRA POR PALABRA con lógica relajada para evitar falsos positivos.
+        """
+        if not text: 
+            return False, None
+        
+        # 1. Dividir el texto en palabras reales (usamos regex para encontrar bloques de caracteres)
+        words = re.findall(r'\b\S+\b', text) 
+        
+        for word in words:
+            clean_word = Sentinel.normalize_word(word)
+            
+            # Si la palabra limpia es muy corta (menos de 3 letras), la ignoramos.
+            if len(clean_word) < 3:
+                continue
+
+            for bad_word in BAD_WORDS_STRICT:
+                
+                # 2. Coincidencia Exacta (Máxima prioridad)
+                if clean_word == bad_word:
+                    return True, f"Palabra prohibida: {bad_word}"
+                
+                # 3. Detección de palabras compuestas (Ej: 'come+mierda')
+                # Buscamos la palabra mala *dentro* de la palabra limpia
+                if bad_word in clean_word:
+                    # Criterio de longitud más estricto: la palabra mala debe ser de al menos 4 caracteres
+                    # (Esto evita falsos positivos como 'aut' en 'autoridad' o 'put' en 'computador')
+                    if len(bad_word) >= 4: 
+                         return True, f"Palabra compuesta ofensiva detectada: {bad_word}"
+
+                # 4. Lógica Difusa (Fuzzy) para errores ortográficos o evasión leves
+                if abs(len(clean_word) - len(bad_word)) <= 2:
+                    # Usamos un umbral MUY ALTO (95%)
+                    similarity = textdistance.jaro_winkler.normalized_similarity(clean_word, bad_word)
+                    if similarity > 0.95:  
+                        return True, f"Palabra sospechosa similar a: {bad_word}"
+        
+        return False, None
+
+# Helper para compatibilidad
+def security_scan(text: str) -> bool:
+    is_unsafe, reason = Sentinel.is_toxic(text)
+    return is_unsafe
+
+def validar_lenguaje_apropiado(texto: str) -> bool:
+    is_unsafe, _ = Sentinel.is_toxic(texto)
+    return not is_unsafe

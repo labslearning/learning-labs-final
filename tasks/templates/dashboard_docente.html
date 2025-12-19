@@ -8,7 +8,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card bg-gradient-primary border-0 shadow-lg animate__animated animate__fadeInDown">
-                <div class="card-body p-4 p-md-5"> {# Aumento de padding para un look más espacioso #}
+                <div class="card-body p-4 p-md-5">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                         <div class="text-center text-md-start mb-4 mb-md-0">
                             <h1 class="text-white fw-bold mb-2">
@@ -16,7 +16,14 @@
                             </h1>
                             <p class="text-white-75 lead mb-0">Bienvenido, <span class="fw-semibold">{{ docente.get_full_name|default:docente.username }}</span></p>
                         </div>
-                        <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-4">
+                        <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-4 align-items-center">
+                            
+                            <div class="me-md-4 border-end pe-4 border-white-50 d-none d-lg-block">
+                                <a href="{% url 'ai_engine' %}?action=chat_socratico" class="btn btn-light btn-rounded shadow-sm fw-bold text-primary">
+                                    <i class="fas fa-robot me-2"></i>Tutor IA (Chat)
+                                </a>
+                            </div>
+                            
                             <div class="text-center">
                                 <h3 class="text-white fw-bold mb-0">{{ total_cursos }}</h3>
                                 <small class="text-white-50 text-uppercase letter-spacing-1">Cursos</small>
@@ -37,7 +44,7 @@
     </div>
 
     <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInUp">
-        <div class="card-body p-2"> {# Reducido padding aquí para nav más compacto #}
+        <div class="card-body p-2">
             <ul class="nav nav-pills nav-justified flex-column flex-sm-row" id="docenteTabs" role="tablist">
                 <li class="nav-item m-1" role="presentation">
                     <button class="nav-link active d-flex align-items-center justify-content-center py-2 px-3 rounded-pill" id="cursos-tab" data-bs-toggle="pill" data-bs-target="#cursos" type="button" role="tab" aria-controls="cursos" aria-selected="true">
@@ -50,6 +57,11 @@
                     </button>
                 </li>
                 <li class="nav-item m-1" role="presentation">
+                    <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="nav-link d-flex align-items-center justify-content-center py-2 px-3 rounded-pill text-primary border border-primary">
+                        <i class="fas fa-brain me-2"></i>Plan de Mejora IA
+                    </a>
+                </li>
+                <li class="nav-item m-1" role="presentation">
                     <button class="nav-link d-flex align-items-center justify-content-center py-2 px-3 rounded-pill" id="calendario-tab" data-bs-toggle="pill" data-bs-target="#calendario" type="button" role="tab" aria-controls="calendario" aria-selected="false">
                         <i class="fas fa-calendar me-2"></i>Calendario
                     </button>
@@ -59,13 +71,36 @@
     </div>
 
     <div class="tab-content" id="docenteTabContent">
+        
         <div class="tab-pane fade show active" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm bg-light animate__animated animate__fadeIn">
+                        <div class="card-body d-flex align-items-center py-3">
+                            <div class="flex-shrink-0 bg-primary-soft p-3 rounded-circle me-3">
+                                <i class="fas fa-lightbulb text-primary fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">Análisis Predictivo disponible</h6>
+                                <small class="text-muted">Utiliza la Inteligencia Artificial para generar estrategias de mejora para tus cursos.</small>
+                            </div>
+                            <div class="ms-auto">
+                                <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="btn btn-sm btn-primary rounded-pill px-4">
+                                    Generar Estrategia
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% if materias_por_curso %}
             <div class="row">
                 {% for curso_nombre, data in materias_por_curso.items %}
-                <div class="col-xxl-4 col-lg-6 mb-4 animate__animated animate__fadeInUp animate__delay-{{ forloop.counter }}s"> {# Animación con retardo #}
-                    <div class="card h-100 border-0 shadow-hover-lg rounded-3 overflow-hidden"> {# Sombra más pronunciada, bordes redondeados #}
-                        <div class="card-header bg-primary bg-gradient text-white border-0 py-3"> {# Color de header consistente #}
+                <div class="col-xxl-4 col-lg-6 mb-4 animate__animated animate__fadeInUp animate__delay-{{ forloop.counter }}s">
+                    <div class="card h-100 border-0 shadow-hover-lg rounded-3 overflow-hidden">
+                        <div class="card-header bg-primary bg-gradient text-white border-0 py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="card-title mb-0 fw-bold">
                                     <i class="fas fa-graduation-cap me-2 text-white opacity-8"></i>{{ curso_nombre }}
@@ -74,17 +109,17 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <h6 class="text-primary mt-3 mb-3 fw-semibold border-bottom pb-2">Materias Asignadas:</h6> {# Título de sección más claro #}
+                            <h6 class="text-primary mt-3 mb-3 fw-semibold border-bottom pb-2">Materias Asignadas:</h6>
                             <div class="list-group list-group-flush mb-3">
                                 {% for materia in data.materias %}
                                 {% if materia and materia.id %}
                                 <div class="list-group-item border-0 px-0 py-2 d-flex justify-content-between align-items-center">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1 fw-semibold text-dark">{{ materia.nombre }}</h6>
-                                        <small class="text-muted">ID: <span class="text-info">{{ materia.id }}</span></small> {# ID con color #}
+                                        <small class="text-muted">ID: <span class="text-info">{{ materia.id }}</span></small>
                                     </div>
                                     <a href="{% url 'subir_notas' materia.id %}" class="btn btn-sm btn-outline-primary ms-3" data-bs-toggle="tooltip" title="Registrar notas">
-                                        <i class="fas fa-edit"></i> <span class="d-none d-lg-inline">Notas</span> {# Texto en botones para pantallas grandes #}
+                                        <i class="fas fa-edit"></i> <span class="d-none d-lg-inline">Notas</span>
                                     </a>
                                 </div>
                                 {% endif %}
@@ -93,14 +128,14 @@
                             <h6 class="text-success mt-4 mb-3 fw-semibold border-bottom pb-2">
                                 <a href="#estudiantes-{{ data.curso_obj.id }}" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="estudiantes-{{ data.curso_obj.id }}" class="text-success text-decoration-none d-flex align-items-center">
                                     Estudiantes en el curso
-                                    <i class="fas fa-chevron-down ms-auto rotate-icon" style="transition: transform 0.3s;"></i> {# Clase para rotar #}
+                                    <i class="fas fa-chevron-down ms-auto rotate-icon" style="transition: transform 0.3s;"></i>
                                 </a>
                             </h6>
                             <div class="collapse" id="estudiantes-{{ data.curso_obj.id }}">
                                 <div class="list-group list-group-flush mt-2">
                                     {% for matricula in data.estudiantes %}
                                     <div class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <i class="fas fa-user-graduate me-2 text-success"></i> {# Icono más específico #}
+                                        <i class="fas fa-user-graduate me-2 text-success"></i>
                                         <span class="text-dark">{{ matricula.estudiante.get_full_name|default:matricula.estudiante.username }}</span>
                                     </div>
                                     {% empty %}
@@ -127,7 +162,7 @@
             <div class="text-center py-5 animate__animated animate__fadeInUp">
                 <div class="card border-0 shadow-lg rounded-3">
                     <div class="card-body py-5 px-4">
-                        <i class="fas fa-book-open fa-5x text-muted mb-4 animate__animated animate__pulse animate__infinite"></i> {# Icono más grande y animado #}
+                        <i class="fas fa-book-open fa-5x text-muted mb-4 animate__animated animate__pulse animate__infinite"></i>
                         <h4 class="text-muted mb-3 fw-bold">No tienes materias asignadas</h4>
                         <p class="text-secondary mb-4">Contacta con el administrador para que te asignen materias y comenzar a gestionar tus cursos.</p>
                         <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg rounded-pill px-4">
@@ -146,9 +181,14 @@
                     <div class="col-12 mb-4">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-primary-soft" style="background-color: rgba(0,123,255,0.1);">
-                                <h4 class="mb-0 text-primary fw-bold">
-                                    <i class="fas fa-book-reader me-2"></i>Materia: {{ mat_data.materia_obj.nombre }}
-                                </h4>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="mb-0 text-primary fw-bold">
+                                        <i class="fas fa-book-reader me-2"></i>Materia: {{ mat_data.materia_obj.nombre }}
+                                    </h4>
+                                    <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <i class="fas fa-robot me-1"></i> Analizar con IA
+                                    </a>
+                                </div>
                             </div>
                             <div class="card-body px-2 py-3">
                                 <div class="row g-3">
@@ -179,7 +219,7 @@
                                                                 </div>
                                                                 {% endif %}
                                                                 
-                                                                <h6 class_alias="text-dark fw-semibold mt-3 mb-2 border-top pt-2 small">Logros Registrados</h6>
+                                                                <h6 class="text-dark fw-semibold mt-3 mb-2 border-top pt-2 small">Logros Registrados</h6>
                                                                 {% for logro in p_stats.logros %}
                                                                     <p class="mb-1 small text-dark-emphasis">
                                                                         <i class="fas fa-star text-warning me-2 opacity-75" style="font-size: 0.7rem;"></i>
@@ -195,17 +235,20 @@
                                                     </div>
                                                     {% empty %}
                                                     <div class="col-12">
-                                                        <p class="text-muted small fst-italic">No hay datos (notas o logros) registrados por usted para esta materia en este curso.</p>
+                                                        <p class="text-muted small fst-italic">No hay datos registrados para esta materia.</p>
                                                     </div>
-                                                    {% endfor %} </div>
+                                                    {% endfor %} 
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    {% endfor %} </div>
+                                    {% endfor %} 
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %} {% else %}
+                    {% endfor %} 
+                {% else %}
                     <div class="col-12">
                         <div class="alert alert-secondary text-center" role="alert">
                             <h4 class="alert-heading">No hay estadísticas</h4>
@@ -215,22 +258,24 @@
                 {% endif %}
             </div>
         </div>
+
         <div class="tab-pane fade" id="calendario" role="tabpanel" aria-labelledby="calendario-tab">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Calendario Académico</h5>
                     <p class="text-muted">Aquí se mostrará el calendario de actividades y eventos. (Funcionalidad futura)</p>
-                    </div>
+                </div>
             </div>
         </div>
-        </div>
+    </div>
 </div>
 
 <style>
-    /* Estilos personalizados si es necesario, aunque Bootstrap debería manejar la mayoría */
     .bg-gradient-primary {
-        /* Asegúrate de que este gradiente sea agradable y oscuro para el texto blanco */
-        background: linear-gradient(to right, #007bff, #0056b3); /* Ejemplo de gradiente */
+        background: linear-gradient(to right, #007bff, #0056b3);
+    }
+    .bg-primary-soft {
+        background-color: rgba(0, 123, 255, 0.1);
     }
     .text-white-75 {
         color: rgba(255, 255, 255, 0.75) !important;
@@ -247,7 +292,7 @@
         transition: all 0.3s ease-in-out;
     }
     .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-        background-color: var(--bs-primary) !important; /* Color primario de Bootstrap */
+        background-color: var(--bs-primary) !important;
         color: #fff !important;
         font-weight: 600;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -259,18 +304,14 @@
     }
     .nav-pills .nav-link:hover:not(.active) {
         color: var(--bs-primary) !important;
-        background-color: rgba(0, 123, 255, 0.1); /* Ligero hover */
+        background-color: rgba(0, 123, 255, 0.1);
     }
     .rotate-icon.fa-chevron-down {
         transition: transform 0.3s ease-in-out;
     }
-    .collapse.show + h6 .rotate-icon {
-        transform: rotate(180deg);
+    .btn-rounded {
+        border-radius: 50px;
     }
-    /* Añadir animaciones si tienes Animate.css incluido */
-    /* .animate__animated { animation-duration: 0.6s; } */
-    /* .animate__fadeInDown { animation-name: fadeInDown; } */
-    /* .animate__fadeInUp { animation-name: fadeInUp; } */
 </style>
 
 <script>
@@ -291,7 +332,6 @@
             });
         });
 
-        // Inicializar tooltips de Bootstrap
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)

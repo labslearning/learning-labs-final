@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os  # <--- ¡AÑADE ESTA LÍNEA!
+#DEEPSEEK_API_KEY = os.environ.get("sk-f4b636146a9147feb7c4e73e6e24d8f3")
+import dj_database_url
 from pathlib import Path
-from decouple import config # <-- ESTA ES LA LÍNEA QUE FALTABA
+from decouple import config 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,25 +32,36 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    # ⚡ Channels debe estar al principio para manejar runserver correctamente
+    'channels',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # 🛠️ Utilidades de Frontend (Necesario para fechas amigables en el Feed)
+    'django.contrib.humanize', 
+
     'tasks.apps.TasksConfig',
+    'widget_tweaks',  # <--- ¡ESTO ES LO QUE FALTABA!
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 1. AÑADIDO: Middleware para forzar el cambio de contraseña
+    # Middleware for forcing password changes
     'tasks.middleware.ForcePasswordChangeMiddleware',
+    # 🛡️ Middleware de Auditoría y Seguridad (Paso 10)
+    'tasks.middleware.AuditMiddleware',
 ]
 
 ROOT_URLCONF = 'djangocrud.urls'
@@ -56,7 +69,7 @@ ROOT_URLCONF = 'djangocrud.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 2. CORREGIDO: Ruta al directorio de plantillas según tu arquitectura
+        # Path to templates directory
         'DIRS': [BASE_DIR / 'tasks' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -64,12 +77,41 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
+                # ===================================================================
+                # 🩺 INJERTO FASE 2: CONTEXT PROCESSOR GLOBAL
+                # ===================================================================
+                'tasks.context_processors.datos_globales_usuario', 
+                # ===================================================================
             ],
         },
     },
 ]
 
+# Servidor WSGI (Tradicional)
 WSGI_APPLICATION = 'djangocrud.wsgi.application'
+
+# ===================================================================
+# ⚡ FASE III (PASO 11): CONFIGURACIÓN ASGI Y CHANNELS
+# ===================================================================
+
+# Servidor ASGI (Asíncrono para WebSockets)
+ASGI_APPLICATION = 'djangocrud.asgi.application'
+
+# Configuración de Capas de Canales (Channel Layers)
+CHANNEL_LAYERS = {
+    "default": {
+        # Usamos InMemory para desarrollo local (no requiere Redis instalado)
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        
+        # NOTA: Para producción, cambiar a Redis:
+        # "BACKEND": "channels_redis.core.RedisChannelLayer",
+        # "CONFIG": {
+        #     "hosts": [("127.0.0.1", 6379)],
+        # },
+    }
+}
+# ===================================================================
 
 
 # Database
@@ -85,7 +127,7 @@ DATABASES = {
     }
 }
 
-# 3. AÑADIDO: Hashing de contraseñas de alta seguridad con Argon2
+# High security password hashers (Argon2)
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -101,7 +143,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        # MODIFICADO: Se añade longitud mínima como buena práctica de seguridad
+        # Minimum length added as a security best practice
         'OPTIONS': {
             'min_length': 8,
         }
@@ -117,7 +159,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-# (Se mantiene la configuración original)
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -132,6 +173,84 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 4. AÑADIDO: Rutas esenciales para el flujo de autenticación
+# Authentication paths
 LOGIN_URL = '/signin/'
 LOGIN_REDIRECT_URL = '/'
+
+# ===================================================================
+# 🩺 CONFIGURACIÓN DE ARCHIVOS MEDIA (PDFs, PEI, etc.)
+# ===================================================================
+
+# 1. URL pública para acceder a los archivos.
+MEDIA_URL = '/media/'
+
+# 2. Ruta absoluta en el sistema de archivos donde se guardarán los archivos.
+#MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ===================================================================
+# 🩺 FIN DE CONFIGURACIÓN MEDIA
+# ===================================================================
+
+DEFAULT_TEMP_PASSWORD = '123456'
+
+
+# ==============================================================
+# CONFIGURACIÓN DE INTELIGENCIA ARTIFICIAL (Fase 4)
+# ==============================================================
+
+# Pega aquí tu API Key real de DeepSeek (empieza por 'sk-...')
+DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
+
+# Opcional: Si quieres cambiar configuraciones globales
+AI_MODEL_NAME = "deepseek-chat"
+
+
+# djangocrud/settings.py
+
+DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
+
+
+
+
+# --- CONFIGURACIÓN PARA RAILWAY ---
+
+# 1. Estilos (CSS/Imágenes)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# 2. Seguridad y Hosts
+# Si existe la variable RAILWAY_ENVIRONMENT, aplicamos seguridad
+if config('RAILWAY_ENVIRONMENT', default=False, cast=bool):
+    DEBUG = False
+    ALLOWED_HOSTS = ['*']
+    CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
+else:
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']
+
+# 3. Base de Datos (Detecta automáticamente PostgreSQL en Railway)
+DATABASE_URL = config('DATABASE_URL', default=None)
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
+    }
+
+# 4. Canales (Redis para el Chat)
+REDIS_URL = config('REDIS_URL', default=None)
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+else:
+    # Configuración local para desarrollo (si no hay Redis)
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }

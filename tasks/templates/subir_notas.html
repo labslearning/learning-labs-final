@@ -10,10 +10,16 @@
                     <h2 class="mb-0 fw-bold"><i class="fas fa-chart-line me-3"></i> Sistema de Calificaciones</h2>
                     <p class="mb-0 fs-5">Curso: {{ curso.nombre }} | Materia: {{ materia.nombre }}</p>
                 </div>
-                <a href="{% url 'dashboard_docente' %}" class="btn btn-outline-light">
-                    <i class="fas fa-arrow-left me-1"></i>Volver al Panel
-                </a>
-            </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-light fw-bold" data-bs-toggle="modal" data-bs-target="#modalAsistencia">
+                        <i class="fas fa-user-check me-2"></i>Asistencia Hoy
+                    </button>
+                    <a href="{% url 'dashboard_docente' %}" class="btn btn-light text-primary fw-bold">
+                        <i class="fas fa-arrow-left me-1"></i>Volver al Panel
+                    </a>
+                </div>
+                </div>
         </div>
         <div class="card-body p-4">
             <form method="POST" id="notasForm">
@@ -226,12 +232,61 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalAsistencia" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-calendar-check me-2"></i>Tomar Asistencia: {{ materia.nombre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="alert alert-light m-3 border-start border-4 border-info small">
+                    <i class="fas fa-info-circle text-info me-1"></i>
+                    Al marcar <strong>Falla</strong> o <strong>Tarde</strong>, se enviará una notificación automática al acudiente.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Estudiante</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in estudiantes_matriculados %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-secondary">{{ m.estudiante.get_full_name|default:m.estudiante.username }}</td>
+                                <td class="text-center py-3">
+                                    <div class="btn-group" role="group" aria-label="Asistencia">
+                                        <button type="button" class="btn btn-outline-success btn-sm px-3" onclick="setAsistencia('{{m.estudiante.id}}', 'ASISTIO', this)">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm px-3" onclick="setAsistencia('{{m.estudiante.id}}', 'TARDE', this)">
+                                            Tarde
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm px-3" onclick="setAsistencia('{{m.estudiante.id}}', 'FALLA', this)">
+                                            Falla
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="logros-por-periodo-data" style="display: none;">{{ logros_por_periodo }}</div>
 
 <div class="modal fade" id="confirmarBorrarModal" tabindex="-1" aria-labelledby="confirmarBorrarModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="confirmarBorrarModalLabel">Confirmar Eliminación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -264,6 +319,30 @@ body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
 </style>
 
 <script>
+// 🟢 MODIFICACIÓN 3: FUNCIÓN JS PARA ASISTENCIA
+function setAsistencia(estId, estado, btn) {
+    const parent = btn.parentElement;
+    Array.from(parent.children).forEach(c => c.classList.remove('active', 'btn-success', 'btn-warning', 'btn-danger', 'text-white'));
+    
+    btn.classList.add('active', 'text-white');
+    if(estado === 'ASISTIO') btn.classList.add('btn-success');
+    if(estado === 'TARDE') btn.classList.add('btn-warning');
+    if(estado === 'FALLA') btn.classList.add('btn-danger');
+
+    fetch("{% url 'api_tomar_asistencia' %}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify({
+            estudiante_id: estId,
+            materia_id: "{{ materia.id }}",
+            estado: estado,
+            fecha: new Date().toISOString().split('T')[0]
+        })
+    }).then(r => r.json()).then(d => {
+        if(!d.success) alert("Error: " + d.error);
+    }).catch(e => alert("Error de conexión"));
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const periodoSelector = document.getElementById('periodoSelector');
     const floatingSaveButton = document.getElementById('floating-save-button');
@@ -284,13 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 c.style.display = "none";
             }
         });
-        
-        // ======================================================
-        // INICIO DE LA CORRECCIÓN 3: JavaScript
-        // Se elimina la siguiente línea que mostraba
-        // la celda de comentario incorrecta:
-        // document.querySelectorAll('.comentario-cell').forEach(c => c.style.display = "");
-        // ======================================================
     }
 
     // Calcula el promedio de las notas

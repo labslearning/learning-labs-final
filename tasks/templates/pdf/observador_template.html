@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica', sans-serif;
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* --- ENCABEZADO INSTITUCIONAL (Igual al Boletín) --- */
+        header {
+            display: block;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-container {
+            display: table;
+            width: 100%;
+        }
+        .header-left {
+            display: table-cell;
+            width: 100px;
+            vertical-align: middle;
+        }
+        .header-right {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .logo {
+            max-width: 80px;
+            max-height: 80px;
+        }
+        .inst-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #003366;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .inst-info {
+            font-size: 8pt;
+            color: #555;
+            margin: 2px 0;
+        }
+
+        /* Título del Documento */
+        .doc-title {
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 5px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            font-weight: bold;
+            font-size: 12pt;
+            color: #003366;
+        }
+
+        /* Datos del Estudiante */
+        .student-info {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+        .student-info td {
+            padding: 4px;
+            font-size: 10pt;
+        }
+
+        /* Tarjeta de Observación */
+        .obs-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+            background-color: #fff;
+        }
+
+        .obs-meta {
+            background-color: #f4f4f4;
+            padding: 6px 10px;
+            font-size: 9pt;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        .obs-body {
+            padding: 10px;
+        }
+
+        .obs-label {
+            color: #003366;
+            font-weight: bold;
+            font-size: 8pt;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .obs-text {
+            margin-bottom: 8px;
+            text-align: justify;
+            font-size: 10pt;
+        }
+
+        .obs-commitments {
+            margin-top: 8px;
+            background-color: #f9fbfd;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #003366;
+        }
+
+        /* Firma */
+        .firma-container {
+            margin-top: 10px;
+            text-align: right;
+            padding-right: 12px;
+            padding-bottom: 10px;
+        }
+        .firma-nombre {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 11pt;
+            font-weight: bold;
+            color: #003366;
+            display: block;
+        }
+        .firma-cargo {
+            font-size: 8pt;
+            color: #777;
+        }
+        
+        .no-records {
+            text-align: center;
+            color: #777;
+            margin-top: 50px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="header-left">
+                {% if institucion.logo %}
+                    <img src="{{ institucion.logo.url }}" class="logo" alt="Logo">
+                {% endif %}
+            </div>
+            <div class="header-right">
+                <h1 class="inst-name">{{ institucion.nombre|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
+                <p class="inst-info">{{ institucion.lema|default:"" }}</p>
+                <p class="inst-info">
+                    NIT: {{ institucion.nit|default:"-" }} | 
+                    Tel: {{ institucion.telefono|default:"-" }} | 
+                    {{ institucion.ciudad|default:"" }}
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <div class="doc-title">OBSERVADOR DEL ALUMNO</div>
+
+    <table class="student-info">
+        <tr>
+            <td><strong>Estudiante:</strong> {{ estudiante.get_full_name|upper }}</td>
+            <td><strong>Documento:</strong> {{ estudiante.username }}</td>
+        </tr>
+        <tr>
+            <td><strong>Curso:</strong> {{ curso.nombre|default:"-" }}</td>
+            <td><strong>Fecha Impresión:</strong> {{ fecha_impresion|date:"d/m/Y" }}</td>
+        </tr>
+    </table>
+
+    {% for obs in observaciones %}
+    <div class="obs-card">
+        <div class="obs-meta">
+            <strong>Fecha:</strong> {{ obs.fecha_creacion|date:"d/m/Y" }} | 
+            <strong>Periodo:</strong> {{ obs.periodo.nombre }} | 
+            <strong>Tipo:</strong> {{ obs.get_tipo_display }}
+        </div>
+        
+        <div class="obs-body">
+            <span class="obs-label">SITUACIÓN:</span>
+            <div class="obs-text">{{ obs.descripcion|linebreaksbr }}</div>
+
+            {% if obs.compromisos_estudiante or obs.compromisos_familia %}
+            <div class="obs-commitments">
+                {% if obs.compromisos_estudiante %}
+                    <span class="obs-label">COMPROMISO ESTUDIANTE:</span>
+                    <div class="obs-text">{{ obs.compromisos_estudiante|linebreaksbr }}</div>
+                {% endif %}
+                
+                {% if obs.compromisos_familia %}
+                    <span class="obs-label">COMPROMISO FAMILIA:</span>
+                    <div class="obs-text">{{ obs.compromisos_familia|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="firma-container">
+            <span class="firma-nombre">{{ obs.autor.get_full_name }}</span>
+            <span class="firma-cargo">{{ obs.autor.perfil.get_rol_display }}</span>
+        </div>
+    </div>
+    {% empty %}
+        <div class="no-records">
+            <p>No hay observaciones registradas en el historial de este estudiante.</p>
+        </div>
+    {% endfor %}
+
+</body>
+</html>

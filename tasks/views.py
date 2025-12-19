@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
+from django.db.models import Avg, Count, Q, Min, Max
+import json
+
+from django.core.serializers.json import DjangoJSONEncoder
+
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
+
+
+
+from .ai.orchestrator import ai_orchestrator
+from .ai.constants import ACCION_MEJORAS_ESTUDIANTE
+
+
 # 1. IMPORTACIONES AÑADIDAS
 from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
 from django.db import IntegrityError, transaction
@@ -16,7 +29,7 @@ from django.template.loader import render_to_string
 # --- FIN DE MODIFICACIÓN 1 ---
 from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date  # 🩺 CIRUGÍA: Se aseguró 'date'
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
 from decimal import Decimal, ROUND_HALF_UP
@@ -32,15 +45,19 @@ from django.views.decorators.csrf import csrf_protect
 from operator import itemgetter
 from django.urls import reverse
 from django.core.paginator import Paginator # Añadido en paso anterior
+from django.db.models import Q, Count # Necesitas Count para ordenar por número de miembros
+from .forms import UserEditForm, EditarPerfilForm
 
-# --- Modelos: Se añade Acudiente ---
+# --- Modelos: Se añade Acudiente y Observacion ---
 from .models import (
     Question, Answer, Perfil, Curso, Nota, Materia,
     Periodo, AsignacionMateria, Matricula, ComentarioDocente,
     ActividadSemanal, LogroPeriodo, Convivencia, GRADOS_CHOICES,
-    Acudiente, Institucion
+    Post, Comment, AuditLog,Report, Acudiente, Institucion, 
+    Observacion, # <--- 🩺 CIRUGÍA: Modelo añadido previamente
+    Asistencia, MensajeInterno, Notificacion, Reaction, Follow, UserLogro, SocialGroup # <--- 🩺 FASE 4: NUEVOS MODELOS AÑADIDOS
 )
-
+from django.contrib.contenttypes.models import ContentType
 # ===================================================================
 # 🩺 INICIO DE CIRUGÍA: Importaciones añadidas para el Plan
 # (Añadidas en pasos anteriores )
@@ -52,11 +69,25 @@ from django.core.files.base import ContentFile
 # ===================================================================
 
 # --- Formularios: Se añaden los nuevos formularios ---
-from .forms import BulkCSVForm, PasswordChangeFirstLoginForm, ProfileSearchForm, QuestionForm, AnswerForm
+from .forms import (
+    BulkCSVForm, PasswordChangeFirstLoginForm, ProfileSearchForm, 
+    QuestionForm, AnswerForm,
+    ObservacionForm, # <--- 🩺 CIRUGÍA: Form añadido previamente
+    MensajeForm, 
+    Post, 
+    PostForm,
+    Comment,
+    CommentForm,
+    SocialGroupForm, 
+     
+     # <--- 🩺 FASE 4: FORMULARIO CHAT AÑADIDO
+)
 
 # --- Utilidades: Se añaden las nuevas funciones de ayuda ---
-from .utils import generar_username_unico, generar_contrasena_temporal, asignar_curso_por_grado
-
+from .utils import (
+    generar_username_unico, generar_contrasena_temporal, asignar_curso_por_grado,
+    crear_notificacion, notificar_acudientes # <--- 🩺 FASE 4: UTILIDADES NOTIFICACION AÑADIDAS
+)
 
 # --- Decoradores: Se añade el nuevo decorador ---
 from .decorators import role_required
@@ -64,6 +95,11 @@ from .decorators import role_required
 # --- INICIO DE MODIFICACIÓN 1 (continuación): Añadir Importaciones ---
 from .services import get_student_report_context # Usamos el nuevo servicio
 # --- FIN DE MODIFICACIÓN 1 ---
+
+####Seguridad 
+
+from django.contrib.auth.decorators import login_required
+from .utils import Sentinel # Tu motor de seguridad
 
 
 # Obtener el modelo de usuario de forma segura
@@ -275,9 +311,16 @@ def signin(request):
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
 
+    # --- REDIRECCIÓN POR ROLES (CORREGIDA) ---
     if hasattr(user, 'perfil'):
         rol = user.perfil.rol
-        if rol == 'ESTUDIANTE':
+        
+        # Staff de Bienestar
+        if rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+            return redirect('dashboard_bienestar')
+        
+        # Otros roles
+        elif rol == 'ESTUDIANTE':
             return redirect('dashboard_estudiante')
         elif rol == 'ACUDIENTE':
             return redirect('dashboard_acudiente')
@@ -421,6 +464,7 @@ def dashboard_estudiante(request):
 # ===================================================================
 # --- INICIO DE CIRUGÍA 2: FUNCIÓN dashboard_docente MODIFICADA ---
 # ===================================================================
+#desde aqui 
 @role_required('DOCENTE')
 def dashboard_docente(request):
     docente = request.user
@@ -544,6 +588,7 @@ def get_description_nota(numero_nota):
 # ===================================================================
 # INICIO DE LA FUNCIÓN CORREGIDA
 # ===================================================================
+#desde aqui 
 @role_required('DOCENTE')
 def subir_notas(request, materia_id):
     asignacion = get_object_or_404(AsignacionMateria, materia_id=materia_id, docente=request.user, activo=True)
@@ -552,7 +597,6 @@ def subir_notas(request, materia_id):
     estudiantes_matriculados = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante')
     periodos = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
 
-    # Lógica para crear periodos si no existen (sin cambios)
     if not periodos.exists():
         nombres = ['Primer Periodo', 'Segundo Periodo', 'Tercer Periodo', 'Cuarto Periodo']
         for nombre in nombres:
@@ -567,21 +611,24 @@ def subir_notas(request, materia_id):
 
     if request.method == 'POST':
         with transaction.atomic():
-            # Lógica de Actividades Semanales (sin cambios)
+            # --- ACTIVIDADES Y TAREAS ---
             actividad_ids_a_mantener = [int(i) for i in request.POST.getlist('actividad_id[]') if i and i.isdigit()]
             ActividadSemanal.objects.filter(curso=curso, materia=materia, docente=request.user)\
                 .exclude(id__in=actividad_ids_a_mantener).delete()
+            
             titulos = request.POST.getlist('titulo_actividad[]')
             descripciones = request.POST.getlist('descripcion_actividad[]')
             fechas_inicio = request.POST.getlist('fecha_inicio_actividad[]')
             fechas_fin = request.POST.getlist('fecha_fin_actividad[]')
             actividad_ids = request.POST.getlist('actividad_id[]')
+            
             for i in range(len(titulos)):
                 titulo = (titulos[i] or "").strip()
                 descripcion = (descripciones[i] or "").strip()
                 fi_str = (fechas_inicio[i] or "").strip()
                 ff_str = (fechas_fin[i] or "").strip()
                 actividad_id = (actividad_ids[i] or "").strip()
+                
                 if (titulo or descripcion):
                     try:
                         fecha_inicio = datetime.strptime(fi_str, '%Y-%m-%d').date() if fi_str else None
@@ -589,9 +636,11 @@ def subir_notas(request, materia_id):
                     except ValueError:
                         messages.error(request, 'Formato de fecha inválido. Usa AAAA-MM-DD.')
                         return redirect('subir_notas', materia_id=materia.id)
+                    
                     if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
                         messages.error(request, 'La fecha de inicio no puede ser posterior a la fecha de finalización.')
                         return redirect('subir_notas', materia_id=materia.id)
+                    
                     if actividad_id:
                         ActividadSemanal.objects.filter(id=actividad_id, docente=request.user).update(
                             titulo=titulo if titulo else 'Actividad de la Semana',
@@ -600,6 +649,7 @@ def subir_notas(request, materia_id):
                             fecha_fin=fecha_fin,
                         )
                     else:
+                        # Crear nueva actividad y notificar
                         ActividadSemanal.objects.create(
                             curso=curso, materia=materia, docente=request.user,
                             titulo=titulo if titulo else 'Actividad de la Semana',
@@ -607,8 +657,13 @@ def subir_notas(request, materia_id):
                             fecha_inicio=fecha_inicio,
                             fecha_fin=fecha_fin,
                         )
+                        # 🔔 Notificación de Tarea
+                        from .utils import notificar_acudientes, crear_notificacion
+                        for m in estudiantes_matriculados:
+                            crear_notificacion(m.estudiante, "Nueva Tarea", f"{materia.nombre}: {titulo}", "ACTIVIDAD", "/dashboard/estudiante/")
+                            notificar_acudientes(m.estudiante, "Nueva Tarea Asignada", f"En {materia.nombre}: {titulo}", "ACTIVIDAD", "/dashboard/acudiente/")
 
-            # Lógica de Logros (sin cambios)
+            # --- LOGROS ---
             logros_json_data = request.POST.get('logros_json_data', '')
             if logros_json_data:
                 try:
@@ -626,25 +681,22 @@ def subir_notas(request, materia_id):
                             desc = (logro.get('descripcion', "") or "").strip()
                             if desc:
                                 if lid > 0:
-                                    LogroPeriodo.objects.filter(id=lid, docente=request.user).update(
-                                        descripcion=desc
-                                    )
+                                    LogroPeriodo.objects.filter(id=lid, docente=request.user).update(descripcion=desc)
                                 else:
                                     LogroPeriodo.objects.create(
-                                        curso=curso,
-                                        periodo=periodo_obj,
-                                        docente=request.user,
-                                        materia=materia,
-                                        descripcion=desc
+                                        curso=curso, periodo=periodo_obj, docente=request.user,
+                                        materia=materia, descripcion=desc
                                     )
                 except json.JSONDecodeError as e:
-                    logger.exception("JSONDecodeError en logros_json_data: %s", e)
-                    messages.error(request, "Error al procesar los logros. Formato de datos no válido.")
+                    logger.exception("JSONDecodeError: %s", e)
 
-            # Lógica de Notas (sin cambios, ya estaba correcta)
+            # --- NOTAS Y PROMEDIOS ---
+            usuario_sistema, _ = User.objects.get_or_create(username='sistema', defaults={'is_active': False})
+            
             for m in estudiantes_matriculados:
                 estudiante = m.estudiante
                 for periodo in periodos:
+                    # 1. Guardar notas parciales (1-4)
                     for i in NUM_NOTAS:
                         nota_key = f'nota_{estudiante.id}_{periodo.id}_{i}'
                         valor_nota = request.POST.get(nota_key)
@@ -653,150 +705,80 @@ def subir_notas(request, materia_id):
                                 nota_valor = Decimal(valor_nota)
                                 if ESCALA_MIN <= nota_valor <= ESCALA_MAX:
                                     Nota.objects.update_or_create(
-                                        estudiante=estudiante, materia=materia, periodo=periodo,
-                                        numero_nota=i,
-                                        defaults={
-                                            'valor': nota_valor.quantize(TWO_PLACES, rounding=ROUND_HALF_UP),
-                                            'descripcion': get_description_nota(i),
-                                            'registrado_por': request.user
-                                        }
+                                        estudiante=estudiante, materia=materia, periodo=periodo, numero_nota=i,
+                                        defaults={'valor': nota_valor.quantize(TWO_PLACES, rounding=ROUND_HALF_UP),
+                                                  'descripcion': get_description_nota(i), 'registrado_por': request.user}
                                     )
-                                else:
-                                    messages.error(request, f'Nota ({get_description_nota(i)}) inválida para {estudiante.get_full_name() or estudiante.username}.')
-                            except (ValueError, decimal.InvalidOperation):
-                                messages.error(request, f'Nota ({get_description_nota(i)}) inválida para {estudiante.get_full_name() or estudiante.username}.')
+                            except: pass
 
-            # Lógica de Promedio (sin cambios, ya estaba correcta)
-            usuario_sistema, _ = User.objects.get_or_create(
-                username='sistema',
-                defaults={'email': 'sistema@tuproyecto.com', 'is_active': False, 'is_staff': False, 'is_superuser': False}
-            )
-            for m in estudiantes_matriculados:
-                estudiante = m.estudiante
-                for periodo in periodos:
-                    notas_periodo_db = Nota.objects.filter(
+                    # 2. Calcular y Guardar Promedio (Nota 5) - ESTO ES LO VITAL PARA EL DASHBOARD
+                    notas_db = Nota.objects.filter(
                         estudiante=estudiante, materia=materia, periodo=periodo,
                         numero_nota__in=NUM_NOTAS
                     ).values('numero_nota', 'valor')
+                    
                     promedio = Decimal('0.0')
-                    for n in notas_periodo_db:
+                    for n in notas_db:
                         promedio += n['valor'] * PESOS_NOTAS.get(n['numero_nota'], Decimal('0.0'))
-                    if notas_periodo_db:
+                    
+                    # Solo guardamos promedio si hay notas parciales
+                    if notas_db:
                         Nota.objects.update_or_create(
-                            estudiante=estudiante, materia=materia, periodo=periodo,
-                            numero_nota=5,
+                            estudiante=estudiante, materia=materia, periodo=periodo, numero_nota=5,
                             defaults={
                                 'valor': promedio.quantize(TWO_PLACES, rounding=ROUND_HALF_UP),
-                                'descripcion': 'Promedio ponderado del periodo',
+                                'descripcion': 'Promedio ponderado',
                                 'registrado_por': usuario_sistema
                             }
                         )
 
-            # ======================================================
-            # INICIO DE LA CORRECCIÓN (Guardar Comentarios)
-            # ======================================================
-            #
-            # Ahora iteramos por cada periodo DENTRO de cada estudiante
-            # para guardar el comentario específico de ese periodo.
-            #
-            for m in estudiantes_matriculados:
-                estudiante = m.estudiante
-                for periodo in periodos:
-                    # La clave ahora debe incluir el ID del periodo
+                    # 3. Comentarios
                     comentario_key = f'comentario_{estudiante.id}_{periodo.id}'
                     texto = request.POST.get(comentario_key)
-
                     if texto and texto.strip():
-                        # Añadimos 'periodo=periodo' al 'update_or_create'
                         ComentarioDocente.objects.update_or_create(
                             docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo,
                             defaults={'comentario': texto.strip()}
                         )
                     elif not (texto or "").strip():
-                        # Añadimos 'periodo=periodo' al filtro 'delete'
                         ComentarioDocente.objects.filter(docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo).delete()
-            #
-            # ======================================================
-            # FIN DE LA CORRECCIÓN
-            # ======================================================
 
-            messages.success(request, 'Cambios guardados: Notas, comentarios, actividades y logros.')
+            messages.success(request, 'Notas guardadas correctamente.')
             return redirect('subir_notas', materia_id=materia.id)
 
-    # --- Lógica de Carga (GET) ---
-
+    # --- GET ---
     estudiante_ids = [m.estudiante_id for m in estudiantes_matriculados]
     periodo_ids = [p.id for p in periodos]
 
-    # Lógica de Notas (sin cambios, ya estaba correcta)
     notas_qs = Nota.objects.filter(
-        estudiante_id__in=estudiante_ids,
-        materia=materia,
-        periodo_id__in=periodo_ids
+        estudiante_id__in=estudiante_ids, materia=materia, periodo_id__in=periodo_ids
     ).values('estudiante_id', 'periodo_id', 'numero_nota', 'valor')
 
-    notas_data = {}
-    for m in estudiantes_matriculados:
-        notas_data[m.estudiante.id] = {'estudiante': m.estudiante, 'periodos': {p.id: {} for p in periodos}}
+    notas_data = {m.estudiante.id: {'estudiante': m.estudiante, 'periodos': {p.id: {} for p in periodos}} for m in estudiantes_matriculados}
+    for n in notas_qs:
+        if n['estudiante_id'] in notas_data and n['periodo_id'] in notas_data[n['estudiante_id']]['periodos']:
+            notas_data[n['estudiante_id']]['periodos'][n['periodo_id']][n['numero_nota']] = n['valor']
 
-    for nota in notas_qs:
-        estudiante_id = nota['estudiante_id']
-        periodo_id = nota['periodo_id']
-        numero_nota = nota['numero_nota']
-        valor = nota['valor']
-        if estudiante_id in notas_data and periodo_id in notas_data[estudiante_id]['periodos']:
-            notas_data[estudiante_id]['periodos'][periodo_id][numero_nota] = valor
-
-    # ======================================================
-    # INICIO DE LA CORRECCIÓN (Cargar Comentarios)
-    # ======================================================
-    #
-    # Reemplazamos la consulta simple por una consulta que
-    # carga todos los comentarios y los organiza en un
-    # diccionario anidado, igual que las notas.
-    #
-    comentarios_qs = ComentarioDocente.objects.filter(
-        docente=request.user,
-        materia=materia,
-        estudiante_id__in=estudiante_ids
-    ).select_related('periodo')
-
-    # Inicializamos: {estudiante_id: {periodo_id: "comentario", ...}}
-    comentarios_data = {}
-    for m in estudiantes_matriculados:
-        comentarios_data[m.estudiante.id] = {p.id: "" for p in periodos}
-
-    # Poblamos el diccionario con los comentarios que existen
+    comentarios_qs = ComentarioDocente.objects.filter(docente=request.user, materia=materia, estudiante_id__in=estudiante_ids).select_related('periodo')
+    comentarios_data = {m.estudiante.id: {p.id: "" for p in periodos} for m in estudiantes_matriculados}
     for c in comentarios_qs:
         if c.estudiante_id in comentarios_data and c.periodo_id in comentarios_data[c.estudiante_id]:
             comentarios_data[c.estudiante_id][c.periodo.id] = c.comentario
-    #
-    # ======================================================
-    # FIN DE LA CORRECCIÓN
-    # ======================================================
 
-    # Lógica de Actividades y Logros (sin cambios)
-    actividades_semanales_existentes = ActividadSemanal.objects.filter(curso=curso, materia=materia).order_by('-fecha_creacion')
-    logros_existentes = LogroPeriodo.objects.filter(curso=curso, docente=request.user, materia=materia).order_by('periodo__id', '-fecha_creacion')
+    actividades = ActividadSemanal.objects.filter(curso=curso, materia=materia).order_by('-fecha_creacion')
+    logros = LogroPeriodo.objects.filter(curso=curso, docente=request.user, materia=materia).order_by('periodo__id', '-fecha_creacion')
     logros_por_periodo = {}
-    for logro in logros_existentes:
-        logros_por_periodo.setdefault(logro.periodo.id, []).append({'id': logro.id, 'descripcion': logro.descripcion, 'periodo_id': logro.periodo.id})
+    for l in logros:
+        logros_por_periodo.setdefault(l.periodo.id, []).append({'id': l.id, 'descripcion': l.descripcion, 'periodo_id': l.periodo.id})
 
-    # Contexto final
     context = {
         'materia': materia, 'curso': curso, 'estudiantes_matriculados': estudiantes_matriculados,
-        'periodos': periodos,
-        'notas_data': notas_data,
-        'comentarios_data': comentarios_data, # <--- 'comentarios_data' ahora está anidado
-        'actividades_semanales': actividades_semanales_existentes,
-        'logros_por_periodo': json.dumps(logros_por_periodo),
+        'periodos': periodos, 'notas_data': notas_data, 'comentarios_data': comentarios_data,
+        'actividades_semanales': actividades, 'logros_por_periodo': json.dumps(logros_por_periodo),
         'rango_notas': NUM_NOTAS, 'escala_min': ESCALA_MIN, 'escala_max': ESCALA_MAX, 'nota_aprobacion': NOTA_APROBACION,
         'grados': GRADOS_CHOICES, 'secciones': _secciones_disponibles()
     }
     return render(request, 'subir_notas.html', context)
-# ===================================================================
-# FIN DE LA FUNCIÓN CORREGIDA
-# ===================================================================
 
 @role_required('ADMINISTRADOR')
 def admin_dashboard(request):
@@ -1080,57 +1062,132 @@ def generar_boletin(request, curso_id):
     context = {'curso': curso, 'estudiantes': estudiantes, 'periodos': periodos, 'materias': materias, 'notas_data': notas_data}
     return render(request, 'generar_boletin.html', context)
 
+#Aqui empece con el registro de los profesores
 @role_required('ADMINISTRADOR')
-def gestionar_profesores(request):
-    profesores = User.objects.filter(
+def asignar_materia_docente(request):
+    """
+    Vista Maestra de Gestión Académica.
+    Maneja 3 procesos en una sola pantalla:
+    1. Registrar Nuevo Docente (Forma B - Rápida).
+    2. Crear Materias.
+    3. Asignar Carga Académica.
+    """
+    
+    # 1. CARGA DE DATOS PARA LOS SELECTORES (Contexto)
+    docentes = User.objects.filter(
         Q(perfil__rol='DOCENTE') | Q(perfil__es_director=True)
     ).select_related('perfil').order_by('first_name', 'last_name').distinct()
+    
     cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
-    materias = Materia.objects.all().order_by('nombre')
+    
+    # Ordenamos materias por nombre y curso para facilitar la búsqueda visual
+    materias = Materia.objects.all().select_related('curso').order_by('nombre')
+    
+    # Tabla de resumen de lo que ya existe
+    asignaciones = AsignacionMateria.objects.filter(activo=True).select_related(
+        'materia', 'curso', 'docente'
+    ).order_by('curso__grado', 'curso__seccion', 'materia__nombre')
+
+    # 2. PROCESAMIENTO DE FORMULARIOS (POST)
     if request.method == 'POST':
+        
+        # ---------------------------------------------------------
+        # CASO A: REGISTRAR NUEVO DOCENTE (Forma B)
+        # ---------------------------------------------------------
         if 'crear_profesor' in request.POST:
-            username = request.POST.get('username')
-            first_name = request.POST.get('first_name')
-            last_name = request.POST.get('last_name')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
+            # Captura de datos
+            username = request.POST.get('username', '').strip().lower()
+            first_name = request.POST.get('first_name', '').strip().title()
+            last_name = request.POST.get('last_name', '').strip().title()
+            email = request.POST.get('email', '').strip().lower()
+
+            # Validación preventiva
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f"Error: El usuario '{username}' ya existe.")
+                return redirect('asignar_materia_docente')
+
             try:
                 with transaction.atomic():
+                    # 1. Crear Usuario (Sin pedir clave, usa la default)
                     user = User.objects.create_user(
-                        username=username, first_name=first_name, last_name=last_name,
-                        email=email, password=password
+                        username=username, 
+                        first_name=first_name, 
+                        last_name=last_name,
+                        email=email, 
+                        password=DEFAULT_TEMP_PASSWORD
                     )
-                    Perfil.objects.create(user=user, rol='DOCENTE', requiere_cambio_clave=True)
-                    messages.success(request, f'Profesor {username} creado exitosamente.')
+                    
+                    # 2. Crear Perfil y activar CERROJO DE SEGURIDAD
+                    Perfil.objects.create(
+                        user=user, 
+                        rol='DOCENTE', 
+                        requiere_cambio_clave=True # Obligatorio cambio al entrar
+                    )
+                    
+                    messages.success(request, f'Docente "{first_name} {last_name}" registrado. Usuario: {username}')
+            
             except IntegrityError:
-                messages.error(request, 'El nombre de usuario o email ya existe.')
+                messages.error(request, "El correo electrónico ya está en uso por otro usuario.")
             except Exception as e:
-                messages.error(request, f'Ocurrió un error: {e}')
-        elif 'asignar_materia' in request.POST:
-            materia_id = request.POST.get('materia_id')
-            docente_id = request.POST.get('docente_id')
-            curso_id = request.POST.get('curso_id')
-            try:
-                materia = get_object_or_404(Materia, id=materia_id)
-                docente = get_object_or_404(User, id=docente_id)
-                curso = get_object_or_404(Curso, id=curso_id)
-                AsignacionMateria.objects.update_or_create(
-                    materia=materia, curso=curso,
-                    defaults={'docente': docente, 'activo': True}
-                )
-                messages.success(request, 'Materia asignada correctamente al docente.')
-            except IntegrityError:
-                messages.error(request, 'Esta asignación ya existe.')
-            except Exception as e:
-                messages.error(request, f'Ocurrió un error: {e}')
+                messages.error(request, f"Error crítico al crear docente: {e}")
+                
             return redirect('asignar_materia_docente')
 
+        # ---------------------------------------------------------
+        # CASO B: CREAR MATERIA
+        # ---------------------------------------------------------
+        elif 'crear_materia' in request.POST:
+            nombre = request.POST.get('nombre')
+            curso_id = request.POST.get('curso_id')
+            
+            if nombre and curso_id:
+                try:
+                    curso_obj = get_object_or_404(Curso, id=curso_id)
+                    Materia.objects.get_or_create(
+                        nombre=nombre.strip().title(),
+                        curso=curso_obj
+                    )
+                    messages.success(request, f'Materia "{nombre}" creada correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error al crear materia: {e}')
+            return redirect('asignar_materia_docente')
+
+        # ---------------------------------------------------------
+        # CASO C: ASIGNAR DOCENTE A MATERIA
+        # ---------------------------------------------------------
+        elif 'asignar_docente' in request.POST:
+            materia_id = request.POST.get('materia_id')
+            docente_id = request.POST.get('docente_id')
+            
+            try:
+                materia_obj = get_object_or_404(Materia, id=materia_id)
+                docente_obj = get_object_or_404(User, id=docente_id)
+                
+                # El curso lo sacamos de la materia para evitar inconsistencias
+                curso_obj = materia_obj.curso
+                
+                AsignacionMateria.objects.update_or_create(
+                    materia=materia_obj,
+                    curso=curso_obj,
+                    defaults={'docente': docente_obj, 'activo': True}
+                )
+                messages.success(request, f'Asignado: {docente_obj.get_full_name()} -> {materia_obj.nombre}.')
+            except Exception as e:
+                messages.error(request, f'Error en la asignación: {e}')
+                
+            return redirect('asignar_materia_docente')
+
+    # 3. RENDERIZADO
     context = {
-        'docentes': profesores,
+        'docentes': docentes,
         'cursos': cursos,
         'materias': materias,
+        'asignaciones': asignaciones
     }
+    
     return render(request, 'admin/asignar_materia_docente.html', context)
+
+
 
 @role_required('ADMINISTRADOR')
 def registrar_alumnos_masivo_form(request):
@@ -1640,7 +1697,26 @@ def admin_eliminar_estudiante(request):
                     base_url = request.build_absolute_uri('/')
                     pdf_content = HTML(string=html_string, base_url=base_url).write_pdf()
 
-                    pdf_file = ContentFile(pdf_content, name=f"boletin_{estudiante_nombre}_{matricula.anio_escolar}.pdf")
+                    # ===================================================================
+                    # 🩺 INICIO DE LA CIRUGÍA: Corregir discrepancia de nombres
+                    # ===================================================================
+                    
+                    # 1. Usamos el username (ej: 'rmorales')
+                    student_username = estudiante_a_retirar.username
+                    
+                    # 2. Reemplazamos el guion '-' del año por '_'
+                    anio_con_guion = matricula.anio_escolar # (ej: "2025-2026")
+                    anio_con_guion_bajo = anio_con_guion.replace('-', '_') # (ej: "2025_2026")
+                    
+                    # 3. Creamos el nombre de archivo sincronizado
+                    nombre_archivo_sincronizado = f"boletin_{student_username}_{anio_con_guion_bajo}.pdf"
+                    
+                    # 4. Usamos el nombre corregido en el ContentFile
+                    pdf_file = ContentFile(pdf_content, name=nombre_archivo_sincronizado)
+                    
+                    # ===================================================================
+                    # 🩺 FIN DE LA CIRUGÍA
+                    # ===================================================================
 
                     curso_obj = contexto_historico.get('curso')
 
@@ -1652,7 +1728,7 @@ def admin_eliminar_estudiante(request):
                         seccion_archivada=curso_obj.seccion,
                         anio_lectivo_archivado=curso_obj.anio_escolar,
                         eliminado_por=request.user,
-                        archivo_pdf=pdf_file
+                        archivo_pdf=pdf_file # pdf_file ahora tiene el nombre sincronizado
                     )
                     boletines_generados += 1
 
@@ -1709,78 +1785,97 @@ def admin_eliminar_estudiante(request):
 
 @role_required('ADMINISTRADOR')
 def asignar_materia_docente(request):
+    # 1. CARGAR DOCENTES (Filtramos por rol DOCENTE o Director)
     docentes = User.objects.filter(
         Q(perfil__rol='DOCENTE') | Q(perfil__es_director=True)
     ).select_related('perfil').order_by('first_name', 'last_name').distinct()
+    
     cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
-    materias = Materia.objects.all().select_related('curso').order_by('curso__grado', 'curso__seccion', 'nombre') # Ordenar por curso
+    materias = Materia.objects.all().select_related('curso').order_by('nombre')
+    
     asignaciones = AsignacionMateria.objects.filter(activo=True).select_related(
         'materia', 'curso', 'docente'
     ).order_by('curso__grado', 'curso__seccion', 'materia__nombre')
 
     if request.method == 'POST':
-        if 'crear_materia' in request.POST:
+        
+        # 🟢 ACCIÓN 1: CREAR NUEVO DOCENTE (Lógica Blindada)
+        if 'crear_profesor' in request.POST:
+            username = request.POST.get('username', '').strip().lower()
+            first_name = request.POST.get('first_name', '').strip().title()
+            last_name = request.POST.get('last_name', '').strip().title()
+            email = request.POST.get('email', '').strip().lower()
+
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f"El usuario '{username}' ya existe.")
+                return redirect('asignar_materia_docente')
+
+            try:
+                with transaction.atomic():
+                    # 1. Crear Usuario
+                    user = User.objects.create_user(
+                        username=username, 
+                        first_name=first_name, 
+                        last_name=last_name,
+                        email=email, 
+                        password=DEFAULT_TEMP_PASSWORD
+                    )
+                    
+                    # 2. Gestionar Perfil (FORZANDO EL ROL)
+                    # Intentamos obtener el perfil (por si una señal lo creó) o crearlo
+                    perfil, created = Perfil.objects.get_or_create(user=user)
+                    
+                    # Forzamos los valores SÍ o SÍ, y guardamos explícitamente
+                    perfil.rol = 'DOCENTE'
+                    perfil.requiere_cambio_clave = True
+                    perfil.save() # Guardado explícito para asegurar el cambio
+                    
+                    messages.success(request, f'Docente "{first_name} {last_name}" registrado correctamente. (Usuario: {username})')
+            
+            except IntegrityError:
+                messages.error(request, "Error: El correo electrónico ya está en uso.")
+            except Exception as e:
+                messages.error(request, f"Error interno: {e}")
+                
+            return redirect('asignar_materia_docente')
+
+        # 🔵 ACCIÓN 2: CREAR MATERIA
+        elif 'crear_materia' in request.POST:
             nombre = request.POST.get('nombre')
             curso_id = request.POST.get('curso_id')
+            
             if nombre and curso_id:
                 try:
                     curso_obj = get_object_or_404(Curso, id=curso_id)
-                    materia_obj, created = Materia.objects.get_or_create(
+                    Materia.objects.get_or_create(
                         nombre=nombre.strip().title(),
                         curso=curso_obj
                     )
-                    if created:
-                        messages.success(request, f'Materia "{nombre}" creada para el curso {curso_obj}.')
-                    else:
-                        messages.info(request, f'La materia "{nombre}" ya existía para el curso {curso_obj}.')
-                except IntegrityError:
-                    messages.error(request, f'Ya existe una materia con el nombre "{nombre}" en ese curso.')
+                    messages.success(request, f'Materia "{nombre}" creada.')
                 except Exception as e:
-                    messages.error(request, f'Ocurrió un error: {e}')
-            else:
-                messages.error(request, "Nombre de materia y curso son obligatorios.")
+                    messages.error(request, f'Error: {e}')
+            return redirect('asignar_materia_docente')
 
+        # 🟠 ACCIÓN 3: ASIGNAR DOCENTE
         elif 'asignar_docente' in request.POST:
             materia_id = request.POST.get('materia_id')
             docente_id = request.POST.get('docente_id')
             
-            # 🚨 INICIO DE LA CORRECCIÓN 🚨
-            # Eliminamos la variable 'curso_id' que viene del formulario,
-            # ya que estaba causando el conflicto de validación.
-            # curso_id = request.POST.get('curso_id') # <-- LÍNEA ELIMINADA
-
             try:
                 materia_obj = get_object_or_404(Materia, id=materia_id)
                 docente_obj = get_object_or_404(User, id=docente_id)
-
-                # Obtenemos el curso correcto DIRECTAMENTE desde la materia seleccionada.
                 curso_obj = materia_obj.curso
                 
-                # Ya no necesitamos la validación, porque el curso
-                # SIEMPRE coincidirá con la materia.
-                # if materia_obj.curso_id != int(curso_id): # <-- BLOQUE ELIMINADO
-
-                # Esta lógica (que corregimos la vez anterior) ahora funcionará
-                # porque 'curso_obj' es el correcto.
                 AsignacionMateria.objects.update_or_create(
                     materia=materia_obj,
                     curso=curso_obj,
-                    defaults={
-                        'docente': docente_obj, 
-                        'activo': True
-                    }
+                    defaults={'docente': docente_obj, 'activo': True}
                 )
-                
-                messages.success(request, f'Materia "{materia_obj.nombre}" asignada a {docente_obj.get_full_name()} en el curso {curso_obj}.')
-            except IntegrityError:
-                messages.error(request, 'Esta asignación ya existe.')
+                messages.success(request, f'Asignado: {docente_obj.get_full_name()}.')
             except Exception as e:
-                logger.error(f"Error en asignar_materia_docente: {e}") # Añadido para mejor depuración
-                messages.error(request, f'Ocurrió un error al asignar la materia: {e}')
-            
-            # 🚨 FIN DE LA CORRECCIÓN 🚨
-            
-        return redirect('asignar_materia_docente')
+                messages.error(request, f'Error: {e}')
+                
+            return redirect('asignar_materia_docente')
 
     context = {
         'docentes': docentes,
@@ -1789,7 +1884,6 @@ def asignar_materia_docente(request):
         'asignaciones': asignaciones
     }
     
-    # Esta ruta de plantilla es correcta según tu primer archivo
     return render(request, 'admin/asignar_materia_docente.html', context)
 
 
@@ -2040,25 +2134,43 @@ def dashboard_acudiente(request):
 @login_required
 def cambiar_clave(request):
     """
-    Permite a los usuarios cambiar su contraseña, especialmente la primera vez.
+    Permite a los usuarios cambiar su contraseña.
+    Al terminar, los redirige automáticamente a su Dashboard correspondiente.
     """
     if request.method == 'POST':
-        # Usa PasswordChangeFirstLoginForm
         form = PasswordChangeFirstLoginForm(user=request.user, data=request.POST)
         if form.is_valid():
             user = form.save()
+            # Esto mantiene la sesión iniciada tras el cambio de clave
             update_session_auth_hash(request, user)
 
             if hasattr(user, 'perfil'):
+                # 1. Quitamos el "cepo" de seguridad
                 user.perfil.requiere_cambio_clave = False
                 user.perfil.save(update_fields=['requiere_cambio_clave'])
 
-            messages.success(request, '¡Tu contraseña ha sido cambiada exitosamente!')
-            return redirect('signin') # Redirige a signin para el flujo normal a su dashboard
+                # 2. Redirección Inteligente según el Rol
+                rol = user.perfil.rol
+                
+                # --- STAFF DE BIENESTAR (Psicólogos y Coords) ---
+                if rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+                    return redirect('dashboard_bienestar')
+                
+                # --- OTROS ROLES ---
+                elif rol == 'ESTUDIANTE':
+                    return redirect('dashboard_estudiante')
+                elif rol == 'ACUDIENTE':
+                    return redirect('dashboard_acudiente')
+                elif rol == 'DOCENTE' or user.perfil.es_director:
+                    return redirect('dashboard_docente')
+                elif rol == 'ADMINISTRADOR':
+                    return redirect('admin_dashboard')
+
+            messages.success(request, '¡Tu contraseña ha sido actualizada correctamente!')
+            return redirect('home') # Fallback por si no tiene rol
         else:
             messages.error(request, 'Por favor corrige los errores a continuación.')
     else:
-        # Usa PasswordChangeFirstLoginForm.
         form = PasswordChangeFirstLoginForm(user=request.user)
 
     return render(request, 'account/cambiar_clave.html', {'form': form})
@@ -2230,36 +2342,62 @@ def admin_db_visual(request):
 # 🩺 CIRUGÍA A: (REEMPLAZO) LÓGICA DE PDF REFACTORIZADA 
 # ===================================================================
 
-def _generar_boletin_pdf_logica(request, matricula_id: int):
-    """
-    Función interna que contiene la lógica de renderizado de PDF
-    para una MATRÍCULA específica.
-    """
-    if HTML is None:
-        raise Exception("El módulo de generación de PDF (WeasyPrint) no está instalado.")
-
-    # Llama al service refactorizado con el ID de la matrícula
-    context = get_student_report_context(matricula_id)
-    if not context:
-        raise Http404(f"No se encontró contexto para la matrícula_id: {matricula_id}")
-
-    context['request'] = request
-
-    html_string = render_to_string('pdf/boletin_template.html', context)
-
-    # WeasyPrint necesita una base_url para encontrar archivos estáticos (CSS, logo)
-    base_url = request.build_absolute_uri('/')
-    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
-
-    response = HttpResponse(pdf, content_type='application/pdf')
-    # 'inline' abre el PDF en el navegador, 'attachment' lo descarga
-    response['Content-Disposition'] = f'inline; filename="boletin_{context["estudiante"].username}_{context["curso"].anio_escolar}.pdf"'
-    return response
 
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA A
 # ===================================================================
+try:
+    from weasyprint import HTML
+except ImportError:
+    HTML = None
 
+def _generar_boletin_pdf_logica(request, matricula_id: int):
+    """
+    FASE 10: Lógica de renderizado de PDF con INTEGRACIÓN DE IA.
+    Genera el boletín incluyendo el análisis de rendimiento automático.
+    """
+    if HTML is None:
+        raise Exception("El módulo de generación de PDF (WeasyPrint) no está instalado.")
+
+    # 1. Obtener los datos académicos base del estudiante
+    context = get_student_report_context(matricula_id)
+    if not context:
+        raise Http404(f"No se encontró contexto para la matrícula_id: {matricula_id}")
+
+    # 2. INTEGRACIÓN DE IA: Generar análisis pedagógico en tiempo real
+    # Obtenemos el objeto estudiante desde el contexto ya cargado
+    estudiante = context.get('estudiante')
+    
+    if estudiante:
+        # Llamamos al orquestador para obtener las recomendaciones constructivistas
+        # El orquestador ya sabe usar el ContextBuilder para ver las notas de la DB
+        resultado_ia = ai_orchestrator.process_request(
+            user=request.user, 
+            action_type=ACCION_MEJORAS_ESTUDIANTE,
+            target_user=estudiante
+        )
+        
+        # Inyectamos el contenido de la IA en el contexto del template
+        if resultado_ia.get('success'):
+            context['analisis_ia'] = resultado_ia.get('content')
+            context['ia_meta'] = resultado_ia.get('meta') # Por si quieres mostrar la fecha del análisis
+        else:
+            context['analisis_ia'] = "El análisis pedagógico automático no está disponible en este momento."
+
+    # 3. Preparar el renderizado
+    context['request'] = request
+    html_string = render_to_string('pdf/boletin_template.html', context)
+
+    # 4. Generar el archivo PDF con WeasyPrint
+    base_url = request.build_absolute_uri('/')
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+
+    # 5. Configurar la respuesta de descarga/visualización
+    filename = f"boletin_{estudiante.username}_{context['curso'].anio_escolar}.pdf"
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    return response
 
 # ===================================================================
 # 🩺 INICIO DE CIRUGÍA C: (REEMPLAZO) Vistas de PDF actualizadas 
@@ -2401,7 +2539,7 @@ def admin_ex_estudiantes(request):
     # 3. Obtener los valores únicos para los menús desplegables de filtro
     #    Optimizamos esto para que solo consulte los valores distintos
     anios_disponibles = BoletinArchivado.objects.order_by('-anio_lectivo_archivado') \
-                                              .values_list('anio_lectivo_archivado', flat=True).distinct()
+                                                    .values_list('anio_lectivo_archivado', flat=True).distinct()
     
     # Usamos los GRADOS_CHOICES para los grados
     grados_disponibles = GRADOS_CHOICES
@@ -2432,3 +2570,2234 @@ def admin_ex_estudiantes(request):
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA: PASO 3
 # ===================================================================
+
+# ===================================================================
+# 🩺 INICIO DE CIRUGÍA: MÓDULO DE BIENESTAR Y CONVIVENCIA (VIEWS)
+# ===================================================================
+
+# Roles permitidos para el módulo de bienestar
+STAFF_ROLES = ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO', 'ADMINISTRADOR']
+
+##desde aqui 
+
+
+@role_required(STAFF_ROLES)
+def ver_observador(request, estudiante_id):
+    """
+    Observation history for a specific student.
+    """
+    estudiante = get_object_or_404(User, id=estudiante_id)
+    
+    if not hasattr(estudiante, 'perfil') or estudiante.perfil.rol != 'ESTUDIANTE':
+        messages.error(request, "El usuario seleccionado no es un estudiante.")
+        return redirect('dashboard_bienestar')
+
+    # Obtener observaciones ordenadas por fecha
+    observaciones = Observacion.objects.filter(estudiante=estudiante).select_related('autor', 'periodo').order_by('-fecha_creacion')
+
+    return render(request, 'bienestar/ver_observador.html', {
+        'estudiante': estudiante,
+        'observaciones': observaciones
+    })
+
+@role_required(STAFF_ROLES)
+def crear_observacion(request, estudiante_id):
+    """
+    Formulario para crear una nueva observación.
+    """
+    estudiante = get_object_or_404(User, id=estudiante_id)
+
+    if request.method == 'POST':
+        # Pasamos el usuario al form para validaciones si fuera necesario
+        form = ObservacionForm(request.POST, user=request.user, estudiante=estudiante)
+        if form.is_valid():
+            observacion = form.save(commit=False)
+            observacion.estudiante = estudiante
+            observacion.autor = request.user
+            observacion.save()
+            messages.success(request, "Observación registrada correctamente.")
+            return redirect('ver_observador', estudiante_id=estudiante.id)
+    else:
+        form = ObservacionForm(user=request.user, estudiante=estudiante)
+
+    return render(request, 'bienestar/form_observacion.html', {
+        'form': form, 
+        'estudiante': estudiante, 
+        'titulo': 'Nueva Observación'
+    })
+
+@role_required(STAFF_ROLES)
+def editar_observacion(request, observacion_id):
+    """
+    Edit an existing observation (with 24h validation).
+    """
+    observacion = get_object_or_404(Observacion, id=observacion_id)
+
+    # Security validation: Only author or admin can edit
+    es_admin = request.user.perfil.rol == 'ADMINISTRADOR'
+    es_autor = observacion.autor == request.user
+
+    if not es_admin and not es_autor:
+        messages.error(request, "No tienes permiso para editar esta observación.")
+        return redirect('ver_observador', estudiante_id=observacion.estudiante.id)
+
+    # Time validation (24h)
+    if not observacion.es_editable and not es_admin:
+        messages.error(request, "El tiempo de edición (24h) ha expirado.")
+        return redirect('ver_observador', estudiante_id=observacion.estudiante.id)
+
+    if request.method == 'POST':
+        # Pass instance to update, user and student for context
+        form = ObservacionForm(request.POST, instance=observacion, user=request.user, estudiante=observacion.estudiante)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Observación actualizada.")
+            return redirect('ver_observador', estudiante_id=observacion.estudiante.id)
+    else:
+        form = ObservacionForm(instance=observacion, user=request.user, estudiante=observacion.estudiante)
+
+    return render(request, 'bienestar/form_observacion.html', {
+        'form': form, 
+        'estudiante': observacion.estudiante, 
+        'titulo': 'Editar Observación'
+    })
+
+# --- VIEW FOR MANAGING STAFF (ADMIN) ---
+@role_required('ADMINISTRADOR')
+def gestionar_staff(request):
+    """
+    Crea usuarios Psicológos, Coordinadores, etc. y maneja la subida del PEI.
+    """
+    staff_roles = [
+        ('PSICOLOGO', 'Psicólogo'),
+        ('COORD_CONVIVENCIA', 'Coord. Convivencia'),
+        ('COORD_ACADEMICO', 'Coord. Académico')
+    ]
+
+    institucion = Institucion.objects.first()
+    if not institucion:
+        institucion = Institucion.objects.create(nombre="Institución Educativa")
+
+    # --- Lógica de Procesamiento POST ---
+    if request.method == 'POST':
+        # 1. Manejar Subida de PEI (si el archivo está presente)
+        if 'pei_file' in request.FILES:
+            if request.user.perfil.rol in ['COORD_ACADEMICO', 'ADMINISTRADOR']:
+                file = request.FILES['pei_file']
+                if file.name.lower().endswith('.pdf'):
+                    institucion.archivo_pei = file
+                    institucion.save()
+                    messages.success(request, "El Documento PEI se ha cargado correctamente.")
+                else:
+                    messages.error(request, "Error: El archivo debe ser un PDF.")
+            else:
+                messages.error(request, "No tienes permisos para modificar el PEI.")
+            return redirect('gestionar_staff')
+
+        # 2. Manejar Creación de Staff (si los campos de staff están presentes)
+        elif 'username' in request.POST:
+            username = request.POST.get('username')
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            email = request.POST.get('email')
+            rol = request.POST.get('rol')
+
+            try:
+                with transaction.atomic():
+                    if rol not in [r[0] for r in staff_roles]:
+                        raise ValueError("Rol inválido")
+
+                    user = User.objects.create_user(
+                        username=username, first_name=first_name, last_name=last_name,
+                        email=email, password=settings.DEFAULT_TEMP_PASSWORD
+                    )
+                    Perfil.objects.create(user=user, rol=rol, requiere_cambio_clave=True)
+                    messages.success(request, f"Usuario {username} creado como {rol}. Clave: {settings.DEFAULT_TEMP_PASSWORD}")
+            except Exception as e:
+                messages.error(request, f"Error al crear staff: {e}")
+
+        return redirect('gestionar_staff')
+
+    # --- Lógica GET ---
+    staff_users = User.objects.filter(
+        perfil__rol__in=[r[0] for r in staff_roles],
+        is_active=True
+    ).select_related('perfil')
+
+    return render(request, 'admin/gestionar_staff.html', {
+        'staff_users': staff_users,
+        'roles': staff_roles,
+        'institucion': institucion # Pasamos el objeto institución
+    })
+
+
+# --- NEW FUNCTION: DEACTIVATE STAFF (SOFT DELETE) ---
+@role_required('ADMINISTRADOR')
+def desactivar_staff(request, user_id):
+    """
+    Deactivates (Soft Delete) a staff member.
+    """
+    usuario = get_object_or_404(User, id=user_id)
+    
+    # Protection 1: Do not deactivate superusers or self
+    if usuario.is_superuser or usuario == request.user:
+        messages.error(request, "No puedes desactivar a este usuario.")
+        return redirect('gestionar_staff')
+
+    # Protection 2: Verify it is wellness staff
+    if not hasattr(usuario, 'perfil') or usuario.perfil.rol not in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+        messages.error(request, "Este usuario no pertenece al staff de bienestar o no tiene perfil.")
+        return redirect('gestionar_staff')
+
+    # Proceed to deactivate
+    usuario.is_active = False
+    usuario.save()
+    
+    messages.success(request, f"El usuario {usuario.get_full_name() or usuario.username} ha sido retirado del equipo correctamente.")
+    return redirect('gestionar_staff')
+
+# --- API TO TOGGLE OBSERVER ACCESS (ADMIN) ---
+@role_required('ADMINISTRADOR')
+@require_POST
+@csrf_protect
+def toggle_observador_permiso(request):
+    try:
+        data = json.loads(request.body)
+        estudiante_id = data.get('estudiante_id')
+        nuevo_estado = bool(data.get('estado'))
+
+        # Find active enrollment
+        matricula = Matricula.objects.filter(estudiante_id=estudiante_id, activo=True).first()
+        if not matricula:
+            return JsonResponse({'status': 'error', 'message': 'Matrícula no encontrada'}, status=404)
+
+        matricula.puede_ver_observador = nuevo_estado
+        matricula.save(update_fields=['puede_ver_observador'])
+
+        return JsonResponse({'status': 'ok', 'nuevo_estado_texto': 'Visible' if nuevo_estado else 'Bloqueado'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+def generar_observador_pdf(request, estudiante_id):
+    """
+    Generates the observer PDF for a student.
+    """
+    # 1. Validate Permissions
+    es_staff = request.user.perfil.rol in STAFF_ROLES
+    es_acudiente = request.user.perfil.rol == 'ACUDIENTE'
+
+    estudiante = get_object_or_404(User, id=estudiante_id)
+    matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).first()
+
+    if es_acudiente:
+        # Verify link
+        vinculo = Acudiente.objects.filter(acudiente=request.user, estudiante=estudiante).exists()
+        if not vinculo:
+            messages.error(request, "No tienes permiso.")
+            return redirect('dashboard_acudiente')
+        # Verify admin block
+        if matricula and not matricula.puede_ver_observador:
+            messages.error(request, "La visualización del observador está bloqueada temporalmente.")
+            return redirect('dashboard_acudiente')
+    elif not es_staff:
+        messages.error(request, "Acceso denegado.")
+        return redirect('home')
+
+    # 2. Get data
+    observaciones = Observacion.objects.filter(estudiante=estudiante).select_related('autor__perfil', 'periodo').order_by('periodo__id', 'fecha_creacion')
+    institucion = Institucion.objects.first()
+
+    # 3. Render PDF
+    if HTML is None:
+        return HttpResponse("Error: WeasyPrint no instalado.", status=500)
+
+    html_string = render_to_string('pdf/observador_template.html', {
+        'estudiante': estudiante,
+        'observaciones': observaciones,
+        'institucion': institucion,
+        'curso': matricula.curso if matricula else None,
+        'fecha_impresion': date.today()
+    })
+
+    base_url = request.build_absolute_uri('/')
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="observador_{estudiante.username}.pdf"'
+    return response
+
+# ===================================================================
+# 🩺 FASE 4: FUNCIONES DE CHAT Y ASISTENCIA (NUEVAS AL FINAL)
+# ===================================================================
+#aqui 
+
+@role_required('DOCENTE')
+@require_POST
+@csrf_protect
+def api_tomar_asistencia(request):
+    """
+    Registra la asistencia de un estudiante vía AJAX.
+    Envía notificación automática al Acudiente y al Coordinador de Convivencia si hay Falla o Retardo.
+    """
+    try:
+        data = json.loads(request.body)
+        estudiante_id = data.get('estudiante_id')
+        materia_id = data.get('materia_id')
+        estado = data.get('estado') 
+        fecha = data.get('fecha', str(date.today()))
+
+        estudiante = get_object_or_404(User, id=estudiante_id)
+        materia = get_object_or_404(Materia, id=materia_id)
+        
+        # Validar matrícula activa para asegurar que el estudiante pertenece al curso
+        matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).first()
+        if not matricula:
+            return JsonResponse({'success': False, 'error': 'Estudiante no matriculado'})
+
+        # Guardar o actualizar el registro de asistencia en la base de datos
+        Asistencia.objects.update_or_create(
+            estudiante=estudiante, materia=materia, fecha=fecha,
+            defaults={
+                'curso': matricula.curso, 
+                'estado': estado, 
+                'registrado_por': request.user
+            }
+        )
+
+        # 🔔 SISTEMA DE NOTIFICACIONES AUTOMÁTICAS
+        # Solo se activa si el estado es 'FALLA' o 'TARDE'
+        if estado in ['FALLA', 'TARDE']:
+            tipo_txt = "Falla de asistencia" if estado == 'FALLA' else "Llegada tarde"
+            
+            # Importación local para evitar errores de referencia circular
+            from .utils import notificar_acudientes, crear_notificacion
+
+            # 1. Notificar al Acudiente (Familia)
+            # Esta función busca automáticamente a los acudientes del estudiante
+            notificar_acudientes(
+                estudiante, 
+                "Alerta de Asistencia", 
+                f"En la clase de {materia.nombre}: {tipo_txt} (Fecha: {fecha}).", 
+                "ASISTENCIA"
+            )
+            
+            # 2. Notificar al Coordinador de Convivencia (Staff)
+            # Buscamos a todos los usuarios activos con el rol de Coordinador de Convivencia
+            coordinadores = User.objects.filter(perfil__rol='COORD_CONVIVENCIA', is_active=True)
+            
+            for coord in coordinadores:
+                crear_notificacion(
+                    usuario_destino=coord,
+                    titulo=f"Reporte: {tipo_txt}",
+                    mensaje=f"Estudiante: {estudiante.get_full_name()} ({matricula.curso.nombre}). Materia: {materia.nombre}. Fecha: {fecha}.",
+                    tipo="ASISTENCIA",
+                    link=f"/bienestar/alumno/{estudiante.id}/" # Enlace directo al perfil/observador del alumno
+                )
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        # Captura cualquier error inesperado y lo devuelve como JSON
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def buzon_mensajes(request):
+    """
+    Bandeja de entrada y salida de mensajes.
+    Agrupa los mensajes enviados para colapsar los envíos masivos en una sola fila.
+    """
+    tipo_bandeja = request.GET.get('tipo', 'recibidos') # Por defecto 'recibidos'
+    
+    mensajes_no_leidos_count = 0
+    titulo_bandeja = ""
+    # Mantenemos la inicialización
+    mensajes = [] 
+
+    if tipo_bandeja == 'enviados':
+        titulo_bandeja = "Mensajes Enviados"
+        
+        # 1. Definir la QuerySet para AGRUPAR
+        mensajes_agrupados = MensajeInterno.objects.filter(remitente=request.user).values(
+            'asunto', 'cuerpo', 'fecha_envio'
+        ).annotate(
+            destinatarios_count=Count('destinatario', distinct=True), 
+            referencia_id=Min('id'),
+            ultimo_destinatario_id=Max('destinatario_id') 
+        ).order_by('-fecha_envio')
+        
+        mensajes = list(mensajes_agrupados) 
+
+        
+    else:
+        titulo_bandeja = "Buzón de Entrada"
+        # Mensajes recibidos
+        mensajes_recibidos_qs = MensajeInterno.objects.filter(destinatario=request.user).select_related('remitente__perfil').order_by('-fecha_envio')
+        
+        mensajes_no_leidos_count = mensajes_recibidos_qs.filter(leido=False).count()
+        mensajes = mensajes_recibidos_qs
+
+
+    # 2. Adjuntar el objeto User completo para la QuerySet de Enviados (Optimización)
+    if tipo_bandeja == 'enviados':
+        destinatario_ids = [m['ultimo_destinatario_id'] for m in mensajes if m['ultimo_destinatario_id']]
+        
+        usuarios_qs = User.objects.filter(id__in=destinatario_ids).select_related('perfil') 
+        ultimo_destinatario_map = {user_obj.id: user_obj for user_obj in usuarios_qs}
+            
+        for m in mensajes:
+            m['ultimo_destinatario_obj'] = ultimo_destinatario_map.get(m['ultimo_destinatario_id'])
+
+
+    # 3. Renderizar el template final
+    # Usamos 'chat/buzon.html'
+    return render(request, 'chat/buzon.html', { 
+        'mensajes': mensajes,
+        'tipo_bandeja': tipo_bandeja,
+        'titulo_bandeja': titulo_bandeja,
+        'mensajes_no_leidos_count': mensajes_no_leidos_count
+    })
+
+#Aqui 
+@login_required
+def enviar_mensaje(request):
+    """
+    Formulario para enviar mensajes (Individuales o Masivos).
+    Maneja la lógica de 'Responder', propagación masiva y FILTRO DE SEGURIDAD (Sentinel).
+    """
+    
+    # 1. Capturar parámetros de la URL (Vienen del botón Responder)
+    destinatario_id_get = request.GET.get('destinatario')
+    asunto_previo = request.GET.get('asunto')
+    mensaje_original_id = request.GET.get('reply_to')
+    
+    # 2. Pre-llenar el formulario
+    initial_data = {}
+    if destinatario_id_get:
+        initial_data['destinatario'] = destinatario_id_get
+    if asunto_previo:
+        if not asunto_previo.startswith("Re:"):
+            initial_data['asunto'] = f"Re: {asunto_previo}"
+        else:
+            initial_data['asunto'] = asunto_previo
+
+    # 3. Buscar el mensaje original para mostrar el contexto (cuadro gris)
+    mensaje_original = None
+    if mensaje_original_id:
+        try:
+            mensaje_posible = MensajeInterno.objects.get(id=mensaje_original_id)
+            if request.user in [mensaje_posible.destinatario, mensaje_posible.remitente]:
+                mensaje_original = mensaje_posible
+        except MensajeInterno.DoesNotExist:
+            pass
+
+    # 4. Procesar el envío
+    if request.method == 'POST':
+        # IMPORTANTE: request.FILES es necesario para subir archivos adjuntos
+        form = MensajeForm(request.user, request.POST, request.FILES)
+        
+        if form.is_valid():
+            
+            # ==================================================================
+            # 🛡️ INICIO: FILTRO DE SEGURIDAD (EL CENTINELA)
+            # ==================================================================
+            asunto_texto = form.cleaned_data.get('asunto', '')
+            cuerpo_texto = form.cleaned_data.get('cuerpo', '')
+            texto_completo = f"{asunto_texto} {cuerpo_texto}" # Analizamos todo
+
+            es_toxico, motivo = Sentinel.is_toxic(texto_completo)
+
+            if es_toxico:
+                # A. Feedback al Usuario (Alerta)
+                messages.error(request, '🚫 Mensaje bloqueado. Se ha detectado contenido inapropiado que infringe las normas de convivencia escolar.')
+                
+                # B. Registro Forense (Evidencia)
+                try:
+                    SecurityLog.objects.create(
+                        usuario=request.user,
+                        contenido_intentado=texto_completo,
+                        razon_bloqueo=motivo or "Lenguaje ofensivo en Mensaje Interno"
+                    )
+                except Exception as e:
+                    print(f"Error guardando log: {e}") # En producción usar logger
+
+                # C. Interrupción: Devolvemos al usuario al formulario SIN enviar nada
+                return render(request, 'chat/enviar.html', {
+                    'form': form,
+                    'mensaje_original': mensaje_original 
+                })
+            # ==================================================================
+            # 🛡️ FIN DEL FILTRO (Si pasa, continúa con el envío)
+            # ==================================================================
+
+            # --- Extracción de Destinos (Individual o Masivo) ---
+            
+            # CRÍTICO: ModelChoiceField devuelve el objeto User (o None si es masivo/vacío)
+            destinatario_obj = form.cleaned_data.get('destinatario')
+            rol_masivo = form.cleaned_data.get('destinatario_rol_masivo')
+            curso_masivo_id = form.cleaned_data.get('destinatario_curso_masivo')
+            
+            destinos_finales_ids = []
+            
+            if destinatario_obj:
+                # 4.1. Caso Individual
+                destinos_finales_ids = [destinatario_obj.id]
+                
+            else:
+                # 4.2. Caso Masivo: Construir QuerySet de destinatarios
+                
+                # Obtener la QuerySet base de todos los usuarios, excluyendo al remitente
+                qs = User.objects.exclude(id=request.user.id)
+                
+                if rol_masivo:
+                    # Lógica para filtrar por rol
+                    if rol_masivo == 'ALL_DOCENTES':
+                        qs = qs.filter(perfil__rol='DOCENTE')
+                    elif rol_masivo == 'ALL_ESTUDIANTES':
+                        qs = qs.filter(perfil__rol='ESTUDIANTE')
+                    elif rol_masivo == 'ALL_ACUDIENTES':
+                        qs = qs.filter(perfil__rol='ACUDIENTE')
+                    elif rol_masivo == 'ALL_STAFF':
+                        qs = qs.filter(perfil__rol__in=['ADMINISTRADOR', 'COORD_ACADEMICO', 'COORD_CONVIVENCIA', 'PSICOLOGO'])
+                    
+                    # Lógica de Docente (Mis estudiantes/acudientes)
+                    elif request.user.perfil.rol == 'DOCENTE':
+                        if rol_masivo in ['MIS_ESTUDIANTES', 'MIS_ACUDIENTES']:
+                            cursos_ids = AsignacionMateria.objects.filter(docente=request.user).values_list('curso_id', flat=True)
+                            estudiantes_ids = Matricula.objects.filter(curso_id__in=cursos_ids).values_list('estudiante_id', flat=True)
+                            
+                            if rol_masivo == 'MIS_ESTUDIANTES':
+                                qs = qs.filter(id__in=estudiantes_ids)
+                            elif rol_masivo == 'MIS_ACUDIENTES':
+                                acudientes_ids = Acudiente.objects.filter(estudiante_id__in=estudiantes_ids).values_list('acudiente_id', flat=True)
+                                qs = qs.filter(id__in=acudientes_ids)
+
+                    # Obtener las IDs finales de la queryset filtrada
+                    destinos_finales_ids = list(qs.values_list('id', flat=True).distinct())
+
+
+                elif curso_masivo_id:
+                    # Lógica para filtrar por curso
+                    try:
+                        curso_id_int = int(curso_masivo_id) 
+                    except ValueError:
+                         messages.error(request, "Error: ID de curso inválida.")
+                         return redirect('buzon_mensajes')
+                    
+                    estudiantes_curso_ids = Matricula.objects.filter(curso_id=curso_id_int).values_list('estudiante_id', flat=True)
+                    acudientes_curso_ids = Acudiente.objects.filter(estudiante_id__in=estudiantes_curso_ids).values_list('acudiente_id', flat=True)
+                    
+                    all_ids = list(estudiantes_curso_ids) + list(acudientes_curso_ids)
+                    
+                    destinos_finales_ids = list(User.objects.filter(id__in=all_ids).exclude(id=request.user.id).values_list('id', flat=True).distinct())
+
+            # 5. Guardar el Mensaje (Individual o Masivo)
+            if destinos_finales_ids:
+                
+                try:
+                    with transaction.atomic():
+                        # 5.1. Guardar el primer mensaje (para tener el archivo subido)
+                        mensaje_principal = form.save(commit=False)
+                        mensaje_principal.remitente = request.user
+                        mensaje_principal.destinatario_id = destinos_finales_ids[0]
+                        mensaje_principal.save()
+                        
+                        # 5.2. Crear el resto de mensajes usando bulk_create (Clonación eficiente)
+                        mensajes_adicionales = []
+                        for user_id in destinos_finales_ids[1:]:
+                            clone = MensajeInterno(
+                                remitente=request.user,
+                                destinatario_id=user_id,
+                                asunto=mensaje_principal.asunto,
+                                cuerpo=mensaje_principal.cuerpo,
+                                archivo=mensaje_principal.archivo, 
+                            )
+                            mensajes_adicionales.append(clone)
+                        
+                        if mensajes_adicionales:
+                            MensajeInterno.objects.bulk_create(mensajes_adicionales)
+
+                    messages.success(request, f"Mensaje enviado exitosamente a {len(destinos_finales_ids)} destinatario(s).")
+                    return redirect('buzon_mensajes')
+
+                except Exception as e:
+                    messages.error(request, f"Error al enviar el mensaje: {e}")
+            else:
+                 messages.error(request, "No se encontraron destinatarios válidos para el envío. Revisa tus filtros.")
+
+        else:
+             messages.error(request, "Error de validación: Por favor revisa los campos.")
+
+    else:
+        # Petición GET
+        form = MensajeForm(request.user, initial=initial_data)
+    
+    # 5. Renderizar
+    return render(request, 'chat/enviar.html', {
+        'form': form,
+        'mensaje_original': mensaje_original 
+    })
+
+
+@login_required
+def leer_mensaje(request, mensaje_id):
+    """
+    Vista para ver la conversación completa y responder con archivos.
+    PROTEGIDA CON SENTINEL (Filtro Anti-Acoso).
+    """
+    # Importaciones locales para asegurar disponibilidad
+    from .models import MensajeInterno, SecurityLog
+    from .utils import Sentinel
+    
+    # 1. Obtener el mensaje original
+    mensaje_actual = get_object_or_404(MensajeInterno, id=mensaje_id)
+    
+    # Seguridad: Solo permitir ver si soy el remitente o el destinatario
+    if request.user != mensaje_actual.destinatario and request.user != mensaje_actual.remitente:
+        messages.error(request, "No tienes permiso para ver esta conversación.")
+        return redirect('buzon_mensajes')
+
+    # 2. Identificar al "otro" usuario en la conversación
+    if mensaje_actual.remitente == request.user:
+        otro_usuario = mensaje_actual.destinatario
+    else:
+        otro_usuario = mensaje_actual.remitente
+
+    # ========================================================
+    # 3. PROCESAR RESPUESTA (POST)
+    # ========================================================
+    if request.method == 'POST':
+        cuerpo = request.POST.get('cuerpo', '').strip() # Asegurar string limpio
+        archivo = request.FILES.get('archivo') # 🔥 CRÍTICO: Capturar el archivo
+
+        # --- 🛡️ INICIO: FILTRO DE SEGURIDAD (EL CENTINELA) 🛡️ ---
+        # Solo analizamos si hay texto escrito
+        if cuerpo:
+            es_toxico, motivo = Sentinel.is_toxic(cuerpo)
+
+            if es_toxico:
+                # A. Alerta al usuario
+                messages.error(request, '🚫 Respuesta no enviada: Se detectó contenido inapropiado o irrespetuoso.')
+                
+                # B. Registro Forense (Silencioso para el admin)
+                try:
+                    SecurityLog.objects.create(
+                        usuario=request.user,
+                        contenido_intentado=cuerpo,
+                        razon_bloqueo=motivo or "Lenguaje ofensivo en Respuesta de Chat"
+                    )
+                except Exception as e:
+                    # En producción usarías logger, aquí print para depurar si falla
+                    print(f"Error log seguridad: {e}")
+
+                # C. Interrupción: Recargamos la página SIN guardar nada
+                return redirect('leer_mensaje', mensaje_id=mensaje_id)
+        # --- 🛡️ FIN DEL FILTRO 🛡️ ---
+
+        # Solo guardamos si hay texto (y pasó el filtro) O hay un archivo
+        if cuerpo or archivo:
+            try:
+                MensajeInterno.objects.create(
+                    remitente=request.user,
+                    destinatario=otro_usuario,
+                    cuerpo=cuerpo, # Ya validado o vacío si solo es archivo
+                    archivo=archivo, # 🔥 Guardamos el archivo en la BD
+                    leido=False
+                )
+                # Recargamos la página para ver el mensaje enviado
+                return redirect('leer_mensaje', mensaje_id=mensaje_id)
+            except Exception as e:
+                messages.error(request, f"Error al enviar: {e}")
+
+    # 4. Marcar como leídos los mensajes que recibí de esa persona
+    MensajeInterno.objects.filter(
+        remitente=otro_usuario, 
+        destinatario=request.user, 
+        leido=False
+    ).update(leido=True)
+
+    # 5. Obtener el historial completo de la charla (Ordenado por fecha)
+    historial = MensajeInterno.objects.filter(
+        (Q(remitente=request.user) & Q(destinatario=otro_usuario)) |
+        (Q(remitente=otro_usuario) & Q(destinatario=request.user))
+    ).order_by('fecha_envio')
+
+    # Asegúrate de que la ruta 'chat/leer.html' coincida con donde guardaste el HTML
+    return render(request, 'chat/leer.html', {
+        'mensaje_actual': mensaje_actual,
+        'otro_usuario': otro_usuario,
+        'historial': historial,
+    })
+
+# tasks/views.py
+
+# tasks/views.py
+
+#desde aqui 
+
+# tasks/views.py
+
+@role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
+def dashboard_academico(request):
+    """
+    Tablero de Inteligencia Académica con MOTOR DE PREDICCIÓN.
+    """
+    # Pesos definidos en el sistema
+    PESOS = {1: 0.20, 2: 0.30, 3: 0.30, 4: 0.20}
+
+    # 1. Obtener notas finales que están perdiendo (< 3.0)
+    # Filtramos solo cursos activos para datos reales
+    notas_reprobadas = Nota.objects.filter(
+        numero_nota=5, 
+        valor__lt=3.0,
+        materia__curso__activo=True
+    ).select_related('estudiante', 'materia', 'materia__curso')
+
+    # 2. PROCESAMIENTO Y PREDICCIÓN
+    riesgo_map = {}
+    
+    for nota_final in notas_reprobadas:
+        est_id = nota_final.estudiante.id
+        
+        # --- ALGORITMO DE PREDICCIÓN ---
+        # 1. ¿Cuánto lleva acumulado?
+        nota_acumulada = float(nota_final.valor)
+        
+        # 2. ¿Qué notas ya se tomaron? (Consultamos las parciales de este estudiante/materia)
+        notas_parciales = Nota.objects.filter(
+            estudiante=nota_final.estudiante,
+            materia=nota_final.materia,
+            periodo=nota_final.periodo,
+            numero_nota__in=[1, 2, 3, 4]
+        ).values_list('numero_nota', flat=True)
+        
+        # 3. Calcular peso evaluado y peso restante
+        peso_evaluado = sum(PESOS[n] for n in notas_parciales)
+        peso_restante = 1.0 - peso_evaluado
+        
+        # 4. Proyección: ¿Qué nota necesita en lo que falta para pasar con 3.0?
+        # Fórmula: (Meta - Acumulado) / Peso_Restante
+        if peso_restante > 0.05: # Si falta más del 5% por evaluar
+            nota_necesaria = (3.0 - nota_acumulada)
+            # Como el acumulado ya está ponderado, la nota necesaria matemática es directa si asumimos 
+            # que nota_acumulada es la suma de (nota * peso).
+            # Ajuste: nota_final.valor en tu sistema es la SUMA PONDERADA.
+            # Meta acumulada total es 3.0.
+            # Puntos que faltan = 3.0 - nota_acumulada.
+            # Esos puntos deben conseguirse en el 'peso_restante'.
+            # Nota promedio necesaria = Puntos Faltantes / Peso Restante.
+            promedio_necesario = (3.0 - nota_acumulada) / peso_restante
+        else:
+            promedio_necesario = 100.0 # Ya no hay tiempo, nota infinita necesaria
+
+        # 5. Clasificar Riesgo / Probabilidad de Pérdida
+        if promedio_necesario > 5.0:
+            probabilidad = "100% (Irrecuperable)"
+            clase_riesgo = "bg-dark text-white" # Ya perdió matemáticamente
+            nivel_riesgo = "CRÍTICO"
+        elif promedio_necesario > 4.0:
+            probabilidad = "85% (Muy Alta)"
+            clase_riesgo = "bg-danger text-white"
+            nivel_riesgo = "ALTO"
+        elif promedio_necesario > 3.0:
+            probabilidad = "50% (Media)"
+            clase_riesgo = "bg-warning text-dark"
+            nivel_riesgo = "MEDIO"
+        else:
+            probabilidad = "20% (Baja)"
+            clase_riesgo = "bg-info text-dark"
+            nivel_riesgo = "BAJO"
+
+        # --- FIN ALGORITMO ---
+
+        if est_id not in riesgo_map:
+            riesgo_map[est_id] = {
+                'estudiante': nota_final.estudiante,
+                'curso': nota_final.materia.curso.nombre,
+                'total_perdidas': 0,
+                'materias': []
+            }
+        
+        riesgo_map[est_id]['total_perdidas'] += 1
+        riesgo_map[est_id]['materias'].append({
+            'nombre': nota_final.materia.nombre,
+            'nota_actual': nota_acumulada,
+            'nota_necesaria': round(promedio_necesario, 2) if promedio_necesario < 10 else "> 5.0",
+            'probabilidad': probabilidad,
+            'clase_riesgo': clase_riesgo,
+            'periodo': nota_final.periodo.nombre
+        })
+
+    # Ordenar: Primero los que tienen más materias perdidas
+    lista_riesgo = sorted(riesgo_map.values(), key=lambda x: x['total_perdidas'], reverse=True)
+
+    # 3. KPIs GLOBALES (Para las tarjetas de arriba)
+    all_notas_finales = Nota.objects.filter(numero_nota=5, materia__curso__activo=True)
+    total_evaluaciones = all_notas_finales.count()
+    promedio_global = all_notas_finales.aggregate(Avg('valor'))['valor__avg'] or 0
+    conteo_reprobadas = notas_reprobadas.count()
+    tasa_reprobacion = (conteo_reprobadas / total_evaluaciones * 100) if total_evaluaciones > 0 else 0
+
+    # 4. GRÁFICOS
+    rendimiento_cursos = all_notas_finales.values('materia__curso__nombre').annotate(prom=Avg('valor')).order_by('materia__curso__nombre')
+    labels_cursos = [x['materia__curso__nombre'] for x in rendimiento_cursos]
+    data_cursos = [float(round(x['prom'], 2)) for x in rendimiento_cursos]
+
+    rendimiento_materias = all_notas_finales.values('materia__nombre').annotate(prom=Avg('valor')).order_by('prom')[:10]
+    labels_materias = [x['materia__nombre'] for x in rendimiento_materias]
+    data_materias = [float(round(x['prom'], 2)) for x in rendimiento_materias]
+
+    context = {
+        'lista_riesgo': lista_riesgo,
+        'kpi': {
+            'promedio': round(promedio_global, 2),
+            'tasa_reprobacion': round(tasa_reprobacion, 1),
+            'total_evaluaciones': total_evaluaciones,
+            'reprobadas': conteo_reprobadas
+        },
+        'chart_cursos_labels': json.dumps(labels_cursos),
+        'chart_cursos_data': json.dumps(data_cursos),
+        'chart_materias_labels': json.dumps(labels_materias),
+        'chart_materias_data': json.dumps(data_materias),
+        # Datos para dona (Aprobados vs Reprobados)
+        'chart_distribucion_data': json.dumps([total_evaluaciones - conteo_reprobadas, conteo_reprobadas])
+    }
+    
+    return render(request, 'admin/dashboard_academico.html', context)
+# tasks/views.py (Agregar al final)
+
+@role_required(STAFF_ROLES)
+def historial_asistencia(request):
+    """
+    Vista para que Coordinación vea el histórico completo de asistencia.
+    Permite filtrar por Curso y Estado (Falla, Tarde, etc).
+    """
+    # Filtros
+    curso_id = request.GET.get('curso')
+    estado = request.GET.get('estado')
+    
+    # Consulta base: Traemos todo ordenado por fecha (lo más reciente primero)
+    asistencias = Asistencia.objects.select_related('estudiante', 'curso', 'materia', 'registrado_por').all().order_by('-fecha')
+
+    # Aplicar filtros si existen
+    if curso_id:
+        asistencias = asistencias.filter(curso_id=curso_id)
+    if estado:
+        asistencias = asistencias.filter(estado=estado)
+    
+    # Paginación: 50 registros por página para no saturar
+    paginator = Paginator(asistencias, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Listas para los selectores de filtro
+    cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
+    
+    return render(request, 'bienestar/historial_asistencia.html', {
+        'page_obj': page_obj,
+        'cursos': cursos,
+        'current_curso': int(curso_id) if curso_id else '',
+        'current_estado': estado,
+        'total_registros': asistencias.count()
+    })
+
+# tasks/views.py
+
+# ... (resto del código anterior) ...
+
+# ===================================================================
+# 🩺 MÓDULO DE BIENESTAR: PANEL PRINCIPAL
+# ===================================================================
+
+# Roles permitidos para el módulo
+STAFF_ROLES = ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO', 'ADMINISTRADOR']
+
+@role_required(STAFF_ROLES)
+def dashboard_bienestar(request):
+    """
+    Panel principal de Bienestar con Estadísticas PEI, Gestión, Analítica de Asistencia y Alertas Académicas.
+    """
+    # 0. LÓGICA DE SUBIDA DEL PEI (Solo para Coord. Académico o Admin)
+    if request.method == 'POST' and 'pei_file' in request.FILES:
+        if request.user.perfil.rol in ['COORD_ACADEMICO', 'ADMINISTRADOR']:
+            institucion = Institucion.objects.first()
+            if not institucion:
+                institucion = Institucion.objects.create(nombre="Institución Educativa")
+            
+            archivo = request.FILES['pei_file']
+            if archivo.name.lower().endswith('.pdf'):
+                institucion.archivo_pei = archivo
+                institucion.save()
+                messages.success(request, "El Documento PEI se ha actualizado correctamente.")
+            else:
+                messages.error(request, "Error: El archivo debe ser un PDF.")
+        return redirect('dashboard_bienestar')
+
+    # 1. LÓGICA DE BÚSQUEDA DE ESTUDIANTES
+    query = request.GET.get('q')
+    estudiantes_busqueda = []
+    if query:
+        estudiantes_busqueda = User.objects.filter(
+            Q(perfil__rol='ESTUDIANTE') &
+            (Q(username__icontains=query) |
+             Q(first_name__icontains=query) |
+             Q(last_name__icontains=query))
+        ).select_related('perfil').distinct()[:20]
+
+    # 2. ESTADÍSTICAS ACADÉMICAS Y DE CONVIVENCIA (KPIs)
+    cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
+    
+    # Definir periodos de encabezado
+    periodos_header = []
+    primer_curso = cursos_activos.first()
+    if primer_curso:
+        periodos_header = Periodo.objects.filter(curso=primer_curso, activo=True).order_by('id')
+
+    # Variables para KPIs Globales
+    total_estudiantes_colegio = 0
+    suma_promedios_acad = 0.0
+    suma_promedios_conv = 0.0
+    cursos_con_datos = 0
+
+    # Arrays para Gráficos Chart.js
+    chart_labels = []      
+    chart_data_acad = []   
+    chart_data_conv = []  
+
+    vista_cursos = []
+    
+    # Pre-carga optimizada de notas de convivencia
+    notas_convivencia_map = {}
+    convivencias_qs = Convivencia.objects.select_related('estudiante', 'periodo').all()
+    for c in convivencias_qs:
+        notas_convivencia_map[(c.estudiante_id, c.periodo_id)] = c.valor
+
+    # Iteración por cursos para cálculos
+    for curso in cursos_activos:
+        matriculas = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante__perfil').order_by('estudiante__last_name')
+        num_alumnos = matriculas.count()
+        total_estudiantes_colegio += num_alumnos
+
+        # Promedios del curso
+        val_conv = Convivencia.objects.filter(curso=curso).aggregate(avg=Avg('valor'))['avg']
+        prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
+        
+        val_acad = Nota.objects.filter(
+            estudiante__matriculas__curso=curso,
+            numero_nota=5 
+        ).aggregate(avg=Avg('valor'))['avg']
+        prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
+
+        # Agregar datos al gráfico si hay alumnos
+        if num_alumnos > 0:
+            chart_labels.append(f"{curso.nombre}")
+            chart_data_acad.append(round(prom_acad_curso, 2))
+            chart_data_conv.append(round(prom_conv_curso, 2))
+            suma_promedios_acad += prom_acad_curso
+            suma_promedios_conv += prom_conv_curso
+            cursos_con_datos += 1
+
+        # Construcción de lista de estudiantes para la tabla visual (Acordeón)
+        periodos_del_curso = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
+        lista_estudiantes = []
+        
+        for mat in matriculas:
+            estudiante = mat.estudiante
+            notas_estudiante = {}
+            for i, p_header in enumerate(periodos_header):
+                val = "-"
+                if i < len(periodos_del_curso):
+                    p_local = periodos_del_curso[i]
+                    val = notas_convivencia_map.get((estudiante.id, p_local.id), "-")
+                notas_estudiante[p_header.id] = val
+            
+            lista_estudiantes.append({
+                'obj': estudiante,
+                'notas': notas_estudiante
+            })
+
+        if lista_estudiantes:
+            vista_cursos.append({
+                'curso': curso,
+                'estudiantes': lista_estudiantes,
+                'stats': {'acad': round(prom_acad_curso, 2), 'conv': round(prom_conv_curso, 2), 'alumnos': num_alumnos}
+            })
+
+    # Cálculo final de promedios institucionales
+    promedio_institucional_acad = round(suma_promedios_acad / cursos_con_datos, 2) if cursos_con_datos > 0 else 0
+    promedio_institucional_conv = round(suma_promedios_conv / cursos_con_datos, 2) if cursos_con_datos > 0 else 0
+
+    # ===================================================================
+    # 🩺 MÓDULO 3: ANALÍTICA DE ASISTENCIA (Fallas y Retardos)
+    # ===================================================================
+    
+    # 1. Estadísticas Totales para Gráfico de Torta
+    stats_asistencia = {
+        'asistio': Asistencia.objects.filter(estado='ASISTIO').count(),
+        'falla': Asistencia.objects.filter(estado='FALLA').count(),
+        'excusa': Asistencia.objects.filter(estado='EXCUSA').count(),
+        'tarde': Asistencia.objects.filter(estado='TARDE').count(),
+    }
+    
+    # 2. Top 5 Estudiantes con más Fallas (Alerta de Ausentismo)
+    top_fallas = Asistencia.objects.filter(estado='FALLA')\
+        .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'estudiante__username', 'curso__nombre')\
+        .annotate(total=Count('id'))\
+        .order_by('-total')[:5]
+
+    # ===================================================================
+    # 🩺 MÓDULO 4: ALERTAS ACADÉMICAS (Notas Malas)
+    # ===================================================================
+    # Buscamos estudiantes con notas finales < 3.0 (Top 5 críticos)
+    alertas_academicas = Nota.objects.filter(numero_nota=5, valor__lt=3.0)\
+        .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'estudiante__username', 'materia__curso__nombre')\
+        .annotate(total_reprobadas=Count('id'))\
+        .order_by('-total_reprobadas')[:5]
+    
+    # ===================================================================
+
+    # Información Institucional
+    institucion = Institucion.objects.first()
+
+    # Contexto Final para el Template
+    context = {
+        'estudiantes': estudiantes_busqueda, 
+        'query': query,
+        'vista_cursos': vista_cursos,
+        'periodos': periodos_header,
+        'institucion': institucion,
+        'kpi': {
+            'total_alumnos': total_estudiantes_colegio,
+            'prom_global_acad': promedio_institucional_acad,
+            'prom_global_conv': promedio_institucional_conv,
+            'total_cursos': cursos_activos.count()
+        },
+        'chart_data': {
+            'labels': json.dumps(chart_labels),
+            'acad': json.dumps(chart_data_acad),
+            'conv': json.dumps(chart_data_conv)
+        },
+        'stats_asistencia': json.dumps(list(stats_asistencia.values())), # Orden: Asistio, Falla, Excusa, Tarde
+        'top_fallas': top_fallas,
+        'alertas_academicas': alertas_academicas, # Nueva variable disponible en el template
+    }
+    return render(request, 'bienestar/dashboard_bienestar.html', context)
+
+@role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
+def reporte_consolidado(request):
+    """
+    Genera una 'Sábana de Notas' (Matriz Estudiantes vs Materias).
+    """
+    cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
+    periodos = None
+    
+    # Filtros seleccionados
+    curso_id = request.GET.get('curso_id')
+    periodo_id = request.GET.get('periodo_id')
+    
+    datos_reporte = []
+    materias = []
+    curso_seleccionado = None
+    periodo_seleccionado = None
+
+    if curso_id and periodo_id:
+        curso_seleccionado = get_object_or_404(Curso, id=curso_id)
+        periodo_seleccionado = get_object_or_404(Periodo, id=periodo_id)
+        
+        # 1. Obtener todas las materias del curso
+        materias = Materia.objects.filter(curso=curso_seleccionado).order_by('nombre')
+        
+        # 2. Obtener estudiantes matriculados
+        matriculas = Matricula.objects.filter(curso=curso_seleccionado, activo=True).select_related('estudiante').order_by('estudiante__last_name')
+        
+        # 3. Construir la matriz
+        for mat in matriculas:
+            estudiante = mat.estudiante
+            notas_estudiante = []
+            promedio_acumulado = 0
+            materias_perdidas = 0
+            
+            for materia in materias:
+                # Buscar la nota final (numero_nota=5) de este estudiante en esta materia y periodo
+                nota_obj = Nota.objects.filter(
+                    estudiante=estudiante, 
+                    materia=materia, 
+                    periodo=periodo_seleccionado,
+                    numero_nota=5
+                ).first()
+                
+                valor = nota_obj.valor if nota_obj else 0
+                if valor > 0 and valor < 3.0:
+                    materias_perdidas += 1
+                
+                notas_estudiante.append({
+                    'materia_id': materia.id,
+                    'valor': valor
+                })
+                promedio_acumulado += float(valor)
+
+            promedio_general = promedio_acumulado / len(materias) if len(materias) > 0 else 0
+            
+            datos_reporte.append({
+                'estudiante': estudiante,
+                'notas': notas_estudiante,
+                'promedio': round(promedio_general, 2),
+                'perdidas': materias_perdidas
+            })
+
+    # Si se seleccionó curso, cargar sus periodos para el segundo dropdown
+    if curso_id:
+        periodos = Periodo.objects.filter(curso_id=curso_id).order_by('id')
+
+    return render(request, 'admin/reporte_consolidado.html', {
+        'cursos': cursos,
+        'periodos': periodos,
+        'curso_seleccionado': curso_seleccionado,
+        'periodo_seleccionado': periodo_seleccionado,
+        'materias': materias,
+        'datos_reporte': datos_reporte,
+    })
+
+# En views.py
+def sabana_notas(request):
+    # 1. Configuración inicial
+    cursos = Curso.objects.all().order_by('nombre')
+    
+    # Obtenemos nombres únicos de periodos para evitar duplicados en el selector
+    nombres_periodos = Periodo.objects.values_list('nombre', flat=True).distinct().order_by('nombre')
+    
+    # Obtenemos la información del colegio para el encabezado oficial
+    institucion = Institucion.objects.first()
+
+    context = {
+        'cursos': cursos,
+        'nombres_periodos': nombres_periodos,
+        'institucion': institucion, # Pasamos la info del colegio al template
+        'datos_reporte': [],
+        'materias': [],
+        'curso_seleccionado': None,
+        'periodo_seleccionado': None,
+    }
+
+    # 2. Captura de parámetros
+    curso_id = request.GET.get('curso_id')
+    periodo_nombre = request.GET.get('periodo_nombre')
+
+    if curso_id and periodo_nombre:
+        curso_seleccionado = get_object_or_404(Curso, id=curso_id)
+        
+        # Buscamos el periodo específico que pertenece a este curso por nombre
+        periodo_seleccionado = Periodo.objects.filter(
+            curso=curso_seleccionado, 
+            nombre=periodo_nombre
+        ).first()
+
+        if periodo_seleccionado:
+            context['curso_seleccionado'] = curso_seleccionado
+            context['periodo_seleccionado'] = periodo_seleccionado
+
+            # 3. Obtener Estudiantes Matriculados
+            estudiantes_matriculados = Matricula.objects.filter(
+                curso=curso_seleccionado,
+                activo=True
+            ).select_related('estudiante').order_by('estudiante__last_name')
+            
+            estudiante_ids = estudiantes_matriculados.values_list('estudiante_id', flat=True)
+
+            # 4. Obtener Materias (Búsqueda Completa)
+            # Busca: Materias del curso O Materias asignadas O Materias con notas existentes
+            materias = Materia.objects.filter(
+                Q(curso=curso_seleccionado) | 
+                Q(asignaciones__curso=curso_seleccionado) |
+                Q(notas__estudiante_id__in=estudiante_ids, notas__periodo=periodo_seleccionado)
+            ).distinct().order_by('nombre')
+            
+            context['materias'] = materias
+
+            # 5. Obtener Notas y Promediar (para definitivas)
+            notas_qs = Nota.objects.filter(
+                estudiante_id__in=estudiante_ids,
+                periodo=periodo_seleccionado,
+                materia__in=materias
+            ).values('estudiante_id', 'materia_id').annotate(definitiva=Avg('valor'))
+
+            # Mapa rápido para acceso O(1)
+            notas_map = {
+                (n['estudiante_id'], n['materia_id']): n['definitiva'] 
+                for n in notas_qs
+            }
+
+            # 6. Armar la Matriz de Datos
+            datos_reporte = []
+
+            for matricula in estudiantes_matriculados:
+                estudiante = matricula.estudiante
+                lista_notas = []
+                suma_promedios = 0
+                materias_con_nota = 0
+                perdidas = 0
+
+                for materia in materias:
+                    clave = (estudiante.id, materia.id)
+                    valor = notas_map.get(clave, 0)
+                    valor = float(round(valor, 1))
+
+                    if valor > 0:
+                        suma_promedios += valor
+                        materias_con_nota += 1
+                        if valor < 3.0:
+                            perdidas += 1
+                    
+                    lista_notas.append({'valor': valor})
+
+                promedio_general = 0
+                if materias_con_nota > 0:
+                    promedio_general = round(suma_promedios / materias_con_nota, 2)
+
+                datos_reporte.append({
+                    'estudiante': estudiante,
+                    'notas': lista_notas,
+                    'promedio': promedio_general,
+                    'perdidas': perdidas
+                })
+
+            context['datos_reporte'] = datos_reporte
+
+    return render(request, 'admin/reporte_consolidado.html', context)
+
+##fase 4 inicio 
+
+# ===================================================================
+# 🛡️ FASE IV (PASO 16): LÓGICA DE MODERACIÓN Y AUDITORÍA
+# ===================================================================
+
+# Nota: El decorador @role_required asume que tienes una implementación personalizada.
+# Asumo que las clases Post y Comment también están importadas correctamente.
+
+@login_required
+# Mantenemos el decorador que me proporcionaste (asumo que 'role_required' existe y funciona)
+@role_required(['ADMINISTRADOR', 'COORD_CONVIVENCIA', 'PSICOLOGO', 'COORD_ACADEMICO', 'DOCENTE'])
+@require_POST
+def moderar_eliminar_contenido(request):
+    """
+    API para eliminar Posts o Comentarios ofensivos.
+    Genera un registro forense en AuditLog antes de borrar el objeto.
+    """
+    import json
+    try:
+        data = json.loads(request.body)
+        
+        # 🔥 CORRECCIÓN CRÍTICA: Cambiar 'tipo' por 'type' para coincidir con el JS del frontend.
+        tipo_contenido = data.get('type') # Ahora busca 'type'
+        item_id = data.get('id')
+        motivo = data.get('motivo', 'Moderación por contenido inapropiado')
+
+        # 1. Identificar el objeto
+        if tipo_contenido == 'post':
+            objeto = get_object_or_404(Post, id=item_id)
+            autor_original = objeto.autor.username
+            resumen_contenido = objeto.contenido[:100] 
+            modelo_nombre = "Post Social"
+            
+        elif tipo_contenido == 'comment':
+            objeto = get_object_or_404(Comment, id=item_id)
+            autor_original = objeto.autor.username
+            resumen_contenido = objeto.contenido[:100]
+            modelo_nombre = "Comentario Social"
+            
+        else:
+            # Ahora este error solo se disparará si el frontend envía un tipo inválido.
+            return JsonResponse({'success': False, 'error': 'Tipo de contenido no válido'}, status=400)
+
+        # 2. Seguridad: Verificación de Autoría Adicional
+        # El decorador @role_required ya maneja que solo staff pueda acceder a esta API.
+        # Ahora verificamos si el usuario es el autor, o el autor del post padre (si es comentario).
+        
+        es_admin = request.user.perfil.rol == 'ADMINISTRADOR'
+        es_autor = objeto.autor == request.user
+        
+        if tipo_contenido == 'comment':
+            # Si es un comentario, el autor del post también puede borrarlo.
+            es_autor_post = objeto.post.autor == request.user
+        else:
+            es_autor_post = False
+            
+        if not (es_admin or es_autor or es_autor_post):
+             return JsonResponse({'success': False, 'error': 'Permiso denegado: No es autor ni administrador.'}, status=403)
+
+
+        # 3. AUDITORÍA FORENSE (La Caja Negra)
+        AuditLog.objects.create(
+            usuario=request.user, 
+            accion='DELETE (MODERATION)',
+            modelo_afectado=modelo_nombre,
+            objeto_id=str(item_id),
+            detalles=f"Autor original: {autor_original}. Moderado por: {request.user.username}. Motivo: {motivo}. Contenido eliminado: '{resumen_contenido}...'",
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+
+        # 4. Eliminar el objeto
+        objeto.delete()
+
+        return JsonResponse({'success': True, 'message': 'Contenido eliminado y evento auditado correctamente.'})
+
+    except Post.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'El post no fue encontrado.'}, status=404)
+    except Comment.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'El comentario no fue encontrado.'}, status=404)
+    except Exception as e:
+        # Usamos logger.error en lugar de logger.exception si el objeto 'logger' es estándar
+        logger.error(f"Error interno en moderación: {e}", exc_info=True) 
+        return JsonResponse({'success': False, 'error': f'Error interno del servidor.'}, status=500)
+
+# ===================================================================
+# 🏗️ FASE IV (PASO 17): VISTA DEL FEED SOCIAL (MURO)
+# ===================================================================
+
+# ===================================================================
+# 🏗️ FASE IV (PASO 17 - CORREGIDO): VISTA DEL FEED SOCIAL (MURO GLOBAL)
+# ===================================================================
+
+@login_required
+def social_feed(request):
+    """
+    Muro Social Comunitario.
+    Maneja la creación de Posts, Comentarios, Grupos y la Búsqueda.
+    IMPORTANTE: El feed principal SOLO muestra posts GENERALES (donde grupo es NULL).
+    """
+    # 🛡️ IMPORTACIONES LOCALES DE SEGURIDAD
+    from .models import Post, Comment, SocialGroup
+    from .forms import PostForm
+    from django.core.paginator import Paginator
+    from django.db.models import Q # Importamos Q para el OR en las búsquedas
+    from django.shortcuts import redirect
+    from django.contrib import messages
+
+    # 1. Recuperar posts base: SOLO PUBLICACIONES GENERALES (grupo__isnull=True)
+    posts_qs = Post.objects.filter(
+        grupo__isnull=True  # 🔥 FILTRO CRÍTICO: Excluye posts hechos dentro de grupos
+    ).select_related(
+        'autor', 
+        'autor__perfil',
+        'grupo' 
+    ).prefetch_related(
+        'comentarios', 
+        'comentarios__autor__perfil', 
+        'reacciones',
+        'reacciones__usuario'
+    ).order_by('-es_destacado', '-creado_en')
+
+    # 1.1. Lógica de BÚSQUEDA (Aplicada sobre los posts generales)
+    query = request.GET.get('q')
+    if query:
+        # Si hay búsqueda, filtra los posts generales por Contenido o Autor
+        posts_qs = posts_qs.filter(
+            Q(contenido__icontains=query) | 
+            Q(autor__first_name__icontains=query) |
+            Q(autor__last_name__icontains=query) |
+            Q(autor__username__icontains=query)
+        ).distinct()
+        
+    # 2. Paginación
+    paginator = Paginator(posts_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 3. Inicializar formulario
+    form = PostForm()
+
+    # 4. Procesar Formularios (Post vs Comentario)
+    if request.method == 'POST':
+        # 🟢 CASO A: CREAR UN POST
+        if 'publicar_post' in request.POST:
+            form = PostForm(request.POST, request.FILES)
+            if form.is_valid():
+                nuevo_post = form.save(commit=False)
+                nuevo_post.autor = request.user
+                
+                # Verificar si es anuncio oficial (solo admins)
+                if request.user.perfil.rol == 'ADMINISTRADOR' and 'es_anuncio' in request.POST:
+                     nuevo_post.tipo = 'ANUNCIO'
+                
+                # Nota: Si el post no tiene 'grupo' en el formulario (por defecto), 
+                # se guardará con grupo=NULL, cumpliendo el filtro del feed.
+                nuevo_post.save()
+                messages.success(request, '¡Publicación creada!')
+                return redirect('social_feed') 
+            else:
+                messages.error(request, 'Error al publicar. Verifica el contenido.')
+
+        # 🔵 CASO B: CREAR UN COMENTARIO
+        elif 'publicar_comentario' in request.POST:
+            post_id = request.POST.get('post_id')
+            contenido = request.POST.get('contenido')
+            
+            if post_id and contenido:
+                try:
+                    post = Post.objects.get(id=post_id)
+                    Comment.objects.create(
+                        post=post,
+                        autor=request.user,
+                        contenido=contenido
+                    )
+                    messages.success(request, 'Comentario agregado.')
+                    return redirect('social_feed') 
+                except Post.DoesNotExist:
+                    messages.error(request, 'El post que intentas comentar no existe.')
+            else:
+                messages.warning(request, 'El comentario no puede estar vacío.')
+
+    # 5. DATOS PARA LA BARRA LATERAL (GRUPOS)
+    grupos_sugeridos = SocialGroup.objects.all().prefetch_related('members').order_by('-created_at')[:5]
+    
+    context = {
+        'page_obj': page_obj, 
+        'post_form': form,
+        'titulo_seccion': 'Comunidad Learning Labs',
+        'grupos_sugeridos': grupos_sugeridos,
+        'q': query # Devolvemos el query para que el buscador mantenga el texto
+    }
+
+    return render(request, 'social_feed.html', context)
+
+# ===================================================================
+# ⚡ FASE IV (PASO 18): API DE REACCIONES (AJAX)
+# ===================================================================
+
+@login_required
+@require_POST
+def api_reaction(request):
+    """
+    Endpoint AJAX para alternar reacciones (Like/Love/etc) en Posts o Comentarios.
+    Retorna JSON con el nuevo conteo para actualizar el frontend sin recargar.
+    """
+    try:
+        data = json.loads(request.body)
+        obj_type = data.get('type') # 'post' o 'comment'
+        obj_id = data.get('id')
+        reaction_type = data.get('reaction', 'LIKE') # Default a LIKE
+
+        # 1. Determinar el modelo al que se reacciona
+        if obj_type == 'post':
+            model = Post
+        elif obj_type == 'comment':
+            model = Comment
+        else:
+            return JsonResponse({'success': False, 'error': 'Tipo de objeto inválido'}, status=400)
+
+        # 2. Obtener el objeto y su ContentType
+        obj = get_object_or_404(model, id=obj_id)
+        ct = ContentType.objects.get_for_model(model)
+
+        # 3. Lógica de Toggle (Poner/Quitar/Cambiar)
+        # Buscamos si ya existe una reacción de este usuario a este objeto
+        reaction, created = Reaction.objects.get_or_create(
+            usuario=request.user,
+            content_type=ct,
+            object_id=obj.id,
+            defaults={'tipo': reaction_type}
+        )
+
+        action = ''
+        if not created:
+            # Si ya existía...
+            if reaction.tipo == reaction_type:
+                # ...y es la misma (dio Like a lo que ya tenía Like), la borramos (Toggle OFF)
+                reaction.delete()
+                action = 'removed'
+            else:
+                # ...pero es diferente (tenía Like y dio Love), la actualizamos
+                reaction.tipo = reaction_type
+                reaction.save()
+                action = 'updated'
+        else:
+            # Si se creó nueva (Toggle ON)
+            action = 'added'
+            # --- GAMIFICACIÓN (Paso 22) ---
+            # Aquí dispararemos la señal para dar puntos al autor del post en el futuro.
+
+        # 4. Calcular totales actualizados para el frontend
+        # Contamos cuántas reacciones quedan para actualizar el numerito en pantalla
+        total = Reaction.objects.filter(content_type=ct, object_id=obj.id).count()
+        
+        # Opcional: Contar por tipos específicos si quieres mostrar "5 Likes, 2 Loves"
+        # por ahora devolvemos el total general.
+
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'total': total,
+            'current_reaction': reaction_type if action != 'removed' else None
+        })
+
+    except Exception as e:
+        logger.exception(f"Error en api_reaction: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# ===================================================================
+# 🤝 FASE IV (PASO 19): API SEGUIR USUARIOS (NETWORKING)
+# ===================================================================
+
+# Dentro de tasks/views.py (asumiendo que logger y las clases se importan arriba)
+
+@login_required
+@require_POST
+def toggle_follow(request):
+    """
+    Alterna la relación de seguimiento usando explícitamente el modelo intermedio Follow.
+    Esto soluciona el error "'Follow' instance expected".
+    """
+    try:
+        data = json.loads(request.body)
+        user_to_follow_id = data.get('user_id')
+
+        if not user_to_follow_id:
+            return JsonResponse({'success': False, 'error': 'ID de usuario no proporcionado'}, status=400)
+
+        # Convertir a entero y validar
+        user_id_int = int(user_to_follow_id)
+        
+        if user_id_int == request.user.id:
+            return JsonResponse({'success': False, 'error': 'No puedes seguirte a ti mismo'}, status=400)
+
+        target_user = get_object_or_404(User, id=user_id_int)
+        
+        # 🔥 LÓGICA DE TOGGLE CON MODELO INTERMEDIO 'Follow' 🔥
+        # Buscamos si existe la relación en la tabla intermedia
+        follow_instance = Follow.objects.filter(follower=request.user, following=target_user).first()
+        
+        action = ''
+        message = ''
+        
+        if follow_instance:
+            # Si existe, la borramos (Unfollow)
+            follow_instance.delete()
+            action = 'unfollowed'
+            message = f"Dejaste de seguir a {target_user.username}"
+        else:
+            # Si no existe, la creamos (Follow)
+            Follow.objects.create(follower=request.user, following=target_user)
+            action = 'followed'
+            message = f"Ahora sigues a {target_user.username}"
+            
+            # Notificación (Opcional)
+            try:
+                from .utils import crear_notificacion
+                crear_notificacion(
+                    target_user,
+                    "Nuevo Seguidor",
+                    f"{request.user.get_full_name()} ha comenzado a seguirte.",
+                    "SISTEMA",
+                    f"/social/profile/{request.user.username}/" 
+                )
+            except ImportError:
+                pass # Ignorar si utils no está disponible o falla la importación
+
+        # Devolver nuevos contadores consultando la tabla Follow
+        # Contamos cuántas veces target_user aparece como 'following' (sus seguidores)
+        followers_count = Follow.objects.filter(following=target_user).count()
+        # Contamos cuántas veces el usuario actual aparece como 'follower' (a quién sigue)
+        following_count = Follow.objects.filter(follower=request.user).count()
+
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'message': message
+        })
+
+    except Exception as e:
+        logger.error(f"Error en toggle_follow: {e}")
+        return JsonResponse({'success': False, 'error': f"Fallo interno: {str(e)}"}, status=500)
+# ===================================================================
+# 👤 FASE IV (PASO 20): VISTA DE PERFIL SOCIAL
+# ===================================================================
+
+@login_required
+def ver_perfil_social(request, username):
+    """
+    Perfil público/privado del usuario.
+    Muestra: Info básica, Estadísticas, Insignias y Timeline de posts.
+    """
+    # 1. Obtener el usuario del perfil (404 si no existe)
+    perfil_user = get_object_or_404(User, username=username)
+    
+    # Intentar obtener el perfil o crearlo si falta (robustez)
+    perfil, created = Perfil.objects.get_or_create(user=perfil_user)
+
+    # 2. Estadísticas Sociales
+    followers_count = perfil_user.seguidores.count()
+    following_count = perfil_user.siguiendo.count()
+    posts_count = Post.objects.filter(autor=perfil_user).count()
+
+    # 3. Verificar si YO lo sigo (para el botón Seguir/Dejar de seguir)
+    # Si soy yo mismo, is_following es False (no me sigo a mí mismo)
+    is_following = False
+    if request.user != perfil_user:
+        is_following = Follow.objects.filter(follower=request.user, following=perfil_user).exists()
+
+    # 4. Timeline del Usuario (Solo sus posts)
+    posts_qs = Post.objects.filter(autor=perfil_user).order_by('-creado_en')
+    
+    # Paginación (5 posts por carga en el perfil para no saturar)
+    paginator = Paginator(posts_qs, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 5. Gamificación (Medallas ganadas)
+    # Traemos los logros obtenidos ordenados por fecha
+    mis_logros = UserLogro.objects.filter(usuario=perfil_user).select_related('logro').order_by('-fecha_obtenido')
+
+    context = {
+        'perfil_user': perfil_user, # El objeto User del dueño del perfil
+        'perfil': perfil,           # El objeto Perfil (con fotos, bio)
+        'is_own_profile': (request.user == perfil_user), # ¿Es mi propio perfil?
+        'is_following': is_following,
+        
+        # Stats
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'posts_count': posts_count,
+        
+        # Contenido
+        'page_obj': page_obj,       # Posts paginados
+        'mis_logros': mis_logros,   # Insignias
+    }
+
+    return render(request, 'perfil_social.html', context)
+
+# ===================================================================
+# 🔍 FASE IV (PASO 21): BUSCADOR GLOBAL INTELIGENTE
+# ===================================================================
+
+@login_required
+def global_search(request):
+    """
+    Motor de búsqueda centralizado.
+    Busca coincidencias en: Usuarios, Grupos, Posts y Preguntas del Foro.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    # Inicializamos resultados vacíos
+    results = {
+        'users': [],
+        'groups': [],
+        'posts': [],
+        'questions': []
+    }
+    
+    total_results = 0
+
+    if query:
+        # 1. Buscar Usuarios (Nombre, Apellido o Username)
+        # Excluimos al usuario que busca y a usuarios inactivos
+        results['users'] = User.objects.filter(
+            (Q(username__icontains=query) |
+             Q(first_name__icontains=query) |
+             Q(last_name__icontains=query)),
+            is_active=True
+        ).exclude(id=request.user.id)[:5] # Limitamos a 5 para no saturar
+
+        # 2. Buscar Grupos (Nombre o Descripción)
+        results['groups'] = Group.objects.filter(
+            Q(nombre__icontains=query) |
+            Q(descripcion__icontains=query)
+        )[:5]
+
+        # 3. Buscar en el Muro Social (Contenido)
+        # Solo posts públicos o de gente que sigo (por privacidad básica)
+        # Por simplicidad en la búsqueda global, mostramos coincidencias generales
+        # pero idealmente filtraríamos por privacidad.
+        results['posts'] = Post.objects.filter(
+            contenido__icontains=query
+        ).select_related('autor').order_by('-creado_en')[:5]
+
+        # 4. Buscar en el Foro (Título o Contenido)
+        results['questions'] = Question.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query)
+        ).order_by('-created_at')[:5]
+
+        # Conteo total para mostrar en la interfaz
+        total_results = len(results['users']) + len(results['groups']) + len(results['posts']) + len(results['questions'])
+
+    context = {
+        'query': query,
+        'results': results,
+        'total_results': total_results
+    }
+
+    return render(request, 'global_search.html', context)
+# --- (Pegar esto al final de tasks/views.py) ---
+
+@login_required
+def lista_grupos(request):
+    """Muestra todos los grupos disponibles para unirse."""
+    #grupos = SocialGroup.objects.all().order_by('-creado_en')
+    grupos = SocialGroup.objects.all().order_by('-created_at')
+    return render(request, 'grupos/lista_grupos.html', {'grupos': grupos})
+
+##Aqui tambien hice algo 
+
+@login_required
+def crear_grupo(request):
+    """
+    Solo Docentes y Administrativos pueden crear grupos.
+    """
+    # Importación local para evitar ciclos con models.py
+    from .forms import SocialGroupForm 
+
+    roles_permitidos = ['ADMINISTRADOR', 'DOCENTE', 'COORD_ACADEMICO', 'PSICOLOGO', 'COORD_CONVIVENCIA']
+    
+    if request.user.perfil.rol not in roles_permitidos:
+        messages.error(request, "Los estudiantes no tienen permiso para crear grupos. Solicítalo a un docente.")
+        return redirect('social_feed') # Redirigir al feed si no tiene permiso
+
+    if request.method == 'POST':
+        form = SocialGroupForm(request.POST, request.FILES)
+        if form.is_valid():
+            grupo = form.save(commit=False)
+            
+            # 1. Asignar el creador (campo 'creator' en inglés)
+            grupo.creator = request.user
+            
+            grupo.save()
+            
+            # 2. Agregar al usuario como miembro y administrador
+            grupo.members.add(request.user)
+            grupo.admins.add(request.user)
+            
+            # 3. Mensaje de éxito usando 'name' (en inglés) <- ESTO ARREGLA TU ERROR
+            messages.success(request, f'Grupo "{grupo.name}" creado exitosamente.')
+            
+            return redirect('detalle_grupo', grupo_id=grupo.id)
+    else:
+        form = SocialGroupForm()
+    
+    return render(request, 'grupos/crear_grupo.html', {'form': form})
+##Aqui
+
+@login_required
+def detalle_grupo(request, grupo_id):
+    """Muro exclusivo del grupo. Maneja Posts, Comentarios, Portada y EDICIÓN DE INFO."""
+    
+    # Importaciones locales para evitar ciclos
+    from .models import SocialGroup, Post, Comment 
+    from .forms import PostForm, SocialGroupForm
+    
+    # 1. Recuperar el grupo
+    grupo = get_object_or_404(SocialGroup, id=grupo_id)
+    
+    # 2. Permisos (Usando los nombres correctos en inglés)
+    es_miembro = grupo.members.filter(id=request.user.id).exists() 
+    es_administrador_grupo = (request.user == grupo.creator or request.user.perfil.rol == 'ADMINISTRADOR')
+
+    # 3. Consulta de Posts
+    posts_qs = Post.objects.filter(grupo=grupo).select_related(
+        'autor', 
+        'autor__perfil'
+    ).prefetch_related(
+        'comentarios', 
+        'comentarios__autor__perfil', 
+        'reacciones'
+    ).order_by('-creado_en')
+    
+    form = PostForm()
+    
+    if request.method == 'POST':
+        
+        # 🟢 CASO A: CAMBIO DE PORTADA
+        if 'cambiar_portada' in request.POST and es_administrador_grupo:
+            form_portada = SocialGroupForm(request.POST, request.FILES, instance=grupo)
+            if form_portada.is_valid():
+                form_portada.save()
+                messages.success(request, "Foto de portada actualizada exitosamente.")
+                return redirect('detalle_grupo', grupo_id=grupo.id)
+            else:
+                messages.error(request, "Error al subir la imagen.")
+
+        # 🟠 CASO B: EDITAR INFORMACIÓN (NOMBRE Y DESCRIPCIÓN) - ¡NUEVO!
+        elif 'editar_info_grupo' in request.POST and es_administrador_grupo:
+            nuevo_nombre = request.POST.get('nombre_grupo')
+            nueva_descripcion = request.POST.get('descripcion_grupo')
+            
+            if nuevo_nombre:
+                grupo.name = nuevo_nombre
+                grupo.description = nueva_descripcion
+                grupo.save()
+                messages.success(request, "Información del grupo actualizada correctamente.")
+                return redirect('detalle_grupo', grupo_id=grupo.id)
+            else:
+                messages.error(request, "El nombre del grupo no puede estar vacío.")
+
+        # 🔵 CASO C: PUBLICAR POST
+        elif 'publicar_post' in request.POST:
+            if not es_miembro:
+                messages.error(request, "Debes unirte al grupo para publicar.")
+                return redirect('detalle_grupo', grupo_id=grupo.id)
+            
+            form = PostForm(request.POST, request.FILES)
+            if form.is_valid():
+                post = form.save(commit=False)
+                post.autor = request.user
+                post.grupo = grupo 
+                post.save()
+                messages.success(request, 'Publicación creada en el grupo.')
+                return redirect('detalle_grupo', grupo_id=grupo.id)
+            else:
+                messages.error(request, 'Error al publicar. Contenido inválido.')
+        
+        # 🟡 CASO D: COMENTAR
+        elif 'publicar_comentario' in request.POST:
+            if not es_miembro:
+                messages.error(request, "Debes unirte al grupo para comentar.")
+                return redirect('detalle_grupo', grupo_id=grupo.id)
+                
+            post_id = request.POST.get('post_id')
+            contenido = request.POST.get('contenido')
+            
+            if post_id and contenido:
+                try:
+                    post = Post.objects.get(id=post_id)
+                    Comment.objects.create(
+                        post=post,
+                        autor=request.user,
+                        contenido=contenido
+                    )
+                    messages.success(request, 'Comentario agregado.')
+                    return redirect('detalle_grupo', grupo_id=grupo.id) 
+                except Post.DoesNotExist:
+                    messages.error(request, 'El post que intentas comentar no existe.')
+            else:
+                messages.warning(request, 'No puedes enviar un comentario vacío.')
+                
+    # 3. Renderizar (Usando la ruta correcta)
+    return render(request, 'grupos/detalle_grupo.html', {
+        'grupo': grupo, 
+        'es_miembro': es_miembro,
+        'posts': posts_qs,
+        'post_form': form,
+        'es_administrador_grupo': es_administrador_grupo,
+    })
+
+# --- NUEVA VISTA PARA ELIMINAR GRUPO ---
+@login_required
+def eliminar_grupo(request, grupo_id):
+    from .models import SocialGroup
+    grupo = get_object_or_404(SocialGroup, id=grupo_id)
+    
+    # Verificar permisos (Solo Creador o Admin General)
+    if request.user == grupo.creator or request.user.perfil.rol == 'ADMINISTRADOR':
+        nombre_grupo = grupo.name
+        grupo.delete()
+        messages.success(request, f'El grupo "{nombre_grupo}" ha sido eliminado permanentemente.')
+        return redirect('social_feed') 
+    else:
+        messages.error(request, "No tienes permiso para eliminar este grupo.")
+        return redirect('detalle_grupo', grupo_id=grupo.id)
+
+
+##unirse al grupo 
+
+@login_required
+def unirse_grupo(request, grupo_id):
+    """Toggle para entrar/salir del grupo."""
+    # Importación local para evitar errores circulares
+    from .models import SocialGroup 
+    
+    grupo = get_object_or_404(SocialGroup, id=grupo_id)
+    
+    # 1. Verificar si el usuario YA es miembro (Usando 'members')
+    if grupo.members.filter(id=request.user.id).exists():
+        # CASO: SALIRSE DEL GRUPO
+        grupo.members.remove(request.user)
+        # Usamos 'name' porque así se llama en el modelo ahora
+        messages.info(request, f'Has salido de {grupo.name}.')
+        
+        # Si se sale, lo mandamos al feed general para que no vea contenido privado
+        return redirect('social_feed')
+    else:
+        # CASO: UNIRSE AL GRUPO
+        grupo.members.add(request.user)
+        messages.success(request, f'¡Bienvenido a {grupo.name}!')
+        
+        # 🔥 CAMBIO CLAVE: Si se une, lo mandamos ADENTRO del grupo
+        # Así el usuario ve confirmación visual inmediata
+        return redirect('detalle_grupo', grupo_id=grupo.id)
+
+
+@login_required
+def editar_perfil(request):
+    """
+    Permite al usuario editar sus datos de cuenta (User) y su perfil social (Perfil).
+    Maneja la foto de portada, avatar, hobbies, metas, etc.
+    """
+    
+    # 1. Cargar datos del usuario y el perfil
+    user = request.user
+    # Usamos getattr por seguridad, aunque el middleware debería haberlo creado
+    perfil = getattr(user, 'perfil', None) 
+
+    if request.method == 'POST':
+        # 2. Cargar los formularios con la data enviada (POST y FILES)
+        user_form = UserEditForm(request.POST, instance=user)
+        
+        # 🔥 CORRECCIÓN CLAVE: Usamos 'EditarPerfilForm' en lugar de 'PerfilEditForm'
+        # Este es el que tiene los campos nuevos (portada, hobbies, etc.)
+        profile_form = EditarPerfilForm(request.POST, request.FILES, instance=perfil)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Guardar ambos modelos de forma segura
+                    user_form.save()
+                    profile_form.save()
+                    
+                    messages.success(request, '¡Tu perfil se ha actualizado correctamente!')
+                    
+                    # Redirigir al perfil público para ver los cambios
+                    return redirect('ver_perfil_social', username=user.username)
+            except Exception as e:
+                messages.error(request, f'Ocurrió un error al guardar: {e}')
+        else:
+            messages.error(request, 'Hay errores en el formulario. Por favor revisa los campos en rojo.')
+    
+    else:
+        # GET: Cargar los formularios con la información actual de la base de datos
+        user_form = UserEditForm(instance=user)
+        profile_form = EditarPerfilForm(instance=perfil)
+    
+    # Renderizamos el template que actualizamos antes
+    return render(request, 'social/editar_perfil.html', {
+        'user_form': user_form,
+        'profile_form': profile_form # Se pasa como 'profile_form' para coincidir con el template
+    })
+##historial de notificaciones 
+
+@login_required
+def historial_notificaciones(request):
+    """
+    Muestra el historial completo de notificaciones del usuario,
+    agrupadas por fecha en el template.
+    """
+    # Obtenemos todas las notificaciones, ordenadas por fecha descendente
+    notificaciones = Notificacion.objects.filter(usuario=request.user).order_by('-fecha_creacion')
+    
+    # Opcional: Marcar todas como leídas al entrar al historial
+    # notificaciones.filter(leido=False).update(leido=True)
+
+    return render(request, 'notificaciones/historial.html', {
+        'notificaciones': notificaciones
+    })
+
+
+
+@login_required
+def editar_perfil(request):
+    """
+    Permite editar al mismo tiempo:
+    1. Modelo User (Nombre, Apellido, Email) -> UserEditForm
+    2. Modelo Perfil (Foto, Portada, Hobbies, Metas) -> EditarPerfilForm
+    """
+    user = request.user
+    perfil = user.perfil # Asumimos que el perfil existe gracias al Signal o Middleware
+    
+    if request.method == 'POST':
+        # 1. Cargamos los datos del formulario de Usuario
+        user_form = UserEditForm(request.POST, instance=user)
+        
+        # 2. Cargamos los datos del formulario de Perfil (incluyendo archivos/fotos)
+        profile_form = EditarPerfilForm(request.POST, request.FILES, instance=perfil)
+
+        # 3. Validamos que AMBOS sean correctos
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()      # Guarda nombre, apellido, email
+            profile_form.save()   # Guarda fotos, hobbies, metas
+            
+            messages.success(request, '¡Tu perfil se ha actualizado correctamente!')
+            # Redirige a la vista del perfil público
+            return redirect('ver_perfil_social', username=user.username)
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    
+    else:
+        # GET: Pre-llenamos los formularios con la información actual
+        user_form = UserEditForm(instance=user)
+        profile_form = EditarPerfilForm(instance=perfil)
+
+    # 4. Enviamos AMBOS formularios al template
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form
+    }
+    
+    return render(request, 'social/editar_perfil.html', context)
+
+
+@login_required
+def crear_comentario(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if request.method == 'POST':
+        contenido = request.POST.get('contenido')
+        if contenido:
+            Comentario.objects.create(
+                autor=request.user,
+                post=post,
+                contenido=contenido
+            )
+            messages.success(request, 'Comentario agregado.')
+    # Redirigir a la misma página desde donde se comentó
+    return redirect(request.META.get('HTTP_REFERER', 'social_feed'))
+
+##Aqui agregue las notificaciones 
+
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    """
+    Marca todas las notificaciones pendientes del usuario actual como leídas.
+    Se llama vía AJAX cuando se abre la campana de notificaciones.
+    """
+    try:
+        # 1. Identificar las notificaciones NO leídas del usuario.
+        # CORRECCIÓN CRÍTICA: Cambiamos 'is_read' por 'leida' (que es el nombre real en tu BD).
+        unread_notifications = Notificacion.objects.filter(
+            usuario=request.user, 
+            leida=False 
+        )
+        
+        # 2. Actualizar el estado en lote a True.
+        # CORRECCIÓN CRÍTICA: Actualizamos el campo 'leida'.
+        updated_count = unread_notifications.update(leida=True)
+        
+        return JsonResponse({
+            'success': True, 
+            'new_count': 0, 
+            'updated_items': updated_count
+        })
+
+    except Exception as e:
+        # Imprime el error en la consola del servidor para depuración
+        print(f"Error crítico marcando notificaciones: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+##Aqui inicie a agregar el boton del observador al acudiente 
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    HTML = None
+
+@login_required
+def descargar_observador_acudiente(request, estudiante_id):
+    """
+    Genera y descarga el PDF del observador para el acudiente.
+    """
+    # 1. Validaciones de Seguridad (Igual que antes)
+    estudiante = get_object_or_404(User, id=estudiante_id)
+    es_mi_hijo = Acudiente.objects.filter(acudiente=request.user, estudiante=estudiante).exists()
+    
+    if not es_mi_hijo:
+        messages.error(request, "No tienes permisos.")
+        return redirect('dashboard_acudiente')
+
+    matricula = Matricula.objects.filter(estudiante=estudiante).order_by('-id').first()
+    
+    if not matricula or not matricula.puede_ver_observador:
+        messages.warning(request, "El observador aún no ha sido habilitado.")
+        return redirect('dashboard_acudiente')
+
+    # 2. Preparar Datos
+    observaciones = Observacion.objects.filter(estudiante=estudiante).order_by('-fecha_creacion')
+    institucion = Institucion.objects.first()
+    curso = matricula.curso if matricula else None
+
+    context = {
+        'estudiante': estudiante,
+        'observaciones': observaciones,
+        'institucion': institucion,
+        'curso': curso,
+        'fecha_impresion': timezone.now(),
+        'generado_por': request.user.get_full_name(),
+        'es_oficial': True,
+        # Importante: Para que las imágenes carguen en el PDF, a veces se necesita la URL base
+        'request': request 
+    }
+
+    # 3. Generar PDF
+    # Renderizamos el HTML a un string
+    html_string = render_to_string('pdf/observador_template.html', context)
+
+    if HTML:
+        # Si WeasyPrint está instalado, generamos el PDF real
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'filename="Observador_{estudiante.username}.pdf"'
+        
+        # Base url es importante para cargar imágenes estáticas/media
+        HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(response)
+        return response
+    else:
+        # Fallback: Si no hay librerías de PDF, mostramos el HTML para imprimir con Ctrl+P
+        # Esto es lo que te estaba pasando, pero ahora sabes por qué.
+        return HttpResponse(html_string)
+
+
+# --- tasks/views.py ---
+
+def cargar_periodos_por_curso(request):
+    """
+    API AJAX para cargar los periodos de un curso seleccionado.
+    Permite que el Administrador y Staff vean los periodos en el reporte consolidado.
+    """
+    curso_id = request.GET.get('curso_id')
+    
+    if not curso_id:
+        return JsonResponse([], safe=False)
+    
+    try:
+        # 1. Obtener el curso
+        curso = Curso.objects.get(id=curso_id)
+        
+        # 2. Filtrar periodos activos de ese curso
+        # No filtramos por docente aquí, porque el Admin/Coord debe ver todo.
+        periodos = Periodo.objects.filter(curso=curso, activo=True).values('id', 'nombre').order_by('id')
+        
+        return JsonResponse(list(periodos), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+
+# tasks/views.py
+
+# tasks/views.py
+
+
+
+@login_required
+def ai_analysis_engine(request):
+    """
+    MOTOR CENTRAL DE ANÁLISIS (FASE 12 - CON MEMORIA).
+    Soluciona: Captura del historial de chat para mantener el contexto.
+    """
+    import json
+    import logging
+    from django.http import JsonResponse
+    from django.shortcuts import render, get_object_or_404
+    from django.core.serializers.json import DjangoJSONEncoder
+    
+    # --- IMPORTACIONES SEGURAS ---
+    from django.contrib.auth.models import User  
+    from tasks.models import Acudiente           
+    
+    from .ai.orchestrator import ai_orchestrator
+    from .ai.constants import ACCION_MEJORAS_ESTUDIANTE, ACCION_MEJORAS_DOCENTE, ACCION_CHAT_SOCRATICO
+
+    logger = logging.getLogger(__name__)
+
+    # --- 1. DETECCIÓN DE ENTORNO (AJAX vs NAVEGADOR) ---
+    accept_header = request.headers.get('Accept', '')
+    
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
+        request.GET.get('format') == 'json' or 
+        'application/json' in accept_header
+    )
+
+    # Configuración de parámetros iniciales
+    if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'DOCENTE':
+        default_action = ACCION_MEJORAS_DOCENTE 
+    else:
+        default_action = ACCION_MEJORAS_ESTUDIANTE
+
+    action_type = request.GET.get('action', default_action)
+    target_id = request.GET.get('target_id')
+    user_query = request.GET.get('user_query') 
+
+    # === [NUEVO] CAPTURA DE MEMORIA ===
+    # El JS nos envía el historial como un string JSON. Debemos convertirlo a lista.
+    raw_history = request.GET.get('history')
+    historial_msgs = []
+    
+    if raw_history:
+        try:
+            historial_msgs = json.loads(raw_history)
+        except Exception as e:
+            logger.warning(f"Error parseando historial: {e}")
+            historial_msgs = [] # Si falla, seguimos sin memoria pero sin crashear
+
+    # --- 2. RUTEADO DE INTERFAZ ---
+    if action_type == ACCION_CHAT_SOCRATICO and not is_ajax:
+        return render(request, 'tasks/ai_chat.html', {
+            'target_user': request.user
+        })
+
+    # Inicializamos target_user
+    target_user = request.user 
+
+    try:
+        # --- 3. SELECCIÓN DE TARGET ---
+        if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'ACUDIENTE':
+            if target_id:
+                target_user = get_object_or_404(User, id=target_id)
+            else:
+                relacion = Acudiente.objects.filter(acudiente=request.user).first()
+                if relacion and relacion.estudiante:
+                    target_user = relacion.estudiante
+                else:
+                    raise ValueError("No se encontró estudiante para este acudiente.")
+        elif target_id:
+            target_user = get_object_or_404(User, id=target_id)
+        elif request.user.perfil.rol == 'DOCENTE':
+            target_user = request.user
+
+        # --- 4. PROCESAMIENTO CON ORQUESTADOR ---
+        # AQUI ES DONDE PASAMOS EL HISTORIAL AL CEREBRO
+        resultado = ai_orchestrator.process_request(
+            user=request.user,
+            action_type=action_type,
+            user_query=user_query,
+            target_user=target_user,
+            historial=historial_msgs  # <--- ¡CONEXIÓN DE MEMORIA!
+        )
+
+    except Exception as e:
+        logger.error(f"CRASH AI: {str(e)}", exc_info=True)
+        resultado = {
+            "success": False,
+            "content": f"Error del sistema: {str(e)}",
+            "source": "INTERNAL_VIEW_ERROR"
+        }
+
+    # --- 5. RESPUESTA INTELIGENTE ---
+    if is_ajax:
+        return JsonResponse(resultado)
+    
+    return render(request, 'tasks/ai_report.html', {
+        'ai_json_response': json.dumps(resultado, default=str, cls=DjangoJSONEncoder),
+        'titulo_analisis': str(action_type).replace('_', ' ').title(),
+        'target_user': target_user
+    })
+
+
+
+
+
+
+
+
+
+
+@login_required
+def test_ai_connection(request):
+    """VISTA DE COMPATIBILIDAD PARA URLS.PY."""
+    return ai_analysis_engine(request)
+
+@login_required
+def dashboard_ia_estudiante(request):
+    """RENDERIZA EL PANEL PRINCIPAL DE IA."""
+    context = {
+        'titulo_pagina': 'Orientación Inteligente',
+        'usuario_nombre': request.user.first_name or request.user.username,
+    }
+    return render(request, 'tasks/ai_dashboard.html', context)

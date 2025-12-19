@@ -13,7 +13,18 @@
             <p class="lead mt-2" style="color: var(--color-text-muted);">
                 Usuario: <span class="fw-bold">{{ estudiante.username }}</span>. Rol: <span class="badge rounded-pill bg-primary-alt">{{ perfil.rol }}</span>.
             </p>
+
+            <div class="d-flex justify-content-center gap-3 mt-4 mb-2">
+                <a href="{% url 'ai_engine' %}?action=mejoras_estudiante" class="btn btn-lg btn-primary-alt rounded-pill px-4 shadow-sm border-0 animate animated pulse infinite" style="background-image: var(--gradient-primary); color: white;">
+                    <i class="fas fa-robot me-2"></i>¿Cómo puedo mejorar?
+                </a>
+                <a href="{% url 'ai_engine' %}?action=chat_socratico" class="btn btn-lg btn-outline-primary rounded-pill px-4 shadow-sm border-2">
+                    <i class="fas fa-brain me-2"></i>Tutor Socrático
+                </a>
+            </div>
+            <small class="text-muted d-block mt-2">Nuestra IA analizará tu boletín y comportamiento para guiarte según el PEI.</small>
         </div>
+
         {% if curso %}
         <div class="alert text-center rounded-pill mb-5 border-primary-alt" role="alert" style="background-color: var(--color-alert-info-bg); color: var(--color-alert-info-text);">
             <i class="fas fa-school me-2"></i> Estás asignado al curso: <span class="fw-bold">{{ curso.nombre }}</span>

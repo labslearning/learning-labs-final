@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container py-5 animate__animated animate__fadeIn">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark"><i class="fas fa-history me-2 text-warning"></i>Historial de Asistencia</h2>
+            <p class="text-muted mb-0">Registro detallado de fallas, retardos y asistencias.</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard_bienestar' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+            
+            <a href="{% url 'dashboard_academico' %}" class="btn btn-warning text-dark fw-bold shadow-sm">
+                <i class="fas fa-brain me-2"></i>Inteligencia Académica
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-4">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Filtrar por Curso</label>
+                    <select name="curso" class="form-select">
+                        <option value="">Todos los cursos</option>
+                        {% for c in cursos %}
+                        <option value="{{ c.id }}" {% if current_curso == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Filtrar por Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="FALLA" {% if current_estado == 'FALLA' %}selected{% endif %}>Falla Injustificada</option>
+                        <option value="TARDE" {% if current_estado == 'TARDE' %}selected{% endif %}>Llegada Tarde</option>
+                        <option value="EXCUSA" {% if current_estado == 'EXCUSA' %}selected{% endif %}>Excusa Médica/Familiar</option>
+                        <option value="ASISTIO" {% if current_estado == 'ASISTIO' %}selected{% endif %}>Asistió</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fas fa-filter me-2"></i>Filtrar</button>
+                    {% if current_curso or current_estado %}
+                    <a href="{% url 'historial_asistencia' %}" class="btn btn-outline-danger" title="Limpiar"><i class="fas fa-times"></i></a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg overflow-hidden rounded-3">
+        <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-primary">Resultados: {{ total_registros }} registros encontrados</span>
+            <button class="btn btn-sm btn-outline-success" onclick="window.print()"><i class="fas fa-print me-1"></i> Imprimir</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-uppercase small text-muted">
+                    <tr>
+                        <th class="ps-4 py-3">Fecha</th>
+                        <th>Estudiante</th>
+                        <th>Curso</th>
+                        <th>Materia / Docente</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page_obj %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-secondary">{{ item.fecha|date:"d M, Y" }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs rounded-circle bg-light text-primary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-weight: bold;">
+                                    {{ item.estudiante.first_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ item.estudiante.get_full_name }}</div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">{{ item.estudiante.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ item.curso.nombre }}</span></td>
+                        <td>
+                            <div class="small fw-bold">{{ item.materia.nombre }}</div>
+                            <div class="small text-muted">Reg: {{ item.registrado_por.get_full_name|default:"Sistema" }}</div>
+                        </td>
+                        <td class="text-center">
+                            {% if item.estado == 'FALLA' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fas fa-times-circle me-1"></i> Falla</span>
+                            {% elif item.estado == 'TARDE' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning"><i class="fas fa-clock me-1"></i> Tarde</span>
+                            {% elif item.estado == 'EXCUSA' %}
+                                <span class="badge bg-info-subtle text-info border border-info"><i class="fas fa-file-medical me-1"></i> Excusa</span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success"><i class="fas fa-check me-1"></i> Asistió</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'ver_observador' item.estudiante.id %}" class="btn btn-sm btn-outline-primary rounded-pill" title="Ir al Observador">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
+                            <p>No se encontraron registros con los filtros aplicados.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white py-3">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&curso={{ current_curso }}&estado={{ current_estado }}">Anterior</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&curso={{ current_curso }}&estado={{ current_estado }}">Siguiente</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .bg-danger-subtle { background-color: #fce8e6; color: #dc3545; }
+    .bg-warning-subtle { background-color: #fff3cd; color: #ffc107; }
+    .bg-info-subtle { background-color: #cff4fc; color: #0dcaf0; }
+    .bg-success-subtle { background-color: #d1e7dd; color: #198754; }
+    
+    @media print {
+        .btn, form, .card-footer { display: none !important; }
+        .card { border: none !important; shadow: none !important; }
+    }
+</style>
+
+{% endblock %}

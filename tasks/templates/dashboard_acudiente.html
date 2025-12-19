@@ -69,6 +69,19 @@ body {
     border: 1px solid #eee; /* Añadir un borde sutil si es necesario */
 }
 
+/* 🤖 Estilo para el botón de IA */
+.btn-ai-acudiente {
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+    border: none;
+    transition: transform 0.2s;
+}
+.btn-ai-acudiente:hover {
+    transform: scale(1.05);
+    color: white;
+    box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
+}
+
 </style>
 
 <div class="container mt-4 py-4">
@@ -103,21 +116,39 @@ body {
                      id="content-{{ data.estudiante.id }}" role="tabpanel"
                      aria-labelledby="tab-{{ data.estudiante.id }}">
 
-                    <div class="text-end mb-3 border-bottom pb-3">
+                    <div class="d-flex justify-content-end gap-2 mb-3 border-bottom pb-3 align-items-center">
                         
+                        <a href="{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}" 
+                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm">
+                            <i class="fas fa-robot me-2"></i>Guía de Apoyo Familiar
+                        </a>
+
+                        {# 1. BOTÓN BOLETÍN #}
+                        {# Depende del switch 'puede_generar_boletin' de la Matrícula #}
                         {% if data.matricula and data.matricula.puede_generar_boletin %}
-                            
                             <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
-                                <i class="fas fa-file-pdf me-2"></i>Generar Boletín
+                                <i class="fas fa-file-pdf me-2"></i>Boletín
                             </a>
                         {% else %}
-                            
-                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada para este estudiante. Por favor, contacte a la administración.">
-                                <i class="fas fa-file-pdf me-2"></i>Generar Boletín (Desactivado)
+                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada para este estudiante.">
+                                <i class="fas fa-file-pdf me-2"></i>Boletín (No disp.)
+                            </button>
+                        {% endif %}
+
+                        {# 2. BOTÓN OBSERVADOR #}
+                        {# LÓGICA SIMPLIFICADA: Ahora depende ÚNICAMENTE del switch del Administrador #}
+                        {% if data.matricula and data.matricula.puede_ver_observador %}
+                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-signature me-2"></i>Observador
+                            </a>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible (Contacte a administración)">
+                                <i class="fas fa-clock me-2"></i>Obs. (No disp.)
                             </button>
                         {% endif %}
                     </div>
-                    {# Solo muestra este encabezado si hay MÁS de un estudiante (ya que el general ya da el contexto si es solo uno) #}
+                    
+                    {# Solo muestra este encabezado si hay MÁS de un estudiante #}
                     {% if estudiantes_data|length > 1 %}
                     <div class="student-report-header mb-4 p-3 rounded" style="background-color: var(--edu-acudiente-primary-light);">
                         <h4 class="mb-0 fw-semibold text-success d-flex justify-content-between align-items-center">
@@ -150,4 +181,5 @@ body {
         </div>
     {% endif %}
 </div>
+
 {% endblock %}
