@@ -277,57 +277,76 @@ def signout(request):
     messages.success(request, 'Sesión cerrada correctamente')
     return redirect('home')
 
-def signin(request):
-    if request.method == 'GET':
-        return render(request, "signin.html", {'form': AuthenticationForm()})
+##aqui 
 
+@csrf_protect
+def signin(request):
+    # --- GET ---
+    if request.method == 'GET':
+        return render(request, "signin.html", {
+            'form': AuthenticationForm(request)
+        })
+
+    # --- POST ---
     form = AuthenticationForm(request, data=request.POST)
 
-    # MODIFICACIÓN CLAVE: Captura el error de la forma de autenticación si no es válida.
     if not form.is_valid():
-        error_messages = form.errors.get('__all__', [])
-
-        # Loguear el error exacto para el diagnóstico
-        if error_messages:
-            for error in error_messages:
-                logger.error(f"Fallo de autenticación: {error}")
+        # Log detallado para producción
+        for error in form.non_field_errors():
+            logger.warning(f"Fallo de autenticación: {error}")
 
         messages.error(request, 'Usuario o contraseña incorrectos.')
         return render(request, 'signin.html', {'form': form})
 
+    # 🔒 VALIDACIÓN CRÍTICA
     user = form.get_user()
+
+    if user is None:
+        logger.error("AuthenticationForm válido pero user=None")
+        messages.error(request, 'Error interno de autenticación.')
+        return render(request, 'signin.html', {'form': form})
+
+    # Login seguro
     login(request, user)
 
-    # Redirección forzosa si el perfil requiere cambio de clave
-    if hasattr(user, 'perfil') and user.perfil.requiere_cambio_clave:
-        messages.info(request, 'Por motivos de seguridad, debes establecer una nueva contraseña.')
+    # --- CAMBIO DE CLAVE FORZADO ---
+    if hasattr(user, 'perfil') and getattr(user.perfil, 'requiere_cambio_clave', False):
+        messages.info(request, 'Por seguridad, debes cambiar tu contraseña.')
         return redirect('cambiar_clave')
 
-    next_url = request.GET.get('next')
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+    # --- REDIRECCIÓN NEXT SEGURA ---
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure()
+    ):
         return redirect(next_url)
 
-    # --- REDIRECCIÓN POR ROLES (CORREGIDA) ---
-    if hasattr(user, 'perfil'):
-        rol = user.perfil.rol
-        
-        # Staff de Bienestar
+    # --- REDIRECCIÓN POR ROL ---
+    try:
+        perfil = user.perfil
+        rol = perfil.rol
+
         if rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
             return redirect('dashboard_bienestar')
-        
-        # Otros roles
         elif rol == 'ESTUDIANTE':
             return redirect('dashboard_estudiante')
         elif rol == 'ACUDIENTE':
             return redirect('dashboard_acudiente')
-        elif rol == 'DOCENTE' or user.perfil.es_director:
+        elif rol == 'DOCENTE' or getattr(perfil, 'es_director', False):
             return redirect('dashboard_docente')
         elif rol == 'ADMINISTRADOR':
             return redirect('admin_dashboard')
 
-    # Fallback si por alguna razón no tiene perfil
-    messages.warning(request, 'No se encontró un perfil de usuario. Contacte al administrador.')
+    except Exception as e:
+        logger.exception(f"Error redireccionando por rol: {e}")
+        messages.warning(request, 'Error en el perfil del usuario.')
+
+    # --- FALLBACK FINAL ---
     return redirect('home')
+
+
 
 def english(request): return render(request, 'english.html')
 def english2(request): return render(request, 'english2.html')
