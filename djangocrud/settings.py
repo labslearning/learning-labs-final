@@ -231,3 +231,9 @@ else:
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
+
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://web-production-707fc.up.railway.app",
+]
