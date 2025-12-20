@@ -8,21 +8,28 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
 import os
+import django
+
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
+
+# 1️⃣ DEFINIR SETTINGS ANTES DE CUALQUIER IMPORT DE APPS
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangocrud.settings")
+
+# 2️⃣ INICIALIZAR DJANGO EXPLÍCITAMENTE
+django.setup()
+
+# 3️⃣ IMPORTS QUE DEPENDEN DE DJANGO (DESPUÉS DEL SETUP)
 from tasks.routing import websocket_urlpatterns
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangocrud.settings')
-
+# 4️⃣ APLICACIÓN ASGI
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": AllowedHostsOriginValidator(
         AuthMiddlewareStack(
-            URLRouter(
-                websocket_urlpatterns
-            )
+            URLRouter(websocket_urlpatterns)
         )
     ),
 })
