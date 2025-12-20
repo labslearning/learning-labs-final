@@ -109,11 +109,7 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 # --- INICIO DE MODIFICACIÓN 1 (continuación): Importar WeasyPrint ---
-try:
-    from weasyprint import HTML
-except ImportError:
-    HTML = None
-    logger.error("WeasyPrint no está instalado. La generación de PDF fallará.")
+
 # --- FIN DE MODIFICACIÓN 1 ---
 
 
