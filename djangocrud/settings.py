@@ -103,12 +103,6 @@ CHANNEL_LAYERS = {
     "default": {
         # Usamos InMemory para desarrollo local (no requiere Redis instalado)
         "BACKEND": "channels.layers.InMemoryChannelLayer",
-        
-        # NOTA: Para producción, cambiar a Redis:
-        # "BACKEND": "channels_redis.core.RedisChannelLayer",
-        # "CONFIG": {
-        #     "hosts": [("127.0.0.1", 6379)],
-        # },
     }
 }
 # ===================================================================
@@ -119,11 +113,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config('DB_NAME', default=''),
+        'USER': config('DB_USER', default=''),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default=''),
+        'PORT': config('DB_PORT', default=''),
     }
 }
 
@@ -143,7 +137,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        # Minimum length added as a security best practice
         'OPTIONS': {
             'min_length': 8,
         }
@@ -181,11 +174,7 @@ LOGIN_REDIRECT_URL = '/'
 # 🩺 CONFIGURACIÓN DE ARCHIVOS MEDIA (PDFs, PEI, etc.)
 # ===================================================================
 
-# 1. URL pública para acceder a los archivos.
 MEDIA_URL = '/media/'
-
-# 2. Ruta absoluta en el sistema de archivos donde se guardarán los archivos.
-#MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ===================================================================
@@ -199,28 +188,18 @@ DEFAULT_TEMP_PASSWORD = '123456'
 # CONFIGURACIÓN DE INTELIGENCIA ARTIFICIAL (Fase 4)
 # ==============================================================
 
-# Pega aquí tu API Key real de DeepSeek (empieza por 'sk-...')
 DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
-
-# Opcional: Si quieres cambiar configuraciones globales
 AI_MODEL_NAME = "deepseek-chat"
 
-
 # djangocrud/settings.py
-
 DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
-
-
 
 
 # --- CONFIGURACIÓN PARA RAILWAY ---
 
-# 1. Estilos (CSS/Imágenes)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# 2. Seguridad y Hosts
-# Si existe la variable RAILWAY_ENVIRONMENT, aplicamos seguridad
 if config('RAILWAY_ENVIRONMENT', default=False, cast=bool):
     DEBUG = False
     ALLOWED_HOSTS = ['*']
@@ -229,14 +208,12 @@ else:
     DEBUG = True
     ALLOWED_HOSTS = ['*']
 
-# 3. Base de Datos (Detecta automáticamente PostgreSQL en Railway)
 DATABASE_URL = config('DATABASE_URL', default=None)
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=1800)
     }
 
-# 4. Canales (Redis para el Chat)
 REDIS_URL = config('REDIS_URL', default=None)
 if REDIS_URL:
     CHANNEL_LAYERS = {
@@ -248,7 +225,6 @@ if REDIS_URL:
         },
     }
 else:
-    # Configuración local para desarrollo (si no hay Redis)
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer"
