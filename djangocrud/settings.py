@@ -200,7 +200,8 @@ DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-if config('RAILWAY_ENVIRONMENT', default=False, cast=bool):
+# 🔧 FIX CRÍTICO PARA RAILWAY (NO cast=bool)
+if config('RAILWAY_ENVIRONMENT', default='') != '':
     DEBUG = False
     ALLOWED_HOSTS = ['*']
     CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
