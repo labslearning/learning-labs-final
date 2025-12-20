@@ -2342,10 +2342,7 @@ def admin_db_visual(request):
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA A
 # ===================================================================
-try:
-    from weasyprint import HTML
-except ImportError:
-    HTML = None
+
 
 def _generar_boletin_pdf_logica(request, matricula_id: int):
     """
