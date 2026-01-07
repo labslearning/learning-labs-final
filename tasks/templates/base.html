@@ -8,8 +8,8 @@
     <title>Learning Labs - Plataforma Educativa</title>
     
     <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4361ee">
     
+    <meta name="theme-color" content="#4361ee">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Learning Labs">
     
@@ -636,15 +636,14 @@
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
 
-        /* ========== BOTÓN DE INSTALACIÓN PWA (ESTILO ACTUALIZADO) ========== */
+        /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
         #install-app-btn {
-            display: none; /* Se activa por JS */
+            display: none; /* Se controla via JS, pero empezará oculto para evitar parpadeos */
             border: 2px solid rgba(255,255,255,0.4);
             background: rgba(255,255,255,0.1);
             color: white;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
         }
         #install-app-btn:hover {
             background: white;
@@ -683,11 +682,11 @@
                     </button>
                 {% endif %}
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
                 </button>
             </div>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
@@ -1138,18 +1137,19 @@
             });
 
             // ==========================================
-            // LÓGICA DE INSTALACIÓN PWA MEJORADA (UNIVERSAL)
+            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA)
             // ==========================================
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
             const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-            // Detecta si la app YA está instalada o en modo "pantalla completa"
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-            // 1. VISIBILIDAD FORZADA: Si el botón existe y NO es la app instalada, MOSTRARLO.
+            // 1. VISIBILIDAD FORZADA: Si no está en modo App, MOSTRAR BOTÓN.
+            // Usamos style.display = 'flex' para asegurar que el botón (ahora en la barra principal) sea visible.
             if (installBtn && !isStandalone) {
-                // Usamos !important en el JS para asegurar que ninguna regla CSS lo oculte
-                installBtn.style.setProperty('display', 'flex', 'important');
+                installBtn.style.display = 'flex'; 
+                // Añadimos 'important' vía CSS text para sobrescribir cualquier display:none previo
+                installBtn.style.cssText = "display: flex !important; align-items: center; justify-content: center;"; 
             }
 
             // 2. Captura del evento nativo (para Android/PC si está disponible)
@@ -1172,8 +1172,8 @@
                         // B) Es iPhone/iPad (Instrucciones manuales)
                         alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (icono cuadrado con flecha) en la barra inferior.\n2. Busca y selecciona 'Agregar a Inicio'.");
                     } else {
-                        // C) Es PC Chrome/Firefox sin evento (Instrucciones manuales)
-                        alert("Para instalar la aplicación:\n\nOpción A: Busca el icono (+) en la barra de direcciones del navegador.\n\nOpción B: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Añadir a pantalla de inicio'.");
+                        // C) Es PC Chrome/Firefox sin evento O Android WebAPK Fallido (Instrucciones manuales)
+                        alert("Para instalar la aplicación:\n\nOpción A: Busca el icono (+) en la barra de direcciones del navegador.\n\nOpción B (Android): Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Agregar a pantalla de inicio'.");
                     }
                 });
             }
