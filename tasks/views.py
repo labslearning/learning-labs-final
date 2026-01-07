@@ -323,21 +323,31 @@ def signin(request):
     ):
         return redirect(next_url)
 
-    # --- REDIRECCIÓN POR ROL ---
+    # --- REDIRECCIÓN POR ROL (LÓGICA CORREGIDA) ---
     try:
         perfil = user.perfil
         rol = perfil.rol
 
-        if rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+        # 1. PRIORIDAD ALTA: ADMINISTRADOR
+        # Se pone primero para que 'es_director' no intercepte al admin.
+        if rol == 'ADMINISTRADOR':
+            return redirect('admin_dashboard')
+
+        # 2. Staff de Bienestar
+        elif rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
             return redirect('dashboard_bienestar')
+
+        # 3. Estudiantes y Acudientes
         elif rol == 'ESTUDIANTE':
             return redirect('dashboard_estudiante')
         elif rol == 'ACUDIENTE':
             return redirect('dashboard_acudiente')
+
+        # 4. Docentes y Directores de Curso
+        # Se deja de último. Si eres admin y director, entrarás por el 'if' de arriba.
+        # Si solo eres docente/director, entrarás aquí.
         elif rol == 'DOCENTE' or getattr(perfil, 'es_director', False):
             return redirect('dashboard_docente')
-        elif rol == 'ADMINISTRADOR':
-            return redirect('admin_dashboard')
 
     except Exception as e:
         logger.exception(f"Error redireccionando por rol: {e}")
