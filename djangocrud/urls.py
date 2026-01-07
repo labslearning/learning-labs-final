@@ -12,6 +12,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 # IMPORTAMOS ESTO PARA FORZAR LA VISUALIZACIÓN EN RAILWAY
 from django.views.static import serve
+from django.views.generic import TemplateView # <--- IMPORTANTE
 # ===================================================================
 # 🩺 FIN DE LA CIRUGÍA
 # ===================================================================
@@ -24,6 +25,7 @@ urlpatterns = [
     # 2. Incluimos TODAS las demás rutas desde 'tasks.urls'
     # Django ahora buscará en 'tasks.urls' CUALQUIER OTRA ruta (incluyendo 'panel/...')
     path('', include('tasks.urls')),
+    path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw.js'),
 ]
 
 
