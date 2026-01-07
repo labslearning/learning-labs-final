@@ -5,16 +5,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4361ee">
-    <meta name="mobile-web-app-capable" content="yes">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Learning Labs">
-    <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
-
     <title>Learning Labs - Plataforma Educativa</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -68,8 +58,6 @@
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
             color: var(--edu-dark);
-            /* Tipografía Responsiva */
-            font-size: clamp(1rem, 2.5vw + 0.5rem, 2rem);
         }
 
         /* Estilos personalizados para SimpleMDE */
@@ -90,8 +78,8 @@
             padding: 0.6rem 2rem;
             box-shadow: 0 4px 20px rgba(63, 55, 201, 0.25);
             font-family: 'Poppins', sans-serif;
-            position: sticky; top: 0; z-index: 1000;
-            padding-top: env(safe-area-inset-top); 
+            position: relative;
+            z-index: 1000;
         }
 
         .navbar-brand {
@@ -407,29 +395,18 @@
             color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
             border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
             align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            animation: slideDown 0.5s ease;
         }
-        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
         @media (max-width: 576px) and (orientation: portrait) {
-            /* Se activa via JS si hay tablas */
             .has-tables #rotate-hint { display: flex; }
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Tablas Responsivas */
-        .table-responsive, table {
+        .table-responsive {
             display: block; width: 100%; overflow-x: auto;
             -webkit-overflow-scrolling: touch; border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 1rem;
             border: 1px solid #eee; background: white;
         }
-        table.table { margin-bottom: 0; background-color: white; white-space: nowrap; }
-        table.table thead th {
-            background-color: #f8f9fa; color: var(--edu-dark);
-            border-bottom: 2px solid #dee2e6; padding: 1rem;
-            text-transform: uppercase; font-size: 0.85rem;
-        }
-        table.table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
         /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
         .yt-modal {
@@ -637,9 +614,6 @@
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
 
-        /* Botón Instalar PWA */
-        #install-app-btn { display: none; margin: 0 10px; }
-
         /* ========== EFECTOS ESPECIALES ========== */
         .edu-pulse {
             animation: pulse 2s infinite;
@@ -661,14 +635,6 @@
                 font-size: 1.4rem;
             }
         }
-        
-        /* Widget Mentor */
-        .mentor-trigger { bottom: 25px; right: 25px; z-index: 9990; }
-        @media (max-width: 576px) {
-            .mentor-trigger { bottom: 20px; right: 20px; }
-            .btn-mentor-main { width: 55px; height: 55px; font-size: 1.4rem; }
-            .mentor-window { width: 100%; height: 60vh; bottom: 0 !important; right: 0 !important; border-radius: 20px 20px 0 0; border: none; }
-        }
     </style>
 </head>
 <body>
@@ -676,8 +642,7 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-atom"></i>
-                <span class="d-none d-sm-inline">Learning Labs</span>
-                <span class="d-inline d-sm-none">LLabs</span>
+                <span>Learning Labs</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
@@ -688,17 +653,11 @@
                     <a href="/" class="nav-link"><i class="fas fa-home"></i> <span>Inicio</span></a>
                     
                     {% if user.is_authenticated %}
-                    
-                        <button id="install-app-btn" class="btn btn-outline-light btn-sm d-none d-lg-block">
-                            <i class="fas fa-download"></i> Instalar App
-                        </button>
-                        <a href="#" id="install-app-link" class="nav-link d-lg-none" style="display:none !important;">
-                            <i class="fas fa-download"></i> <span>Instalar Aplicación</span>
-                        </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
                             <span class="d-lg-none ms-2">Mensajes</span>
+                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -710,6 +669,7 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
+                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -861,26 +821,18 @@
                 <span>Gira tu dispositivo para ver mejor las tablas de datos.</span>
             </div>
         </div>
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </div>
     
-    <div id="pdfModal" class="yt-modal">
+    <div id="youtubeModal" class="yt-modal">
         <div class="yt-modal-content">
-            <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
-            <div style="flex: 1; width: 100%; position: relative; background-color: #333; border-radius: 10px 10px 0 0; overflow:hidden;">
-                <object id="pdfObject" data="" type="application/pdf" width="100%" height="100%" style="border:none;">
-                    <div class="d-flex justify-content-center align-items-center h-100 text-white flex-column text-center p-4">
-                        <i class="fas fa-file-pdf fa-3x mb-3 text-warning"></i>
-                        <p class="mb-2">Tu navegador no muestra la vista previa.</p>
-                        <small class="text-white-50">Usa el botón de abajo para descargar.</small>
-                    </div>
-                </object>
+            <span class="close-yt" onclick="closeYtModal()">&times; Cerrar</span>
+            <div class="video-container">
+                <iframe id="ytPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
-            <div class="yt-modal-footer d-flex justify-content-between align-items-center">
-                <span class="text-white-50 small">Documento PDF</span>
-                <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-primary">
-                    <i class="fas fa-download me-1"></i> Descargar y Abrir
+            <div class="yt-modal-footer">
+                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
+                    <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
                 </a>
             </div>
         </div>
@@ -889,12 +841,17 @@
     <div class="video-modal" id="videoModal">
         <div class="video-modal-content-wrapper">
             <div class="video-modal-header">
-                <h5><i class="fas fa-play-circle"></i> <span id="videoModalTitle">Video</span></h5>
-                <button class="video-modal-close" id="videoModalClose" title="Cerrar"><i class="fas fa-times"></i></button>
+                <h5><i class="fas fa-play-circle"></i> <span id="videoModalTitle">Clase Educativa</span></h5>
+                <button class="video-modal-close" id="videoModalClose" title="Cerrar video">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="video-modal-body" id="videoModalBody"></div>
+            <div class="video-modal-body" id="videoModalBody">
+            </div>
             <div class="video-modal-footer">
-                <button class="btn btn-edu btn-edu-secondary" id="videoModalCloseBtn">Cerrar</button>
+                <button class="btn btn-edu btn-edu-secondary" id="videoModalCloseBtn">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -907,7 +864,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video Local
+        // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -920,7 +877,7 @@
             if (videoModalCloseHeaderEl) videoModalCloseHeaderEl.addEventListener('click', closeVideoModal);
             if (videoModalCloseFooterBtnEl) videoModalCloseFooterBtnEl.addEventListener('click', closeVideoModal);
 
-            // Escuchar tecla Escape para cerrar modal (Videos o PDFs)
+            // Escuchar tecla Escape para cerrar modal
             document.addEventListener('keydown', handleGlobalKeydown);
 
              // --- ✅ SCRIPT DE NOTIFICACIONES ---
@@ -982,7 +939,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video Local ---
+        // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -1082,10 +1039,6 @@
                     console.log("Closing video modal via Escape key.");
                     closeVideoModal();
                 }
-                // Cerrar modal de PDF si está abierto
-                if (document.getElementById('pdfModal').style.display === 'block') {
-                    closePdfModal();
-                }
             }
         }
 
@@ -1142,38 +1095,6 @@
                     });
                 }
             });
-            
-            // Lógica PWA Install
-            let deferredPrompt;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                const btn = document.getElementById('install-app-btn');
-                const link = document.getElementById('install-app-link');
-                if(btn) btn.style.display = 'block';
-                if(link) link.style.display = 'flex !important';
-                
-                const installAction = () => {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('Usuario aceptó instalar');
-                        }
-                        deferredPrompt = null;
-                    });
-                };
-                if(btn) btn.addEventListener('click', installAction);
-                if(link) link.addEventListener('click', installAction);
-            });
-            
-            // Registro Service Worker
-            if ('serviceWorker' in navigator) {
-                 navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SW registrado', reg);
-                 }).catch(function(err) {
-                    console.log('SW error', err);
-                 });
-            }
 
             console.log("Base.html: initializeApp() complete.");
         }
@@ -1229,45 +1150,52 @@
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Abrir PDF en modal interno con fallback
-                    openPdfModal(href);
-                    return;
+                    // Abrir PDF en una pestaña nueva para evitar problemas de CORS/X-Frame
+                    window.open(href, '_blank', 'noopener,noreferrer');
                 }
 
             }, true); // Use capture para interceptar antes que nadie
         });
 
-        // Funciones del Modal de PDF
-        function openPdfModal(url) {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
-            var downloadBtn = document.getElementById('pdfDownloadLink');
-            var fallbackBtn = document.getElementById('pdfFallbackLink');
-            
-            // Asignar fuente al object tag y botones
-            objectTag.data = url;
-            downloadBtn.href = url;
-            if(fallbackBtn) fallbackBtn.href = url;
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
+        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
+        function openYtModal(url) {
+            var videoId = '';
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
 
-            // Mostrar modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll en el fondo
+            if (match && match[2].length == 11) {
+                videoId = match[2];
+                var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                
+                document.getElementById('ytPlayer').src = embedUrl;
+                
+                // Actualizamos el botón de emergencia por si el video falla
+                var externalBtn = document.getElementById('ytExternalLink');
+                if(externalBtn) {
+                    externalBtn.href = url;
+                }
+
+                document.getElementById('youtubeModal').style.display = 'block';
+            } else {
+                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
+                window.open(url, '_blank');
+            }
         }
 
-        function closePdfModal() {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
+        function closeYtModal() {
+            var modal = document.getElementById('youtubeModal');
+            var iframe = document.getElementById('ytPlayer');
             
             modal.style.display = 'none';
-            objectTag.data = ''; // Limpiar para detener carga
-            document.body.style.overflow = ''; // Restaura scroll
+            iframe.src = ''; 
         }
 
-        // Cerrar modal al hacer clic fuera
+        // Cerrar modal al hacer clic fuera del contenido
         window.addEventListener('click', function(event) {
-            var modal = document.getElementById('pdfModal');
+            var modal = document.getElementById('youtubeModal');
             if (event.target == modal) {
-                closePdfModal();
+                closeYtModal();
             }
         });
     </script>
