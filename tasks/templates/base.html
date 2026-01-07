@@ -6,15 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Learning Labs - Plataforma Educativa</title>
-
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4361ee">
-    <meta name="mobile-web-app-capable" content="yes">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Learning Labs">
-    <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -42,7 +33,7 @@
             --edu-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --edu-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             
-            /* Áreas seguras para móviles */
+            /* Áreas seguras para móviles modernos (iPhone X+) */
             --safe-area-bottom: env(safe-area-inset-bottom, 20px);
         }
 
@@ -59,7 +50,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Evita scroll lateral */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -81,7 +72,7 @@
             min-height: 150px;
         }
 
-        /* ========== BARRA DE NAVEGACIÓN ========== */
+        /* ========== BARRA DE NAVEGACIÓN MEJORADA (PROFESIONAL) ========== */
         .navbar {
             background: linear-gradient(120deg, var(--edu-primary), var(--edu-secondary));
             padding: 0.6rem 2rem;
@@ -408,22 +399,14 @@
         @media (max-width: 576px) and (orientation: portrait) {
             .has-tables #rotate-hint { display: flex; }
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Tablas Responsivas */
-        .table-responsive, table {
+        .table-responsive {
             display: block; width: 100%; overflow-x: auto;
             -webkit-overflow-scrolling: touch; border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 1rem;
             border: 1px solid #eee; background: white;
         }
-        table.table { margin-bottom: 0; background-color: white; white-space: nowrap; }
-        table.table thead th {
-            background-color: #f8f9fa; color: var(--edu-dark);
-            border-bottom: 2px solid #dee2e6; padding: 1rem;
-            text-transform: uppercase; font-size: 0.85rem;
-        }
-        table.table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
         /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
         .yt-modal {
@@ -630,10 +613,6 @@
             text-align: right;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
-        
-        /* Botón Instalar (Oculto por defecto, se muestra con JS) */
-        #install-app-btn { display: none; }
-        #install-app-link { display: none !important; } /* Forzamos oculto hasta que JS diga lo contrario */
 
         /* ========== EFECTOS ESPECIALES ========== */
         .edu-pulse {
@@ -656,14 +635,6 @@
                 font-size: 1.4rem;
             }
         }
-        
-        /* Widget Mentor */
-        .mentor-trigger { bottom: 25px; right: 25px; z-index: 9990; }
-        @media (max-width: 576px) {
-            .mentor-trigger { bottom: 20px; right: 20px; }
-            .btn-mentor-main { width: 55px; height: 55px; font-size: 1.4rem; }
-            .mentor-window { width: 100%; height: 60vh; bottom: 0 !important; right: 0 !important; border-radius: 20px 20px 0 0; border: none; }
-        }
     </style>
 </head>
 <body>
@@ -671,31 +642,22 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-atom"></i>
-                <span class="d-none d-sm-inline">Learning Labs</span>
-                <span class="d-inline d-sm-none">LLabs</span>
+                <span>Learning Labs</span>
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
                     <a href="/" class="nav-link"><i class="fas fa-home"></i> <span>Inicio</span></a>
                     
                     {% if user.is_authenticated %}
-                        
-                        <button id="install-app-btn" class="btn btn-outline-light btn-sm mx-2">
-                            <i class="fas fa-download"></i> <span class="d-none d-md-inline">Instalar App</span>
-                        </button>
-                        <a href="#" id="install-app-link" class="nav-link">
-                            <i class="fas fa-download"></i> <span>Instalar Aplicación</span>
-                        </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
                             <span class="d-lg-none ms-2">Mensajes</span>
+                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -707,6 +669,7 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
+                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -855,47 +818,10 @@
         <div id="rotate-hint" class="container">
             <div class="d-flex align-items-center justify-content-center">
                 <i class="fas fa-mobile-alt fa-rotate-90 me-2"></i>
-                <span>Para ver mejor las tablas, gira tu dispositivo.</span>
+                <span>Gira tu dispositivo para ver mejor las tablas de datos.</span>
             </div>
         </div>
         {% block content %}{% endblock %}
-    </div>
-    
-    <div id="pdfModal" class="yt-modal">
-        <div class="yt-modal-content">
-            <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
-            <div style="flex: 1; width: 100%; position: relative; background-color: #333; border-radius: 10px 10px 0 0; overflow:hidden;">
-                <object id="pdfObject" data="" type="application/pdf" width="100%" height="100%" style="border:none;">
-                    <div class="d-flex justify-content-center align-items-center h-100 text-white flex-column text-center p-4">
-                        <i class="fas fa-file-pdf fa-3x mb-3 text-warning"></i>
-                        <p class="mb-2">Tu navegador no muestra la vista previa.</p>
-                        <small class="text-white-50 mb-3">Usa el botón de abajo para descargar.</small>
-                        <a id="pdfFallbackLink" href="#" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-download me-1"></i> Descargar PDF
-                        </a>
-                    </div>
-                </object>
-            </div>
-            <div class="yt-modal-footer d-flex justify-content-between align-items-center">
-                <span class="text-white-50 small">Documento PDF</span>
-                <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-download me-1"></i> Guardar
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="video-modal" id="videoModal">
-        <div class="video-modal-content-wrapper">
-            <div class="video-modal-header">
-                <h5><i class="fas fa-play-circle"></i> <span id="videoModalTitle">Video</span></h5>
-                <button class="video-modal-close" id="videoModalClose" title="Cerrar"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="video-modal-body" id="videoModalBody"></div>
-            <div class="video-modal-footer">
-                <button class="btn btn-edu btn-edu-secondary" id="videoModalCloseBtn">Cerrar</button>
-            </div>
-        </div>
     </div>
     
     <div id="youtubeModal" class="yt-modal">
@@ -905,9 +831,27 @@
                 <iframe id="ytPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
             <div class="yt-modal-footer">
-                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white">
-                    <i class="fas fa-external-link-alt"></i> Ver en YouTube
+                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
+                    <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
                 </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="video-modal" id="videoModal">
+        <div class="video-modal-content-wrapper">
+            <div class="video-modal-header">
+                <h5><i class="fas fa-play-circle"></i> <span id="videoModalTitle">Clase Educativa</span></h5>
+                <button class="video-modal-close" id="videoModalClose" title="Cerrar video">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="video-modal-body" id="videoModalBody">
+            </div>
+            <div class="video-modal-footer">
+                <button class="btn btn-edu btn-edu-secondary" id="videoModalCloseBtn">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -918,9 +862,9 @@
     {# 2. Cargar librería de editor Markdown (SimpleMDE) #}
     <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 
-    {# 3. Lógica Global (Video, Notificaciones y PWA) #}
+    {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video Local
+        // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -929,6 +873,7 @@
 
         // --- Event Listeners ---
         function setupEventListeners() {
+            console.log("Base.html: Setting up event listeners...");
             if (videoModalCloseHeaderEl) videoModalCloseHeaderEl.addEventListener('click', closeVideoModal);
             if (videoModalCloseFooterBtnEl) videoModalCloseFooterBtnEl.addEventListener('click', closeVideoModal);
 
@@ -945,6 +890,8 @@
              if(document.querySelector('table')) {
                  document.body.classList.add('has-tables');
              }
+             
+             console.log("Base.html: Event listeners setup complete.");
         }
         
         // --- FUNCIÓN DE RESETEO DE NOTIFICACIONES ---
@@ -985,25 +932,31 @@
                 if (response.ok) {
                     counterElement.innerText = '0';
                     counterElement.style.display = 'none';
+                    console.log('Notificaciones marcadas como leídas visualmente.');
                 }
             } catch (error) {
                 console.error('Error al resetear notificaciones:', error);
             }
         }
 
-        // --- Funciones del Modal de Video Local ---
+        // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
-            if (!videoModalEl) return;
-            
+            if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
+                console.error("Error: Elementos del modal de video no encontrados.");
+                return;
+            }
+            console.log(`Opening video modal for: ${videoTitle} (URL: ${videoUrl})`);
+
             videoModalTitleEl.textContent = videoTitle;
             videoModalBodyEl.innerHTML = "";
 
-            if (!videoUrl || videoUrl.trim() === '') {
+            if (!videoUrl || videoUrl.trim() === '' || videoUrl.toUpperCase() === 'TU_URL_AQUI') {
+                 console.warn("Video URL is missing or invalid.");
                 const errorHtml = `
                     <div class="video-error-display">
                         <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
                         <h5>Video No Disponible</h5>
-                        <p>El contenido para "<strong>${videoTitle}</strong>" no está disponible.</p>
+                        <p>El contenido para "<strong>${videoTitle}</strong>" no está disponible en este momento.</p>
                     </div>`;
                 videoModalBodyEl.innerHTML = errorHtml;
             } else {
@@ -1026,12 +979,27 @@
                 } else if (videoUrl.toLowerCase().endsWith('.ogv')) {
                      sourceElement.setAttribute('type', 'video/ogg');
                 } 
+                else {
+                     console.warn("Tipo de video desconocido para:", videoUrl, ". Intentando sin 'type'.");
+                }
 
                 videoElement.appendChild(sourceElement);
+                videoElement.appendChild(document.createTextNode('Tu navegador no soporta la etiqueta de video.'));
+
                 videoModalBodyEl.appendChild(videoElement);
 
                 videoElement.play().catch(error => {
-                    console.log("Autoplay prevenido:", error);
+                    console.log("Autoplay fue prevenido por el navegador:", error);
+                });
+
+                videoElement.addEventListener('error', (e) => {
+                    console.error("Error al cargar el video:", videoUrl, e);
+                    videoModalBodyEl.innerHTML = `
+                        <div class="video-error-display">
+                            <div class="error-icon"><i class="fas fa-times-circle"></i></div>
+                            <h5>Error al Cargar Video</h5>
+                            <p>No se pudo cargar el video desde la URL proporcionada.</p>
+                        </div>`;
                 });
             }
 
@@ -1039,29 +1007,43 @@
             document.body.style.overflow = 'hidden';
         }
 
+
         function closeVideoModal() {
+             console.log("Closing video modal.");
             const videoElement = videoModalBodyEl.querySelector('video');
             if (videoElement) {
                 videoElement.pause();
-                videoElement.remove();
+                while (videoElement.firstChild) {
+                    videoElement.removeChild(videoElement.firstChild);
+                }
+                videoElement.load();
+                 videoElement.remove();
             }
 
             videoModalEl.classList.remove('active');
             document.body.style.overflow = '';
+
+            setTimeout(() => {
+                if (videoModalBodyEl && !videoModalEl.classList.contains('active')) {
+                    videoModalBodyEl.innerHTML = "";
+                }
+            }, 350);
         }
+
 
         // --- Handlers de Eventos Globales ---
         function handleGlobalKeydown(event) {
             if (event.key === "Escape" || event.key === "Esc") {
+                 console.log("Escape key pressed.");
                 if (videoModalEl && videoModalEl.classList.contains('active')) {
+                    console.log("Closing video modal via Escape key.");
                     closeVideoModal();
                 }
-                if (document.getElementById('pdfModal').style.display === 'block') closePdfModal();
-                if (document.getElementById('youtubeModal').style.display === 'block') closeYtModal();
             }
         }
 
         // --- Inicialización al Cargar el DOM ---
+        console.log("Base.html: Script principal iniciando...");
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
@@ -1069,6 +1051,7 @@
         }
 
         function initializeApp() {
+            console.log("Base.html: DOMContentLoaded event fired. Running initializeApp().");
             setupEventListeners();
 
             // Configurar Marked si está disponible
@@ -1088,6 +1071,7 @@
                      new SimpleMDE({ 
                         element: element,
                         spellChecker: false,
+                        placeholder: element.getAttribute("placeholder") || "Escribe aquí con formato...",
                         status: false,
                         toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"]
                     });
@@ -1100,6 +1084,8 @@
                 const hasEditor = form.querySelector('.CodeMirror'); 
                 if (hasEditor) {
                     form.setAttribute('novalidate', 'true');
+                    console.log("Auto-reparación: Formulario desbloqueado (novalidate añadido).");
+
                     form.addEventListener('submit', function() {
                         const btn = form.querySelector('button[type="submit"]');
                         if(btn) {
@@ -1109,132 +1095,108 @@
                     });
                 }
             });
-            
-            // --- SCRIPT DE INSTALACIÓN PWA MEJORADO ---
-            let deferredPrompt;
-            const installBtn = document.getElementById('install-app-btn');
-            const installLink = document.getElementById('install-app-link');
 
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Previene que Chrome muestre el prompt automáticamente
-                e.preventDefault();
-                // Guarda el evento para dispararlo después
-                deferredPrompt = e;
-                
-                // Muestra los botones de instalación
-                if(installBtn) {
-                    installBtn.style.display = 'block';
-                    installBtn.classList.remove('d-none');
-                }
-                if(installLink) {
-                    installLink.style.display = 'flex';
-                    installLink.classList.remove('d-none');
-                    // Forzar display flex con importante para sobrescribir reglas CSS específicas si las hay
-                    installLink.style.setProperty('display', 'flex', 'important');
-                }
-            });
-
-            const installAppAction = async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    deferredPrompt = null;
-                    // Ocultar botones tras la acción
-                    if(installBtn) installBtn.style.display = 'none';
-                    if(installLink) installLink.style.display = 'none';
-                }
-            };
-
-            if(installBtn) installBtn.addEventListener('click', installAppAction);
-            if(installLink) installLink.addEventListener('click', installAppAction);
-            
-            // Registro Service Worker para PWA
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registrado', reg))
-                    .catch(err => console.log('SW error', err));
-            }
+            console.log("Base.html: initializeApp() complete.");
         }
+
     </script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.body.addEventListener('click', function(e) {
                 var target = e.target.closest('a');
+                
+                // Si no es un link o no tiene href, salir
                 if (!target || !target.getAttribute('href')) return;
 
                 var href = target.getAttribute('href');
                 var currentDomain = window.location.hostname;
 
                 // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                // Si es YouTube, NO abrimos el modal. Forzamos nueva pestaña automáticamente.
+                // Esto evita el Error 153 porque el video carga directamente en youtube.com
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
-                    e.preventDefault(); e.stopPropagation();
+                    e.preventDefault();
+                    e.stopPropagation();
                     window.open(href, '_blank', 'noopener,noreferrer');
                     return; 
                 }
 
-                // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
-                if (href.toLowerCase().endsWith('.pdf')) {
-                    e.preventDefault(); e.stopPropagation();
-                    openPdfModal(href);
-                    return;
-                }
-
-                // --- 3. LÓGICA DE ENLACES EXTERNOS ---
+                // --- 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // Verifica rigurosamente si el dominio destino es diferente al actual
                 try {
+                    // Solo analizamos URLs absolutas (http/https)
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
+                        
+                        // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
                         if (targetUrl.hostname !== currentDomain) {
-                            e.preventDefault(); e.stopPropagation();
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // 'noopener,noreferrer' es buena práctica de seguridad
                             window.open(href, '_blank', 'noopener,noreferrer');
+                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
                         }
                     }
                 } catch (err) {
-                    if (href.indexOf('http') === 0 && !href.includes(currentDomain)) {
+                    // Si la URL es rara o falla el análisis, dejamos que el navegador decida,
+                    // pero por seguridad podríamos forzar _blank si parece http
+                    if (href.indexOf('http') === 0) {
                          window.open(href, '_blank');
                     }
                 }
-            }, true);
+
+                // --- 3. LÓGICA PDF ---
+                if (href.toLowerCase().endsWith('.pdf')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Abrir PDF en una pestaña nueva para evitar problemas de CORS/X-Frame
+                    window.open(href, '_blank', 'noopener,noreferrer');
+                }
+
+            }, true); // Use capture para interceptar antes que nadie
         });
 
-        // Funciones del Modal de PDF
-        function openPdfModal(url) {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
-            var downloadBtn = document.getElementById('pdfDownloadLink');
-            var fallbackBtn = document.getElementById('pdfFallbackLink');
-            
-            objectTag.data = url;
-            downloadBtn.href = url;
-            if(fallbackBtn) fallbackBtn.href = url;
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
+        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
+        function openYtModal(url) {
+            var videoId = '';
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
 
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
+            if (match && match[2].length == 11) {
+                videoId = match[2];
+                var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                
+                document.getElementById('ytPlayer').src = embedUrl;
+                
+                // Actualizamos el botón de emergencia por si el video falla
+                var externalBtn = document.getElementById('ytExternalLink');
+                if(externalBtn) {
+                    externalBtn.href = url;
+                }
+
+                document.getElementById('youtubeModal').style.display = 'block';
+            } else {
+                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
+                window.open(url, '_blank');
+            }
         }
 
-        function closePdfModal() {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
+        function closeYtModal() {
+            var modal = document.getElementById('youtubeModal');
+            var iframe = document.getElementById('ytPlayer');
             
             modal.style.display = 'none';
-            objectTag.data = ''; 
-            document.body.style.overflow = ''; 
-        }
-        
-        function closeYtModal() {
-             var modal = document.getElementById('youtubeModal');
-             var iframe = document.getElementById('ytPlayer');
-             modal.style.display = 'none';
-             iframe.src = '';
+            iframe.src = ''; 
         }
 
         // Cerrar modal al hacer clic fuera del contenido
         window.addEventListener('click', function(event) {
-            var modalPdf = document.getElementById('pdfModal');
-            var modalYt = document.getElementById('youtubeModal');
-            if (event.target == modalPdf) closePdfModal();
-            if (event.target == modalYt) closeYtModal();
+            var modal = document.getElementById('youtubeModal');
+            if (event.target == modal) {
+                closeYtModal();
+            }
         });
     </script>
 
