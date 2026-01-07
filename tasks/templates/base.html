@@ -6,17 +6,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Learning Labs - Plataforma Educativa</title>
-
-    <link rel="manifest" href="{% static 'manifest.json' %}">
     
+    <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#4361ee">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Learning Labs">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Learning Labs">
     <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -405,28 +403,18 @@
             color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
             border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
             align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            animation: slideDown 0.5s ease;
         }
-        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
         @media (max-width: 576px) and (orientation: portrait) {
             .has-tables #rotate-hint { display: flex; }
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Tablas Responsivas */
-        .table-responsive, table {
+        .table-responsive {
             display: block; width: 100%; overflow-x: auto;
             -webkit-overflow-scrolling: touch; border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 1rem;
             border: 1px solid #eee; background: white;
         }
-        table.table { margin-bottom: 0; background-color: white; white-space: nowrap; }
-        table.table thead th {
-            background-color: #f8f9fa; color: var(--edu-dark);
-            border-bottom: 2px solid #dee2e6; padding: 1rem;
-            text-transform: uppercase; font-size: 0.85rem;
-        }
-        table.table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
         /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
         .yt-modal {
@@ -633,28 +621,6 @@
             text-align: right;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
-        
-        /* ESTILO PARA BOTÓN INSTALAR PWA */
-        #install-app-btn {
-             display: none; /* Se oculta al inicio */
-             cursor: pointer;
-        }
-        
-        #install-app-link {
-            display: none !important; /* Se oculta al inicio */
-        }
-        
-        /* Modal de Instrucciones iOS */
-        #iosInstallModal {
-            display: none;
-            position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;
-        }
-        #iosInstallModal .modal-content-ios {
-            background-color: white; padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px;
-            text-align: center; color: #333; position: relative;
-        }
-        #iosInstallModal .ios-icon { font-size: 2rem; margin: 10px 0; color: #007aff; }
 
         /* ========== EFECTOS ESPECIALES ========== */
         .edu-pulse {
@@ -667,6 +633,22 @@
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
 
+        /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
+        #install-app-btn {
+            display: none; /* Se controla via JS */
+            border: 2px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #install-app-btn:hover {
+            background: white;
+            color: var(--edu-primary);
+            transform: scale(1.05);
+            border-color: white;
+        }
+
         /* ========== RESPONSIVIDAD ADICIONAL ========== */
         @media (max-width: 768px) {
             .navbar {
@@ -676,14 +658,6 @@
             .navbar-brand {
                 font-size: 1.4rem;
             }
-        }
-        
-        /* Widget Mentor */
-        .mentor-trigger { bottom: 25px; right: 25px; z-index: 9990; }
-        @media (max-width: 576px) {
-            .mentor-trigger { bottom: 20px; right: 20px; }
-            .btn-mentor-main { width: 55px; height: 55px; font-size: 1.4rem; }
-            .mentor-window { width: 100%; height: 60vh; bottom: 0 !important; right: 0 !important; border-radius: 20px 20px 0 0; border: none; }
         }
     </style>
 </head>
@@ -704,17 +678,17 @@
                     
                     {% if user.is_authenticated %}
                         
-                        <button id="install-app-btn" class="btn btn-link text-white nav-link" title="Descargar App">
-                            <i class="fas fa-download"></i>
+                        <button id="install-app-btn" class="btn btn-sm rounded-circle me-2" style="width: 40px; height: 40px; align-items: center; justify-content: center; padding: 0;" title="Instalar Aplicación">
+                            <div style="position: relative; width: 100%; height: 100%;">
+                                <i class="fas fa-mobile-alt" style="font-size: 1.2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
+                                <i class="fas fa-download" style="font-size: 0.7rem; position: absolute; bottom: 4px; right: 4px; background: var(--edu-primary); border-radius: 50%; padding: 2px; border: 1px solid white;"></i>
+                            </div>
                         </button>
-                        
-                        <a href="#" id="install-app-link" class="nav-link">
-                            <i class="fas fa-download"></i> <span>Descargar App</span>
-                        </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
                             <span class="d-lg-none ms-2">Mensajes</span>
+                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -726,6 +700,7 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
+                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -880,18 +855,6 @@
         {% block content %}{% endblock %}
     </div>
     
-    <div id="iosInstallModal" class="yt-modal" onclick="document.getElementById('iosInstallModal').style.display='none'">
-        <div class="modal-content-ios" style="margin: 30% auto; background: white; padding: 20px; border-radius: 15px; max-width: 350px; text-align: center;">
-            <h4><i class="fas fa-download text-primary"></i> Instalar App</h4>
-            <p class="text-muted mt-3">Para instalar en iPhone/iPad:</p>
-            <div class="text-start d-inline-block">
-                <p>1. Toca el botón <strong>Compartir</strong> <i class="fas fa-share-square"></i></p>
-                <p>2. Busca y selecciona <strong>"Agregar a Inicio"</strong> <i class="fas fa-plus-square"></i></p>
-            </div>
-            <button class="btn btn-primary mt-3 w-100">Entendido</button>
-        </div>
-    </div>
-    
     <div id="youtubeModal" class="yt-modal">
         <div class="yt-modal-content">
             <span class="close-yt" onclick="closeYtModal()">&times; Cerrar</span>
@@ -901,30 +864,6 @@
             <div class="yt-modal-footer">
                 <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
                     <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div id="pdfModal" class="yt-modal">
-        <div class="yt-modal-content">
-            <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
-            <div style="flex: 1; width: 100%; position: relative; background-color: #333; border-radius: 10px 10px 0 0; overflow:hidden;">
-                <object id="pdfObject" data="" type="application/pdf" width="100%" height="100%" style="border:none;">
-                    <div class="d-flex justify-content-center align-items-center h-100 text-white flex-column text-center p-4">
-                        <i class="fas fa-file-pdf fa-3x mb-3 text-warning"></i>
-                        <p class="mb-2">Tu navegador no puede visualizar este PDF aquí.</p>
-                        <small class="text-white-50 mb-3">Pero no te preocupes, puedes descargarlo aquí:</small>
-                        <a id="pdfFallbackLink" href="#" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-download me-1"></i> Descargar PDF
-                        </a>
-                    </div>
-                </object>
-            </div>
-            <div class="yt-modal-footer d-flex justify-content-between align-items-center">
-                <span class="text-white-50 small">Documento PDF</span>
-                <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-download me-1"></i> Guardar
                 </a>
             </div>
         </div>
@@ -956,7 +895,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video Local
+        // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -1031,7 +970,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video Local ---
+        // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -1131,8 +1070,6 @@
                     console.log("Closing video modal via Escape key.");
                     closeVideoModal();
                 }
-                if (document.getElementById('pdfModal').style.display === 'block') closePdfModal();
-                if (document.getElementById('youtubeModal').style.display === 'block') closeYtModal();
             }
         }
 
@@ -1189,61 +1126,57 @@
                     });
                 }
             });
-            
-            // --- SCRIPT DE INSTALACIÓN PWA (Universal + iOS) ---
+
+            // ==========================================
+            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA)
+            // ==========================================
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
-            const installLink = document.getElementById('install-app-link');
-            
-            // Detección de iOS
-            const isIos = /iphone|ipad|ipod/.test( window.navigator.userAgent.toLowerCase() );
+            const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
 
-            // Si es iOS y NO está en modo app, mostrar botón de instrucciones
-            if (isIos && !isInStandaloneMode) {
-                if(installBtn) installBtn.style.display = 'inline-block';
-                if(installLink) installLink.style.setProperty('display', 'flex', 'important');
-                
-                // Al hacer clic en iOS, mostrar modal de ayuda
-                const showIosHelp = (e) => {
-                    e.preventDefault();
-                    document.getElementById('iosInstallModal').style.display = 'flex';
-                };
-                if(installBtn) installBtn.addEventListener('click', showIosHelp);
-                if(installLink) installLink.addEventListener('click', showIosHelp);
-            }
-
-            // Para Android y PC (Chrome/Edge) - Evento Estándar
+            // 1. Detección automática (Android / PC)
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                
-                if(installBtn) installBtn.style.display = 'inline-block';
-                if(installLink) installLink.style.setProperty('display', 'flex', 'important');
+                if(installBtn) installBtn.style.display = 'flex';
+                console.log("PWA: Evento beforeinstallprompt capturado.");
             });
 
-            const installAppAction = async () => {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                if(installBtn) installBtn.style.display = 'none';
-                if(installLink) installLink.style.display = 'none';
-            };
-
-            // Solo añadir el evento de instalación si NO es iOS (para no pisar el modal de ayuda)
-            if (!isIos) {
-                if(installBtn) installBtn.addEventListener('click', installAppAction);
-                if(installLink) installLink.addEventListener('click', installAppAction);
+            // 2. Detección forzada para iOS
+            if (isIos && !isInStandaloneMode && installBtn) {
+                installBtn.style.display = 'flex';
+                console.log("PWA: Dispositivo iOS detectado, mostrando botón.");
             }
-            
-            // Registro Service Worker
+
+            // 3. Manejador de Click Universal
+            if(installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        // Flujo Android / PC
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`PWA: Usuario respondió: ${outcome}`);
+                        deferredPrompt = null;
+                        if(outcome === 'accepted') installBtn.style.display = 'none';
+                    } else if (isIos) {
+                        // Flujo iOS (Instrucciones manuales)
+                        alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (cuadrado con flecha) en la barra inferior del navegador.\n2. Busca y selecciona la opción 'Agregar a Inicio'.");
+                    }
+                });
+            }
+
+            // ==========================================
+            // REGISTRO DE SERVICE WORKER
+            // ==========================================
             if ('serviceWorker' in navigator) {
-                 navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SW registrado', reg);
-                 }).catch(function(err) {
-                    console.log('SW error', err);
-                 });
+                navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registrado con éxito:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Fallo al registrar Service Worker:', error);
+                });
             }
 
             console.log("Base.html: initializeApp() complete.");
@@ -1300,9 +1233,8 @@
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Abrir PDF en modal interno con fallback
-                    openPdfModal(href);
-                    return;
+                    // Abrir PDF en una pestaña nueva para evitar problemas de CORS/X-Frame
+                    window.open(href, '_blank', 'noopener,noreferrer');
                 }
 
             }, true); // Use capture para interceptar antes que nadie
@@ -1341,43 +1273,12 @@
             modal.style.display = 'none';
             iframe.src = ''; 
         }
-        
-        // Funciones del Modal de PDF
-        function openPdfModal(url) {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
-            var downloadBtn = document.getElementById('pdfDownloadLink');
-            var fallbackBtn = document.getElementById('pdfFallbackLink');
-            
-            // Asignar fuente al object tag y botones
-            objectTag.data = url;
-            downloadBtn.href = url;
-            if(fallbackBtn) fallbackBtn.href = url;
-
-            // Mostrar modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll en el fondo
-        }
-
-        function closePdfModal() {
-            var modal = document.getElementById('pdfModal');
-            var objectTag = document.getElementById('pdfObject');
-            
-            modal.style.display = 'none';
-            objectTag.data = ''; // Limpiar para detener carga
-            document.body.style.overflow = ''; // Restaura scroll
-        }
 
         // Cerrar modal al hacer clic fuera del contenido
         window.addEventListener('click', function(event) {
-            var modalYt = document.getElementById('youtubeModal');
-            var modalPdf = document.getElementById('pdfModal');
-            
-            if (event.target == modalYt) {
+            var modal = document.getElementById('youtubeModal');
+            if (event.target == modal) {
                 closeYtModal();
-            }
-            if (event.target == modalPdf) {
-                closePdfModal();
             }
         });
     </script>
