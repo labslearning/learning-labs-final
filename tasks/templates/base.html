@@ -635,7 +635,7 @@
 
         /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
         #install-app-btn {
-            display: none; /* Se controla via JS */
+            display: none; /* Se controla via JS, pero empezará oculto para evitar parpadeos */
             border: 2px solid rgba(255,255,255,0.4);
             background: rgba(255,255,255,0.1);
             color: white;
@@ -1128,40 +1128,41 @@
             });
 
             // ==========================================
-            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA)
+            // LÓGICA DE INSTALACIÓN PWA MEJORADA
             // ==========================================
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
             const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+            // Detecta si la app YA está instalada o en modo "pantalla completa"
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-            // 1. Detección automática (Android / PC)
+            // 1. VISIBILIDAD POR DEFECTO (Si no está instalada, ¡muestra el botón!)
+            if (installBtn && !isStandalone) {
+                installBtn.style.display = 'flex'; // Fuerza visibilidad inicial
+            }
+
+            // 2. Captura del evento nativo (para Android/PC si está disponible)
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                if(installBtn) installBtn.style.display = 'flex';
-                console.log("PWA: Evento beforeinstallprompt capturado.");
+                console.log("PWA: Evento nativo capturado y listo.");
             });
 
-            // 2. Detección forzada para iOS
-            if (isIos && !isInStandaloneMode && installBtn) {
-                installBtn.style.display = 'flex';
-                console.log("PWA: Dispositivo iOS detectado, mostrando botón.");
-            }
-
-            // 3. Manejador de Click Universal
+            // 3. Manejador de Click INTELIGENTE
             if(installBtn) {
                 installBtn.addEventListener('click', async () => {
                     if (deferredPrompt) {
-                        // Flujo Android / PC
+                        // A) El navegador está listo (Android/PC perfecto)
                         deferredPrompt.prompt();
                         const { outcome } = await deferredPrompt.userChoice;
-                        console.log(`PWA: Usuario respondió: ${outcome}`);
                         deferredPrompt = null;
                         if(outcome === 'accepted') installBtn.style.display = 'none';
                     } else if (isIos) {
-                        // Flujo iOS (Instrucciones manuales)
-                        alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (cuadrado con flecha) en la barra inferior del navegador.\n2. Busca y selecciona la opción 'Agregar a Inicio'.");
+                        // B) Es iPhone/iPad
+                        alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (icono cuadrado con flecha) en la barra inferior.\n2. Busca y selecciona 'Agregar a Inicio'.");
+                    } else {
+                        // C) Es PC/Chrome pero el evento no disparó (o es primera visita)
+                        alert("Para instalar la aplicación:\n\nOpción A: Busca el icono de 'Instalar' (+) en la barra de direcciones del navegador (arriba a la derecha).\n\nOpción B: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación'.");
                     }
                 });
             }
@@ -1172,10 +1173,10 @@
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
                 .then(function(registration) {
-                    console.log('Service Worker registrado con éxito:', registration.scope);
+                    console.log('Service Worker registrado:', registration.scope);
                 })
                 .catch(function(error) {
-                    console.log('Fallo al registrar Service Worker:', error);
+                    console.log('Error SW:', error);
                 });
             }
 
