@@ -992,25 +992,27 @@
                 if (!target || !target.getAttribute('href')) return;
 
                 var href = target.getAttribute('href');
-                
-                // --- PROTECCIÓN 1: LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                var currentDomain = window.location.hostname;
+
+                // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                // Si es YouTube, NO abrimos el modal. Forzamos nueva pestaña automáticamente.
+                // Esto evita el Error 153 porque el video carga directamente en youtube.com
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    openYtModal(href);
+                    window.open(href, '_blank', 'noopener,noreferrer');
                     return; 
                 }
 
-                // --- PROTECCIÓN 2: LÓGICA DE ENLACES EXTERNOS (ANTI-ERROR 153) ---
+                // --- 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
                 // Verifica rigurosamente si el dominio destino es diferente al actual
                 try {
                     // Solo analizamos URLs absolutas (http/https)
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
-                        var currentHost = window.location.hostname;
                         
                         // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
-                        if (targetUrl.hostname !== currentHost) {
+                        if (targetUrl.hostname !== currentDomain) {
                             e.preventDefault();
                             e.stopPropagation();
                             // 'noopener,noreferrer' es buena práctica de seguridad
@@ -1029,6 +1031,8 @@
             }, true); // Use capture para interceptar antes que nadie
         });
 
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
+        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
         function openYtModal(url) {
             var videoId = '';
             var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
