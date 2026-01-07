@@ -4,7 +4,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Learning Labs - Plataforma Educativa</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
 
     <style>
         :root {
-            /* Sistema de diseño educativo */
+            /* Sistema de diseño educativo - Variables Globales */
             --edu-primary: #4361ee;
             --edu-secondary: #3f37c9;
             --edu-accent: #4cc9f0;
@@ -32,13 +32,6 @@
             --edu-border-radius: 12px;
             --edu-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --edu-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            
-            /* Áreas seguras para iPhone X en adelante */
-            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
-        }
-
-        html {
-            scroll-behavior: smooth;
         }
 
         body {
@@ -50,14 +43,20 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden; /* Evita scroll lateral */
-            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden; /* Previene scroll horizontal indeseado en móviles */
         }
+
+        /* Tipografía Responsiva Profesional */
+        h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
+        h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+        h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+        h4, h5, h6 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
             color: var(--edu-dark);
+            margin-bottom: 1rem;
         }
 
         /* Estilos personalizados para SimpleMDE */
@@ -72,7 +71,7 @@
             min-height: 150px;
         }
 
-        /* ========== BARRA DE NAVEGACIÓN MEJORADA (PROFESIONAL) ========== */
+        /* ========== BARRA DE NAVEGACIÓN MEJORADA ========== */
         .navbar {
             background: linear-gradient(120deg, var(--edu-primary), var(--edu-secondary));
             padding: 0.6rem 2rem;
@@ -128,21 +127,18 @@
             opacity: 0.9;
         }
 
-        /* Hover en escritorio */
-        @media (min-width: 992px) {
-            .nav-link:hover, .nav-link:focus, .nav-link.show {
-                color: white !important;
-                background-color: rgba(255, 255, 255, 0.15);
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
+        .nav-link:hover, .nav-link:focus, .nav-link.show {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
 
-            .nav-link.active {
-                background-color: rgba(255, 255, 255, 0.25) !important;
-                font-weight: 600;
-                color: white !important;
-                box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
-            }
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            font-weight: 600;
+            color: white !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
         }
 
         /* Dropdowns más estéticos */
@@ -180,7 +176,7 @@
             margin-right: 0.5rem;
         }
 
-        /* Badges de notificación (Escritorio) */
+        /* Badges de notificación mejorados */
         .badge-notification {
             position: absolute;
             top: 2px;
@@ -217,7 +213,6 @@
             border: 2px solid rgba(255,255,255,0.9);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: var(--edu-transition);
-            border-radius: 50%;
         }
         
         .nav-avatar-placeholder {
@@ -231,7 +226,6 @@
             font-weight: bold;
             font-size: 1rem;
             border: 2px solid rgba(255,255,255,0.5);
-            border-radius: 50%;
         }
 
         .nav-link:hover .nav-avatar-img {
@@ -239,75 +233,74 @@
             transform: scale(1.05);
         }
         
-        /* ============ ESTILOS MÓVILES (TIPO APP) ============ */
+        /* ============ ESTILOS MÓVILES PROFESIONALES (0 - 991px) ============ */
         @media (max-width: 991.98px) {
-            .navbar { padding: 0.7rem 1rem; }
-            .navbar-brand { font-size: 1.4rem; }
-
-            .navbar-collapse {
-                background-color: white; /* Fondo blanco */
-                margin-top: 1rem;
-                border-radius: var(--edu-border-radius);
-                padding: 0.5rem;
-                box-shadow: 0 100px 80px rgba(0,0,0,0.1); /* Sombra profunda */
-                border: 1px solid rgba(0,0,0,0.05);
-                max-height: 85vh;
-                overflow-y: auto;
-            }
-
-            .nav-item { width: 100%; margin: 0; }
-
-            .nav-link {
-                padding: 1rem 1rem !important; /* Area táctil grande */
-                margin: 0.2rem 0;
-                justify-content: flex-start;
-                color: #333 !important; /* Texto oscuro */
-                font-weight: 600;
-                border-radius: 10px;
-                border-bottom: 1px solid #f4f4f4;
+            .navbar {
+                padding: 0.7rem 1rem;
             }
             
-            .nav-link:active {
-                background-color: #f0f2f5; /* Feedback al tocar */
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+            
+            /* El menú colapsado se ve como una tarjeta flotante y limpia */
+            .navbar-collapse {
+                background-color: white; /* Fondo blanco tipo App */
+                margin-top: 1rem;
+                border-radius: var(--edu-border-radius);
+                padding: 1rem;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+                border: 1px solid rgba(0,0,0,0.05);
+            }
+
+            /* Estilo "App" para los enlaces en móvil */
+            .nav-link {
+                padding: 0.8rem 1rem !important;
+                margin: 0.3rem 0;
+                justify-content: flex-start;
+                color: var(--edu-text-primary) !important; /* Texto oscuro para contraste */
+                font-weight: 500;
+                border-radius: 10px;
+            }
+
+            .nav-link:hover, .nav-link.active {
+                background-color: var(--edu-light) !important;
+                color: var(--edu-primary) !important;
+                box-shadow: none;
+                transform: translateX(5px);
             }
 
             .nav-link i {
                 color: var(--edu-primary);
-                width: 32px;
+                width: 25px;
                 text-align: center;
-                font-size: 1.2rem;
-                margin-right: 10px;
-            }
-
-            /* Badge en Móvil (A la derecha, estilo iOS) */
-            .badge-notification {
-                position: static !important;
-                transform: none !important;
-                margin-left: auto !important; /* Empuja a la derecha */
-                border: none;
-                min-width: 24px;
-                height: 24px;
-                font-size: 0.8rem;
-                background-color: var(--edu-danger);
-                color: white;
-                border-radius: 12px;
+                margin-right: 8px;
             }
             
-            /* Dropdowns limpios en móvil */
+            /* Ajuste de Badge en Móvil (ya no flota, se pone al lado) */
+            .badge-notification {
+                position: static;
+                transform: none;
+                margin-left: auto; /* Empuja a la derecha */
+                border: none;
+                min-width: 22px;
+                height: 22px;
+                font-size: 0.75rem;
+            }
+            
+            /* Ajuste de Dropdowns en Móvil */
             .dropdown-menu {
                 box-shadow: none;
                 border: none;
-                padding-left: 1rem;
+                padding-left: 1.5rem; /* Jerarquía visual */
                 background-color: transparent;
                 margin-top: 0 !important;
-                border-left: 3px solid var(--edu-primary);
+                border-left: 2px solid #eee;
                 border-radius: 0;
             }
             
             .dropdown-item {
-                padding: 0.8rem 1rem;
-                color: #555;
-                font-size: 1rem;
+                padding: 0.7rem 1rem;
             }
         }
 
@@ -376,39 +369,93 @@
             padding: 1.5rem;
         }
         
+        /* ========== ARMONÍA DASHBOARD (TABLAS Y CONTENEDORES) ========== */
+        /* Estilos para que las tablas no rompan el diseño en móvil */
+        table, .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: transparent;
+        }
+        
+        /* Contenedor responsivo automático para cualquier tabla dentro del contenido */
+        .main-content-wrapper table {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #eee;
+            background: white;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Estilos de tabla moderna */
+        .main-content-wrapper table thead th {
+            background-color: #f8f9fa;
+            color: var(--edu-dark);
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            padding: 1rem;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .main-content-wrapper table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f1f1;
+            white-space: nowrap; /* Evita que el texto se rompa feo */
+        }
+
+        /* Contenedor Principal Ajustable (El "Cuerpo" de la página) */
+        .main-content-wrapper {
+            width: 100%;
+            padding-right: 1.5rem;
+            padding-left: 1.5rem;
+            margin-right: auto;
+            margin-left: auto;
+            padding-bottom: 4rem;
+        }
+        
+        @media (min-width: 1400px) {
+            .main-content-wrapper { max-width: 1320px; }
+        }
+        
         @media (max-width: 768px) {
+            .main-content-wrapper { 
+                padding-right: 1rem; 
+                padding-left: 1rem; 
+                padding-top: 1rem;
+            }
             .edu-card-body { padding: 1rem; }
         }
         
-        /* Contenedor Principal */
-        .main-content-wrapper {
-            width: 100%; padding: 1.5rem; margin: 0 auto; padding-bottom: 6rem;
-        }
-        @media (min-width: 1400px) { .main-content-wrapper { max-width: 1320px; } }
-        @media (max-width: 768px) {
-            .main-content-wrapper { padding: 1rem 1rem; }
-        }
-        
-        /* Sugerencia de Rotación */
+        /* ========== SUGERENCIA DE ROTACIÓN (SOLO MÓVIL VERTICAL) ========== */
         #rotate-hint {
-            display: none; background: linear-gradient(to right, #fff3cd, #fff8e1);
-            color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
-            border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
-            align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: none; /* Oculto por defecto */
+            background: linear-gradient(to right, #fff3cd, #fff8e1);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideDown 0.5s ease;
         }
+        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
+        
         @media (max-width: 576px) and (orientation: portrait) {
+            /* Se activará vía JS si hay tablas */
             .has-tables #rotate-hint { display: flex; }
         }
         
-        /* Tablas Responsivas */
-        .table-responsive {
-            display: block; width: 100%; overflow-x: auto;
-            -webkit-overflow-scrolling: touch; border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 1rem;
-            border: 1px solid #eee; background: white;
-        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
+        /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE / PDF) ========== */
         .yt-modal {
             display: none; /* Oculto por defecto */
             position: fixed; 
@@ -418,21 +465,22 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.8); /* Fondo oscuro transparente */
+            background-color: rgba(0,0,0,0.85); /* Fondo oscuro transparente */
             backdrop-filter: blur(5px); /* Efecto borroso bonito */
         }
 
         .yt-modal-content {
             position: relative;
-            margin: 5% auto;
+            margin: 3% auto;
             padding: 0;
-            width: 80%;
-            max-width: 800px;
-            background-color: #000;
+            width: 90%;
+            max-width: 1000px;
+            background-color: #222;
             border-radius: 10px;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
+            height: 85vh; /* Altura fija para PDFs */
         }
         
         /* Ajuste Modal en Celular */
@@ -463,15 +511,16 @@
         
         .yt-modal-footer {
             background-color: #111;
-            padding: 10px;
-            text-align: center;
+            padding: 12px;
+            text-align: right;
             border-radius: 0 0 10px 10px;
+            border-top: 1px solid #333;
         }
 
         .close-yt {
             color: white;
             position: absolute;
-            top: -30px;
+            top: -35px;
             right: 0;
             font-size: 28px;
             font-weight: bold;
@@ -633,6 +682,17 @@
             70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
+
+        /* ========== RESPONSIVIDAD ADICIONAL ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.75rem 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -640,11 +700,13 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-atom"></i>
-                <span>Learning Labs</span>
-            </a>
+                <span class="d-none d-sm-inline">Learning Labs</span>
+                <span class="d-inline d-sm-none">LLabs</span> </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
@@ -655,7 +717,6 @@
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
                             <span class="d-lg-none ms-2">Mensajes</span>
-                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -667,7 +728,6 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
-                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -810,8 +870,9 @@
             </div>
         </div>
     </nav>
-    
+
     <div class="main-content-wrapper">
+        
         <div id="rotate-hint" class="container">
             <div class="d-flex align-items-center justify-content-center">
                 <i class="fas fa-mobile-alt fa-rotate-90 me-2"></i>
@@ -822,20 +883,6 @@
         {# El contenido específico de cada página se inserta aquí #}
         {% block content %}
         {% endblock %}
-    </div>
-    
-    <div id="youtubeModal" class="yt-modal">
-        <div class="yt-modal-content">
-            <span class="close-yt" onclick="closeYtModal()">&times; Cerrar</span>
-            <div class="video-container">
-                <iframe id="ytPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            </div>
-            <div class="yt-modal-footer">
-                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
-                    <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
-                </a>
-            </div>
-        </div>
     </div>
     
     <div id="pdfModal" class="yt-modal">
@@ -852,7 +899,7 @@
                     </div>
                 </object>
             </div>
-            <div class="yt-modal-footer d-flex justify-content-between align-items-center" style="color:white;">
+            <div class="yt-modal-footer d-flex justify-content-between align-items-center">
                 <span class="text-white-50 small">Visor de Documentos</span>
                 <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-outline-light">
                     <i class="fas fa-download"></i> Guardar
@@ -887,7 +934,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video
+        // Elementos del DOM del Modal de Video Local
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -900,7 +947,7 @@
             if (videoModalCloseHeaderEl) videoModalCloseHeaderEl.addEventListener('click', closeVideoModal);
             if (videoModalCloseFooterBtnEl) videoModalCloseFooterBtnEl.addEventListener('click', closeVideoModal);
 
-            // Escuchar tecla Escape para cerrar modal
+            // Escuchar tecla Escape para cerrar modal (Videos o PDFs)
             document.addEventListener('keydown', handleGlobalKeydown);
 
              // --- ✅ SCRIPT DE NOTIFICACIONES ---
@@ -962,7 +1009,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video ---
+        // --- Funciones del Modal de Video Local ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -1058,10 +1105,12 @@
         function handleGlobalKeydown(event) {
             if (event.key === "Escape" || event.key === "Esc") {
                  console.log("Escape key pressed.");
+                
+                // Cerrar modal de video local si está abierto
                 if (videoModalEl && videoModalEl.classList.contains('active')) {
-                    console.log("Closing video modal via Escape key.");
                     closeVideoModal();
                 }
+                // Cerrar modal de PDF si está abierto
                 if (document.getElementById('pdfModal').style.display === 'block') {
                     closePdfModal();
                 }
@@ -1138,7 +1187,9 @@
                 var href = target.getAttribute('href');
                 var currentDomain = window.location.hostname;
 
-                // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                // --- 1. LÓGICA DE YOUTUBE (ANTI-ERROR 153) ---
+                // Si es YouTube, NO abrimos modal. Abrimos nueva pestaña INMEDIATAMENTE.
+                // Esto garantiza que el usuario nunca vea el error dentro de la plataforma.
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1147,6 +1198,7 @@
                 }
 
                 // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
+                // Si el archivo termina en .pdf, abrir modal interno
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1154,7 +1206,7 @@
                     return;
                 }
 
-                // --- 3. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // --- 3. LÓGICA DE OTROS ENLACES EXTERNOS ---
                 try {
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
@@ -1162,47 +1214,17 @@
                             e.preventDefault();
                             e.stopPropagation();
                             window.open(href, '_blank', 'noopener,noreferrer');
-                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
                         }
                     }
                 } catch (err) {
-                    if (href.indexOf('http') === 0) {
+                    // Fallback
+                    if (href.indexOf('http') === 0 && !href.includes(currentDomain)) {
                          window.open(href, '_blank');
                     }
                 }
 
             }, true); // Use capture
         });
-
-        function openYtModal(url) {
-            var videoId = '';
-            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            var match = url.match(regExp);
-
-            if (match && match[2].length == 11) {
-                videoId = match[2];
-                var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
-                
-                document.getElementById('ytPlayer').src = embedUrl;
-                
-                var externalBtn = document.getElementById('ytExternalLink');
-                if(externalBtn) {
-                    externalBtn.href = url;
-                }
-
-                document.getElementById('youtubeModal').style.display = 'block';
-            } else {
-                window.open(url, '_blank');
-            }
-        }
-
-        function closeYtModal() {
-            var modal = document.getElementById('youtubeModal');
-            var iframe = document.getElementById('ytPlayer');
-            
-            modal.style.display = 'none';
-            iframe.src = ''; 
-        }
 
         // Funciones del Modal de PDF
         function openPdfModal(url) {
@@ -1232,12 +1254,8 @@
 
         // Cerrar modal al hacer clic fuera
         window.addEventListener('click', function(event) {
-            var modal = document.getElementById('youtubeModal');
+            var modal = document.getElementById('pdfModal');
             if (event.target == modal) {
-                closeYtModal();
-            }
-            var pdfModal = document.getElementById('pdfModal');
-            if (event.target == pdfModal) {
                 closePdfModal();
             }
         });
@@ -1254,7 +1272,7 @@
             <button onclick="startNewChat()" class="btn-control" title="Nueva Clase / Limpiar" data-bs-toggle="tooltip">
                 <i class="fas fa-eraser"></i>
             </button>
-            <button onclick="toggleExpand()" class="btn-control d-none d-md-inline" title="Expandir/Contraer">
+            <button onclick="toggleExpand()" class="btn-control" title="Expandir/Contraer">
                 <i class="fas fa-expand" id="icon-expand"></i>
                 <i class="fas fa-compress" id="icon-compress" style="display: none;"></i>
             </button>
@@ -1303,9 +1321,9 @@
         bottom: 30px; 
         right: 30px; 
         z-index: 10000;
+        /* Cursor de movimiento para indicar que se puede arrastrar */
         cursor: grab; 
-        touch-action: none;
-        padding-bottom: var(--safe-area-bottom); /* Soporte iPhone */
+        touch-action: none; /* Mejora para móviles */
     }
     
     .mentor-trigger:active {
@@ -1316,12 +1334,16 @@
         width: 60px; height: 60px; border-radius: 50%;
         background: linear-gradient(135deg, #0d6efd, #0043a8);
         border: 2px solid rgba(255,255,255,0.2); color: white; font-size: 24px;
+        /* Quitamos cursor pointer aquí para que lo maneje el wrapper */
         cursor: inherit; 
-        transition: transform 0.1s;
+        transition: transform 0.1s; /* Transición más rápida para el drag */
         display: flex; align-items: center; justify-content: center;
-        pointer-events: auto;
+        pointer-events: none; /* Permite que el click pase al div padre si es necesario, o lo manejamos en JS */
     }
     
+    /* Reactivamos eventos de puntero solo para el botón interno */
+    .btn-mentor-main { pointer-events: auto; }
+
     .btn-mentor-main:hover { transform: scale(1.05); }
 
     .online-badge {
@@ -1334,29 +1356,9 @@
         position: fixed; bottom: 100px; right: 30px; width: 380px; height: 500px;
         background: #fff; border-radius: 16px; z-index: 10001; display: none;
         flex-direction: column; border: 1px solid rgba(0,0,0,0.1);
-        transition: opacity 0.3s, transform 0.3s;
+        transition: opacity 0.3s, transform 0.3s; /* Quitamos transition de bottom/right para evitar conflictos */
         transform-origin: bottom right; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
-    
-    /* --- ESTILOS MÓVIL FULL SCREEN --- */
-    @media (max-width: 768px) {
-        .mentor-window {
-            width: 100% !important;
-            height: 100% !important;
-            bottom: 0 !important;
-            right: 0 !important;
-            border-radius: 0;
-            top: 0;
-            z-index: 20000; /* Superpuesto a todo */
-        }
-        .mentor-header {
-            padding-top: max(15px, env(safe-area-inset-top)); /* Espacio Notch */
-        }
-        .mentor-footer {
-            padding-bottom: max(12px, var(--safe-area-bottom)); /* Espacio Home Bar */
-        }
-    }
-
     .mentor-window.expanded {
         width: 90vw; height: 85vh; bottom: 50% !important; right: 50% !important;
         transform: translate(50%, 50%) !important; border-radius: 12px;
@@ -1515,10 +1517,8 @@
                 </div>
             </div>
         `;
-        // En móvil evitamos focus automático para no abrir teclado inesperadamente
-        if(window.innerWidth > 768) {
-            widgetInput.focus();
-        }
+        widgetInput.value = '';
+        widgetInput.focus();
     }
 
     // 2. TOGGLES DE VENTANA
@@ -1529,16 +1529,11 @@
             widgetWindow.style.display = 'flex';
             iconClosed.style.display = 'none';
             iconOpen.style.display = 'block';
-            
-            // Bloquear scroll del body en móvil cuando el chat está abierto
-            if(window.innerWidth <= 768) {
-                document.body.style.overflow = 'hidden';
-            }
+            setTimeout(() => widgetInput.focus(), 100);
         } else {
             widgetWindow.style.display = 'none';
             iconClosed.style.display = 'block';
             iconOpen.style.display = 'none';
-            document.body.style.overflow = '';
         }
     }
 
@@ -1559,7 +1554,6 @@
         if (widgetWindow.classList.contains('expanded')) toggleExpand();
         widgetWindow.style.display = 'none';
         document.getElementById('mentor-trigger-btn').style.display = 'none';
-        document.body.style.overflow = '';
     }
 
     // 3. ENVÍO DE MENSAJES
