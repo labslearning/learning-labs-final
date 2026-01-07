@@ -4,7 +4,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Learning Labs - Plataforma Educativa</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -32,6 +32,13 @@
             --edu-border-radius: 12px;
             --edu-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --edu-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            
+            /* Áreas seguras para móviles modernos (iPhone X+) */
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -43,6 +50,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden; /* Evita scroll lateral */
+            -webkit-tap-highlight-color: transparent;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -119,18 +128,21 @@
             opacity: 0.9;
         }
 
-        .nav-link:hover, .nav-link:focus, .nav-link.show {
-            color: white !important;
-            background-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+        /* Hover en escritorio */
+        @media (min-width: 992px) {
+            .nav-link:hover, .nav-link:focus, .nav-link.show {
+                color: white !important;
+                background-color: rgba(255, 255, 255, 0.15);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
 
-        .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.25) !important;
-            font-weight: 600;
-            color: white !important;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+            .nav-link.active {
+                background-color: rgba(255, 255, 255, 0.25) !important;
+                font-weight: 600;
+                color: white !important;
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+            }
         }
 
         /* Dropdowns más estéticos */
@@ -168,7 +180,7 @@
             margin-right: 0.5rem;
         }
 
-        /* Badges de notificación mejorados */
+        /* Badges de notificación (Escritorio) */
         .badge-notification {
             position: absolute;
             top: 2px;
@@ -205,6 +217,7 @@
             border: 2px solid rgba(255,255,255,0.9);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: var(--edu-transition);
+            border-radius: 50%;
         }
         
         .nav-avatar-placeholder {
@@ -218,6 +231,7 @@
             font-weight: bold;
             font-size: 1rem;
             border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
         }
 
         .nav-link:hover .nav-avatar-img {
@@ -225,19 +239,75 @@
             transform: scale(1.05);
         }
         
+        /* ============ ESTILOS MÓVILES (TIPO APP) ============ */
         @media (max-width: 991.98px) {
+            .navbar { padding: 0.7rem 1rem; }
+            .navbar-brand { font-size: 1.4rem; }
+
             .navbar-collapse {
-                background-color: var(--edu-secondary);
+                background-color: white; /* Fondo blanco */
                 margin-top: 1rem;
                 border-radius: var(--edu-border-radius);
-                padding: 1rem;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                padding: 0.5rem;
+                box-shadow: 0 100px 80px rgba(0,0,0,0.1); /* Sombra profunda */
+                border: 1px solid rgba(0,0,0,0.05);
+                max-height: 85vh;
+                overflow-y: auto;
             }
 
+            .nav-item { width: 100%; margin: 0; }
+
             .nav-link {
-                padding: 0.8rem 1rem !important;
-                margin: 0.25rem 0;
+                padding: 1rem 1rem !important; /* Area táctil grande */
+                margin: 0.2rem 0;
                 justify-content: flex-start;
+                color: #333 !important; /* Texto oscuro */
+                font-weight: 600;
+                border-radius: 10px;
+                border-bottom: 1px solid #f4f4f4;
+            }
+            
+            .nav-link:active {
+                background-color: #f0f2f5; /* Feedback al tocar */
+            }
+
+            .nav-link i {
+                color: var(--edu-primary);
+                width: 32px;
+                text-align: center;
+                font-size: 1.2rem;
+                margin-right: 10px;
+            }
+
+            /* Badge en Móvil (A la derecha, estilo iOS) */
+            .badge-notification {
+                position: static !important;
+                transform: none !important;
+                margin-left: auto !important; /* Empuja a la derecha */
+                border: none;
+                min-width: 24px;
+                height: 24px;
+                font-size: 0.8rem;
+                background-color: var(--edu-danger);
+                color: white;
+                border-radius: 12px;
+            }
+            
+            /* Dropdowns limpios en móvil */
+            .dropdown-menu {
+                box-shadow: none;
+                border: none;
+                padding-left: 1rem;
+                background-color: transparent;
+                margin-top: 0 !important;
+                border-left: 3px solid var(--edu-primary);
+                border-radius: 0;
+            }
+            
+            .dropdown-item {
+                padding: 0.8rem 1rem;
+                color: #555;
+                font-size: 1rem;
             }
         }
 
@@ -304,6 +374,38 @@
 
         .edu-card-body {
             padding: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .edu-card-body { padding: 1rem; }
+        }
+        
+        /* Contenedor Principal */
+        .main-content-wrapper {
+            width: 100%; padding: 1.5rem; margin: 0 auto; padding-bottom: 6rem;
+        }
+        @media (min-width: 1400px) { .main-content-wrapper { max-width: 1320px; } }
+        @media (max-width: 768px) {
+            .main-content-wrapper { padding: 1rem 1rem; }
+        }
+        
+        /* Sugerencia de Rotación */
+        #rotate-hint {
+            display: none; background: linear-gradient(to right, #fff3cd, #fff8e1);
+            color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
+            border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
+            align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        @media (max-width: 576px) and (orientation: portrait) {
+            .has-tables #rotate-hint { display: flex; }
+        }
+        
+        /* Tablas Responsivas */
+        .table-responsive {
+            display: block; width: 100%; overflow-x: auto;
+            -webkit-overflow-scrolling: touch; border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 1rem;
+            border: 1px solid #eee; background: white;
         }
 
         /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
@@ -548,12 +650,14 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
-                    <a href="/" class="nav-link"><i class="fas fa-home"></i> Inicio</a>
+                    <a href="/" class="nav-link"><i class="fas fa-home"></i> <span>Inicio</span></a>
                     
                     {% if user.is_authenticated %}
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
+                            <span class="d-lg-none ms-2">Mensajes</span>
+                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -564,6 +668,8 @@
                         <li class="nav-item dropdown mx-lg-1">
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
+                                <span class="d-lg-none ms-2">Notificaciones</span>
+                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -605,13 +711,13 @@
                             </ul>
                         </li>
 
-                        <a href="{% url 'social_feed' %}" class="nav-link"><i class="fas fa-users"></i> Comunidad</a>
+                        <a href="{% url 'social_feed' %}" class="nav-link"><i class="fas fa-users"></i> <span>Comunidad</span></a>
                         
-                        <a href="{% url 'lista_grupos' %}" class="nav-link"><i class="fas fa-layer-group"></i> Grupos</a>
+                        <a href="{% url 'lista_grupos' %}" class="nav-link"><i class="fas fa-layer-group"></i> <span>Grupos</span></a>
 
                         {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'PSICOLOGO' or user.perfil.rol == 'COORD_ACADEMICO' or user.perfil.rol == 'COORD_CONVIVENCIA' %}
                             <a href="{% url 'dashboard_bienestar' %}" class="nav-link">
-                                <i class="fas fa-chart-line"></i> Bienestar
+                                <i class="fas fa-chart-line"></i> <span>Bienestar</span>
                             </a>
                         {% endif %}
                         
@@ -619,13 +725,13 @@
                     
                             {% if user.perfil.rol == 'DOCENTE' %}
                             <a href="{% url 'dashboard_docente' %}" class="nav-link">
-                                <i class="fas fa-clipboard-list"></i> Notas
+                                <i class="fas fa-clipboard-list"></i> <span>Notas</span>
                             </a>
                             
                             {% elif user.perfil.rol == 'ESTUDIANTE' or user.perfil.rol == 'ACUDIENTE' %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-book-reader"></i> Mis Cursos
+                                    <i class="fas fa-book-reader"></i> <span>Mis Cursos</span>
                                 </a>
                                 <ul class="dropdown-menu shadow-sm">
                                     <li><a class="dropdown-item" href="/english"><i class="fas fa-language"></i> Inglés</a></li>
@@ -708,8 +814,15 @@
     </nav>
 
     {# El contenido específico de cada página se inserta aquí #}
-    {% block content %}
-    {% endblock %}
+    <div class="main-content-wrapper">
+        <div id="rotate-hint" class="container">
+            <div class="d-flex align-items-center justify-content-center">
+                <i class="fas fa-mobile-alt fa-rotate-90 me-2"></i>
+                <span>Gira tu dispositivo para ver mejor las tablas de datos.</span>
+            </div>
+        </div>
+        {% block content %}{% endblock %}
+    </div>
     
     <div id="youtubeModal" class="yt-modal">
         <div class="yt-modal-content">
@@ -771,6 +884,11 @@
              const notifToggle = document.getElementById('notification-dropdown-toggle');
              if(notifToggle) {
                  notifToggle.addEventListener('click', resetNotificationCounter);
+             }
+             
+             // --- DETECCIÓN DE TABLAS PARA SUGERENCIA DE ROTACIÓN ---
+             if(document.querySelector('table')) {
+                 document.body.classList.add('has-tables');
              }
              
              console.log("Base.html: Event listeners setup complete.");
@@ -1026,6 +1144,14 @@
                     if (href.indexOf('http') === 0) {
                          window.open(href, '_blank');
                     }
+                }
+
+                // --- 3. LÓGICA PDF ---
+                if (href.toLowerCase().endsWith('.pdf')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Abrir PDF en una pestaña nueva para evitar problemas de CORS/X-Frame
+                    window.open(href, '_blank', 'noopener,noreferrer');
                 }
 
             }, true); // Use capture para interceptar antes que nadie
