@@ -16,7 +16,7 @@
 
     <style>
         :root {
-            /* Sistema de diseño educativo */
+            /* Sistema de diseño educativo - Variables Globales */
             --edu-primary: #4361ee;
             --edu-secondary: #3f37c9;
             --edu-accent: #4cc9f0;
@@ -43,17 +43,20 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden; /* Evita scroll lateral no deseado en móviles */
+            overflow-x: hidden; /* Previene scroll horizontal indeseado en móviles */
         }
 
-        /* Tipografía Fluida (Se ajusta sola) */
+        /* Tipografía Responsiva Profesional */
         h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
         h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
         h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
-        h4, h5, h6 {
+        h4, h5, h6 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
+
+        h1, h2, h3, h4, h5, h6 {
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
             color: var(--edu-dark);
+            margin-bottom: 1rem;
         }
 
         /* Estilos personalizados para SimpleMDE */
@@ -236,12 +239,16 @@
                 padding: 0.7rem 1rem;
             }
             
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+            
             .navbar-collapse {
-                background-color: white; /* Fondo limpio tipo App */
+                background-color: white; /* Fondo blanco tipo App */
                 margin-top: 1rem;
                 border-radius: var(--edu-border-radius);
                 padding: 1rem;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
                 border: 1px solid rgba(0,0,0,0.05);
             }
 
@@ -250,17 +257,17 @@
                 margin: 0.3rem 0;
                 justify-content: flex-start;
                 color: var(--edu-text-primary) !important; /* Texto oscuro para contraste */
-                font-weight: 600;
+                font-weight: 500;
                 border-radius: 10px;
             }
-            
+
             .nav-link:hover, .nav-link.active {
                 background-color: var(--edu-light) !important;
                 color: var(--edu-primary) !important;
                 box-shadow: none;
                 transform: translateX(5px);
             }
-            
+
             .nav-link i {
                 color: var(--edu-primary);
                 width: 25px;
@@ -268,7 +275,7 @@
                 margin-right: 8px;
             }
             
-            /* Ajuste de Badge en Móvil (ya no flota, se pone al lado) */
+            /* Ajuste de Badge en Móvil */
             .badge-notification {
                 position: static;
                 transform: none;
@@ -283,11 +290,15 @@
             .dropdown-menu {
                 box-shadow: none;
                 border: none;
-                padding-left: 1.5rem; /* Indentación jerárquica */
+                padding-left: 1.5rem; /* Jerarquía visual */
                 background-color: transparent;
                 margin-top: 0 !important;
                 border-left: 2px solid #eee;
                 border-radius: 0;
+            }
+            
+            .dropdown-item {
+                padding: 0.7rem 1rem;
             }
         }
 
@@ -355,38 +366,42 @@
         .edu-card-body {
             padding: 1.5rem;
         }
-
+        
         /* ========== ARMONÍA DASHBOARD (TABLAS Y CONTENEDORES) ========== */
-        /* Estilos para que las tablas de notas se vean bien en móvil */
-        .table-responsive-harmony {
+        /* Estilos para que las tablas no rompan el diseño en móvil */
+        .table-responsive {
             display: block;
             width: 100%;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            -webkit-overflow-scrolling: touch;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             margin-bottom: 1rem;
             border: 1px solid #eee;
+            background: white;
         }
         
         table.table {
             margin-bottom: 0;
-            white-space: nowrap; /* Evita que el texto se rompa feo en celdas pequeñas */
+            white-space: nowrap; /* Evita saltos de línea feos */
         }
-
+        
         table.table thead th {
-            background-color: #f1f3f5;
+            background-color: #f8f9fa;
             color: var(--edu-dark);
             font-weight: 600;
             border-bottom: 2px solid #dee2e6;
             padding: 1rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
         }
 
         table.table tbody td {
             padding: 1rem;
             vertical-align: middle;
+            border-bottom: 1px solid #f1f1f1;
         }
-        
+
         /* Contenedor Principal Ajustable (El "Cuerpo" de la página) */
         .main-content-wrapper {
             width: 100%;
@@ -394,7 +409,7 @@
             padding-left: 1.5rem;
             margin-right: auto;
             margin-left: auto;
-            padding-bottom: 4rem; /* Espacio para el widget mentor */
+            padding-bottom: 4rem;
         }
         
         @media (min-width: 1400px) {
@@ -409,27 +424,29 @@
             }
             .edu-card-body { padding: 1rem; }
         }
-
+        
         /* ========== SUGERENCIA DE ROTACIÓN (SOLO MÓVIL VERTICAL) ========== */
         #rotate-hint {
-            display: none;
-            background: #fff3cd;
+            display: none; /* Oculto por defecto */
+            background: linear-gradient(to right, #fff3cd, #fff8e1);
             color: #856404;
-            border: 1px solid #ffeeba;
-            padding: 0.75rem;
+            border-left: 4px solid #ffc107;
+            padding: 0.8rem 1rem;
             border-radius: 8px;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideDown 0.5s ease;
         }
-        #rotate-hint i { margin-right: 0.5rem; }
+        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
         
         @media (max-width: 576px) and (orientation: portrait) {
-            /* Solo mostrar si hay tablas en la página */
-            .has-tables #rotate-hint { display: block; }
+            /* Se activará vía JS si hay tablas */
+            .has-tables #rotate-hint { display: flex; }
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE / PDF) ========== */
         .yt-modal {
@@ -658,13 +675,6 @@
             70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
-
-        /* ========== RESPONSIVIDAD ADICIONAL ========== */
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.4rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -818,7 +828,7 @@
                                         {{ user.username|slice:":1"|upper }}
                                     </div>
                                 {% endif %}
-                                <span class="d-lg-none ms-2 fw-bold text-dark">{{ user.username }}</span>
+                                <span class="d-lg-none ms-2">{{ user.username }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="navbarDropdownProfile">
                                 <li class="text-center py-2 bg-light rounded-top">
@@ -846,8 +856,10 @@
     <div class="main-content-wrapper">
         
         <div id="rotate-hint" class="container">
-            <i class="fas fa-mobile-alt fa-rotate-90"></i>
-            <span>Para una mejor experiencia con las tablas, gira tu dispositivo.</span>
+            <div class="d-flex align-items-center justify-content-center">
+                <i class="fas fa-mobile-alt fa-rotate-90 me-2"></i>
+                <span>Gira tu dispositivo para ver mejor las tablas de datos.</span>
+            </div>
         </div>
 
         {# El contenido específico de cada página se inserta aquí #}
@@ -926,11 +938,11 @@
                  notifToggle.addEventListener('click', resetNotificationCounter);
              }
              
-             // Detección automática de tablas para mostrar sugerencia de rotación
+             // --- DETECCIÓN DE TABLAS PARA SUGERENCIA DE ROTACIÓN ---
              if(document.querySelector('table')) {
                  document.body.classList.add('has-tables');
              }
-
+             
              console.log("Base.html: Event listeners setup complete.");
         }
         
