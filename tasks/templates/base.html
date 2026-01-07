@@ -635,7 +635,7 @@
 
         /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
         #install-app-btn {
-            display: none; /* Se controla via JS para evitar parpadeos */
+            display: none; /* Se controla via JS, pero empezará oculto para evitar parpadeos */
             border: 2px solid rgba(255,255,255,0.4);
             background: rgba(255,255,255,0.1);
             color: white;
@@ -670,7 +670,6 @@
             </a>
 
             <div class="d-flex align-items-center ms-auto">
-                
                 {% if user.is_authenticated %}
                     <button id="install-app-btn" class="btn btn-sm rounded-circle me-3" style="width: 40px; height: 40px; align-items: center; justify-content: center; padding: 0;" title="Instalar Aplicación">
                         <div style="position: relative; width: 100%; height: 100%;">
@@ -680,7 +679,7 @@
                     </button>
                 {% endif %}
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
                 </button>
             </div>
