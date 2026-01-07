@@ -1,14 +1,17 @@
-# djangocrud/urls.py (VERSIÓN CORREGIDA Y LIMPIA)
+# djangocrud/urls.py (VERSIÓN FINAL: TU CÓDIGO + ARREGLO RAILWAY)
 
 from django.contrib import admin
-from django.urls import path, include
+# AGREGAMOS 're_path' AQUÍ ABAJO PARA PODER USAR LA LLAVE MAESTRA
+from django.urls import path, include, re_path
 
 # ===================================================================
 # 🩺 INICIO DE LA CIRUGÍA (SOLUCIÓN AL ERROR 404 de PDF)
 # ===================================================================
-# Importaciones necesarias para servir archivos media en MODO DEBUG
+# Importaciones necesarias para servir archivos media
 from django.conf import settings
 from django.conf.urls.static import static
+# IMPORTAMOS ESTO PARA FORZAR LA VISUALIZACIÓN EN RAILWAY
+from django.views.static import serve
 # ===================================================================
 # 🩺 FIN DE LA CIRUGÍA
 # ===================================================================
@@ -25,14 +28,23 @@ urlpatterns = [
 
 
 # ===================================================================
-# 🩺 INICIO DE LA CIRUGÍA (SOLUCIÓN AL ERROR 404 de PDF)
+# 🩺 INICIO DE LA CIRUGÍA (VISUALIZACIÓN DE FOTOS)
 # ===================================================================
 
+# CASO 1: MODO DEBUG (Tu computador local)
 # Esta línea le da permiso a Django (SOLO si DEBUG=True)
-# para servir los archivos que están en MEDIA_ROOT (tu carpeta 'media')
-# cuando se solicitan a través de MEDIA_URL (el prefijo '/media/').
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# CASO 2: MODO PRODUCCIÓN (Railway)
+# Aquí es donde estaba el problema. Railway tiene DEBUG=False.
+# Con esto obligamos a Django a mostrar las fotos también en la nube.
+else:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]
 
 # ===================================================================
 # 🩺 FIN DE LA CIRUGÍA
