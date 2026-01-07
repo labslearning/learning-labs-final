@@ -638,7 +638,7 @@
 
         /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
         #install-app-btn {
-            display: none; /* Se controla via JS, pero empezará oculto para evitar parpadeos */
+            display: none; /* Se controla via JS */
             border: 2px solid rgba(255,255,255,0.4);
             background: rgba(255,255,255,0.1);
             color: white;
@@ -676,9 +676,9 @@
                 
                 {% if user.is_authenticated %}
                     <button id="install-app-btn" class="btn btn-sm rounded-circle me-3" style="width: 40px; height: 40px; align-items: center; justify-content: center; padding: 0;" title="Instalar Aplicación">
-                        <div style="position: relative; width: 100%; height: 100%;">
-                            <i class="fas fa-mobile-alt" style="font-size: 1.2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
-                            <i class="fas fa-download" style="font-size: 0.7rem; position: absolute; bottom: 4px; right: 4px; background: var(--edu-primary); border-radius: 50%; padding: 2px; border: 1px solid white;"></i>
+                        <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-mobile-alt" style="font-size: 1.2rem;"></i>
+                            <i class="fas fa-download" style="font-size: 0.7rem; position: absolute; bottom: 4px; right: 4px; background: var(--edu-primary); color: white; border-radius: 50%; padding: 2px; border: 1px solid white;"></i>
                         </div>
                     </button>
                 {% endif %}
@@ -1137,7 +1137,7 @@
             });
 
             // ==========================================
-            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA)
+            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA CORREGIDA)
             // ==========================================
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
@@ -1146,7 +1146,7 @@
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
             // 1. VISIBILIDAD FORZADA: Si el botón existe y NO es la app instalada, MOSTRARLO.
-            // Usamos style.display = 'flex' para asegurar que el botón (ahora en la barra principal) sea visible.
+            // Esto arregla el problema de "Android imposible" porque muestra el botón aunque el evento tarde.
             if (installBtn && !isStandalone) {
                 installBtn.style.display = 'flex'; 
                 // Añadimos 'important' vía CSS text para sobrescribir cualquier display:none previo
@@ -1160,21 +1160,23 @@
                 console.log("PWA: Evento nativo capturado y listo.");
             });
 
-            // 3. Manejador de Click INTELIGENTE
+            // 3. Manejador de Click INTELIGENTE (Cubre todos los casos)
             if(installBtn) {
                 installBtn.addEventListener('click', async () => {
                     if (deferredPrompt) {
                         // A) El navegador lo permite nativamente (Android/PC Ideal)
                         deferredPrompt.prompt();
                         const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User response to install prompt: ${outcome}`);
                         deferredPrompt = null;
                         if(outcome === 'accepted') installBtn.style.display = 'none';
                     } else if (isIos) {
                         // B) Es iPhone/iPad (Instrucciones manuales)
                         alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (icono cuadrado con flecha) en la barra inferior.\n2. Busca y selecciona 'Agregar a Inicio'.");
                     } else {
-                        // C) Es PC Chrome/Firefox sin evento O Android WebAPK Fallido (Instrucciones manuales)
-                        alert("Para instalar la aplicación:\n\nOpción A: Busca el icono (+) en la barra de direcciones del navegador.\n\nOpción B (Android): Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Agregar a pantalla de inicio'.");
+                        // C) FALLBACK UNIVERSAL (Android sin evento / PC sin evento)
+                        // Esto garantiza que el botón SIEMPRE haga algo útil, aunque Chrome no quiera instalarlo automáticamente.
+                        alert("Instalación Manual:\n\nAndroid: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Agregar a pantalla de inicio'.\n\nPC: Busca el icono (+) en la barra de direcciones.");
                     }
                 });
             }
