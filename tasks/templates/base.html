@@ -8,6 +8,7 @@
     <title>Learning Labs - Plataforma Educativa</title>
 
     <link rel="manifest" href="{% static 'manifest.json' %}">
+    
     <meta name="theme-color" content="#4361ee">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Learning Labs">
@@ -16,7 +17,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Learning Labs">
     <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -43,7 +43,7 @@
             --edu-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --edu-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             
-            /* Áreas seguras para móviles */
+            /* Áreas seguras para móviles modernos (iPhone X+) */
             --safe-area-bottom: env(safe-area-inset-bottom, 20px);
         }
 
@@ -60,7 +60,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Evita scroll lateral */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -82,7 +82,7 @@
             min-height: 150px;
         }
 
-        /* ========== BARRA DE NAVEGACIÓN ========== */
+        /* ========== BARRA DE NAVEGACIÓN MEJORADA (PROFESIONAL) ========== */
         .navbar {
             background: linear-gradient(120deg, var(--edu-primary), var(--edu-secondary));
             padding: 0.6rem 2rem;
@@ -155,7 +155,7 @@
             }
         }
 
-        /* Dropdowns */
+        /* Dropdowns más estéticos */
         .dropdown-menu {
             border: none;
             border-radius: 12px;
@@ -190,7 +190,7 @@
             margin-right: 0.5rem;
         }
 
-        /* Badges */
+        /* Badges de notificación (Escritorio) */
         .badge-notification {
             position: absolute;
             top: 2px;
@@ -219,7 +219,7 @@
             box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
         }
 
-        /* Avatar */
+        /* Avatar en Navbar */
         .nav-avatar-img {
             width: 38px;
             height: 38px;
@@ -255,11 +255,11 @@
             .navbar-brand { font-size: 1.4rem; }
 
             .navbar-collapse {
-                background-color: white;
+                background-color: white; /* Fondo blanco */
                 margin-top: 1rem;
                 border-radius: var(--edu-border-radius);
                 padding: 0.5rem;
-                box-shadow: 0 100px 80px rgba(0,0,0,0.1);
+                box-shadow: 0 100px 80px rgba(0,0,0,0.1); /* Sombra profunda */
                 border: 1px solid rgba(0,0,0,0.05);
                 max-height: 85vh;
                 overflow-y: auto;
@@ -268,17 +268,17 @@
             .nav-item { width: 100%; margin: 0; }
 
             .nav-link {
-                padding: 1rem 1rem !important;
+                padding: 1rem 1rem !important; /* Area táctil grande */
                 margin: 0.2rem 0;
                 justify-content: flex-start;
-                color: #333 !important;
+                color: #333 !important; /* Texto oscuro */
                 font-weight: 600;
                 border-radius: 10px;
                 border-bottom: 1px solid #f4f4f4;
             }
             
             .nav-link:active {
-                background-color: #f0f2f5;
+                background-color: #f0f2f5; /* Feedback al tocar */
             }
 
             .nav-link i {
@@ -289,11 +289,11 @@
                 margin-right: 10px;
             }
 
-            /* Badge en Móvil */
+            /* Badge en Móvil (A la derecha, estilo iOS) */
             .badge-notification {
                 position: static !important;
                 transform: none !important;
-                margin-left: auto !important;
+                margin-left: auto !important; /* Empuja a la derecha */
                 border: none;
                 min-width: 24px;
                 height: 24px;
@@ -303,6 +303,7 @@
                 border-radius: 12px;
             }
             
+            /* Dropdowns limpios en móvil */
             .dropdown-menu {
                 box-shadow: none;
                 border: none;
@@ -320,7 +321,7 @@
             }
         }
 
-        /* Botones y Cards */
+        /* ========== BOTONES EDUCATIVOS ========== */
         .btn-edu {
             border-radius: var(--edu-border-radius);
             padding: 0.75rem 1.5rem;
@@ -357,6 +358,7 @@
             color: var(--edu-dark);
         }
 
+        /* ========== TARJETAS EDUCATIVAS ========== */
         .edu-card {
             border: none;
             border-radius: var(--edu-border-radius);
@@ -426,110 +428,256 @@
         }
         table.table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
-        /* ========== MODALES (YOUTUBE / PDF) ========== */
+        /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
         .yt-modal {
-            display: none; position: fixed; z-index: 9999;
-            left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
-            background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; /* Oculto por defecto */
+            position: fixed; 
+            z-index: 9999; /* Por encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.8); /* Fondo oscuro transparente */
+            backdrop-filter: blur(5px); /* Efecto borroso bonito */
         }
 
         .yt-modal-content {
-            position: relative; margin: 5% auto; padding: 0;
-            width: 80%; max-width: 800px; background-color: #000;
-            border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-            display: flex; flex-direction: column;
+            position: relative;
+            margin: 5% auto;
+            padding: 0;
+            width: 80%;
+            max-width: 800px;
+            background-color: #000;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
         }
 
         .video-container {
-            position: relative; padding-bottom: 56.25%; padding-top: 25px;
-            height: 0; width: 100%;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            padding-top: 25px;
+            height: 0;
+            width: 100%;
         }
 
         .video-container iframe {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border-radius: 10px 10px 0 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px 10px 0 0; /* Ajuste para el botón inferior */
         }
         
         .yt-modal-footer {
-            background-color: #111; padding: 10px;
-            text-align: center; border-radius: 0 0 10px 10px;
+            background-color: #111;
+            padding: 10px;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
         }
 
         .close-yt {
-            color: white; position: absolute; top: -30px; right: 0;
-            font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10000;
+            color: white;
+            position: absolute;
+            top: -30px;
+            right: 0;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
         }
-        .close-yt:hover { color: #ff0000; }
 
-        /* Video Local Modal */
-        .video-modal {
-            position: fixed; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(30, 35, 40, 0.95); display: flex; align-items: center; justify-content: center;
-            z-index: 1100; opacity: 0; transition: opacity 0.35s ease, visibility 0s linear 0.35s;
-            pointer-events: none; visibility: hidden; backdrop-filter: blur(8px);
+        .close-yt:hover {
+            color: #ff0000;
         }
+
+        /* Estilos antiguos del modal de video (se mantienen por compatibilidad) */
+        .video-modal {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 35, 40, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            opacity: 0;
+            transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+            pointer-events: none;
+            visibility: hidden;
+            backdrop-filter: blur(8px);
+        }
+
         .video-modal.active {
-            opacity: 1; pointer-events: auto; visibility: visible; transition: opacity 0.35s ease;
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+            transition: opacity 0.35s ease;
         }
 
         .video-modal-content-wrapper {
-            background-color: white; border-radius: var(--edu-border-radius);
+            background-color: white;
+            border-radius: var(--edu-border-radius);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            display: flex; flex-direction: column;
-            width: 90%; max-width: 900px; max-height: 90vh;
-            overflow: hidden; transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.95);
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .video-modal.active .video-modal-content-wrapper { transform: scale(1); }
+
+        .video-modal.active .video-modal-content-wrapper {
+            transform: scale(1);
+        }
 
         .video-modal-header {
-            padding: 1.25rem 1.5rem; background-color: var(--edu-primary);
-            color: white; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.25rem 1.5rem;
+            background-color: var(--edu-primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-modal-header h5 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .video-modal-close {
-            background: none; border: none; color: white; cursor: pointer;
-            font-size: 1.5rem; padding: 0.25rem; line-height: 1; opacity: 0.8;
-            transition: all 0.2s ease; border-radius: 50%;
-            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0.25rem;
+            line-height: 1;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .video-modal-close:hover { opacity: 1; background-color: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
+
+        .video-modal-close:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
 
         .video-modal-body {
-            flex: 1; padding: 0; display: flex; justify-content: center; align-items: center;
-            background-color: #222; overflow-y: auto;
+            flex: 1;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            overflow-y: auto;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
+
         .video-modal-body video {
-            display: block; width: 100%; height: auto; max-height: calc(90vh - 130px); outline: none;
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: calc(90vh - 130px);
+            outline: none;
         }
 
         .video-error-display {
-            padding: 2rem; text-align: center; color: var(--edu-text-secondary);
+            padding: 2rem;
+            text-align: center;
+            color: var(--edu-text-secondary);
         }
-        .video-error-display .error-icon { font-size: 3rem; color: var(--edu-danger); margin-bottom: 1rem; }
-        .video-error-display h5 { font-size: 1.3rem; font-weight: 600; color: var(--edu-text-primary); margin-bottom: 0.75rem; }
-        .video-error-display p { font-size: 1rem; line-height: 1.6; margin-bottom: 0; }
+
+        .video-error-display .error-icon {
+            font-size: 3rem;
+            color: var(--edu-danger);
+            margin-bottom: 1rem;
+        }
+
+        .video-error-display h5 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--edu-text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .video-error-display p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
 
         .video-modal-footer {
-            padding: 1rem 1.5rem; background-color: #f8f9fa;
-            border-top: 1px solid #e1e8ed; text-align: right;
+            padding: 1rem 1.5rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e1e8ed;
+            text-align: right;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
+        
+        /* ESTILO PARA BOTÓN INSTALAR PWA */
+        #install-app-btn {
+             display: none; /* Se oculta al inicio */
+             cursor: pointer;
+        }
+        
+        #install-app-link {
+            display: none !important; /* Se oculta al inicio */
+        }
+        
+        /* Modal de Instrucciones iOS */
+        #iosInstallModal {
+            display: none;
+            position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;
+        }
+        #iosInstallModal .modal-content-ios {
+            background-color: white; padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px;
+            text-align: center; color: #333; position: relative;
+        }
+        #iosInstallModal .ios-icon { font-size: 2rem; margin: 10px 0; color: #007aff; }
 
-        /* Botón Instalar PWA (Oculto inicialmente, JS lo muestra) */
-        #install-app-btn { display: none; margin: 0 10px; }
-        #install-app-link { display: none; }
+        /* ========== EFECTOS ESPECIALES ========== */
+        .edu-pulse {
+            animation: pulse 2s infinite;
+        }
 
-        /* Efectos */
-        .edu-pulse { animation: pulse 2s infinite; }
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
 
+        /* ========== RESPONSIVIDAD ADICIONAL ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.75rem 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+        }
+        
         /* Widget Mentor */
         .mentor-trigger { bottom: 25px; right: 25px; z-index: 9990; }
         @media (max-width: 576px) {
@@ -544,8 +692,7 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-atom"></i>
-                <span class="d-none d-sm-inline">Learning Labs</span>
-                <span class="d-inline d-sm-none">LLabs</span>
+                <span>Learning Labs</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
@@ -556,12 +703,13 @@
                     <a href="/" class="nav-link"><i class="fas fa-home"></i> <span>Inicio</span></a>
                     
                     {% if user.is_authenticated %}
-
-                        <button id="install-app-btn" class="btn btn-outline-light btn-sm mx-2" style="display: none;">
-                            <i class="fas fa-download"></i> <span class="d-none d-lg-inline">Instalar App</span>
+                        
+                        <button id="install-app-btn" class="btn btn-link text-white nav-link" title="Descargar App">
+                            <i class="fas fa-download"></i>
                         </button>
-                        <a href="#" id="install-app-link" class="nav-link" style="display: none;">
-                            <i class="fas fa-download"></i> <span>Instalar Aplicación</span>
+                        
+                        <a href="#" id="install-app-link" class="nav-link">
+                            <i class="fas fa-download"></i> <span>Descargar App</span>
                         </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
@@ -732,6 +880,18 @@
         {% block content %}{% endblock %}
     </div>
     
+    <div id="iosInstallModal" class="yt-modal" onclick="document.getElementById('iosInstallModal').style.display='none'">
+        <div class="modal-content-ios" style="margin: 30% auto; background: white; padding: 20px; border-radius: 15px; max-width: 350px; text-align: center;">
+            <h4><i class="fas fa-download text-primary"></i> Instalar App</h4>
+            <p class="text-muted mt-3">Para instalar en iPhone/iPad:</p>
+            <div class="text-start d-inline-block">
+                <p>1. Toca el botón <strong>Compartir</strong> <i class="fas fa-share-square"></i></p>
+                <p>2. Busca y selecciona <strong>"Agregar a Inicio"</strong> <i class="fas fa-plus-square"></i></p>
+            </div>
+            <button class="btn btn-primary mt-3 w-100">Entendido</button>
+        </div>
+    </div>
+    
     <div id="youtubeModal" class="yt-modal">
         <div class="yt-modal-content">
             <span class="close-yt" onclick="closeYtModal()">&times; Cerrar</span>
@@ -745,7 +905,7 @@
             </div>
         </div>
     </div>
-
+    
     <div id="pdfModal" class="yt-modal">
         <div class="yt-modal-content">
             <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
@@ -796,7 +956,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video
+        // Elementos del DOM del Modal de Video Local
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -871,7 +1031,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video ---
+        // --- Funciones del Modal de Video Local ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -1030,48 +1190,52 @@
                 }
             });
             
-            // --- SCRIPT DE INSTALACIÓN PWA (CORREGIDO Y REFORZADO) ---
+            // --- SCRIPT DE INSTALACIÓN PWA (Universal + iOS) ---
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
             const installLink = document.getElementById('install-app-link');
+            
+            // Detección de iOS
+            const isIos = /iphone|ipad|ipod/.test( window.navigator.userAgent.toLowerCase() );
+            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
 
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevenir que Chrome 67+ muestre el prompt automáticamente
-                e.preventDefault();
-                // Guardar el evento para dispararlo después
-                deferredPrompt = e;
-                console.log("PWA: Evento beforeinstallprompt disparado y capturado.");
+            // Si es iOS y NO está en modo app, mostrar botón de instrucciones
+            if (isIos && !isInStandaloneMode) {
+                if(installBtn) installBtn.style.display = 'inline-block';
+                if(installLink) installLink.style.setProperty('display', 'flex', 'important');
                 
-                // Mostrar botones de instalación (estaban ocultos con CSS)
-                if(installBtn) {
-                    installBtn.style.display = 'inline-block';
-                }
-                if(installLink) {
-                    // Forzamos flex e important para sobrescribir reglas de media queries
-                    installLink.style.setProperty('display', 'flex', 'important');
-                }
+                // Al hacer clic en iOS, mostrar modal de ayuda
+                const showIosHelp = (e) => {
+                    e.preventDefault();
+                    document.getElementById('iosInstallModal').style.display = 'flex';
+                };
+                if(installBtn) installBtn.addEventListener('click', showIosHelp);
+                if(installLink) installLink.addEventListener('click', showIosHelp);
+            }
+
+            // Para Android y PC (Chrome/Edge) - Evento Estándar
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                if(installBtn) installBtn.style.display = 'inline-block';
+                if(installLink) installLink.style.setProperty('display', 'flex', 'important');
             });
 
             const installAppAction = async () => {
-                if (!deferredPrompt) {
-                    console.log("PWA: No hay prompt diferido disponible.");
-                    return;
-                }
-                // Mostrar el prompt
+                if (!deferredPrompt) return;
                 deferredPrompt.prompt();
-                // Esperar a que el usuario responda
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`PWA: Usuario respondió: ${outcome}`);
-                // Limpiar variable
                 deferredPrompt = null;
-                
-                // Ocultar botones tras la acción
                 if(installBtn) installBtn.style.display = 'none';
                 if(installLink) installLink.style.display = 'none';
             };
 
-            if(installBtn) installBtn.addEventListener('click', installAppAction);
-            if(installLink) installLink.addEventListener('click', installAppAction);
+            // Solo añadir el evento de instalación si NO es iOS (para no pisar el modal de ayuda)
+            if (!isIos) {
+                if(installBtn) installBtn.addEventListener('click', installAppAction);
+                if(installLink) installLink.addEventListener('click', installAppAction);
+            }
             
             // Registro Service Worker
             if ('serviceWorker' in navigator) {
@@ -1108,16 +1272,7 @@
                     return; 
                 }
 
-                // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
-                // Si el archivo termina en .pdf, abrir modal interno con fallback
-                if (href.toLowerCase().endsWith('.pdf')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openPdfModal(href);
-                    return;
-                }
-
-                // --- 3. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // --- 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
                 // Verifica rigurosamente si el dominio destino es diferente al actual
                 try {
                     // Solo analizamos URLs absolutas (http/https)
@@ -1139,6 +1294,15 @@
                     if (href.indexOf('http') === 0) {
                          window.open(href, '_blank');
                     }
+                }
+
+                // --- 3. LÓGICA PDF ---
+                if (href.toLowerCase().endsWith('.pdf')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Abrir PDF en modal interno con fallback
+                    openPdfModal(href);
+                    return;
                 }
 
             }, true); // Use capture para interceptar antes que nadie
@@ -1208,8 +1372,13 @@
         window.addEventListener('click', function(event) {
             var modalYt = document.getElementById('youtubeModal');
             var modalPdf = document.getElementById('pdfModal');
-            if (event.target == modalYt) closeYtModal();
-            if (event.target == modalPdf) closePdfModal();
+            
+            if (event.target == modalYt) {
+                closeYtModal();
+            }
+            if (event.target == modalPdf) {
+                closePdfModal();
+            }
         });
     </script>
 
