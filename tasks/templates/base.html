@@ -9,7 +9,10 @@
     
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#4361ee">
+    
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Learning Labs">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Learning Labs">
@@ -633,14 +636,15 @@
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
 
-        /* ========== BOTÓN DE INSTALACIÓN PWA (Universal) ========== */
+        /* ========== BOTÓN DE INSTALACIÓN PWA (ESTILO ACTUALIZADO) ========== */
         #install-app-btn {
-            display: none; /* Se controla via JS, pero empezará oculto para evitar parpadeos */
+            display: none; /* Se activa por JS */
             border: 2px solid rgba(255,255,255,0.4);
             background: rgba(255,255,255,0.1);
             color: white;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
         #install-app-btn:hover {
             background: white;
@@ -668,7 +672,7 @@
                 <i class="fas fa-atom"></i>
                 <span>Learning Labs</span>
             </a>
-
+            
             <div class="d-flex align-items-center ms-auto">
                 {% if user.is_authenticated %}
                     <button id="install-app-btn" class="btn btn-sm rounded-circle me-3" style="width: 40px; height: 40px; align-items: center; justify-content: center; padding: 0;" title="Instalar Aplicación">
@@ -679,11 +683,11 @@
                     </button>
                 {% endif %}
 
-                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
                 </button>
             </div>
-
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
