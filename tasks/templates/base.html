@@ -8,7 +8,6 @@
     <title>Learning Labs - Plataforma Educativa</title>
 
     <link rel="manifest" href="{% static 'manifest.json' %}">
-    
     <meta name="theme-color" content="#4361ee">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Learning Labs">
@@ -156,7 +155,7 @@
             }
         }
 
-        /* Dropdowns más estéticos */
+        /* Dropdowns */
         .dropdown-menu {
             border: none;
             border-radius: 12px;
@@ -191,7 +190,7 @@
             margin-right: 0.5rem;
         }
 
-        /* Badges de notificación (Escritorio) */
+        /* Badges */
         .badge-notification {
             position: absolute;
             top: 2px;
@@ -220,7 +219,7 @@
             box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
         }
 
-        /* Avatar en Navbar */
+        /* Avatar */
         .nav-avatar-img {
             width: 38px;
             height: 38px;
@@ -256,11 +255,11 @@
             .navbar-brand { font-size: 1.4rem; }
 
             .navbar-collapse {
-                background-color: white; /* Fondo blanco */
+                background-color: white;
                 margin-top: 1rem;
                 border-radius: var(--edu-border-radius);
                 padding: 0.5rem;
-                box-shadow: 0 100px 80px rgba(0,0,0,0.1); /* Sombra profunda */
+                box-shadow: 0 100px 80px rgba(0,0,0,0.1);
                 border: 1px solid rgba(0,0,0,0.05);
                 max-height: 85vh;
                 overflow-y: auto;
@@ -269,17 +268,17 @@
             .nav-item { width: 100%; margin: 0; }
 
             .nav-link {
-                padding: 1rem 1rem !important; /* Area táctil grande */
+                padding: 1rem 1rem !important;
                 margin: 0.2rem 0;
                 justify-content: flex-start;
-                color: #333 !important; /* Texto oscuro */
+                color: #333 !important;
                 font-weight: 600;
                 border-radius: 10px;
                 border-bottom: 1px solid #f4f4f4;
             }
             
             .nav-link:active {
-                background-color: #f0f2f5; /* Feedback al tocar */
+                background-color: #f0f2f5;
             }
 
             .nav-link i {
@@ -290,11 +289,11 @@
                 margin-right: 10px;
             }
 
-            /* Badge en Móvil (A la derecha, estilo iOS) */
+            /* Badge en Móvil */
             .badge-notification {
                 position: static !important;
                 transform: none !important;
-                margin-left: auto !important; /* Empuja a la derecha */
+                margin-left: auto !important;
                 border: none;
                 min-width: 24px;
                 height: 24px;
@@ -304,7 +303,6 @@
                 border-radius: 12px;
             }
             
-            /* Dropdowns limpios en móvil */
             .dropdown-menu {
                 box-shadow: none;
                 border: none;
@@ -322,7 +320,7 @@
             }
         }
 
-        /* ========== BOTONES EDUCATIVOS ========== */
+        /* Botones y Cards */
         .btn-edu {
             border-radius: var(--edu-border-radius);
             padding: 0.75rem 1.5rem;
@@ -359,7 +357,6 @@
             color: var(--edu-dark);
         }
 
-        /* ========== TARJETAS EDUCATIVAS ========== */
         .edu-card {
             border: none;
             border-radius: var(--edu-border-radius);
@@ -406,10 +403,13 @@
             color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
             border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
             align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideDown 0.5s ease;
         }
+        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
         @media (max-width: 576px) and (orientation: portrait) {
             .has-tables #rotate-hint { display: flex; }
         }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Tablas Responsivas */
         .table-responsive, table {
@@ -426,234 +426,110 @@
         }
         table.table tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
-        /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
+        /* ========== MODALES (YOUTUBE / PDF) ========== */
         .yt-modal {
-            display: none; /* Oculto por defecto */
-            position: fixed; 
-            z-index: 9999; /* Por encima de todo */
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.8); /* Fondo oscuro transparente */
-            backdrop-filter: blur(5px); /* Efecto borroso bonito */
+            display: none; position: fixed; z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
         }
 
         .yt-modal-content {
-            position: relative;
-            margin: 5% auto;
-            padding: 0;
-            width: 80%;
-            max-width: 800px;
-            background-color: #000;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
+            position: relative; margin: 5% auto; padding: 0;
+            width: 80%; max-width: 800px; background-color: #000;
+            border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            display: flex; flex-direction: column;
         }
 
         .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 */
-            padding-top: 25px;
-            height: 0;
-            width: 100%;
+            position: relative; padding-bottom: 56.25%; padding-top: 25px;
+            height: 0; width: 100%;
         }
 
         .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 10px 10px 0 0; /* Ajuste para el botón inferior */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 10px 10px 0 0;
         }
         
         .yt-modal-footer {
-            background-color: #111;
-            padding: 10px;
-            text-align: center;
-            border-radius: 0 0 10px 10px;
+            background-color: #111; padding: 10px;
+            text-align: center; border-radius: 0 0 10px 10px;
         }
 
         .close-yt {
-            color: white;
-            position: absolute;
-            top: -30px;
-            right: 0;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10000;
+            color: white; position: absolute; top: -30px; right: 0;
+            font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10000;
         }
+        .close-yt:hover { color: #ff0000; }
 
-        .close-yt:hover {
-            color: #ff0000;
-        }
-
-        /* Estilos antiguos del modal de video (se mantienen por compatibilidad) */
+        /* Video Local Modal */
         .video-modal {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(30, 35, 40, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1100;
-            opacity: 0;
-            transition: opacity 0.35s ease, visibility 0s linear 0.35s;
-            pointer-events: none;
-            visibility: hidden;
-            backdrop-filter: blur(8px);
+            position: fixed; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(30, 35, 40, 0.95); display: flex; align-items: center; justify-content: center;
+            z-index: 1100; opacity: 0; transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+            pointer-events: none; visibility: hidden; backdrop-filter: blur(8px);
         }
-
         .video-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-            visibility: visible;
-            transition: opacity 0.35s ease;
+            opacity: 1; pointer-events: auto; visibility: visible; transition: opacity 0.35s ease;
         }
 
         .video-modal-content-wrapper {
-            background-color: white;
-            border-radius: var(--edu-border-radius);
+            background-color: white; border-radius: var(--edu-border-radius);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            width: 90%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow: hidden;
-            transform: scale(0.95);
+            display: flex; flex-direction: column;
+            width: 90%; max-width: 900px; max-height: 90vh;
+            overflow: hidden; transform: scale(0.95);
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .video-modal.active .video-modal-content-wrapper {
-            transform: scale(1);
-        }
+        .video-modal.active .video-modal-content-wrapper { transform: scale(1); }
 
         .video-modal-header {
-            padding: 1.25rem 1.5rem;
-            background-color: var(--edu-primary);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .video-modal-header h5 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            padding: 1.25rem 1.5rem; background-color: var(--edu-primary);
+            color: white; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .video-modal-close {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.5rem;
-            padding: 0.25rem;
-            line-height: 1;
-            opacity: 0.8;
-            transition: all 0.2s ease;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: none; border: none; color: white; cursor: pointer;
+            font-size: 1.5rem; padding: 0.25rem; line-height: 1; opacity: 0.8;
+            transition: all 0.2s ease; border-radius: 50%;
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
         }
-
-        .video-modal-close:hover {
-            opacity: 1;
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
+        .video-modal-close:hover { opacity: 1; background-color: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
 
         .video-modal-body {
-            flex: 1;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #222;
-            overflow-y: auto;
+            flex: 1; padding: 0; display: flex; justify-content: center; align-items: center;
+            background-color: #222; overflow-y: auto;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
-
         .video-modal-body video {
-            display: block;
-            width: 100%;
-            height: auto;
-            max-height: calc(90vh - 130px);
-            outline: none;
+            display: block; width: 100%; height: auto; max-height: calc(90vh - 130px); outline: none;
         }
 
         .video-error-display {
-            padding: 2rem;
-            text-align: center;
-            color: var(--edu-text-secondary);
+            padding: 2rem; text-align: center; color: var(--edu-text-secondary);
         }
-
-        .video-error-display .error-icon {
-            font-size: 3rem;
-            color: var(--edu-danger);
-            margin-bottom: 1rem;
-        }
-
-        .video-error-display h5 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--edu-text-primary);
-            margin-bottom: 0.75rem;
-        }
-
-        .video-error-display p {
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 0;
-        }
+        .video-error-display .error-icon { font-size: 3rem; color: var(--edu-danger); margin-bottom: 1rem; }
+        .video-error-display h5 { font-size: 1.3rem; font-weight: 600; color: var(--edu-text-primary); margin-bottom: 0.75rem; }
+        .video-error-display p { font-size: 1rem; line-height: 1.6; margin-bottom: 0; }
 
         .video-modal-footer {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-top: 1px solid #e1e8ed;
-            text-align: right;
+            padding: 1rem 1.5rem; background-color: #f8f9fa;
+            border-top: 1px solid #e1e8ed; text-align: right;
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
 
-        /* ========== EFECTOS ESPECIALES ========== */
-        .edu-pulse {
-            animation: pulse 2s infinite;
-        }
+        /* Botón Instalar PWA (Oculto inicialmente, JS lo muestra) */
+        #install-app-btn { display: none; margin: 0 10px; }
+        #install-app-link { display: none; }
 
+        /* Efectos */
+        .edu-pulse { animation: pulse 2s infinite; }
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
         }
 
-        /* ========== RESPONSIVIDAD ADICIONAL ========== */
-        @media (max-width: 768px) {
-            .navbar {
-                padding: 0.75rem 1.5rem;
-            }
-            
-            .navbar-brand {
-                font-size: 1.4rem;
-            }
-        }
-        
         /* Widget Mentor */
         .mentor-trigger { bottom: 25px; right: 25px; z-index: 9990; }
         @media (max-width: 576px) {
@@ -671,29 +547,26 @@
                 <span class="d-none d-sm-inline">Learning Labs</span>
                 <span class="d-inline d-sm-none">LLabs</span>
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="fas fa-bars" style="color: white; font-size: 1.2rem;"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
                 
                 <div class="navbar-nav ms-auto align-items-lg-center">
                     <a href="/" class="nav-link"><i class="fas fa-home"></i> <span>Inicio</span></a>
                     
                     {% if user.is_authenticated %}
-                        
+
                         <button id="install-app-btn" class="btn btn-outline-light btn-sm mx-2" style="display: none;">
                             <i class="fas fa-download"></i> <span class="d-none d-lg-inline">Instalar App</span>
                         </button>
-                        <a href="#" id="install-app-link" class="nav-link d-lg-none" style="display: none;">
+                        <a href="#" id="install-app-link" class="nav-link" style="display: none;">
                             <i class="fas fa-download"></i> <span>Instalar Aplicación</span>
                         </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
                             <span class="d-lg-none ms-2">Mensajes</span>
-                            
                             {% if mensajes_no_leidos_count > 0 %}
                             <span class="badge-notification">
                                 {{ mensajes_no_leidos_count }}
@@ -705,7 +578,6 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
-                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -924,7 +796,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video Local
+        // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -999,7 +871,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video Local ---
+        // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -1158,7 +1030,7 @@
                 }
             });
             
-            // --- SCRIPT DE INSTALACIÓN PWA (CORREGIDO) ---
+            // --- SCRIPT DE INSTALACIÓN PWA (CORREGIDO Y REFORZADO) ---
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
             const installLink = document.getElementById('install-app-link');
@@ -1227,6 +1099,8 @@
                 var currentDomain = window.location.hostname;
 
                 // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                // Si es YouTube, NO abrimos el modal. Forzamos nueva pestaña automáticamente.
+                // Esto evita el Error 153 porque el video carga directamente en youtube.com
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1235,6 +1109,7 @@
                 }
 
                 // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
+                // Si el archivo termina en .pdf, abrir modal interno con fallback
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1242,18 +1117,26 @@
                     return;
                 }
 
-                // --- 3. LÓGICA DE ENLACES EXTERNOS ---
+                // --- 3. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // Verifica rigurosamente si el dominio destino es diferente al actual
                 try {
+                    // Solo analizamos URLs absolutas (http/https)
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
+                        
+                        // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
                         if (targetUrl.hostname !== currentDomain) {
                             e.preventDefault();
                             e.stopPropagation();
+                            // 'noopener,noreferrer' es buena práctica de seguridad
                             window.open(href, '_blank', 'noopener,noreferrer');
+                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
                         }
                     }
                 } catch (err) {
-                    if (href.indexOf('http') === 0 && !href.includes(currentDomain)) {
+                    // Si la URL es rara o falla el análisis, dejamos que el navegador decida,
+                    // pero por seguridad podríamos forzar _blank si parece http
+                    if (href.indexOf('http') === 0) {
                          window.open(href, '_blank');
                     }
                 }
@@ -1261,7 +1144,8 @@
             }, true); // Use capture para interceptar antes que nadie
         });
 
-        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
+        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
         function openYtModal(url) {
             var videoId = '';
             var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -1272,12 +1156,16 @@
                 var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
                 
                 document.getElementById('ytPlayer').src = embedUrl;
+                
+                // Actualizamos el botón de emergencia por si el video falla
                 var externalBtn = document.getElementById('ytExternalLink');
                 if(externalBtn) {
                     externalBtn.href = url;
                 }
+
                 document.getElementById('youtubeModal').style.display = 'block';
             } else {
+                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
                 window.open(url, '_blank');
             }
         }
@@ -1285,6 +1173,7 @@
         function closeYtModal() {
             var modal = document.getElementById('youtubeModal');
             var iframe = document.getElementById('ytPlayer');
+            
             modal.style.display = 'none';
             iframe.src = ''; 
         }
@@ -1311,8 +1200,8 @@
             var objectTag = document.getElementById('pdfObject');
             
             modal.style.display = 'none';
-            objectTag.data = ''; 
-            document.body.style.overflow = '';
+            objectTag.data = ''; // Limpiar para detener carga
+            document.body.style.overflow = ''; // Restaura scroll
         }
 
         // Cerrar modal al hacer clic fuera del contenido
