@@ -969,23 +969,25 @@
     </script>
     
     <script>
-        // Detectar clicks en toda la página
-        document.addEventListener('click', function(e) {
-            var target = e.target.closest('a');
-            
-            if (target) {
-                var href = target.getAttribute('href');
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.addEventListener('click', function(e) {
+                var target = e.target.closest('a');
                 
-                // Verificar si es un link de YouTube
-                if (href && (href.includes('youtube.com/watch') || href.includes('youtu.be'))) {
-                    e.preventDefault(); 
-                    openYtModal(href);
+                if (target) {
+                    var href = target.getAttribute('href');
+                    
+                    if (href && (href.includes('youtube.com/watch') || href.includes('youtu.be'))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openYtModal(href);
+                    }
                 }
-            }
+            }, true); // Use capture to handle event earlier
         });
 
         function openYtModal(url) {
             var videoId = '';
+            // Regex mejorado para capturar ID de YouTube
             var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             var match = url.match(regExp);
 
@@ -1007,12 +1009,13 @@
             iframe.src = ''; 
         }
 
-        window.onclick = function(event) {
+        // Cerrar modal al hacer clic fuera del contenido
+        window.addEventListener('click', function(event) {
             var modal = document.getElementById('youtubeModal');
             if (event.target == modal) {
                 closeYtModal();
             }
-        }
+        });
     </script>
 
 
