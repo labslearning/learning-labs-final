@@ -17,6 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Learning Labs">
     <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -26,7 +27,7 @@
 
     <style>
         :root {
-            /* Sistema de diseño educativo - Variables Globales */
+            /* Sistema de diseño educativo */
             --edu-primary: #4361ee;
             --edu-secondary: #3f37c9;
             --edu-accent: #4cc9f0;
@@ -43,7 +44,7 @@
             --edu-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --edu-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             
-            /* Áreas seguras para móviles modernos (iPhone X+) */
+            /* Áreas seguras para móviles */
             --safe-area-bottom: env(safe-area-inset-bottom, 20px);
         }
 
@@ -60,7 +61,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden; /* Evita scroll lateral */
+            overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -82,7 +83,7 @@
             min-height: 150px;
         }
 
-        /* ========== BARRA DE NAVEGACIÓN MEJORADA (PROFESIONAL) ========== */
+        /* ========== BARRA DE NAVEGACIÓN ========== */
         .navbar {
             background: linear-gradient(120deg, var(--edu-primary), var(--edu-secondary));
             padding: 0.6rem 2rem;
@@ -405,14 +406,10 @@
             color: #856404; border-left: 4px solid #ffc107; padding: 0.8rem 1rem;
             border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
             align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            animation: slideDown 0.5s ease;
         }
-        #rotate-hint i { margin-right: 0.8rem; font-size: 1.2rem; }
         @media (max-width: 576px) and (orientation: portrait) {
-            /* Se activa via JS si hay tablas */
             .has-tables #rotate-hint { display: flex; }
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Tablas Responsivas */
         .table-responsive, table {
@@ -635,17 +632,6 @@
             border-radius: 0 0 var(--edu-border-radius) var(--edu-border-radius);
         }
 
-        /* Botón Instalar PWA */
-        #install-app-btn { 
-            display: none; /* Se activa por JS */
-            margin: 0 10px; 
-            cursor: pointer;
-        }
-        
-        #install-app-link {
-            display: none !important; /* Se activa por JS */
-        }
-
         /* ========== EFECTOS ESPECIALES ========== */
         .edu-pulse {
             animation: pulse 2s infinite;
@@ -697,18 +683,21 @@
                     
                     {% if user.is_authenticated %}
                         
-                        <button id="install-app-btn" class="btn btn-outline-light btn-sm mx-2 d-none d-lg-block">
-                            <i class="fas fa-download"></i> Instalar App
+                        <button id="install-app-btn" class="btn btn-outline-light btn-sm mx-2" style="display: none;">
+                            <i class="fas fa-download"></i> <span class="d-none d-lg-inline">Instalar App</span>
                         </button>
-                        <a href="#" id="install-app-link" class="nav-link d-lg-none" style="display:none !important;">
+                        <a href="#" id="install-app-link" class="nav-link d-lg-none" style="display: none;">
                             <i class="fas fa-download"></i> <span>Instalar Aplicación</span>
                         </a>
 
                         <a class="nav-link position-relative mx-lg-1" href="{% url 'buzon_mensajes' %}" title="Mensajería Interna">
                             <i class="fas fa-envelope"></i>
-                            <span class="d-lg-none ms-2">Mensajes</span> 
+                            <span class="d-lg-none ms-2">Mensajes</span>
+                            
                             {% if mensajes_no_leidos_count > 0 %}
-                            <span class="badge-notification">{{ mensajes_no_leidos_count }}</span>
+                            <span class="badge-notification">
+                                {{ mensajes_no_leidos_count }}
+                            </span>
                             {% endif %}
                         </a>
 
@@ -716,6 +705,7 @@
                             <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notification-dropdown-toggle">
                                 <i class="fas fa-bell"></i>
                                 <span class="d-lg-none ms-2">Notificaciones</span>
+                                
                                 <span id="notification-badge" class="badge-notification" style="{% if notificaciones_count == 0 %}display: none;{% endif %}">
                                     {{ notificaciones_count }}
                                 </span>
@@ -883,7 +873,7 @@
             </div>
         </div>
     </div>
-    
+
     <div id="pdfModal" class="yt-modal">
         <div class="yt-modal-content">
             <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
@@ -1168,38 +1158,44 @@
                 }
             });
             
-            // --- SCRIPT DE INSTALACIÓN PWA MEJORADO ---
+            // --- SCRIPT DE INSTALACIÓN PWA (CORREGIDO) ---
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
             const installLink = document.getElementById('install-app-link');
 
             window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevenir que Chrome 67+ muestre el prompt automáticamente
                 e.preventDefault();
+                // Guardar el evento para dispararlo después
                 deferredPrompt = e;
+                console.log("PWA: Evento beforeinstallprompt disparado y capturado.");
                 
-                // Forzar visualización de botones
+                // Mostrar botones de instalación (estaban ocultos con CSS)
                 if(installBtn) {
-                    installBtn.style.display = 'block';
-                    installBtn.classList.remove('d-none');
+                    installBtn.style.display = 'inline-block';
                 }
                 if(installLink) {
-                    installLink.style.display = 'flex';
-                    installLink.classList.remove('d-none');
-                    // Forzar display flex con importante para sobrescribir reglas CSS
+                    // Forzamos flex e important para sobrescribir reglas de media queries
                     installLink.style.setProperty('display', 'flex', 'important');
                 }
             });
 
             const installAppAction = async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    deferredPrompt = null;
-                    // Ocultar botones tras la acción
-                    if(installBtn) installBtn.style.display = 'none';
-                    if(installLink) installLink.style.display = 'none';
+                if (!deferredPrompt) {
+                    console.log("PWA: No hay prompt diferido disponible.");
+                    return;
                 }
+                // Mostrar el prompt
+                deferredPrompt.prompt();
+                // Esperar a que el usuario responda
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`PWA: Usuario respondió: ${outcome}`);
+                // Limpiar variable
+                deferredPrompt = null;
+                
+                // Ocultar botones tras la acción
+                if(installBtn) installBtn.style.display = 'none';
+                if(installLink) installLink.style.display = 'none';
             };
 
             if(installBtn) installBtn.addEventListener('click', installAppAction);
@@ -1231,8 +1227,6 @@
                 var currentDomain = window.location.hostname;
 
                 // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
-                // Si es YouTube, NO abrimos el modal. Forzamos nueva pestaña automáticamente.
-                // Esto evita el Error 153 porque el video carga directamente en youtube.com
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1241,7 +1235,6 @@
                 }
 
                 // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
-                // Si el archivo termina en .pdf, abrir modal interno con fallback
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1249,26 +1242,18 @@
                     return;
                 }
 
-                // --- 3. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
-                // Verifica rigurosamente si el dominio destino es diferente al actual
+                // --- 3. LÓGICA DE ENLACES EXTERNOS ---
                 try {
-                    // Solo analizamos URLs absolutas (http/https)
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
-                        
-                        // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
                         if (targetUrl.hostname !== currentDomain) {
                             e.preventDefault();
                             e.stopPropagation();
-                            // 'noopener,noreferrer' es buena práctica de seguridad
                             window.open(href, '_blank', 'noopener,noreferrer');
-                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
                         }
                     }
                 } catch (err) {
-                    // Si la URL es rara o falla el análisis, dejamos que el navegador decida,
-                    // pero por seguridad podríamos forzar _blank si parece http
-                    if (href.indexOf('http') === 0) {
+                    if (href.indexOf('http') === 0 && !href.includes(currentDomain)) {
                          window.open(href, '_blank');
                     }
                 }
@@ -1276,8 +1261,7 @@
             }, true); // Use capture para interceptar antes que nadie
         });
 
-        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
-        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API
         function openYtModal(url) {
             var videoId = '';
             var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -1288,16 +1272,12 @@
                 var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
                 
                 document.getElementById('ytPlayer').src = embedUrl;
-                
-                // Actualizamos el botón de emergencia por si el video falla
                 var externalBtn = document.getElementById('ytExternalLink');
                 if(externalBtn) {
                     externalBtn.href = url;
                 }
-
                 document.getElementById('youtubeModal').style.display = 'block';
             } else {
-                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
                 window.open(url, '_blank');
             }
         }
@@ -1305,7 +1285,6 @@
         function closeYtModal() {
             var modal = document.getElementById('youtubeModal');
             var iframe = document.getElementById('ytPlayer');
-            
             modal.style.display = 'none';
             iframe.src = ''; 
         }
@@ -1332,8 +1311,8 @@
             var objectTag = document.getElementById('pdfObject');
             
             modal.style.display = 'none';
-            objectTag.data = ''; // Limpiar para detener carga
-            document.body.style.overflow = ''; // Restaura scroll
+            objectTag.data = ''; 
+            document.body.style.overflow = '';
         }
 
         // Cerrar modal al hacer clic fuera del contenido
