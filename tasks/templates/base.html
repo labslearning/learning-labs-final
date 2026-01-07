@@ -329,6 +329,8 @@
             background-color: #000;
             border-radius: 10px;
             box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
         }
 
         .video-container {
@@ -336,6 +338,7 @@
             padding-bottom: 56.25%; /* 16:9 */
             padding-top: 25px;
             height: 0;
+            width: 100%;
         }
 
         .video-container iframe {
@@ -344,7 +347,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            border-radius: 10px;
+            border-radius: 10px 10px 0 0; /* Ajuste para el botón inferior */
+        }
+        
+        .yt-modal-footer {
+            background-color: #111;
+            padding: 10px;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
         }
 
         .close-yt {
@@ -707,6 +717,11 @@
             <div class="video-container">
                 <iframe id="ytPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
+            <div class="yt-modal-footer">
+                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
+                    <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
+                </a>
+            </div>
         </div>
     </div>
 
@@ -977,10 +992,8 @@
                 if (!target || !target.getAttribute('href')) return;
 
                 var href = target.getAttribute('href');
-                var currentDomain = window.location.hostname;
-
-                // 1. LÓGICA DE YOUTUBE (Prioridad Alta)
-                // Si es YouTube, usamos el modal oscuro
+                
+                // --- PROTECCIÓN 1: LÓGICA DE YOUTUBE (Prioridad Alta) ---
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -988,36 +1001,54 @@
                     return; 
                 }
 
-                // 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153)
-                // Verificamos si empieza con http/https y NO contiene nuestro dominio
-                var esAbsoluto = href.indexOf('http') === 0;
-                var esMismoDominio = href.includes(currentDomain);
-
-                if (esAbsoluto && !esMismoDominio) {
-                    // Es externo: Forzar nueva pestaña
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.open(href, '_blank', 'noopener,noreferrer');
+                // --- PROTECCIÓN 2: LÓGICA DE ENLACES EXTERNOS (ANTI-ERROR 153) ---
+                // Verifica rigurosamente si el dominio destino es diferente al actual
+                try {
+                    // Solo analizamos URLs absolutas (http/https)
+                    if (href.indexOf('http') === 0) {
+                        var targetUrl = new URL(href);
+                        var currentHost = window.location.hostname;
+                        
+                        // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
+                        if (targetUrl.hostname !== currentHost) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // 'noopener,noreferrer' es buena práctica de seguridad
+                            window.open(href, '_blank', 'noopener,noreferrer');
+                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
+                        }
+                    }
+                } catch (err) {
+                    // Si la URL es rara o falla el análisis, dejamos que el navegador decida,
+                    // pero por seguridad podríamos forzar _blank si parece http
+                    if (href.indexOf('http') === 0) {
+                         window.open(href, '_blank');
+                    }
                 }
-                
-                // Si es un enlace interno, dejamos que el navegador actúe normal.
 
-            }, true); // Use capture
+            }, true); // Use capture para interceptar antes que nadie
         });
 
         function openYtModal(url) {
             var videoId = '';
-            // Regex mejorado para capturar ID de YouTube
             var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             var match = url.match(regExp);
 
             if (match && match[2].length == 11) {
                 videoId = match[2];
                 var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                
                 document.getElementById('ytPlayer').src = embedUrl;
+                
+                // Actualizamos el botón de emergencia por si el video falla
+                var externalBtn = document.getElementById('ytExternalLink');
+                if(externalBtn) {
+                    externalBtn.href = url;
+                }
+
                 document.getElementById('youtubeModal').style.display = 'block';
             } else {
-                // Si falla el regex, abrir en nueva pestaña por seguridad
+                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
                 window.open(url, '_blank');
             }
         }
