@@ -243,6 +243,7 @@
                 font-size: 1.4rem;
             }
             
+            /* El menú colapsado se ve como una tarjeta flotante y limpia */
             .navbar-collapse {
                 background-color: white; /* Fondo blanco tipo App */
                 margin-top: 1rem;
@@ -252,6 +253,7 @@
                 border: 1px solid rgba(0,0,0,0.05);
             }
 
+            /* Estilo "App" para los enlaces en móvil */
             .nav-link {
                 padding: 0.8rem 1rem !important;
                 margin: 0.3rem 0;
@@ -275,7 +277,7 @@
                 margin-right: 8px;
             }
             
-            /* Ajuste de Badge en Móvil */
+            /* Ajuste de Badge en Móvil (ya no flota, se pone al lado) */
             .badge-notification {
                 position: static;
                 transform: none;
@@ -373,7 +375,7 @@
             display: block;
             width: 100%;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch; /* Scroll suave en móviles */
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             margin-bottom: 1rem;
@@ -383,7 +385,7 @@
         
         table.table {
             margin-bottom: 0;
-            white-space: nowrap; /* Evita saltos de línea feos */
+            white-space: nowrap; /* Evita saltos de línea feos en celdas */
         }
         
         table.table thead th {
@@ -409,7 +411,7 @@
             padding-left: 1.5rem;
             margin-right: auto;
             margin-left: auto;
-            padding-bottom: 4rem;
+            padding-bottom: 4rem; /* Espacio extra al fondo */
         }
         
         @media (min-width: 1400px) {
@@ -674,6 +676,17 @@
             0% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
             100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
+        }
+
+        /* ========== RESPONSIVIDAD ADICIONAL ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.75rem 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
