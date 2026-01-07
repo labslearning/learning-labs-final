@@ -14,6 +14,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configurar el worker de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <style>
         :root {
             /* Sistema de diseño educativo */
@@ -418,22 +424,22 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.8); /* Fondo oscuro transparente */
-            backdrop-filter: blur(5px); /* Efecto borroso bonito */
+            background-color: rgba(0,0,0,0.85); /* Fondo oscuro transparente */
+            backdrop-filter: blur(5px);
         }
 
         .yt-modal-content {
             position: relative;
             margin: 2% auto; /* Margen superior reducido */
             padding: 0;
-            width: 85%;
+            width: 90%;
             max-width: 1000px;
-            background-color: #000;
+            background-color: #222;
             border-radius: 10px;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            height: 90vh; /* Altura fija para PDFs */
+            height: 90vh; /* Altura fija */
         }
         
         /* Ajuste Modal en Celular */
@@ -482,6 +488,24 @@
 
         .close-yt:hover {
             color: #ff0000;
+        }
+
+        /* Contenedor específico para PDF.js */
+        #pdf-viewer-container {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .pdf-page-canvas {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            max-width: 95%; /* Asegura que no se desborde en celular */
         }
 
         /* Estilos antiguos del modal de video local (se mantienen por compatibilidad) */
@@ -842,14 +866,17 @@
     <div id="pdfModal" class="yt-modal">
         <div class="yt-modal-content">
             <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
-            <div style="flex: 1; width: 100%; height: 100%; background-color: #333; border-radius: 10px 10px 0 0; overflow: hidden;">
-                <iframe id="pdfFrame" src="" width="100%" height="100%" style="border:none;" allowfullscreen></iframe>
-            </div>
+            <div id="pdf-viewer-container">
+                <div id="pdf-loading" class="text-white text-center mt-5">
+                    <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+                    <p class="mt-2">Cargando documento...</p>
+                </div>
+                </div>
             
             <div class="yt-modal-footer d-flex justify-content-between align-items-center" style="color:white; background: #111;">
                 <span class="text-white-50 small">Visor de Documentos</span>
                 <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-download"></i> Descargar
+                    <i class="fas fa-download"></i> Guardar
                 </a>
             </div>
         </div>
@@ -1140,7 +1167,7 @@
                     return; 
                 }
 
-                // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
+                // --- 2. LÓGICA DE PDF (VISUALIZADOR PDF.JS) ---
                 if (href.toLowerCase().endsWith('.pdf')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1148,7 +1175,7 @@
                     return;
                 }
 
-                // --- 3. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // --- 3. LÓGICA DE ENLACES EXTERNOS ---
                 try {
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
@@ -1198,28 +1225,70 @@
             iframe.src = ''; 
         }
 
-        // Funciones del Modal de PDF MODIFICADAS PARA IFRAME
-        function openPdfModal(url) {
-            var modal = document.getElementById('pdfModal');
-            var iframe = document.getElementById('pdfFrame'); // Usamos el ID del iframe
-            var downloadBtn = document.getElementById('pdfDownloadLink');
-            
-            // Asignar fuente al iframe y botón
-            iframe.src = url; // IFRAME usa src, no data
-            downloadBtn.href = url;
+        // --- LÓGICA VISOR PDF.JS ---
+        let currentPdf = null;
 
-            // Mostrar modal
+        async function openPdfModal(url) {
+            var modal = document.getElementById('pdfModal');
+            var container = document.getElementById('pdf-viewer-container');
+            var downloadBtn = document.getElementById('pdfDownloadLink');
+            var loadingSpinner = document.getElementById('pdf-loading');
+
+            downloadBtn.href = url;
             modal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll en el fondo
+            document.body.style.overflow = 'hidden';
+
+            // Limpiar visor anterior
+            container.innerHTML = '';
+            container.appendChild(loadingSpinner);
+            loadingSpinner.style.display = 'block';
+
+            try {
+                // Cargar PDF
+                const loadingTask = pdfjsLib.getDocument(url);
+                currentPdf = await loadingTask.promise;
+                
+                loadingSpinner.style.display = 'none';
+                
+                // Renderizar todas las páginas
+                for (let pageNum = 1; pageNum <= currentPdf.numPages; pageNum++) {
+                    const page = await currentPdf.getPage(pageNum);
+                    
+                    const scale = 1.5; // Calidad de zoom inicial
+                    const viewport = page.getViewport({ scale: scale });
+
+                    // Crear canvas para la página
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page-canvas';
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    // Ajustar estilo para responsividad
+                    canvas.style.width = '100%';
+                    canvas.style.maxWidth = '800px'; 
+                    canvas.style.height = 'auto';
+
+                    container.appendChild(canvas);
+
+                    // Renderizar
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
+                }
+            } catch (error) {
+                console.error('Error al cargar PDF:', error);
+                loadingSpinner.innerHTML = `<p class="text-danger">Error al cargar el documento.<br>Intenta descargarlo.</p>`;
+            }
         }
 
         function closePdfModal() {
             var modal = document.getElementById('pdfModal');
-            var iframe = document.getElementById('pdfFrame');
-            
             modal.style.display = 'none';
-            iframe.src = ''; // Limpiar para detener carga
-            document.body.style.overflow = ''; // Restaura scroll
+            document.body.style.overflow = '';
+            currentPdf = null;
         }
 
         // Cerrar modal al hacer clic fuera
