@@ -306,7 +306,7 @@
             padding: 1.5rem;
         }
 
-        /* ========== MODAL GENÉRICO (Usado para PDF) ========== */
+        /* ========== MODAL DE VIDEO MEJORADO (YOUTUBE) ========== */
         .yt-modal {
             display: none; /* Oculto por defecto */
             position: fixed; 
@@ -316,28 +316,51 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.85); /* Fondo oscuro transparente */
+            background-color: rgba(0,0,0,0.8); /* Fondo oscuro transparente */
             backdrop-filter: blur(5px); /* Efecto borroso bonito */
         }
 
         .yt-modal-content {
             position: relative;
-            margin: 2% auto; /* Margen superior reducido para aprovechar altura */
+            margin: 5% auto;
             padding: 0;
-            width: 90%;
-            max-width: 1000px; /* Más ancho para leer PDFs cómodamente */
-            background-color: #222;
+            width: 80%;
+            max-width: 800px;
+            background-color: #000;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
-            height: 90vh; /* Altura fija relativa a la pantalla */
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            padding-top: 25px;
+            height: 0;
+            width: 100%;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px 10px 0 0; /* Ajuste para el botón inferior */
+        }
+        
+        .yt-modal-footer {
+            background-color: #111;
+            padding: 10px;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
         }
 
         .close-yt {
             color: white;
             position: absolute;
-            top: -35px;
+            top: -30px;
             right: 0;
             font-size: 28px;
             font-weight: bold;
@@ -349,15 +372,7 @@
             color: #ff0000;
         }
 
-        .yt-modal-footer {
-            background-color: #111;
-            padding: 12px;
-            text-align: right;
-            border-radius: 0 0 10px 10px;
-            border-top: 1px solid #333;
-        }
-
-        /* Estilos antiguos del modal de video (se mantienen por compatibilidad para videos locales) */
+        /* Estilos antiguos del modal de video (se mantienen por compatibilidad) */
         .video-modal {
             position: fixed;
             left: 0;
@@ -696,13 +711,15 @@
     {% block content %}
     {% endblock %}
     
-    <div id="pdfModal" class="yt-modal">
+    <div id="youtubeModal" class="yt-modal">
         <div class="yt-modal-content">
-            <span class="close-yt" onclick="closePdfModal()">&times; Cerrar</span>
-            <iframe id="pdfFrame" src="" style="width:100%; height:100%; border:none; border-radius: 10px 10px 0 0;" allowfullscreen></iframe>
+            <span class="close-yt" onclick="closeYtModal()">&times; Cerrar</span>
+            <div class="video-container">
+                <iframe id="ytPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
             <div class="yt-modal-footer">
-                <a id="pdfDownloadLink" href="#" download class="btn btn-sm btn-primary">
-                    <i class="fas fa-download"></i> Descargar PDF
+                <a id="ytExternalLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary text-white" style="border: 1px solid #555;">
+                    <i class="fas fa-external-link-alt"></i> ¿No carga? Ver en YouTube
                 </a>
             </div>
         </div>
@@ -734,7 +751,7 @@
 
     {# 3. Lógica Global (Video y Notificaciones) #}
     <script>
-        // Elementos del DOM del Modal de Video Local
+        // Elementos del DOM del Modal de Video
         const videoModalEl = document.getElementById('videoModal');
         const videoModalBodyEl = document.getElementById('videoModalBody');
         const videoModalTitleEl = document.getElementById('videoModalTitle');
@@ -747,7 +764,7 @@
             if (videoModalCloseHeaderEl) videoModalCloseHeaderEl.addEventListener('click', closeVideoModal);
             if (videoModalCloseFooterBtnEl) videoModalCloseFooterBtnEl.addEventListener('click', closeVideoModal);
 
-            // Escuchar tecla Escape para cerrar modal (Videos o PDFs)
+            // Escuchar tecla Escape para cerrar modal
             document.addEventListener('keydown', handleGlobalKeydown);
 
              // --- ✅ SCRIPT DE NOTIFICACIONES ---
@@ -804,7 +821,7 @@
             }
         }
 
-        // --- Funciones del Modal de Video Local ---
+        // --- Funciones del Modal de Video ---
         function openVideoModal(videoUrl, videoTitle = "Clase Educativa") {
             if (!videoModalEl || !videoModalBodyEl || !videoModalTitleEl) {
                 console.error("Error: Elementos del modal de video no encontrados.");
@@ -900,14 +917,9 @@
         function handleGlobalKeydown(event) {
             if (event.key === "Escape" || event.key === "Esc") {
                  console.log("Escape key pressed.");
-                
-                // Cerrar modal de video local si está abierto
                 if (videoModalEl && videoModalEl.classList.contains('active')) {
+                    console.log("Closing video modal via Escape key.");
                     closeVideoModal();
-                }
-                // Cerrar modal de PDF si está abierto
-                if (document.getElementById('pdfModal').style.display === 'block') {
-                    closePdfModal();
                 }
             }
         }
@@ -982,8 +994,9 @@
                 var href = target.getAttribute('href');
                 var currentDomain = window.location.hostname;
 
-                // --- 1. LÓGICA DE YOUTUBE (ANTI-ERROR 153) ---
-                // Si es YouTube, NO abrimos modal. Abrimos nueva pestaña.
+                // --- 1. LÓGICA DE YOUTUBE (Prioridad Alta) ---
+                // Si es YouTube, NO abrimos el modal. Forzamos nueva pestaña automáticamente.
+                // Esto evita el Error 153 porque el video carga directamente en youtube.com
                 if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -991,64 +1004,72 @@
                     return; 
                 }
 
-                // --- 2. LÓGICA DE PDF (VISUALIZADOR INTEGRADO) ---
-                // Si el archivo termina en .pdf, abrir modal interno
-                if (href.toLowerCase().endsWith('.pdf')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openPdfModal(href);
-                    return;
-                }
-
-                // --- 3. LÓGICA DE OTROS ENLACES EXTERNOS ---
+                // --- 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153 en otros sitios) ---
+                // Verifica rigurosamente si el dominio destino es diferente al actual
                 try {
+                    // Solo analizamos URLs absolutas (http/https)
                     if (href.indexOf('http') === 0) {
                         var targetUrl = new URL(href);
+                        
+                        // Si el "hostname" es diferente, es externo -> FUERZA NUEVA PESTAÑA
                         if (targetUrl.hostname !== currentDomain) {
                             e.preventDefault();
                             e.stopPropagation();
+                            // 'noopener,noreferrer' es buena práctica de seguridad
                             window.open(href, '_blank', 'noopener,noreferrer');
+                            console.log("Enlace externo detectado y redirigido a nueva pestaña:", href);
                         }
                     }
                 } catch (err) {
-                    // Fallback
-                    if (href.indexOf('http') === 0 && !href.includes(currentDomain)) {
+                    // Si la URL es rara o falla el análisis, dejamos que el navegador decida,
+                    // pero por seguridad podríamos forzar _blank si parece http
+                    if (href.indexOf('http') === 0) {
                          window.open(href, '_blank');
                     }
                 }
 
-            }, true); // Use capture
+            }, true); // Use capture para interceptar antes que nadie
         });
 
-        // Funciones del Modal de PDF
-        function openPdfModal(url) {
-            var modal = document.getElementById('pdfModal');
-            var iframe = document.getElementById('pdfFrame');
-            var downloadBtn = document.getElementById('pdfDownloadLink');
-            
-            // Asignar fuente al iframe y al botón de descarga
-            iframe.src = url;
-            downloadBtn.href = url;
+        // NOTA: Estas funciones quedan aquí por si en el futuro decides arreglar el API,
+        // pero actualmente no se llamarán para enlaces de YouTube gracias al bloque anterior.
+        function openYtModal(url) {
+            var videoId = '';
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
 
-            // Mostrar modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll en el fondo
+            if (match && match[2].length == 11) {
+                videoId = match[2];
+                var embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                
+                document.getElementById('ytPlayer').src = embedUrl;
+                
+                // Actualizamos el botón de emergencia por si el video falla
+                var externalBtn = document.getElementById('ytExternalLink');
+                if(externalBtn) {
+                    externalBtn.href = url;
+                }
+
+                document.getElementById('youtubeModal').style.display = 'block';
+            } else {
+                // Si falla el regex (enlace roto), abrir en nueva pestaña por seguridad
+                window.open(url, '_blank');
+            }
         }
 
-        function closePdfModal() {
-            var modal = document.getElementById('pdfModal');
-            var iframe = document.getElementById('pdfFrame');
+        function closeYtModal() {
+            var modal = document.getElementById('youtubeModal');
+            var iframe = document.getElementById('ytPlayer');
             
             modal.style.display = 'none';
             iframe.src = ''; 
-            document.body.style.overflow = ''; // Restaura scroll
         }
 
-        // Cerrar modal al hacer clic fuera
+        // Cerrar modal al hacer clic fuera del contenido
         window.addEventListener('click', function(event) {
-            var modal = document.getElementById('pdfModal');
+            var modal = document.getElementById('youtubeModal');
             if (event.target == modal) {
-                closePdfModal();
+                closeYtModal();
             }
         });
     </script>
