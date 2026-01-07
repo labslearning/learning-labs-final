@@ -973,16 +973,36 @@
             document.body.addEventListener('click', function(e) {
                 var target = e.target.closest('a');
                 
-                if (target) {
-                    var href = target.getAttribute('href');
-                    
-                    if (href && (href.includes('youtube.com/watch') || href.includes('youtu.be'))) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        openYtModal(href);
-                    }
+                // Si no es un link o no tiene href, salir
+                if (!target || !target.getAttribute('href')) return;
+
+                var href = target.getAttribute('href');
+                var currentDomain = window.location.hostname;
+
+                // 1. LÓGICA DE YOUTUBE (Prioridad Alta)
+                // Si es YouTube, usamos el modal oscuro
+                if (href.includes('youtube.com/watch') || href.includes('youtu.be')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openYtModal(href);
+                    return; 
                 }
-            }, true); // Use capture to handle event earlier
+
+                // 2. LÓGICA DE ENLACES EXTERNOS (Evitar Error 153)
+                // Verificamos si empieza con http/https y NO contiene nuestro dominio
+                var esAbsoluto = href.indexOf('http') === 0;
+                var esMismoDominio = href.includes(currentDomain);
+
+                if (esAbsoluto && !esMismoDominio) {
+                    // Es externo: Forzar nueva pestaña
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(href, '_blank', 'noopener,noreferrer');
+                }
+                
+                // Si es un enlace interno, dejamos que el navegador actúe normal.
+
+            }, true); // Use capture
         });
 
         function openYtModal(url) {
@@ -997,6 +1017,7 @@
                 document.getElementById('ytPlayer').src = embedUrl;
                 document.getElementById('youtubeModal').style.display = 'block';
             } else {
+                // Si falla el regex, abrir en nueva pestaña por seguridad
                 window.open(url, '_blank');
             }
         }
