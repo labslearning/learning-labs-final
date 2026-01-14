@@ -2052,17 +2052,13 @@ def api_get_students_by_course(request, curso_id):
 
 
 # --- VISTAS DE ACUDIENTE Y GESTIÓN DE CUENTAS ---
-
+# Desde Aqui 
 @login_required
 @role_required('ACUDIENTE')
 def dashboard_acudiente(request):
     """
     Panel de control para el acudiente. Muestra la información de todos los estudiantes vinculados.
-
-    Correcciones:
-    - usar objeto Materia como clave en materias_con_notas (para que plantilla pueda usar `.nombre`)
-    - construir para cada estudiante las mismas colecciones que usa dashboard_estudiante
-    - Se añade el 'perfil' de cada estudiante para compatibilidad total con la plantilla del estudiante.
+    INCLUYE: Lógica de estadística para gráficas (Chart.js).
     """
     acudiente_user = request.user
 
@@ -2086,13 +2082,22 @@ def dashboard_acudiente(request):
         matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).select_related('curso').first()
         curso = matricula.curso if matricula else None
 
-        # colecciones por estudiante (mismo formato que dashboard_estudiante)
+        # colecciones por estudiante
         materias_con_notas = {}
         comentarios_docente = {}
         actividades_semanales = {}
         convivencia_notas = {}
         logros_por_materia_por_periodo = {}
         periodos_disponibles = []
+        
+        # --- VARIABLES PARA ESTADÍSTICAS (Inicialización) ---
+        stats_materias_labels = []    # Nombres de materias para el eje X
+        stats_materias_promedios = [] # Promedios para las barras
+        stats_periodos_labels = []    # Nombres de periodos
+        stats_periodos_data = []      # Evolución temporal
+        conteo_ganadas = 0
+        conteo_perdidas = 0
+        promedio_general_acumulado = 0.0
 
         if curso:
             # periodos y materias del curso
@@ -2100,53 +2105,111 @@ def dashboard_acudiente(request):
             asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia')
             materias = [a.materia for a in asignaciones]
 
-            # Notas del estudiante en las materias del curso
-            # Se optimiza la consulta para traer notas de todas las materias de una vez
+            # -----------------------------------------------------------
+            # 1. CÁLCULO DE ESTADÍSTICAS (NUEVO BLOQUE)
+            # -----------------------------------------------------------
+            # Traemos solo las notas definitivas (numero_nota=5) para los cálculos rápidos
+            notas_definitivas_qs = Nota.objects.filter(
+                estudiante=estudiante, 
+                materia__in=materias,
+                numero_nota=5
+            )
+
+            # A. Estadísticas por Materia y Ganadas/Perdidas
+            for materia in materias:
+                # Filtrar notas de esta materia en memoria (Python) para no hacer N consultas
+                notas_mat = [n.valor for n in notas_definitivas_qs if n.materia_id == materia.id]
+                
+                nombre_materia = materia.nombre
+                promedio_materia = 0.0
+
+                if notas_mat:
+                    promedio_materia = float(sum(notas_mat)) / len(notas_mat)
+                    
+                    # Conteo para la gráfica de Dona (Umbral 3.5)
+                    # Asegúrate de que NOTA_APROBACION esté importada o usa 3.5
+                    if promedio_materia >= 3.5:
+                        conteo_ganadas += 1
+                    else:
+                        conteo_perdidas += 1
+                
+                stats_materias_labels.append(nombre_materia)
+                stats_materias_promedios.append(round(promedio_materia, 2))
+
+            # B. Estadísticas por Periodo (Evolución)
+            for periodo in periodos_disponibles:
+                stats_periodos_labels.append(periodo.nombre)
+                # Notas de este periodo en todas las materias
+                notas_per = [n.valor for n in notas_definitivas_qs if n.periodo_id == periodo.id]
+                
+                if notas_per:
+                    prom_per = float(sum(notas_per)) / len(notas_per)
+                    stats_periodos_data.append(round(prom_per, 2))
+                else:
+                    stats_periodos_data.append(0)
+
+            # C. Promedio General del Estudiante
+            if stats_materias_promedios:
+                # Filtramos los ceros para no castigar el promedio con materias que no han iniciado
+                promedios_validos = [p for p in stats_materias_promedios if p > 0]
+                if promedios_validos:
+                    promedio_general_acumulado = sum(promedios_validos) / len(promedios_validos)
+
+            # -----------------------------------------------------------
+            # 2. CARGA DE DATOS PARA TABLAS (LÓGICA ORIGINAL OPTIMIZADA)
+            # -----------------------------------------------------------
             notas_qs = Nota.objects.filter(
                 estudiante=estudiante, materia__in=materias
             ).select_related('periodo', 'materia').order_by('periodo__id', 'numero_nota')
 
             for nota in notas_qs:
-                materia_obj = nota.materia  # <-- objeto Materia
+                materia_obj = nota.materia 
                 periodo_id = nota.periodo.id
-                # clave = objeto materia (no id) para que la plantilla pueda usar materia.nombre
                 materias_con_notas.setdefault(materia_obj, {}).setdefault(periodo_id, {})[nota.numero_nota] = nota
 
-            # Comentarios por materia del docente
+            # Comentarios
             comentarios_qs = ComentarioDocente.objects.filter(estudiante=estudiante, materia__in=materias).select_related('materia', 'docente')
             for c in comentarios_qs:
-                # clave = materia.id (así lo usa la plantilla del estudiante)
                 comentarios_docente.setdefault(c.materia.id, []).append(c)
 
-            # Actividades semanales del curso por materia
+            # Actividades
             actividades_qs = ActividadSemanal.objects.filter(curso=curso, materia__in=materias).order_by('-fecha_creacion').select_related('materia')
             for act in actividades_qs:
-                # clave = materia.id (así lo usa la plantilla del estudiante)
                 actividades_semanales.setdefault(act.materia.id, []).append(act)
 
-            # Logros por materia y periodo
+            # Logros
             logros_qs = LogroPeriodo.objects.filter(curso=curso, materia__in=materias).order_by('periodo__id', '-fecha_creacion').select_related('periodo', 'materia')
             for logro in logros_qs:
-                # clave = objeto materia (así lo usa la plantilla del estudiante)
                 logros_por_materia_por_periodo.setdefault(logro.materia, {}).setdefault(logro.periodo.id, []).append(logro)
 
-            # Convivencia (notas) del estudiante
+            # Convivencia
             convivencia_qs = Convivencia.objects.filter(estudiante=estudiante, curso=curso).select_related('periodo')
             for conv in convivencia_qs:
                 convivencia_notas[conv.periodo.id] = {'valor': conv.valor, 'comentario': conv.comentario}
 
-        # ahora agregamos el bloque con la misma estructura que espera la plantilla dashboard_estudiante.html
+        # Agregamos el bloque completo
         estudiantes_data.append({
             'estudiante': estudiante,
-            'perfil': perfil_estudiante, # <-- AÑADIDO PARA COMPATIBILIDAD
+            'perfil': perfil_estudiante,
             'curso': curso,
-            'matricula': matricula, # <-- AÑADIDO PARA COMPATIBILIDAD
+            'matricula': matricula,
             'periodos_disponibles': periodos_disponibles,
             'materias_con_notas': materias_con_notas,
             'comentarios_docente': comentarios_docente,
             'actividades_semanales': actividades_semanales,
             'logros_por_materia_por_periodo': logros_por_materia_por_periodo,
             'convivencia_notas': convivencia_notas,
+            # --- OBJETO DE ESTADÍSTICAS PARA EL TEMPLATE ---
+            'stats': {
+                'materias_labels': json.dumps(stats_materias_labels),
+                'materias_data': json.dumps(stats_materias_promedios),
+                'periodos_labels': json.dumps(stats_periodos_labels),
+                'periodos_data': json.dumps(stats_periodos_data),
+                'ganadas': conteo_ganadas,
+                'perdidas': conteo_perdidas,
+                'promedio_general': round(promedio_general_acumulado, 2),
+                'distribucion_data': json.dumps([conteo_ganadas, conteo_perdidas])
+            }
         })
 
     context = {
@@ -2154,7 +2217,7 @@ def dashboard_acudiente(request):
         'estudiantes_data': estudiantes_data
     }
     return render(request, 'dashboard_acudiente.html', context)
-
+# Hasta Aqui
 
 @login_required
 def cambiar_clave(request):

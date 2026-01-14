@@ -5,6 +5,8 @@
 {% load static %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 /* Estilos adicionales para un look más profesional */
 :root {
@@ -82,6 +84,23 @@ body {
     box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
 }
 
+/* 📊 Nuevos Estilos para las Estadísticas */
+.stat-card {
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+    height: 100%;
+    background: #fff;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+.chart-container {
+    position: relative;
+    width: 100%;
+}
 </style>
 
 <div class="container mt-4 py-4">
@@ -147,6 +166,55 @@ body {
                             </button>
                         {% endif %}
                     </div>
+
+                    <div class="row mb-5">
+                        <div class="col-12">
+                            <h4 class="fw-bold text-secondary mb-3"><i class="fas fa-chart-pie me-2"></i>Analítica de Rendimiento</h4>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center">
+                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Promedio General</h6>
+                                <h1 class="display-3 fw-bold mb-0 {% if data.stats.promedio_general < 3.5 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ data.stats.promedio_general }}
+                                </h1>
+                                <small class="text-muted">Escala 1.0 - 5.0</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 mb-3">
+                            <div class="stat-card p-3">
+                                <h6 class="text-muted fw-bold mb-3">Evolución por Periodo</h6>
+                                <div class="chart-container" style="height: 200px;">
+                                    <canvas id="chartPeriodos_{{ data.estudiante.id }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-card p-3">
+                                <h6 class="text-muted fw-bold mb-3">Estado de Materias</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="chart-container" style="height: 160px; width: 160px;">
+                                        <canvas id="chartStatus_{{ data.estudiante.id }}"></canvas>
+                                    </div>
+                                    <div class="ms-3 small">
+                                        <div class="mb-2"><span class="badge bg-success rounded-pill me-1">&bull;</span> Aprobando: <strong>{{ data.stats.ganadas }}</strong></div>
+                                        <div><span class="badge bg-danger rounded-pill me-1">&bull;</span> En Riesgo: <strong>{{ data.stats.perdidas }}</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="stat-card p-3">
+                                <h6 class="text-muted fw-bold mb-3">Desempeño por Materia (Acumulado)</h6>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="chartMaterias_{{ data.estudiante.id }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     {# Solo muestra este encabezado si hay MÁS de un estudiante #}
                     {% if estudiantes_data|length > 1 %}
@@ -171,6 +239,88 @@ body {
                         {% include "dashboard_estudiante.html" %}
 
                     {% endwith %}
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // 1. Gráfica de Evolución (Línea)
+                            const ctxPeriodos = document.getElementById('chartPeriodos_{{ data.estudiante.id }}');
+                            if (ctxPeriodos) {
+                                new Chart(ctxPeriodos.getContext('2d'), {
+                                    type: 'line',
+                                    data: {
+                                        labels: {{ data.stats.periodos_labels|safe }},
+                                        datasets: [{
+                                            label: 'Promedio',
+                                            data: {{ data.stats.periodos_data|safe }},
+                                            borderColor: '#28a745',
+                                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                            tension: 0.3,
+                                            fill: true,
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        scales: { y: { min: 1, max: 5, grid: { borderDash: [5, 5] } } },
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            }
+
+                            // 2. Gráfica de Estatus (Dona)
+                            const ctxStatus = document.getElementById('chartStatus_{{ data.estudiante.id }}');
+                            if (ctxStatus) {
+                                new Chart(ctxStatus.getContext('2d'), {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Aprobando', 'Reprobando'],
+                                        datasets: [{
+                                            data: {{ data.stats.distribucion_data|safe }},
+                                            backgroundColor: ['#28a745', '#dc3545'],
+                                            borderWidth: 2,
+                                            borderColor: '#ffffff'
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        cutout: '75%',
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            }
+
+                            // 3. Gráfica por Materias (Barras)
+                            const ctxMaterias = document.getElementById('chartMaterias_{{ data.estudiante.id }}');
+                            if (ctxMaterias) {
+                                const rawData = {{ data.stats.materias_data|safe }};
+                                const bgColors = rawData.map(val => val < 3.5 ? 'rgba(220, 53, 69, 0.8)' : 'rgba(40, 167, 69, 0.8)');
+                                
+                                new Chart(ctxMaterias.getContext('2d'), {
+                                    type: 'bar',
+                                    data: {
+                                        labels: {{ data.stats.materias_labels|safe }},
+                                        datasets: [{
+                                            label: 'Promedio',
+                                            data: rawData,
+                                            backgroundColor: bgColors,
+                                            borderRadius: 4,
+                                            barPercentage: 0.6
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        scales: { y: { min: 0, max: 5 } },
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            }
+                        });
+                    </script>
+
                 </div>
             {% endfor %}
         </div>
