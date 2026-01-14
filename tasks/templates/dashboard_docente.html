@@ -214,6 +214,7 @@
             </div>
 
             <div class="row mb-5">
+                
                 <div class="col-lg-4 mb-4">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-danger text-white py-3">
@@ -323,7 +324,7 @@
                                         <tr>
                                             <th class="ps-4">Estudiante</th>
                                             <th class="text-center">Fallas</th>
-                                            <th class="text-end pe-3">Acción IA</th>
+                                            <th class="text-end pe-3">Historial</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -337,11 +338,62 @@
                                                 <span class="badge bg-warning text-dark rounded-pill">{{ item.fallas }}</span>
                                             </td>
                                             <td class="text-end pe-3">
-                                                <a href="{% url 'ai_engine' %}?action=plan_asistencia&target_id={{ item.estudiante.id }}" 
-                                                   class="btn btn-sm btn-outline-warning text-dark rounded-pill shadow-sm"
-                                                   title="Estrategia de retención">
-                                                    <i class="fas fa-handshake me-1"></i>Retener
-                                                </a>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'ai_engine' %}?action=plan_asistencia&target_id={{ item.estudiante.id }}" 
+                                                       class="btn btn-sm btn-outline-dark rounded-start"
+                                                       title="Estrategia de retención">
+                                                        <i class="fas fa-robot"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-warning rounded-end" 
+                                                            data-bs-toggle="modal" data-bs-target="#modalFallas{{ item.estudiante.id }}"
+                                                            title="Ver fechas exactas">
+                                                        <i class="fas fa-list-ul"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <div class="modal fade" id="modalFallas{{ item.estudiante.id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-warning-subtle">
+                                                                <h6 class="modal-title fw-bold text-dark">
+                                                                    <i class="fas fa-user-clock me-2"></i>Historial: {{ item.estudiante.get_full_name }}
+                                                                </h6>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body p-0">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-sm table-striped mb-0 small text-start">
+                                                                        <thead class="table-light">
+                                                                            <tr>
+                                                                                <th class="ps-3">Fecha</th>
+                                                                                <th>Materia</th>
+                                                                                <th>Estado</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for asis in item.estudiante.asistencia_set.all|dictsortreversed:"fecha" %}
+                                                                                {# Filtramos solo las fallas registradas por este docente #}
+                                                                                {% if asis.estado == 'FALLA' and asis.registrado_por == request.user %}
+                                                                                <tr>
+                                                                                    <td class="ps-3">{{ asis.fecha|date:"D d M" }}</td>
+                                                                                    <td>{{ asis.materia.nombre }}</td>
+                                                                                    <td><span class="badge bg-danger rounded-pill">Falla</span></td>
+                                                                                </tr>
+                                                                                {% endif %}
+                                                                            {% empty %}
+                                                                                <tr><td colspan="3" class="text-center py-3">No hay registros detallados disponibles.</td></tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer py-1">
+                                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                         {% endfor %}
