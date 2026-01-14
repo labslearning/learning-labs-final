@@ -101,6 +101,28 @@ body {
     position: relative;
     width: 100%;
 }
+
+/* Gráfico circular CSS para asistencia */
+.circular-chart {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 250px;
+}
+.circle-bg {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 3.8;
+}
+.circle {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  animation: progress 1s ease-out forwards;
+}
+@keyframes progress {
+  0% { stroke-dasharray: 0 100; }
+}
 </style>
 
 <div class="container mt-4 py-4">
@@ -173,7 +195,7 @@ body {
                         </div>
                         
                         <div class="col-md-3 mb-3">
-                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center">
+                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center h-100">
                                 <h6 class="text-muted text-uppercase small ls-1 mb-2">Promedio General</h6>
                                 <h1 class="display-3 fw-bold mb-0 {% if data.stats.promedio_general < 3.5 %}text-danger{% else %}text-success{% endif %}">
                                     {{ data.stats.promedio_general }}
@@ -182,34 +204,62 @@ body {
                             </div>
                         </div>
 
-                        <div class="col-md-5 mb-3">
-                            <div class="stat-card p-3">
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center h-100">
+                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Asistencia Total</h6>
+                                <div class="position-relative d-flex justify-content-center align-items-center" style="width: 100px; height: 100px;">
+                                    <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
+                                        <path class="circle-bg"
+                                            d="M18 2.0845
+                                               a 15.9155 15.9155 0 0 1 0 31.831
+                                               a 15.9155 15.9155 0 0 1 0 -31.831"
+                                            fill="none" stroke="#eee" stroke-width="3" />
+                                        <path class="circle"
+                                            stroke-dasharray="{{ data.stats.asistencia_pct }}, 100"
+                                            d="M18 2.0845
+                                               a 15.9155 15.9155 0 0 1 0 31.831
+                                               a 15.9155 15.9155 0 0 1 0 -31.831"
+                                            fill="none" 
+                                            stroke="{% if data.stats.asistencia_pct < 85 %}#dc3545{% else %}#28a745{% endif %}" 
+                                            stroke-width="3" 
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    <div class="position-absolute fw-bold fs-4">
+                                        {{ data.stats.asistencia_pct }}%
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-2">Fallas acumuladas: <strong>{{ data.stats.total_fallas }}</strong></small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="stat-card p-3 h-100">
                                 <h6 class="text-muted fw-bold mb-3">Evolución por Periodo</h6>
-                                <div class="chart-container" style="height: 200px;">
+                                <div class="chart-container" style="height: 180px;">
                                     <canvas id="chartPeriodos_{{ data.estudiante.id }}"></canvas>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <div class="stat-card p-3">
+                            <div class="stat-card p-3 h-100">
                                 <h6 class="text-muted fw-bold mb-3">Estado de Materias</h6>
-                                <div class="d-flex align-items-center justify-content-center">
-                                    <div class="chart-container" style="height: 160px; width: 160px;">
+                                <div class="d-flex align-items-center justify-content-center h-75">
+                                    <div class="chart-container" style="height: 150px; width: 150px;">
                                         <canvas id="chartStatus_{{ data.estudiante.id }}"></canvas>
                                     </div>
                                     <div class="ms-3 small">
-                                        <div class="mb-2"><span class="badge bg-success rounded-pill me-1">&bull;</span> Aprobando: <strong>{{ data.stats.ganadas }}</strong></div>
-                                        <div><span class="badge bg-danger rounded-pill me-1">&bull;</span> En Riesgo: <strong>{{ data.stats.perdidas }}</strong></div>
+                                        <div class="mb-2"><span class="badge bg-success rounded-pill me-1">&bull;</span> Ganando: <strong>{{ data.stats.ganadas }}</strong></div>
+                                        <div><span class="badge bg-danger rounded-pill me-1">&bull;</span> Perdiendo: <strong>{{ data.stats.perdidas }}</strong></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-12">
-                            <div class="stat-card p-3">
+                        <div class="col-md-8 mb-3">
+                            <div class="stat-card p-3 h-100">
                                 <h6 class="text-muted fw-bold mb-3">Desempeño por Materia (Acumulado)</h6>
-                                <div class="chart-container" style="height: 300px;">
+                                <div class="chart-container" style="height: 200px;">
                                     <canvas id="chartMaterias_{{ data.estudiante.id }}"></canvas>
                                 </div>
                             </div>
@@ -275,7 +325,7 @@ body {
                                 new Chart(ctxStatus.getContext('2d'), {
                                     type: 'doughnut',
                                     data: {
-                                        labels: ['Aprobando', 'Reprobando'],
+                                        labels: ['Ganando', 'Perdiendo'],
                                         datasets: [{
                                             data: {{ data.stats.distribucion_data|safe }},
                                             backgroundColor: ['#28a745', '#dc3545'],
@@ -286,7 +336,7 @@ body {
                                     options: {
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        cutout: '75%',
+                                        cutout: '70%',
                                         plugins: { legend: { display: false } }
                                     }
                                 });
@@ -307,7 +357,7 @@ body {
                                             data: rawData,
                                             backgroundColor: bgColors,
                                             borderRadius: 4,
-                                            barPercentage: 0.6
+                                            barPercentage: 0.7
                                         }]
                                     },
                                     options: {
