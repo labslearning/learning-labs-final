@@ -92,6 +92,7 @@ body {
     transition: transform 0.2s;
     height: 100%;
     background: #fff;
+    position: relative;
 }
 .stat-card:hover {
     transform: translateY(-3px);
@@ -151,7 +152,7 @@ body {
             </ul>
         {% endif %}
 
-        <div class="tab-content {% if estudiantes_data|length == 1 %}mt-4{% endif %}" id="studentTabContent"> {# Añade margen superior si solo hay 1 estudiante #}
+        <div class="tab-content {% if estudiantes_data|length == 1 %}mt-4{% endif %}" id="studentTabContent"> 
             {% for data in estudiantes_data %}
                 <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
                      id="content-{{ data.estudiante.id }}" role="tabpanel"
@@ -165,25 +166,23 @@ body {
                         </a>
 
                         {# 1. BOTÓN BOLETÍN #}
-                        {# Depende del switch 'puede_generar_boletin' de la Matrícula #}
                         {% if data.matricula and data.matricula.puede_generar_boletin %}
                             <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
                                 <i class="fas fa-file-pdf me-2"></i>Boletín
                             </a>
                         {% else %}
-                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada para este estudiante.">
+                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada.">
                                 <i class="fas fa-file-pdf me-2"></i>Boletín (No disp.)
                             </button>
                         {% endif %}
 
                         {# 2. BOTÓN OBSERVADOR #}
-                        {# LÓGICA SIMPLIFICADA: Ahora depende ÚNICAMENTE del switch del Administrador #}
                         {% if data.matricula and data.matricula.puede_ver_observador %}
                             <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary">
                                 <i class="fas fa-file-signature me-2"></i>Observador
                             </a>
                         {% else %}
-                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible (Contacte a administración)">
+                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible">
                                 <i class="fas fa-clock me-2"></i>Obs. (No disp.)
                             </button>
                         {% endif %}
@@ -210,25 +209,22 @@ body {
                                 <div class="position-relative d-flex justify-content-center align-items-center" style="width: 100px; height: 100px;">
                                     <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
                                         <path class="circle-bg"
-                                            d="M18 2.0845
-                                               a 15.9155 15.9155 0 0 1 0 31.831
-                                               a 15.9155 15.9155 0 0 1 0 -31.831"
-                                            fill="none" stroke="#eee" stroke-width="3" />
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                         <path class="circle"
                                             stroke-dasharray="{{ data.stats.asistencia_pct }}, 100"
-                                            d="M18 2.0845
-                                               a 15.9155 15.9155 0 0 1 0 31.831
-                                               a 15.9155 15.9155 0 0 1 0 -31.831"
-                                            fill="none" 
-                                            stroke="{% if data.stats.asistencia_pct < 85 %}#dc3545{% else %}#28a745{% endif %}" 
-                                            stroke-width="3" 
-                                            stroke-linecap="round" />
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                            stroke="{% if data.stats.asistencia_pct < 85 %}#dc3545{% else %}#28a745{% endif %}" />
                                     </svg>
-                                    <div class="position-absolute fw-bold fs-4">
-                                        {{ data.stats.asistencia_pct }}%
-                                    </div>
+                                    <div class="position-absolute fw-bold fs-4">{{ data.stats.asistencia_pct }}%</div>
                                 </div>
-                                <small class="text-muted mt-2">Fallas acumuladas: <strong>{{ data.stats.total_fallas }}</strong></small>
+                                <div class="mt-2">
+                                    <small class="text-muted d-block">Fallas acumuladas: <strong>{{ data.stats.total_fallas }}</strong></small>
+                                    {% if data.stats.total_fallas > 0 %}
+                                    <button class="btn btn-sm btn-outline-secondary mt-1 rounded-pill" data-bs-toggle="modal" data-bs-target="#modalAsistencia_{{ data.estudiante.id }}">
+                                        <i class="fas fa-list-ul"></i> Ver Historial
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
 
@@ -265,8 +261,48 @@ body {
                             </div>
                         </div>
                     </div>
+
+                    <div class="modal fade" id="modalAsistencia_{{ data.estudiante.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title"><i class="fas fa-calendar-times text-danger me-2"></i>Historial de Fallas</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    {% if data.stats.detalle_fallas %}
+                                    <table class="table table-striped mb-0">
+                                        <thead class="table-danger">
+                                            <tr>
+                                                <th class="ps-4">Fecha</th>
+                                                <th>Materia / Clase</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for falla in data.stats.detalle_fallas %}
+                                            <tr>
+                                                <td class="ps-4">{{ falla.fecha|date:"d M, Y" }}</td>
+                                                <td class="fw-bold">{{ falla.materia.nombre }}</td>
+                                                <td><span class="badge bg-danger">Falla</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    {% else %}
+                                    <div class="p-4 text-center text-muted">
+                                        No hay detalles disponibles.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    {# Solo muestra este encabezado si hay MÁS de un estudiante #}
+                    {# Encabezado del reporte si hay más de un estudiante #}
                     {% if estudiantes_data|length > 1 %}
                     <div class="student-report-header mb-4 p-3 rounded" style="background-color: var(--edu-acudiente-primary-light);">
                         <h4 class="mb-0 fw-semibold text-success d-flex justify-content-between align-items-center">
@@ -283,11 +319,9 @@ body {
                     </div>
                     {% endif %}
 
-                    {# Pasa todas las variables específicas de este estudiante al template 'include' #}
+                    {# Inclusión del dashboard original del estudiante #}
                     {% with estudiante=data.estudiante perfil=data.perfil curso=data.curso matricula=data.matricula periodos_disponibles=data.periodos_disponibles materias_con_notas=data.materias_con_notas comentarios_docente=data.comentarios_docente actividades_semanales=data.actividades_semanales logros_por_materia_por_periodo=data.logros_por_materia_por_periodo convivencia_notas=data.convivencia_notas %}
-
                         {% include "dashboard_estudiante.html" %}
-
                     {% endwith %}
 
                     <script>

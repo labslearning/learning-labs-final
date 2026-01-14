@@ -2054,19 +2054,19 @@ def api_get_students_by_course(request, curso_id):
 # --- VISTAS DE ACUDIENTE Y GESTIÓN DE CUENTAS ---
 # Desde Aqui 
 # ===================================================================
-# 🩺 CIRUGÍA VISUAL: DASHBOARD ACUDIENTE CON ANALÍTICA
+# 🩺 CIRUGÍA VISUAL: DASHBOARD ACUDIENTE (CON HISTORIAL DE FALLAS)
 # ===================================================================
 
 @login_required
 @role_required('ACUDIENTE')
 def dashboard_acudiente(request):
     """
-    Panel de control para el acudiente. Muestra la información de todos los estudiantes vinculados.
-    INCLUYE: Lógica de estadística para gráficas (Chart.js) y medidor de asistencia.
+    Panel de control para el acudiente.
+    INCLUYE: Analítica, Gráficas y DETALLE DE ASISTENCIA (Fechas y Materias).
     """
     acudiente_user = request.user
 
-    # Obtener vínculos acudiente -> estudiantes (optimizada)
+    # Obtener vínculos (optimizada)
     vinculados = Acudiente.objects.filter(acudiente=acudiente_user).select_related('estudiante', 'estudiante__perfil')
 
     if not vinculados.exists():
@@ -2091,7 +2091,7 @@ def dashboard_acudiente(request):
         logros_por_materia_por_periodo = {}
         periodos_disponibles = []
         
-        # --- VARIABLES PARA ESTADÍSTICAS ---
+        # Variables estadísticas
         stats_materias_labels = []    
         stats_materias_promedios = [] 
         stats_periodos_labels = []    
@@ -2103,6 +2103,7 @@ def dashboard_acudiente(request):
         # Variables de asistencia
         porcentaje_asistencia = 100.0
         total_fallas = 0
+        fallas_detalladas = [] # <--- NUEVA LISTA PARA EL HISTORIAL
 
         if curso:
             # Obtener periodos y materias
@@ -2126,7 +2127,7 @@ def dashboard_acudiente(request):
 
                 if notas_mat:
                     promedio_materia = float(sum(notas_mat)) / len(notas_mat)
-                    if promedio_materia >= 3.5: # Usando umbral 3.5
+                    if promedio_materia >= 3.5: 
                         conteo_ganadas += 1
                     else:
                         conteo_perdidas += 1
@@ -2152,20 +2153,31 @@ def dashboard_acudiente(request):
                     promedio_general_acumulado = sum(promedios_validos) / len(promedios_validos)
 
             # -----------------------------------------------------------
-            # 2. CÁLCULO DE ASISTENCIA
+            # 2. CÁLCULO DE ASISTENCIA DETALLADA
             # -----------------------------------------------------------
-            # Importación local para evitar error circular si no está arriba
             try:
                 from .models import Asistencia 
-                total_clases = Asistencia.objects.filter(estudiante=estudiante, curso=curso).count()
-                total_fallas = Asistencia.objects.filter(estudiante=estudiante, curso=curso, estado='FALLA').count()
                 
+                # Totales numéricos
+                total_clases = Asistencia.objects.filter(estudiante=estudiante, curso=curso).count()
+                
+                # Lista detallada de fallas (Fecha y Materia) ordenadas por fecha reciente
+                fallas_qs = Asistencia.objects.filter(
+                    estudiante=estudiante, 
+                    curso=curso, 
+                    estado='FALLA'
+                ).select_related('materia').order_by('-fecha')
+                
+                total_fallas = fallas_qs.count()
+                fallas_detalladas = list(fallas_qs) # Convertir a lista para el template
+
                 if total_clases > 0:
                     porcentaje_asistencia = ((total_clases - total_fallas) / total_clases) * 100
                 
                 porcentaje_asistencia = round(porcentaje_asistencia, 1)
+
             except ImportError:
-                pass # Si no existe el modelo, se queda en 100%
+                pass 
 
             # -----------------------------------------------------------
             # 3. CARGA DE DATOS PARA TABLAS (DETALLE)
@@ -2220,7 +2232,8 @@ def dashboard_acudiente(request):
                 'promedio_general': round(promedio_general_acumulado, 2),
                 'distribucion_data': json.dumps([conteo_ganadas, conteo_perdidas]),
                 'asistencia_pct': porcentaje_asistencia,
-                'total_fallas': total_fallas
+                'total_fallas': total_fallas,
+                'detalle_fallas': fallas_detalladas # <--- Lista detallada de fallas
             }
         })
 
