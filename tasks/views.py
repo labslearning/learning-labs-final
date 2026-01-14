@@ -625,13 +625,10 @@ def dashboard_docente(request):
     total_estudiantes_unicos = set()
     estadisticas_por_materia = {} # Pestaña 2
     
-    # --- NUEVAS VARIABLES PARA ESTADÍSTICAS AVANZADAS (Pestaña 3) ---
-    # Cache para acumular notas y fallas de cada estudiante a través de los ciclos
-    # Estructura: { id_estudiante: { 'obj': User, 'suma_notas': 0, 'num_notas': 0, 'fallas': 0, 'curso': str } }
+    # --- VARIABLES PARA ESTADÍSTICAS AVANZADAS ---
     analisis_estudiantes = {} 
-    
-    conteo_reprobados_global = 0 # KPI total
-    conteo_total_fallas = 0      # KPI total
+    conteo_reprobados_global = 0 
+    conteo_total_fallas = 0      
 
     # --- INICIO DEL BUCLE PRINCIPAL ---
     for asignacion in asignaciones:
@@ -646,7 +643,6 @@ def dashboard_docente(request):
         # BLOQUE 1: GESTIÓN DE MATERIAS (Tab 1)
         # -------------------------------------------------------
         if curso_key not in materias_por_curso:
-            # Traemos estudiantes con select_related para optimizar
             qs_estudiantes = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante', 'estudiante__perfil')
             
             materias_por_curso[curso_key] = {
@@ -656,7 +652,6 @@ def dashboard_docente(request):
                 'estudiantes': qs_estudiantes,
             }
             
-            # Inicializar estudiante en el cache de análisis (si es la primera vez que lo vemos)
             for mat in qs_estudiantes:
                 est = mat.estudiante
                 total_estudiantes_unicos.add(est.id)
@@ -669,7 +664,6 @@ def dashboard_docente(request):
                         'fallas': 0
                     }
 
-        # Añadir materia a la lista visual
         if materia_actual not in materias_por_curso[curso_key]['materias']:
             materias_por_curso[curso_key]['materias'].append(materia_actual)
         
@@ -692,7 +686,6 @@ def dashboard_docente(request):
             }
 
             for periodo in periodos_curso:
-                # Obtenemos las notas definitivas (numero_nota=5) de este grupo
                 notas_qs = Nota.objects.filter(
                     estudiante_id__in=estudiantes_del_curso_ids,
                     materia=materia_actual,
@@ -700,17 +693,13 @@ def dashboard_docente(request):
                     numero_nota=5 
                 )
                 
-                # A. Promedio para la gráfica de la materia
                 promedio_materia_periodo = notas_qs.aggregate(promedio=Avg('valor'))['promedio']
 
-                # B. ALIMENTAR EL RANKING GLOBAL (NUEVO)
-                # Recorremos las notas para sumarlas al promedio individual del estudiante
                 for nota in notas_qs:
                     if nota.estudiante_id in analisis_estudiantes:
                         analisis_estudiantes[nota.estudiante_id]['suma_notas'] += float(nota.valor)
                         analisis_estudiantes[nota.estudiante_id]['num_notas'] += 1
 
-                # C. Logros
                 logros_periodo = LogroPeriodo.objects.filter(
                     curso=curso, docente=docente, materia=materia_actual, periodo=periodo
                 ).order_by('-fecha_creacion')
@@ -726,15 +715,15 @@ def dashboard_docente(request):
     # BLOQUE 3: PROCESAMIENTO FINAL DE ANALÍTICA (Tab 3)
     # -------------------------------------------------------
     
-    # 1. Calcular Ausentismo (Fallas)
+    # 1. Calcular Ausentismo (Fallas Y Retardos)
     try:
         from .models import Asistencia
-        # Buscamos fallas SOLO en las materias de este docente
         mis_materias_ids = [a.materia.id for a in asignaciones]
         
+        # CORRECCIÓN: Filtramos por FALLA O TARDE
         fallas_agrupadas = Asistencia.objects.filter(
             materia_id__in=mis_materias_ids,
-            estado='FALLA'
+            estado__in=['FALLA', 'TARDE'] 
         ).values('estudiante_id').annotate(total=Count('id'))
         
         for f in fallas_agrupadas:
@@ -744,7 +733,7 @@ def dashboard_docente(request):
                 conteo_total_fallas += f['total']
                 
     except ImportError:
-        pass # Si no existe el modelo Asistencia, seguimos sin fallar
+        pass 
 
     # 2. Convertir diccionario a lista plana para ordenar
     lista_final_estudiantes = []
@@ -754,7 +743,6 @@ def dashboard_docente(request):
         if data['num_notas'] > 0:
             promedio_final = data['suma_notas'] / data['num_notas']
         
-        # Contamos para el KPI global si va perdiendo (< 3.0)
         if promedio_final > 0 and promedio_final < 3.0:
             conteo_reprobados_global += 1
 
@@ -766,29 +754,21 @@ def dashboard_docente(request):
         })
 
     # 3. Generar los TOPS
-    
-    # Top Mejores (Mayor promedio)
     top_mejores = sorted(lista_final_estudiantes, key=lambda x: x['promedio'], reverse=True)[:5]
     
-    # Top Riesgo (Menor promedio, pero mayor a 0 para ignorar a los que no tienen notas)
     estudiantes_con_notas = [x for x in lista_final_estudiantes if x['promedio'] > 0]
     top_riesgo = sorted(estudiantes_con_notas, key=lambda x: x['promedio'])[:5]
     
-    # Top Ausentismo (Más fallas)
     con_fallas = [x for x in lista_final_estudiantes if x['fallas'] > 0]
     top_ausentismo = sorted(con_fallas, key=lambda x: x['fallas'], reverse=True)[:5]
 
     context = {
         'docente': docente,
-        'materias_por_curso': materias_por_curso,         # Tab 1
-        'estadisticas_por_materia': estadisticas_por_materia, # Tab 2
-        
-        # Datos Generales
+        'materias_por_curso': materias_por_curso,
+        'estadisticas_por_materia': estadisticas_por_materia,
         'total_cursos': len(materias_por_curso),
         'total_materias': len(estadisticas_por_materia),
         'total_estudiantes': len(total_estudiantes_unicos),
-        
-        # Nuevos Datos Analíticos (Tab 3)
         'top_mejores': top_mejores,
         'top_riesgo': top_riesgo,
         'top_ausentismo': top_ausentismo,
@@ -797,7 +777,6 @@ def dashboard_docente(request):
     }
     return render(request, 'dashboard_docente.html', context)
 
-# Función auxiliar para descripciones
 def get_description_nota(numero_nota):
     return {
         1: 'Quiz (20%)',
