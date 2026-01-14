@@ -374,6 +374,15 @@
                                                                 {% else %}
                                                                     <span class="text-muted small">Sin notas</span>
                                                                 {% endif %}
+                                                                
+                                                                {% if p_stats.logros %}
+                                                                <div class="mt-2 pt-2 border-top">
+                                                                    <small class="d-block text-muted fst-italic text-truncate" title="{{ p_stats.logros.0.descripcion }}">
+                                                                        <i class="fas fa-check-circle me-1 text-success"></i>
+                                                                        {{ p_stats.logros.0.descripcion }}
+                                                                    </small>
+                                                                </div>
+                                                                {% endif %}
                                                             </div>
                                                         </div>
                                                     </div>
