@@ -608,116 +608,174 @@ def dashboard_estudiante(request):
 # --- INICIO DE CIRUGÍA 2: FUNCIÓN dashboard_docente MODIFICADA ---
 # ===================================================================
 #desde aqui 
+# ===================================================================
+# 👨‍🏫 VISTA DASHBOARD DOCENTE: GESTIÓN + INTELIGENCIA ACADÉMICA
+# ===================================================================
+
 @role_required('DOCENTE')
 def dashboard_docente(request):
     docente = request.user
-    # Ordenamos por materia primero, para facilitar la nueva agrupación
+    
+    # 1. Obtener asignaciones base ordenadas
     asignaciones = AsignacionMateria.objects.filter(docente=docente, activo=True)\
         .select_related('materia', 'curso').order_by('materia__nombre', 'curso__grado', 'curso__seccion')
     
-    # --- ESTRUCTURA PARA PESTAÑA 1 (MIS MATERIAS) ---
-    # Esta lógica se queda intacta, solo cambia el orden de 'asignaciones'
+    # --- ESTRUCTURAS DE DATOS ---
     materias_por_curso = {}
     total_estudiantes_unicos = set()
+    estadisticas_por_materia = {} # Pestaña 2
     
-    # --- INICIO DE CIRUGÍA: NUEVA ESTRUCTURA PARA PESTAÑA 2 (ESTADÍSTICAS) ---
-    # { materia_id: { 'materia_obj': obj, 'cursos': { curso_id: { 'curso_obj': obj, 'periodos': { periodo_id: {...} } } } } }
-    estadisticas_por_materia = {}
-    
-    # --- FIN DE CIRUGÍA ---
+    # --- VARIABLES PARA ESTADÍSTICAS AVANZADAS ---
+    analisis_estudiantes = {} 
+    conteo_reprobados_global = 0 
+    conteo_total_fallas = 0      
 
-    # Usamos un set para controlar qué estudiantes hemos contado
-    estudiantes_contados = set()
-
+    # --- INICIO DEL BUCLE PRINCIPAL ---
     for asignacion in asignaciones:
         curso = asignacion.curso
         materia_actual = asignacion.materia
         
-        if not curso:
-            continue
+        if not curso: continue
             
         curso_key = f"{curso.get_grado_display()} {curso.seccion}"
         
-        # --- Lógica para PESTAÑA 1 (MIS MATERIAS) ---
+        # -------------------------------------------------------
+        # BLOQUE 1: GESTIÓN DE MATERIAS (Tab 1)
+        # -------------------------------------------------------
         if curso_key not in materias_por_curso:
+            qs_estudiantes = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante', 'estudiante__perfil')
+            
             materias_por_curso[curso_key] = {
                 'curso_obj': curso,
                 'materias': [], 
                 'es_director': (getattr(curso, 'director', None) == docente),
-                'estudiantes': Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante'),
+                'estudiantes': qs_estudiantes,
             }
-        
-        # Contar estudiantes únicos (solo una vez por estudiante)
-        for m in materias_por_curso[curso_key]['estudiantes']:
-             total_estudiantes_unicos.add(m.estudiante.id)
+            
+            for mat in qs_estudiantes:
+                est = mat.estudiante
+                total_estudiantes_unicos.add(est.id)
+                if est.id not in analisis_estudiantes:
+                    analisis_estudiantes[est.id] = {
+                        'obj': est,
+                        'curso_texto': curso_key,
+                        'suma_notas': 0.0,
+                        'num_notas': 0,
+                        'fallas': 0
+                    }
 
-        # Añadir materia a la lista de la Pestaña 1
         if materia_actual not in materias_por_curso[curso_key]['materias']:
             materias_por_curso[curso_key]['materias'].append(materia_actual)
         
-        # --- FIN LÓGICA PESTAÑA 1 ---
-
-        # --- INICIO DE CIRUGÍA: LÓGICA PARA PESTAÑA 2 (ESTADÍSTICAS) ---
-        
-        # 1. Asegurar que la materia existe en el dict
+        # -------------------------------------------------------
+        # BLOQUE 2: ESTADÍSTICAS POR MATERIA (Tab 2)
+        # -------------------------------------------------------
         if materia_actual.id not in estadisticas_por_materia:
             estadisticas_por_materia[materia_actual.id] = {
                 'materia_obj': materia_actual,
                 'cursos': {}
             }
         
-        # 2. Asegurar que el curso existe dentro de la materia
         if curso.id not in estadisticas_por_materia[materia_actual.id]['cursos']:
-            # Obtenemos los estudiantes de este curso (ya los tenemos en materias_por_curso)
-            estudiantes_del_curso = materias_por_curso[curso_key]['estudiantes']
-            estudiante_ids = [m.estudiante_id for m in estudiantes_del_curso]
+            estudiantes_del_curso_ids = [m.estudiante.id for m in materias_por_curso[curso_key]['estudiantes']]
             periodos_curso = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
             
             estadisticas_por_materia[materia_actual.id]['cursos'][curso.id] = {
                 'curso_obj': curso,
-                'periodos': {} # Se llenará ahora
+                'periodos': {}
             }
 
-            # 3. Calcular estadísticas para CADA periodo
             for periodo in periodos_curso:
-                # Calcular promedio de ESTA materia en ESTE curso en ESTE periodo
-                promedio_materia_periodo = Nota.objects.filter(
-                    estudiante_id__in=estudiante_ids,
+                notas_qs = Nota.objects.filter(
+                    estudiante_id__in=estudiantes_del_curso_ids,
                     materia=materia_actual,
                     periodo=periodo,
-                    numero_nota=5 # Promedio ponderado
-                ).aggregate(promedio=Avg('valor'))['promedio']
+                    numero_nota=5 
+                )
+                
+                promedio_materia_periodo = notas_qs.aggregate(promedio=Avg('valor'))['promedio']
 
-                # Obtener logros de ESTA materia en ESTE curso en ESTE periodo
+                for nota in notas_qs:
+                    if nota.estudiante_id in analisis_estudiantes:
+                        analisis_estudiantes[nota.estudiante_id]['suma_notas'] += float(nota.valor)
+                        analisis_estudiantes[nota.estudiante_id]['num_notas'] += 1
+
                 logros_periodo = LogroPeriodo.objects.filter(
-                    curso=curso, 
-                    docente=docente,
-                    materia=materia_actual, # <-- Filtro clave
-                    periodo=periodo
+                    curso=curso, docente=docente, materia=materia_actual, periodo=periodo
                 ).order_by('-fecha_creacion')
 
-                # REQUISITO: Si hay notas O hay logros, SÍ se añade el periodo
                 if promedio_materia_periodo is not None or logros_periodo.exists():
                     estadisticas_por_materia[materia_actual.id]['cursos'][curso.id]['periodos'][periodo.id] = {
                         'periodo_obj': periodo,
                         'promedio': promedio_materia_periodo,
                         'logros': logros_periodo
                     }
+
+    # -------------------------------------------------------
+    # BLOQUE 3: PROCESAMIENTO FINAL DE ANALÍTICA (Tab 3)
+    # -------------------------------------------------------
+    
+    # 1. Calcular Ausentismo (Fallas Y Retardos)
+    try:
+        from .models import Asistencia
+        mis_materias_ids = [a.materia.id for a in asignaciones]
         
-        # --- FIN DE CIRUGÍA ---
+        # CORRECCIÓN: Filtramos por FALLA O TARDE
+        fallas_agrupadas = Asistencia.objects.filter(
+            materia_id__in=mis_materias_ids,
+            estado__in=['FALLA', 'TARDE'] 
+        ).values('estudiante_id').annotate(total=Count('id'))
+        
+        for f in fallas_agrupadas:
+            eid = f['estudiante_id']
+            if eid in analisis_estudiantes:
+                analisis_estudiantes[eid]['fallas'] = f['total']
+                conteo_total_fallas += f['total']
+                
+    except ImportError:
+        pass 
+
+    # 2. Convertir diccionario a lista plana para ordenar
+    lista_final_estudiantes = []
+    
+    for eid, data in analisis_estudiantes.items():
+        promedio_final = 0.0
+        if data['num_notas'] > 0:
+            promedio_final = data['suma_notas'] / data['num_notas']
+        
+        if promedio_final > 0 and promedio_final < 3.0:
+            conteo_reprobados_global += 1
+
+        lista_final_estudiantes.append({
+            'estudiante': data['obj'],
+            'curso': data['curso_texto'],
+            'promedio': round(promedio_final, 2),
+            'fallas': data['fallas']
+        })
+
+    # 3. Generar los TOPS
+    top_mejores = sorted(lista_final_estudiantes, key=lambda x: x['promedio'], reverse=True)[:5]
+    
+    estudiantes_con_notas = [x for x in lista_final_estudiantes if x['promedio'] > 0]
+    top_riesgo = sorted(estudiantes_con_notas, key=lambda x: x['promedio'])[:5]
+    
+    con_fallas = [x for x in lista_final_estudiantes if x['fallas'] > 0]
+    top_ausentismo = sorted(con_fallas, key=lambda x: x['fallas'], reverse=True)[:5]
 
     context = {
         'docente': docente,
-        'materias_por_curso': materias_por_curso, # Para la Pestaña 1
-        'estadisticas_por_materia': estadisticas_por_materia, # Para la Pestaña 2
-        'total_cursos': len(materias_por_curso), # Total de cursos únicos
-        'total_materias': len(estadisticas_por_materia), # Total de materias únicas
+        'materias_por_curso': materias_por_curso,
+        'estadisticas_por_materia': estadisticas_por_materia,
+        'total_cursos': len(materias_por_curso),
+        'total_materias': len(estadisticas_por_materia),
         'total_estudiantes': len(total_estudiantes_unicos),
+        'top_mejores': top_mejores,
+        'top_riesgo': top_riesgo,
+        'top_ausentismo': top_ausentismo,
+        'kpi_reprobados': conteo_reprobados_global,
+        'kpi_fallas': conteo_total_fallas
     }
     return render(request, 'dashboard_docente.html', context)
-# ===================================================================
-# --- FIN DE CIRUGÍA 2 ---
-# ===================================================================
 
 def get_description_nota(numero_nota):
     return {
