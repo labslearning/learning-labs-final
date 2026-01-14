@@ -2054,7 +2054,7 @@ def api_get_students_by_course(request, curso_id):
 # --- VISTAS DE ACUDIENTE Y GESTIÓN DE CUENTAS ---
 # Desde Aqui 
 # ===================================================================
-# 🩺 CIRUGÍA VISUAL: DASHBOARD ACUDIENTE (CON HISTORIAL DE FALLAS)
+# 🩺 VISTA DASHBOARD ACUDIENTE: CORREGIDA Y BLINDADA
 # ===================================================================
 
 @login_required
@@ -2062,7 +2062,7 @@ def api_get_students_by_course(request, curso_id):
 def dashboard_acudiente(request):
     """
     Panel de control para el acudiente.
-    INCLUYE: Analítica, Gráficas y DETALLE DE ASISTENCIA (Fechas y Materias).
+    CORRECCIÓN: Se asegura de cargar los docentes aunque no tengan perfil completo.
     """
     acudiente_user = request.user
 
@@ -2103,13 +2103,45 @@ def dashboard_acudiente(request):
         # Variables de asistencia
         porcentaje_asistencia = 100.0
         total_fallas = 0
-        fallas_detalladas = [] # <--- NUEVA LISTA PARA EL HISTORIAL
+        fallas_detalladas = []
+
+        # Variable para Directorio Docente
+        docentes_directorio = []
 
         if curso:
-            # Obtener periodos y materias
+            # Obtener periodos
             periodos_disponibles = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
-            asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia')
+            
+            # -----------------------------------------------------------
+            # CORRECCIÓN CRÍTICA AQUÍ: 
+            # Quitamos 'docente__perfil' del select_related para evitar que
+            # Django oculte profesores que no tienen perfil configurado.
+            # -----------------------------------------------------------
+            asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia', 'docente')
             materias = [a.materia for a in asignaciones]
+
+            # --- LÓGICA DIRECTORIO DE DOCENTES (BLINDADA) ---
+            docentes_vistos = set()
+            for asig in asignaciones:
+                # Verificamos que la asignación tenga un docente real (ID válido)
+                if asig.docente_id and asig.docente_id not in docentes_vistos:
+                    docente = asig.docente
+                    
+                    # Obtener foto de forma segura (sin romper si no hay perfil)
+                    foto_url = None
+                    try:
+                        if hasattr(docente, 'perfil') and docente.perfil.foto:
+                            foto_url = docente.perfil.foto.url
+                    except Exception:
+                        foto_url = None # Si falla algo con la foto, ponemos None y mostramos la inicial
+
+                    docentes_directorio.append({
+                        'id': docente.id,
+                        'nombre': docente.get_full_name() or docente.username,
+                        'materia_principal': asig.materia.nombre,
+                        'foto_url': foto_url
+                    })
+                    docentes_vistos.add(docente.id)
 
             # -----------------------------------------------------------
             # 1. CÁLCULO DE ESTADÍSTICAS ACADÉMICAS
@@ -2158,10 +2190,8 @@ def dashboard_acudiente(request):
             try:
                 from .models import Asistencia 
                 
-                # Totales numéricos
                 total_clases = Asistencia.objects.filter(estudiante=estudiante, curso=curso).count()
                 
-                # Lista detallada de fallas (Fecha y Materia) ordenadas por fecha reciente
                 fallas_qs = Asistencia.objects.filter(
                     estudiante=estudiante, 
                     curso=curso, 
@@ -2169,7 +2199,7 @@ def dashboard_acudiente(request):
                 ).select_related('materia').order_by('-fecha')
                 
                 total_fallas = fallas_qs.count()
-                fallas_detalladas = list(fallas_qs) # Convertir a lista para el template
+                fallas_detalladas = list(fallas_qs)
 
                 if total_clases > 0:
                     porcentaje_asistencia = ((total_clases - total_fallas) / total_clases) * 100
@@ -2233,8 +2263,10 @@ def dashboard_acudiente(request):
                 'distribucion_data': json.dumps([conteo_ganadas, conteo_perdidas]),
                 'asistencia_pct': porcentaje_asistencia,
                 'total_fallas': total_fallas,
-                'detalle_fallas': fallas_detalladas # <--- Lista detallada de fallas
-            }
+                'detalle_fallas': fallas_detalladas
+            },
+            # DIRECTORIO DOCENTE (Ahora sí cargará siempre)
+            'docentes': docentes_directorio
         })
 
     context = {
