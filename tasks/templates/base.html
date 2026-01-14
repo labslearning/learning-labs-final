@@ -1136,62 +1136,47 @@
                 }
             });
 
-            // =======================================================
-            // SOLUCIÓN PWA DE NIVEL SUPERIOR (CORRECCIÓN QUIRÚRGICA)
-            // =======================================================
-            
+            // ==========================================
+            // LÓGICA DE INSTALACIÓN PWA (MULTIPLATAFORMA CORREGIDA)
+            // ==========================================
             let deferredPrompt;
             const installBtn = document.getElementById('install-app-btn');
-            
-            // 1. Detección Inteligente del Entorno
             const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-            
-            // Detección Standalone (Si ya es una App) - Múltiples checks
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone || 
-                                 (window.sessionStorage && window.sessionStorage.getItem('is_pwa') === 'true');
+            // Detecta si la app YA está instalada o en modo "pantalla completa"
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-            // 2. FORZAR VISIBILIDAD SIEMPRE (Si no es App)
-            // Usamos un timeout para asegurar que el DOM está listo y overridear cualquier CSS previo
-            setTimeout(() => {
-                if (installBtn && !isStandalone) {
-                    installBtn.style.display = 'flex';
-                    // Forzamos con !important vía inline styles para ganar a cualquier CSS externo
-                    installBtn.setAttribute('style', 'display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px;');
-                    console.log("PWA: Botón forzado a visible.");
-                }
-            }, 500);
+            // 1. VISIBILIDAD FORZADA: Si el botón existe y NO es la app instalada, MOSTRARLO.
+            // Esto arregla el problema de "Android imposible" porque muestra el botón aunque el evento tarde.
+            if (installBtn && !isStandalone) {
+                installBtn.style.display = 'flex'; 
+                // Añadimos 'important' vía CSS text para sobrescribir cualquier display:none previo
+                installBtn.style.cssText = "display: flex !important; align-items: center; justify-content: center;"; 
+            }
 
-            // 3. Captura del evento nativo (Solo funciona a veces en Android/PC)
+            // 2. Captura del evento nativo (para Android/PC si está disponible)
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                console.log("PWA: Evento nativo capturado correctamente.");
+                console.log("PWA: Evento nativo capturado y listo.");
             });
 
-            // 4. Manejador de Click INTELIGENTE (Cubre todos los casos)
+            // 3. Manejador de Click INTELIGENTE (Cubre todos los casos)
             if(installBtn) {
                 installBtn.addEventListener('click', async () => {
                     if (deferredPrompt) {
-                        // CASO A: Tenemos el evento nativo (Ideal para PC/Android Compatible)
+                        // A) El navegador lo permite nativamente (Android/PC Ideal)
                         deferredPrompt.prompt();
                         const { outcome } = await deferredPrompt.userChoice;
-                        console.log(`PWA: Usuario respondió: ${outcome}`);
+                        console.log(`User response to install prompt: ${outcome}`);
                         deferredPrompt = null;
                         if(outcome === 'accepted') installBtn.style.display = 'none';
+                    } else if (isIos) {
+                        // B) Es iPhone/iPad (Instrucciones manuales)
+                        alert("Para instalar en iOS:\n1. Presiona el botón 'Compartir' (icono cuadrado con flecha) en la barra inferior.\n2. Busca y selecciona 'Agregar a Inicio'.");
                     } else {
-                        // CASO B: NO hay evento (iOS, Android sin evento, o PC ya instalado)
-                        // Aquí es donde elevamos el nivel con instrucciones precisas según el dispositivo
-                        
-                        if (isIos) {
-                            alert("Instalación en iOS (iPhone/iPad):\n\n1. Presiona el botón 'Compartir' (cuadrado con flecha hacia arriba) en la barra inferior.\n\n2. Desliza hacia arriba y selecciona 'Agregar a Inicio'.");
-                        } else if (isAndroid) {
-                            alert("Instalación en Android:\n\n1. Toca el menú de tres puntos (⋮) en la esquina superior derecha de tu navegador.\n\n2. Selecciona 'Instalar aplicación' o 'Agregar a pantalla principal'.");
-                        } else {
-                            // PC o Mac
-                            alert("Instalación en PC/Mac:\n\nBusca el icono de instalación (+) en el lado derecho de la barra de direcciones del navegador.");
-                        }
+                        // C) FALLBACK UNIVERSAL (Android sin evento / PC sin evento)
+                        // Esto garantiza que el botón SIEMPRE haga algo útil, aunque Chrome no quiera instalarlo automáticamente.
+                        alert("Instalación Manual:\n\nAndroid: Abre el menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Agregar a pantalla de inicio'.\n\nPC: Busca el icono (+) en la barra de direcciones.");
                     }
                 });
             }
