@@ -188,7 +188,7 @@ body {
                         {% endif %}
                     </div>
 
-                    <div class="row mb-5">
+                    <div class="row mb-4">
                         <div class="col-12">
                             <h4 class="fw-bold text-secondary mb-3"><i class="fas fa-chart-pie me-2"></i>Analítica de Rendimiento</h4>
                         </div>
@@ -257,6 +257,58 @@ body {
                                 <h6 class="text-muted fw-bold mb-3">Desempeño por Materia (Acumulado)</h6>
                                 <div class="chart-container" style="height: 200px;">
                                     <canvas id="chartMaterias_{{ data.estudiante.id }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-5">
+                        <div class="col-12">
+                            <h4 class="fw-bold text-secondary mb-3"><i class="fas fa-chalkboard-teacher me-2"></i>Equipo Docente</h4>
+                            
+                            <div class="card stat-card shadow-sm">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive" style="max-height: 300px;">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light sticky-top">
+                                                <tr>
+                                                    <th class="ps-4" style="width: 60px;">Foto</th>
+                                                    <th>Docente</th>
+                                                    <th>Asignatura</th>
+                                                    <th class="text-end pe-4">Contacto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for profe in data.docentes %}
+                                                <tr>
+                                                    <td class="ps-4">
+                                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style="width: 40px; height: 40px; font-size: 1.1em;">
+                                                            {% if profe.foto_url %}
+                                                                <img src="{{ profe.foto_url }}" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                                                            {% else %}
+                                                                {{ profe.nombre|slice:":1" }}
+                                                            {% endif %}
+                                                        </div>
+                                                    </td>
+                                                    <td class="fw-bold text-dark">{{ profe.nombre }}</td>
+                                                    <td class="text-muted">{{ profe.materia_principal }}</td>
+                                                    <td class="text-end pe-4">
+                                                        <a href="{% url 'enviar_mensaje' %}?destinatario={{ profe.id }}&asunto=Consulta de Acudiente: {{ data.estudiante.get_full_name }}" 
+                                                           class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                            <i class="fas fa-envelope me-1"></i> Mensaje
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4 text-muted">
+                                                        No hay docentes asignados todavía.
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
