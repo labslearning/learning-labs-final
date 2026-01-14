@@ -405,87 +405,204 @@ def answer_question(request, question_id):
     return render(request, 'answer_question.html', {'form': form, 'question': question})
 
 # Dashboards
+##DEsde aqui
+# ===================================================================
+# 🎓 VISTA DASHBOARD ESTUDIANTE: PREMIUM (ANALÍTICA + ASISTENCIA)
+# ===================================================================
+
 @role_required('ESTUDIANTE')
 def dashboard_estudiante(request):
+    """
+    Panel del Estudiante con Estadísticas Avanzadas, Asistencia y Directorio.
+    """
     estudiante = request.user
     perfil_estudiante = get_object_or_404(Perfil, user=estudiante)
 
-    # Intenta obtener la matrícula activa más reciente del estudiante
+    # Intenta obtener la matrícula activa más reciente
     matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).select_related('curso').first()
-
     curso = matricula.curso if matricula else None
 
-    # Inicializar todas las colecciones de datos académicos
+    # Inicializar colecciones
     materias_con_notas = {}
     comentarios_docente = {}
     actividades_semanales = {}
     convivencia_notas = {}
     logros_por_materia_por_periodo = {}
-    periodos_disponibles = [] # Nuevo: Para que el estudiante sepa los periodos
+    periodos_disponibles = []
+    
+    # --- VARIABLES PARA ESTADÍSTICAS (NUEVO) ---
+    stats_materias_labels = []    
+    stats_materias_promedios = [] 
+    stats_periodos_labels = []    
+    stats_periodos_data = []      
+    conteo_ganadas = 0
+    conteo_perdidas = 0
+    promedio_general_acumulado = 0.0
+    
+    # Variables de asistencia
+    porcentaje_asistencia = 100.0
+    total_fallas = 0
+    fallas_detalladas = []
+
+    # Directorio Docente
+    docentes_directorio = []
 
     if curso:
-        # Obtener los periodos para este curso
-        periodos_disponibles = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
+        # Obtener periodos
+        periodos_disponibles = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
 
-        # Obtener las asignaciones de materia para este curso
-        asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia')
+        # Obtener asignaciones (Optimizada para traer datos del docente)
+        asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia', 'docente')
         materias = [a.materia for a in asignaciones]
 
+        # --- LÓGICA DIRECTORIO DE DOCENTES ---
+        docentes_vistos = set()
+        for asig in asignaciones:
+            if asig.docente_id and asig.docente_id not in docentes_vistos:
+                docente = asig.docente
+                # Foto segura
+                foto_url = None
+                try:
+                    if hasattr(docente, 'perfil') and docente.perfil.foto:
+                        foto_url = docente.perfil.foto.url
+                except Exception: pass
+
+                docentes_directorio.append({
+                    'id': docente.id,
+                    'nombre': docente.get_full_name() or docente.username,
+                    'materia_principal': asig.materia.nombre,
+                    'foto_url': foto_url
+                })
+                docentes_vistos.add(docente.id)
+
+        # -----------------------------------------------------------
+        # 1. CÁLCULO DE ESTADÍSTICAS ACADÉMICAS
+        # -----------------------------------------------------------
+        notas_definitivas_qs = Nota.objects.filter(
+            estudiante=estudiante, 
+            materia__in=materias,
+            numero_nota=5
+        )
+
+        # A. Estadísticas por Materia
         for materia in materias:
-            # 1. Notas
-            # Se usa .select_related('periodo') para optimizar
+            notas_mat = [n.valor for n in notas_definitivas_qs if n.materia_id == materia.id]
+            promedio_materia = 0.0
+
+            if notas_mat:
+                promedio_materia = float(sum(notas_mat)) / len(notas_mat)
+                if promedio_materia >= 3.5: 
+                    conteo_ganadas += 1
+                else:
+                    conteo_perdidas += 1
+            
+            stats_materias_labels.append(materia.nombre)
+            stats_materias_promedios.append(round(promedio_materia, 2))
+
+        # B. Estadísticas por Periodo
+        for periodo in periodos_disponibles:
+            stats_periodos_labels.append(periodo.nombre)
+            notas_per = [n.valor for n in notas_definitivas_qs if n.periodo_id == periodo.id]
+            
+            if notas_per:
+                prom_per = float(sum(notas_per)) / len(notas_per)
+                stats_periodos_data.append(round(prom_per, 2))
+            else:
+                stats_periodos_data.append(0)
+
+        # C. Promedio General
+        if stats_materias_promedios:
+            promedios_validos = [p for p in stats_materias_promedios if p > 0]
+            if promedios_validos:
+                promedio_general_acumulado = sum(promedios_validos) / len(promedios_validos)
+
+        # -----------------------------------------------------------
+        # 2. CÁLCULO DE ASISTENCIA DETALLADA
+        # -----------------------------------------------------------
+        try:
+            from .models import Asistencia 
+            total_clases = Asistencia.objects.filter(estudiante=estudiante, curso=curso).count()
+            fallas_qs = Asistencia.objects.filter(estudiante=estudiante, curso=curso, estado='FALLA').select_related('materia').order_by('-fecha')
+            total_fallas = fallas_qs.count()
+            fallas_detalladas = list(fallas_qs)
+
+            if total_clases > 0:
+                porcentaje_asistencia = ((total_clases - total_fallas) / total_clases) * 100
+            
+            porcentaje_asistencia = round(porcentaje_asistencia, 1)
+        except ImportError: pass
+
+        # -----------------------------------------------------------
+        # 3. DATOS DETALLADOS (LÓGICA ORIGINAL)
+        # -----------------------------------------------------------
+        for materia in materias:
+            # Notas
             notes = Nota.objects.filter(estudiante=estudiante, materia=materia).select_related('periodo').order_by('periodo__id', 'numero_nota')
             notas_por_periodo = {}
             for nota in notes:
-                # Almacenamos el objeto nota por su numero_nota dentro del ID del periodo
                 notas_por_periodo.setdefault(nota.periodo.id, {})[nota.numero_nota] = nota
 
             if notas_por_periodo:
                 materias_con_notas[materia] = notas_por_periodo
 
-            # 2. Comentarios del Docente
+            # Comentarios
             comentarios = ComentarioDocente.objects.filter(estudiante=estudiante, materia=materia).order_by('-fecha_creacion')
             if comentarios.exists():
                 comentarios_docente[materia.id] = comentarios
 
-            # 3. Actividades Semanales
+            # Actividades
             actividades = ActividadSemanal.objects.filter(curso=curso, materia=materia).order_by('-fecha_creacion')
             if actividades.exists():
                 actividades_semanales[materia.id] = actividades
 
-            # 4. Logros
-            logros_de_la_materia = LogroPeriodo.objects.filter(
-                curso=curso,
-                materia=materia,
-            ).order_by('periodo__id', '-fecha_creacion')
-
+            # Logros
+            logros_de_la_materia = LogroPeriodo.objects.filter(curso=curso, materia=materia).order_by('periodo__id', '-fecha_creacion')
             if logros_de_la_materia.exists():
                 logros_por_periodo_temp = {}
                 for logro in logros_de_la_materia:
                     logros_por_periodo_temp.setdefault(logro.periodo.id, []).append(logro)
                 logros_por_materia_por_periodo[materia] = logros_por_periodo_temp
 
-        # 5. Notas de Convivencia
+        # Convivencia
         convivencia_existente = Convivencia.objects.filter(estudiante=estudiante, curso=curso).select_related('periodo')
         for convivencia in convivencia_existente:
             convivencia_notas[convivencia.periodo.id] = {'valor': convivencia.valor, 'comentario': convivencia.comentario}
+
+    # Empaquetar Estadísticas
+    stats = {
+        'materias_labels': json.dumps(stats_materias_labels),
+        'materias_data': json.dumps(stats_materias_promedios),
+        'periodos_labels': json.dumps(stats_periodos_labels),
+        'periodos_data': json.dumps(stats_periodos_data),
+        'ganadas': conteo_ganadas,
+        'perdidas': conteo_perdidas,
+        'promedio_general': round(promedio_general_acumulado, 2),
+        'distribucion_data': json.dumps([conteo_ganadas, conteo_perdidas]),
+        'asistencia_pct': porcentaje_asistencia,
+        'total_fallas': total_fallas,
+        'detalle_fallas': fallas_detalladas
+    }
 
     context = {
         'estudiante': estudiante,
         'perfil': perfil_estudiante,
         'curso': curso,
-        'matricula': matricula, # Se incluye la matrícula
-        'periodos_disponibles': periodos_disponibles, # Se incluyen los periodos
+        'matricula': matricula,
+        'periodos_disponibles': periodos_disponibles,
         'materias_con_notas': materias_con_notas,
         'comentarios_docente': comentarios_docente,
         'actividades_semanales': actividades_semanales,
         'logros_por_materia_por_periodo': logros_por_materia_por_periodo,
         'convivencia_notas': convivencia_notas,
+        # NUEVOS CONTEXTOS
+        'stats': stats,
+        'docentes': docentes_directorio
     }
 
     return render(request, 'dashboard_estudiante.html', context)
 
 
+##Hasta aqui 
 # ===================================================================
 # --- INICIO DE CIRUGÍA 2: FUNCIÓN dashboard_docente MODIFICADA ---
 # ===================================================================

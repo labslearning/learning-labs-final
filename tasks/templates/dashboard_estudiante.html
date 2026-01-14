@@ -2,9 +2,12 @@
 {% load note_filters %}
 {% load custom_filters %}
 {% load static %}
+
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="container py-5">
-    <div class="card p-5 border-0 shadow-lg animate animated fadeInUp" style="background-color: var(--color-bg-light);">
+    <div class="card p-5 border-0 shadow-lg animate animated fadeInUp mb-5" style="background-color: var(--color-bg-light);">
         <div class="text-center mb-4">
             <i class="fas fa-user-graduate fa-5x mb-3 text-primary-alt animated animate zoomIn"></i>
             <h1 class="display-4 fw-bold" style="color: var(--color-text-dark);">
@@ -34,142 +37,261 @@
             <i class="fas fa-exclamation-triangle me-2"></i> Aún no estás asignado a un curso. Por favor, contacta a tu administrador.
         </div>
         {% endif %}
+    </div>
 
-        <hr class="my-4" style="border-color: var(--color-hr);">
-
-        <h3 class="text-center fw-bold text-dark mb-5 animate animated fadeInUp">Progreso Académico</h3>
-
-        {% if materias_con_notas %}
-        <div class="card p-4 border-0 shadow-lg mb-5 animate animated fadeInUp" style="background-color: var(--color-card-bg-light);">
-            <h4 class="fw-bold text-center mb-4" style="color: var(--color-primary-alt);">Rendimiento Ponderado por Periodo</h4>
-            
-            <div style="min-height: 250px; max-height: 350px; margin: 0 auto; width: 100%;">
-                <canvas id="progresoAcademicoChart"></canvas>
-            </div>
-            
-            <div id="globalChartData" style="display: none;"
-                 data-periodos='[{% for p in periodos_disponibles %}"{{ p.nombre }}",{% endfor %}]'
-                 data-promedios='[
-                    {% for materia, periodos_notas in materias_con_notas.items %}
-                        {
-                            "materia": "{{ materia.nombre }}",
-                            "datos": [
-                                {% for periodo in periodos_disponibles %}
-                                    {% with nota_promedio_obj=periodos_notas|get_item:periodo.id|find_note_by_number:5 %}
-                                        {{ nota_promedio_obj.valor|default:'null' }}{% if not forloop.last %},{% endif %}
-                                    {% endwith %}
-                                {% endfor %}
-                            ]
-                        }{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ]'>
-            </div>
-            <p class="text-center small text-muted mt-3">La línea de rendimiento se dibuja con el **Promedio Ponderado Final** de cada periodo.</p>
+    {% if curso %}
+    
+    <div class="row mb-5 animate animated fadeInUp">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-dark text-center"><i class="fas fa-chart-pie me-2"></i>Resumen Ejecutivo</h3>
         </div>
-        <div class="row g-4">
-            {% for materia, periodos_notas in materias_con_notas.items %}
-            <div class="col-md-6 col-lg-4 d-flex">
-                <div class="card flex-fill h-100 shadow-hover border-0 rounded-4 animate animated fadeInUp">
-                    <div class="card-header p-3 border-0 rounded-top-4 collapse-toggle-header" style="background-image: var(--gradient-primary); color: white; cursor: pointer;"
-                         data-bs-toggle="collapse" data-bs-target="#collapse-{{ materia.id }}" aria-expanded="false" aria-controls="collapse-{{ materia.id }}">
-                        <h5 class="mb-0 fw-bold d-flex justify-content-between align-items-center">
-                            {{ materia.nombre }}
-                            <i class="fas fa-chevron-down rotate-on-collapse"></i>
-                        </h5>
+        
+        <div class="col-md-3 mb-4">
+            <div class="stat-card p-4 text-center d-flex flex-column justify-content-center align-items-center">
+                <h6 class="text-muted text-uppercase small mb-2">Promedio General</h6>
+                <h1 class="display-3 fw-bold mb-0 {% if stats.promedio_general < 3.5 %}text-danger{% else %}text-success{% endif %}">
+                    {{ stats.promedio_general }}
+                </h1>
+                <small class="text-muted">Escala 1.0 - 5.0</small>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="stat-card p-4 text-center d-flex flex-column justify-content-center align-items-center">
+                <h6 class="text-muted text-uppercase small mb-2">Asistencia Total</h6>
+                <div class="position-relative d-flex justify-content-center align-items-center" style="width: 100px; height: 100px;">
+                    <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="{{ stats.asistencia_pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="{% if stats.asistencia_pct < 85 %}#e74c3c{% else %}#2ecc71{% endif %}" />
+                    </svg>
+                    <div class="position-absolute fw-bold fs-4">{{ stats.asistencia_pct }}%</div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted d-block">Fallas: <strong>{{ stats.total_fallas }}</strong></small>
+                    {% if stats.total_fallas > 0 %}
+                    <button class="btn btn-sm btn-link text-decoration-none p-0 mt-1" data-bs-toggle="modal" data-bs-target="#modalAsistencia">
+                        <i class="fas fa-list-ul me-1"></i> Ver detalle
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="stat-card p-4">
+                <h6 class="text-muted fw-bold mb-3 text-center">Estado de Materias</h6>
+                <div class="row align-items-center h-100">
+                    <div class="col-6 d-flex justify-content-center">
+                        <div class="chart-container" style="height: 160px; width: 160px;">
+                            <canvas id="chartStatusNew"></canvas>
+                        </div>
                     </div>
-                    <div class="collapse" id="collapse-{{ materia.id }}">
-                        <div class="card-body">
-                            {% for periodo in periodos_disponibles %}
-                            {% with notas_list=materias_con_notas|get_item:materia|get_item:periodo.id %}
-                            <div class="card border-0 mb-4 shadow-sm">
-                                <div class="card-header bg-light border-0">
-                                    <h6 class="fw-semibold text-muted mb-0">{{ periodo.nombre }}</h6>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="chart-{{ materia.id }}-{{ periodo.id }}"></canvas>
-                                    
-                                    <div class="chart-data" data-materia-id="{{ materia.id }}" data-periodo-id="{{ periodo.id }}" style="display:none;">
-                                        <span class="chart-labels">
-                                            {% for nota in notas_list.values|dictsort:"numero_nota" %}"{{ nota.descripcion|cut:'(%)'|cut:'Promedio ponderado' }}", {% endfor %}
-                                        </span>
-                                        <span class="chart-data-values">
-                                            {% for nota in notas_list.values|dictsort:"numero_nota" %}{{ nota.valor }}, {% endfor %}
-                                        </span>
-                                    </div>
-                                    
-                                    {% with nota_promedio=notas_list|find_note_by_number:5 %}
-                                    {% if nota_promedio %}
-                                    <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
-                                        <span class="fw-semibold text-muted">Promedio Final:</span>
-                                        <span class="badge rounded-pill p-2 fs-6 {% if nota_promedio.valor >= 3.0 %}bg-success-alt{% else %}bg-danger-alt{% endif %}">{{ nota_promedio.valor }}</span>
-                                    </div>
-                                    {% endif %}
-                                    {% endwith %}
-                                </div>
-                            </div>
-                            {% endwith %}
-                            {% endfor %}
+                    <div class="col-6">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2"><i class="fas fa-circle text-success me-2"></i> Ganando: <strong>{{ stats.ganadas }}</strong></li>
+                            <li><i class="fas fa-circle text-danger me-2"></i> Perdiendo: <strong>{{ stats.perdidas }}</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            <div class="mt-4">
-                                {% with comentarios_list=comentarios_docente|get_item:materia.id %}
-                                {% if comentarios_list %}
-                                <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-comment-dots me-2"></i>Comentarios del Docente</h6>
-                                {% for comentario_obj in comentarios_list %}
-                                <blockquote class="blockquote mb-0 mt-2 p-3 rounded-3" style="background-color: var(--color-card-bg-light);">
-                                    <p class="mb-0 small" style="color: var(--color-text-muted);">{{ comentario_obj.comentario }}</p>
-                                    <footer class="blockquote-footer mt-2" style="font-size: 0.8em; color: var(--color-text-muted-alt);">
-                                        <cite title="{{ comentario_obj.docente.get_full_name|default:comentario_obj.docente.username }}">{{ comentario_obj.docente.get_full_name|default:comentario_obj.docente.username }}</cite>
-                                    </footer>
-                                </blockquote>
-                                {% endfor %}
-                                {% endif %}
-                                {% endwith %}
-                            </div>
+        <div class="col-12 mb-4">
+            <div class="stat-card p-4">
+                <h6 class="text-muted fw-bold mb-3">Desempeño Acumulado por Materia</h6>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="chartMateriasNew"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            <div class="mt-4">
-                                {% with actividades_list=actividades_semanales|get_item:materia.id %}
-                                {% if actividades_list %}
-                                <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-clipboard-list me-2"></i>Actividades de la Semana</h6>
-                                {% for actividad in actividades_list %}
-                                <div class="p-3 rounded-3 border mb-2" style="background-color: var(--color-card-bg-light);">
-                                    <h6 class="fw-semibold">{{ actividad.titulo }}</h6>
-                                    <p class="small mb-2" style="color: var(--color-text-muted);">{{ actividad.descripcion }}</p>
-                                    <p class="small text-muted mb-0"><i class="fas fa-calendar-alt me-1"></i>Fechas: {{ actividad.fecha_inicio|date:"d M Y" }} - {{ actividad.fecha_fin|date:"d M Y" }}</p>
-                                </div>
-                                {% endfor %}
-                                {% endif %}
-                                {% endwith %}
-                            </div>
-
-                            <div class="mt-4">
-                                {% with logros_materia=logros_por_materia_por_periodo|get_item:materia %}
-                                    {% if logros_materia %}
-                                    <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-award me-2"></i>Logros del Período</h6>
-                                        {% for periodo_id, logros_list in logros_materia.items %}
-                                        <div class="p-3 rounded-3 border mb-2" style="border-color: var(--color-primary) !important; background-color: var(--color-card-bg-light);">
-                                            <p class="mb-1 fw-bold" style="color: var(--color-text-dark);">{{ logros_list.0.periodo.nombre }}:</p>
-                                            <ul class="list-unstyled mb-0">
-                                            {% for logro in logros_list %}
-                                                <li class="small" style="color: var(--color-text-muted);"><i class="fas fa-check-circle me-1" style="color: var(--color-success);"></i> {{ logro.descripcion }}</li>
-                                            {% endfor %}
-                                            </ul>
+    <div class="row mb-5 animate animated fadeInUp">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 py-3 px-4">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Mis Profesores</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 300px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light sticky-top">
+                                <tr>
+                                    <th class="ps-4" style="width: 70px;">Foto</th>
+                                    <th>Docente</th>
+                                    <th>Asignatura</th>
+                                    <th class="text-end pe-4">Contacto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profe in docentes %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold shadow-sm" style="width: 45px; height: 45px; font-size: 1.2rem;">
+                                            {% if profe.foto_url %}
+                                                <img src="{{ profe.foto_url }}" class="rounded-circle" width="45" height="45" style="object-fit: cover;">
+                                            {% else %}
+                                                {{ profe.nombre|slice:":1" }}
+                                            {% endif %}
                                         </div>
-                                        {% endfor %}
-                                    {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ profe.nombre }}</div>
+                                    </td>
+                                    <td class="text-muted">{{ profe.materia_principal }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'enviar_mensaje' %}?destinatario={{ profe.id }}&asunto=Consulta Estudiante: {{ estudiante.get_full_name }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            <i class="fas fa-envelope me-1"></i> Mensaje
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center py-4 text-muted">No tienes docentes asignados todavía.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5" style="border-color: var(--color-hr);">
+    {% endif %}
+
+    <h3 class="text-center fw-bold text-dark mb-5 animate animated fadeInUp">Progreso Académico Detallado</h3>
+
+    {% if materias_con_notas %}
+    <div class="card p-4 border-0 shadow-lg mb-5 animate animated fadeInUp" style="background-color: var(--color-card-bg-light);">
+        <h4 class="fw-bold text-center mb-4" style="color: var(--color-primary-alt);">Rendimiento Ponderado por Periodo</h4>
+        
+        <div style="min-height: 250px; max-height: 350px; margin: 0 auto; width: 100%;">
+            <canvas id="progresoAcademicoChart"></canvas>
+        </div>
+        
+        <div id="globalChartData" style="display: none;"
+             data-periodos='[{% for p in periodos_disponibles %}"{{ p.nombre }}",{% endfor %}]'
+             data-promedios='[
+                {% for materia, periodos_notas in materias_con_notas.items %}
+                    {
+                        "materia": "{{ materia.nombre }}",
+                        "datos": [
+                            {% for periodo in periodos_disponibles %}
+                                {% with nota_promedio_obj=periodos_notas|get_item:periodo.id|find_note_by_number:5 %}
+                                    {{ nota_promedio_obj.valor|default:'null' }}{% if not forloop.last %},{% endif %}
+                                {% endwith %}
+                            {% endfor %}
+                        ]
+                    }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]'>
+        </div>
+        <p class="text-center small text-muted mt-3">La línea de rendimiento se dibuja con el **Promedio Ponderado Final** de cada periodo.</p>
+    </div>
+
+    <div class="row g-4">
+        {% for materia, periodos_notas in materias_con_notas.items %}
+        <div class="col-md-6 col-lg-4 d-flex">
+            <div class="card flex-fill h-100 shadow-hover border-0 rounded-4 animate animated fadeInUp">
+                <div class="card-header p-3 border-0 rounded-top-4 collapse-toggle-header" style="background-image: var(--gradient-primary); color: white; cursor: pointer;"
+                     data-bs-toggle="collapse" data-bs-target="#collapse-{{ materia.id }}" aria-expanded="false" aria-controls="collapse-{{ materia.id }}">
+                    <h5 class="mb-0 fw-bold d-flex justify-content-between align-items-center">
+                        {{ materia.nombre }}
+                        <i class="fas fa-chevron-down rotate-on-collapse"></i>
+                    </h5>
+                </div>
+                <div class="collapse" id="collapse-{{ materia.id }}">
+                    <div class="card-body">
+                        {% for periodo in periodos_disponibles %}
+                        {% with notas_list=materias_con_notas|get_item:materia|get_item:periodo.id %}
+                        <div class="card border-0 mb-4 shadow-sm">
+                            <div class="card-header bg-light border-0">
+                                <h6 class="fw-semibold text-muted mb-0">{{ periodo.nombre }}</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart-{{ materia.id }}-{{ periodo.id }}"></canvas>
+                                
+                                <div class="chart-data" data-materia-id="{{ materia.id }}" data-periodo-id="{{ periodo.id }}" style="display:none;">
+                                    <span class="chart-labels">
+                                        {% for nota in notas_list.values|dictsort:"numero_nota" %}"{{ nota.descripcion|cut:'(%)'|cut:'Promedio ponderado' }}", {% endfor %}
+                                    </span>
+                                    <span class="chart-data-values">
+                                        {% for nota in notas_list.values|dictsort:"numero_nota" %}{{ nota.valor }}, {% endfor %}
+                                    </span>
+                                </div>
+                                
+                                {% with nota_promedio=notas_list|find_note_by_number:5 %}
+                                {% if nota_promedio %}
+                                <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
+                                    <span class="fw-semibold text-muted">Promedio Final:</span>
+                                    <span class="badge rounded-pill p-2 fs-6 {% if nota_promedio.valor >= 3.0 %}bg-success-alt{% else %}bg-danger-alt{% endif %}">{{ nota_promedio.valor }}</span>
+                                </div>
+                                {% endif %}
                                 {% endwith %}
                             </div>
+                        </div>
+                        {% endwith %}
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            {% with comentarios_list=comentarios_docente|get_item:materia.id %}
+                            {% if comentarios_list %}
+                            <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-comment-dots me-2"></i>Comentarios del Docente</h6>
+                            {% for comentario_obj in comentarios_list %}
+                            <blockquote class="blockquote mb-0 mt-2 p-3 rounded-3" style="background-color: var(--color-card-bg-light);">
+                                <p class="mb-0 small" style="color: var(--color-text-muted);">{{ comentario_obj.comentario }}</p>
+                                <footer class="blockquote-footer mt-2" style="font-size: 0.8em; color: var(--color-text-muted-alt);">
+                                    <cite title="{{ comentario_obj.docente.get_full_name|default:comentario_obj.docente.username }}">{{ comentario_obj.docente.get_full_name|default:comentario_obj.docente.username }}</cite>
+                                </footer>
+                            </blockquote>
+                            {% endfor %}
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div class="mt-4">
+                            {% with actividades_list=actividades_semanales|get_item:materia.id %}
+                            {% if actividades_list %}
+                            <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-clipboard-list me-2"></i>Actividades de la Semana</h6>
+                            {% for actividad in actividades_list %}
+                            <div class="p-3 rounded-3 border mb-2" style="background-color: var(--color-card-bg-light);">
+                                <h6 class="fw-semibold">{{ actividad.titulo }}</h6>
+                                <p class="small mb-2" style="color: var(--color-text-muted);">{{ actividad.descripcion }}</p>
+                                <p class="small text-muted mb-0"><i class="fas fa-calendar-alt me-1"></i>Fechas: {{ actividad.fecha_inicio|date:"d M Y" }} - {{ actividad.fecha_fin|date:"d M Y" }}</p>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div class="mt-4">
+                            {% with logros_materia=logros_por_materia_por_periodo|get_item:materia %}
+                                {% if logros_materia %}
+                                <h6 class="fw-bold" style="color: var(--color-text-dark);"><i class="fas fa-award me-2"></i>Logros del Período</h6>
+                                    {% for periodo_id, logros_list in logros_materia.items %}
+                                    <div class="p-3 rounded-3 border mb-2" style="border-color: var(--color-primary) !important; background-color: var(--color-card-bg-light);">
+                                        <p class="mb-1 fw-bold" style="color: var(--color-text-dark);">{{ logros_list.0.periodo.nombre }}:</p>
+                                        <ul class="list-unstyled mb-0">
+                                        {% for logro in logros_list %}
+                                            <li class="small" style="color: var(--color-text-muted);"><i class="fas fa-check-circle me-1" style="color: var(--color-success);"></i> {{ logro.descripcion }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="alert text-center border-info-alt" role="alert" style="background-color: var(--color-alert-info-bg); color: var(--color-alert-info-text);">
-            Aún no tienes notas registradas. ¡Ánimo, el aprendizaje continúa!
-        </div>
-        {% endif %}
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="alert text-center border-info-alt" role="alert" style="background-color: var(--color-alert-info-bg); color: var(--color-alert-info-text);">
+        Aún no tienes notas registradas. ¡Ánimo, el aprendizaje continúa!
+    </div>
+    {% endif %}
 
     {% if curso %}
     <hr class="my-5" style="border-color: var(--color-hr);">
@@ -214,8 +336,47 @@
     </div>
     {% endif %}
 </div>
+
+<div class="modal fade" id="modalAsistencia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title"><i class="fas fa-calendar-times text-danger me-2"></i>Mis Fallas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                {% if stats.detalle_fallas %}
+                <table class="table table-striped mb-0">
+                    <thead class="table-danger">
+                        <tr>
+                            <th class="ps-4">Fecha</th>
+                            <th>Materia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for falla in stats.detalle_fallas %}
+                        <tr>
+                            <td class="ps-4">{{ falla.fecha|date:"d M, Y" }}</td>
+                            <td class="fw-bold">{{ falla.materia.nombre }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    No tienes fallas registradas. ¡Sigue así!
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-/* Se mantiene el CSS original, que usa variables para el tema */
+/* CSS FUSIONADO (ORIGINAL + NUEVO) */
 :root {
     --color-primary: #3498db;
     --color-primary-alt: #2c3e50;
@@ -241,29 +402,34 @@
 .bg-success-alt { background-color: var(--color-success) !important; }
 .bg-danger-alt { background-color: var(--color-danger) !important; }
 
-.shadow-hover {
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+.shadow-hover { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+.shadow-hover:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important; }
+.animate.animated { animation-duration: 0.8s; }
+.collapse { transition: height 0.3s ease-in-out; }
+.rotate-on-collapse { transition: transform 0.3s ease-in-out; }
+.collapse-toggle-header[aria-expanded="true"] .rotate-on-collapse { transform: rotate(180deg); }
+
+/* NUEVOS ESTILOS PARA ANALÍTICA */
+.stat-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    height: 100%;
+    transition: transform 0.2s;
+    border: 1px solid rgba(0,0,0,0.05);
 }
-.shadow-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
-}
-.animate.animated {
-    animation-duration: 0.8s;
-}
-.collapse {
-    transition: height 0.3s ease-in-out;
-}
-.rotate-on-collapse {
-    transition: transform 0.3s ease-in-out;
-}
-.collapse-toggle-header[aria-expanded="true"] .rotate-on-collapse {
-    transform: rotate(180deg);
-}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); }
+.chart-container { position: relative; width: 100%; }
+
+/* Gráfico circular CSS para asistencia */
+.circular-chart { display: block; margin: 0 auto; max-width: 100%; max-height: 250px; }
+.circle-bg { fill: none; stroke: #eee; stroke-width: 3.8; }
+.circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+@keyframes progress { 0% { stroke-dasharray: 0 100; } }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-// Mapeo de colores para Chart.js (Necesario porque Chart.js no lee directamente las variables CSS)
+// Mapeo de colores para Chart.js
 const CHART_COLORS = {
     primary: '#3498db',
     danger: '#e74c3c',
@@ -275,17 +441,9 @@ const CHART_COLORS = {
     muted_rgb: '127, 140, 141'
 };
 
-// --- Función de utilidades para generar una paleta de colores armónica para las líneas de progreso
 function getChartColor(index) {
     const customColors = [
-        CHART_COLORS.primary,
-        CHART_COLORS.success,
-        '#f1c40f', // Amarillo
-        '#9b59b6', // Morado
-        '#1abc9c', // Turquesa
-        '#e67e22', // Naranja
-        CHART_COLORS.danger,
-        '#c0392b'  // Rojo oscuro
+        CHART_COLORS.primary, CHART_COLORS.success, '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', CHART_COLORS.danger, '#c0392b'
     ];
     return customColors[index % customColors.length];
 }
@@ -293,9 +451,54 @@ function getChartColor(index) {
 document.addEventListener('DOMContentLoaded', function () {
     const notaAprobacion = 3.0;
 
-    // #########################################
-    // # 1. Lógica para el Gráfico Global (Línea de Progreso)
-    // #########################################
+    // #######################################################
+    // # 1. LÓGICA DE GRÁFICAS DE ANALÍTICA (NUEVO)
+    // #######################################################
+    const chartStatusCanvas = document.getElementById('chartStatusNew');
+    if (chartStatusCanvas) {
+        new Chart(chartStatusCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Ganando', 'Perdiendo'],
+                datasets: [{
+                    data: {{ stats.distribucion_data|safe }},
+                    backgroundColor: [CHART_COLORS.success, CHART_COLORS.danger],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { responsive: true, cutout: '70%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    const chartMateriasCanvas = document.getElementById('chartMateriasNew');
+    if (chartMateriasCanvas) {
+        const rawData = {{ stats.materias_data|safe }};
+        const bgColors = rawData.map(val => val < 3.5 ? CHART_COLORS.danger : CHART_COLORS.success);
+        
+        new Chart(chartMateriasCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ stats.materias_labels|safe }},
+                datasets: [{
+                    label: 'Promedio',
+                    data: rawData,
+                    backgroundColor: bgColors,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 5 } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // #######################################################
+    // # 2. Lógica para el Gráfico Global (Original)
+    // #######################################################
     const globalDataContainer = document.getElementById('globalChartData');
     if (globalDataContainer) {
         try {
@@ -329,48 +532,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false, 
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            min: 0,
-                            max: 5,
+                            beginAtZero: true, min: 0, max: 5,
                             title: { display: true, text: 'Promedio', color: CHART_COLORS.primary },
                             grid: { color: 'rgba(0, 0, 0, 0.05)' }, 
-                            suggestedMin: 0,
-                            suggestedMax: 5.5,
+                            suggestedMin: 0, suggestedMax: 5.5,
                             afterBuildTicks: function(scale) {
-                                scale.ticks.push({ 
-                                    value: notaAprobacion, 
-                                    label: 'Aprobación (3.0)', 
-                                    major: true 
-                                });
+                                scale.ticks.push({ value: notaAprobacion, label: 'Aprobación (3.0)', major: true });
                             }
                         },
-                        x: { 
-                            title: { display: true, text: 'Periodo', color: CHART_COLORS.primary },
-                            grid: { display: false } 
-                        }
+                        x: { title: { display: true, text: 'Periodo', color: CHART_COLORS.primary }, grid: { display: false } }
                     },
                     plugins: {
-                        legend: { 
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true, 
-                                padding: 15
-                            }
-                        },
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 15 } },
                         tooltip: {
                             backgroundColor: 'rgba(44, 62, 80, 0.9)', 
                             titleFont: { weight: 'bold' },
                             callbacks: {
                                 label: function(context) {
-                                    if (context.parsed.y === null) {
-                                        return context.dataset.label + ': No Registrado';
-                                    }
+                                    if (context.parsed.y === null) return context.dataset.label + ': No Registrado';
                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
                                 }
                             }
@@ -378,16 +560,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
-
-        } catch (e) {
-            console.error("Error al inicializar el gráfico global:", e);
-        }
+        } catch (e) { console.error("Error al inicializar el gráfico global:", e); }
     }
 
-
-    // #########################################
-    // # 2. Lógica para los Gráficos de Barras por Periodo (Coloreado por aprobación)
-    // #########################################
+    // #######################################################
+    // # 3. Lógica para los Gráficos de Barras por Periodo (Original)
+    // #######################################################
     const handleCollapseShow = function(e) {
         const collapseElement = e.target;
         const chartDataContainers = collapseElement.querySelectorAll('.chart-data');
@@ -404,15 +582,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     .map(v => v.trim() === 'None' || v.trim() === 'null' || v.trim() === '' ? null : parseFloat(v))
                     .filter(v => v !== null && !isNaN(v));
 
-                if (dataValues.length === 0) {
-                    return; 
-                }
+                if (dataValues.length === 0) return;
 
                 const ctx = document.getElementById(`chart-${materiaId}-${periodoId}`).getContext('2d');
                 
                 const backgroundColors = dataValues.map(value => {
                     if (value === null || isNaN(value)) return 'rgba(189, 195, 199, 0.5)'; 
-                    
                     return value >= notaAprobacion ? CHART_COLORS.primary : CHART_COLORS.danger;
                 });
 
@@ -425,53 +600,23 @@ document.addEventListener('DOMContentLoaded', function () {
                             data: dataValues,
                             backgroundColor: backgroundColors,
                             hoverBackgroundColor: backgroundColors.map(c => c + 'CC'), 
-                            borderRadius: 6, 
-                            borderWidth: 0 
+                            borderRadius: 6, borderWidth: 0 
                         }]
                     },
                     options: {
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: true,
-                                max: 5,
-                                title: {
-                                    display: true,
-                                    text: 'Calificación',
-                                    color: CHART_COLORS.primary
-                                },
+                                beginAtZero: true, max: 5,
+                                title: { display: true, text: 'Calificación', color: CHART_COLORS.primary },
                                 grid: { color: 'rgba(0, 0, 0, 0.05)' },
                                 afterBuildTicks: function(scale) {
                                     scale.ticks.push({ value: notaAprobacion, label: 'Aprobación (3.0)', major: true });
                                 }
                             },
-                            x: {
-                                grid: { display: false }
-                            }
+                            x: { grid: { display: false } }
                         },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(44, 62, 80, 0.9)',
-                                titleFont: { weight: 'bold' },
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += context.parsed.y.toFixed(2);
-                                        } else {
-                                            label += 'No Registrado';
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
                 container.dataset.chartInitialized = 'true';
