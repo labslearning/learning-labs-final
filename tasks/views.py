@@ -661,7 +661,8 @@ def dashboard_docente(request):
                         'curso_texto': curso_key,
                         'suma_notas': 0.0,
                         'num_notas': 0,
-                        'fallas': 0
+                        'fallas': 0,
+                        'historial_temp': [] # Placeholder
                     }
 
         if materia_actual not in materias_por_curso[curso_key]['materias']:
@@ -715,12 +716,12 @@ def dashboard_docente(request):
     # BLOQUE 3: PROCESAMIENTO FINAL DE ANALÍTICA (Tab 3)
     # -------------------------------------------------------
     
-    # 1. Calcular Ausentismo (Fallas Y Retardos)
+    # 1. Calcular Ausentismo (Fallas Y Retardos - Conteo Global)
+    mis_materias_ids = [a.materia.id for a in asignaciones] # IDs de las materias de este profe
     try:
         from .models import Asistencia
-        mis_materias_ids = [a.materia.id for a in asignaciones]
         
-        # CORRECCIÓN: Filtramos por FALLA O TARDE
+        # Filtramos fallas y retardos
         fallas_agrupadas = Asistencia.objects.filter(
             materia_id__in=mis_materias_ids,
             estado__in=['FALLA', 'TARDE'] 
@@ -750,7 +751,8 @@ def dashboard_docente(request):
             'estudiante': data['obj'],
             'curso': data['curso_texto'],
             'promedio': round(promedio_final, 2),
-            'fallas': data['fallas']
+            'fallas': data['fallas'],
+            'historial': [] # Inicializamos la lista vacía para llenarla luego
         })
 
     # 3. Generar los TOPS
@@ -762,6 +764,32 @@ def dashboard_docente(request):
     con_fallas = [x for x in lista_final_estudiantes if x['fallas'] > 0]
     top_ausentismo = sorted(con_fallas, key=lambda x: x['fallas'], reverse=True)[:5]
 
+    # ==============================================================================
+    # 🔥 CORRECCIÓN CRÍTICA: CARGAR EL HISTORIAL DETALLADO DE FALLAS
+    # Sin este bloque, el modal en el HTML nunca tendrá datos para mostrar.
+    # ==============================================================================
+    try:
+        from .models import Asistencia
+        
+        # Recorremos SOLO a los estudiantes que están en el Top de Ausentismo
+        for item in top_ausentismo:
+            estudiante_obj = item['estudiante']
+            
+            # Buscamos cada registro individual (Día, Fecha, Hora, Materia)
+            # Solo de las materias de este profesor (mis_materias_ids)
+            detalle_fallas = Asistencia.objects.filter(
+                estudiante=estudiante_obj,
+                materia_id__in=mis_materias_ids,
+                estado__in=['FALLA', 'TARDE']
+            ).select_related('materia').order_by('-fecha', '-hora') # Orden descendente
+            
+            # Guardamos la consulta en el diccionario del estudiante
+            item['historial'] = list(detalle_fallas)
+
+    except Exception as e:
+        print(f"Error cargando historial de fallas: {e}")
+    # ==============================================================================
+
     context = {
         'docente': docente,
         'materias_por_curso': materias_por_curso,
@@ -771,7 +799,7 @@ def dashboard_docente(request):
         'total_estudiantes': len(total_estudiantes_unicos),
         'top_mejores': top_mejores,
         'top_riesgo': top_riesgo,
-        'top_ausentismo': top_ausentismo,
+        'top_ausentismo': top_ausentismo, # Ahora incluye 'historial' con fechas y horas
         'kpi_reprobados': conteo_reprobados_global,
         'kpi_fallas': conteo_total_fallas
     }
