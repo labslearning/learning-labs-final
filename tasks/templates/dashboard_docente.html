@@ -323,7 +323,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="ps-4">Estudiante</th>
-                                            <th class="text-center">Fallas</th>
+                                            <th class="text-center">Total</th>
                                             <th class="text-end pe-3">Acciones</th>
                                         </tr>
                                     </thead>
@@ -365,16 +365,17 @@
                                                                     <table class="table table-sm table-striped mb-0 small text-start">
                                                                         <thead class="table-light">
                                                                             <tr>
-                                                                                <th class="ps-3">Día/Fecha</th>
+                                                                                <th class="ps-3">Día y Fecha</th>
                                                                                 <th>Materia</th>
                                                                                 <th>Estado</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
+                                                                            {# Iteramos asistencias inversamente por fecha, filtrando fallas/tardes #}
                                                                             {% for asis in item.estudiante.asistencia_set.all|dictsortreversed:"fecha" %}
                                                                                 {% if asis.estado == 'FALLA' or asis.estado == 'TARDE' %}
                                                                                 <tr>
-                                                                                    <td class="ps-3 text-nowrap">{{ asis.fecha|date:"l d M" }}</td>
+                                                                                    <td class="ps-3 text-nowrap">{{ asis.fecha|date:"l d F" }}</td>
                                                                                     <td>{{ asis.materia.nombre }}</td>
                                                                                     <td>
                                                                                         {% if asis.estado == 'FALLA' %}
@@ -398,8 +399,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                            </td>
+                                                </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
