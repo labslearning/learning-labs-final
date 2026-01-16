@@ -183,7 +183,6 @@
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
-       
        <div class="col-lg-6 mb-4 mb-lg-0">
            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
@@ -366,7 +365,7 @@
                        <div class="card border-0 shadow-sm">
                            <div class="card-header bg-gradient-success text-white py-2 d-flex justify-content-between align-items-center">
                                <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
-                               <small class="text-white-50">Orden por promedio definitivo</small>
+                               <small class="text-white-50">Orden por promedio de notas</small>
                            </div>
                            <div class="card-body p-0">
                                <div class="table-responsive">
@@ -389,7 +388,11 @@
                                                    {% endif %}
                                                </td>
                                                <td class="text-start ps-3">{{ top_est.nombre }}</td>
-                                               <td><span class="badge bg-success bg-opacity-75 rounded-pill">{{ top_est.promedio }}</span></td>
+                                               <td>
+                                                   <span class="badge bg-success bg-opacity-75 rounded-pill">
+                                                       {{ top_est.promedio }}
+                                                   </span>
+                                               </td>
                                            </tr>
                                            {% endfor %}
                                        </tbody>
@@ -556,6 +559,8 @@
    .bg-success-subtle { background-color: #d1e7dd; }
     .bg-warning-subtle { background-color: #fff3cd; }
    .bg-danger-subtle { background-color: #f8d7da; }
+   
+   /* Fondo gradiente verde esmeralda para el Top 10 */
    .bg-gradient-success { background: linear-gradient(135deg, #1cc88a, #13855c); }
   
    .shadow-hover:hover { transform: translateY(-3px); transition: all 0.2s; }
