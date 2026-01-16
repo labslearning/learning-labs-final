@@ -1201,7 +1201,7 @@
         }
 
         // Ejecutar la función de renderizado del calendario
-        renderCalendar();
+        setTimeout(renderCalendar, 500); // Pequeño retraso para asegurar que el DOM esté listo
 
         // Si el sidebar está oculto en móviles, renderizar el calendario cuando se muestre
         const sidebar = document.querySelector('.col-right-sidebar');
@@ -1215,6 +1215,11 @@
             }, { threshold: 0.1 });
             observer.observe(sidebar);
         }
+
+        // También ejecutar cuando la ventana se redimensione (por si el sidebar aparece/desaparece)
+        window.addEventListener('resize', function() {
+            setTimeout(renderCalendar, 300);
+        });
     });
 </script>
 {% endblock %}
