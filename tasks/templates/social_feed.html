@@ -70,7 +70,7 @@
         top: 80px;
         margin-bottom: 20px;
     }
-    
+
     /* Left Sidebar Groups */
     .group-item {
         display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; transition: background-color 0.2s;
@@ -83,7 +83,7 @@
 
     /* Right Sidebar Video/Calendar */
     .video-responsive {
-        position: relative; overflow: hidden; width: 100%; 
+        position: relative; overflow: hidden; width: 100%;
         border-radius: 8px; margin-bottom: 15px;
     }
     /* Estilo para el video nativo */
@@ -93,14 +93,13 @@
         display: block;
         border-radius: 8px;
     }
-    
+
     /* CALENDAR STYLE */
     .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; text-transform: capitalize; }
     .calendar-day { display: inline-block; width: 14.28%; text-align: center; padding: 5px 0; font-size: 0.8rem; }
     .calendar-date { font-weight: 600; color: var(--text-primary); }
     .calendar-today { background-color: var(--edu-accent); color: white !important; border-radius: 50%; }
     .calendar-empty { background: transparent; }
-
 
     /* --- Post Cards & Input --- */
     .create-post-card, .post-card {
@@ -122,10 +121,10 @@
     .reaction-icon-group i { color: white; background: var(--edu-primary); padding: 4px; border-radius: 50%; font-size: 0.65rem; border: 2px solid white; }
 
     /* ACTIONS - ESTILOS PROFESIONALES */
-    .post-actions { 
-        padding: 4px 16px; 
-        display: flex; 
-        gap: 4px; 
+    .post-actions {
+        padding: 4px 16px;
+        display: flex;
+        gap: 4px;
         border-top: 1px solid var(--divider);
     }
     .action-btn {
@@ -136,7 +135,7 @@
         border: none;
     }
     .action-btn:hover { background-color: var(--action-hover); }
-    
+
     /* Estado para Me Gusta activo */
     .action-btn.active-primary {
         color: var(--edu-primary) !important;
@@ -145,22 +144,22 @@
 
     /* Comments - Facebook/LinkedIn Style */
     .comments-section { padding: 12px 16px 16px; background-color: #ffffff; border-radius: 0 0 12px 12px; }
-    
+
     .comment-item { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
-    .comment-bubble { 
-        background-color: #f0f2f5; 
-        padding: 8px 12px; 
-        border-radius: 18px; 
-        line-height: 1.3; 
+    .comment-bubble {
+        background-color: #f0f2f5;
+        padding: 8px 12px;
+        border-radius: 18px;
+        line-height: 1.3;
     }
     .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-right: 5px; white-space: nowrap;}
     .comment-text { font-size: 0.9rem; }
     .comment-content-wrapper { flex-grow: 1; min-width: 0; }
-    
-    .comment-meta { 
-        font-size: 0.75rem; 
-        color: var(--text-secondary); 
-        margin-left: 50px; 
+
+    .comment-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-left: 50px;
         margin-top: 2px;
     }
     .comment-meta > span { cursor: pointer; }
@@ -187,7 +186,7 @@
         box-shadow: 0 0 0 2px var(--edu-primary);
         background-color: #fff;
     }
-    
+
     /* === MODAL DE VIDEO YOUTUBE === */
     .video-modal-iframe-wrapper {
         position: relative;
@@ -255,30 +254,30 @@
         border-radius: 8px;
         overflow: hidden; /* Corta lo que se salga del borde redondeado */
         background-color: #000000; /* Fondo negro para resaltar la foto (estilo cine) */
-        
+
         /* Centrado Flexbox */
         display: flex;
         justify-content: center;
         align-items: center;
-        
+
         /* Límite de altura: vital para que no rompa el diseño vertical */
-        max-height: 500px; 
+        max-height: 500px;
         width: 100%;
     }
 
     .post-media img {
         /* Asegura que la imagen nunca sea más ancha que el contenedor */
-        max-width: 100%; 
-        
+        max-width: 100%;
+
         /* Asegura que la imagen nunca sea más alta que el límite */
-        max-height: 500px; 
-        
+        max-height: 500px;
+
         /* Mantiene la proporción original (no la estira ni aplasta) */
-        width: auto; 
+        width: auto;
         height: auto;
-        
+
         /* 'contain' muestra toda la foto. Usa 'cover' si prefieres que llene todo el espacio aunque recorte bordes */
-        object-fit: contain; 
+        object-fit: contain;
         display: block;
     }
 
@@ -301,7 +300,7 @@
         /* Eliminamos el padding y shadow para que el sidebar-search-card lo maneje */
         margin-bottom: 20px;
     }
-    
+
     /* ESTILOS PARA EL BUSCADOR EN EL SIDEBAR (Cambiado a sidebar-search-card) */
     .sidebar-search-card {
         background: var(--card-bg);
@@ -331,7 +330,7 @@
         transition: background-color 0.2s;
     }
     /* Fin Estilos Buscador Sidebar */
-    
+
     .search-icon-container {
         position: absolute;
         left: 0;
@@ -347,19 +346,19 @@
 
 <div class="container feed-container">
     <div class="row">
-        
+
         <div class="col-md-4 col-lg-3 col-sidebar">
-            
+
             <div class="sidebar-search-card">
                 <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
                     <div class="position-relative">
                         <div class="search-icon-container" style="top: 0px; left: 0px;">
                             <i class="fas fa-search text-secondary"></i>
                         </div>
-                        <input type="text" 
-                               name="q" 
-                               class="form-control sidebar-search-input" 
-                               placeholder="Buscar publicaciones..." 
+                        <input type="text"
+                               name="q"
+                               class="form-control sidebar-search-input"
+                               placeholder="Buscar publicaciones..."
                                value="{{ request.GET.q|default:'' }}"
                                aria-label="Buscar publicaciones">
                     </div>
@@ -388,7 +387,7 @@
                                 <i class="fas fa-users"></i>
                             </div>
                         {% endif %}
-                        
+
                         <div class="group-info-sidebar flex-grow-1">
                             <a href="{% url 'detalle_grupo' grupo.id %}" class="text-decoration-none">
                                 <h6>{{ grupo.name|truncatechars:18 }}</h6>
@@ -410,7 +409,7 @@
                         </form>
                     </div>
                     {% endfor %}
-                    
+
                     <div class="text-center mt-3 pt-2 border-top">
                         <a href="{% url 'lista_grupos' %}" class="small fw-bold text-decoration-none text-primary">Ver todos los grupos</a>
                     </div>
@@ -424,7 +423,7 @@
         </div>
 
         <div class="col-md-8 col-lg-6 col-main-feed">
-            
+
             <div class="create-post-card">
                 <div class="create-post-top d-flex align-items-center gap-2">
                     {% if user.perfil.foto_perfil %}
@@ -434,7 +433,7 @@
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}
-                    
+
                     <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
                         ¿Qué estás pensando, {{ user.first_name }}?
                     </div>
@@ -486,7 +485,7 @@
                                 <i class="fas fa-globe-americas ms-1 text-secondary" style="font-size: 0.7rem;"></i>
                             </div>
                         </div>
-                        
+
                         <div class="dropdown">
                             <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-ellipsis-h"></i>
@@ -514,7 +513,7 @@
                         <img src="{{ post.imagen.url }}" alt="Imagen del post" loading="lazy">
                     </div>
                     {% endif %}
-                    
+
                     {% if post.archivo %}
                         {% with extension=post.archivo.url|slice:"-4:"|lower %}
                             {% if extension == ".mp4" or extension == "webm" or extension == ".ogg" %}
@@ -533,7 +532,6 @@
                             {% endif %}
                         {% endwith %}
                     {% endif %}
-
 
                     <div class="post-stats">
                         <div class="d-flex align-items-center">
@@ -599,7 +597,7 @@
                                         </div>
                                         <div class="comment-meta">
                                             <span class="text-secondary cursor-pointer" onclick="toggleReactionDirecto({{ comentario.id }}, 'comment', this)">
-                                                Me gusta 
+                                                Me gusta
                                                 <span id="reaction-count-comment-{{ comentario.id }}" class="ms-1 fw-bold">
                                                     {% if comentario.reacciones.count > 0 %}{{ comentario.reacciones.count }}{% endif %}
                                                 </span>
@@ -614,19 +612,19 @@
                                     </div>
                                 </div>
                             {% endfor %}
-                            
+
                             <div class="comment-input-area">
                                 {% if user.perfil.foto_perfil %}
                                     <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
                                 {% else %}
                                     <div class="user-avatar-sm bg-secondary" style="width: 32px; height: 32px;"></div>
                                 {% endif %}
-                                
+
                                 <form method="POST" action="." class="w-100 d-flex gap-2 align-items-center">
                                     {% csrf_token %}
                                     <input type="hidden" name="publicar_comentario" value="1">
                                     <input type="hidden" name="post_id" value="{{ post.id }}">
-                                    
+
                                     <input type="text" name="contenido" class="comment-input" placeholder="Escribe un comentario..." required autocomplete="off">
                                     <button type="submit" class="btn btn-primary btn-sm rounded-circle p-0" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-paper-plane" style="font-size: 0.9rem;"></i>
@@ -677,9 +675,9 @@
 
             <div class="sidebar-card">
                 <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-calendar-alt me-1"></i> Calendario</h6>
-                
+
                 <div class="calendar-header" id="calendar-header">Cargando...</div>
-                
+
                 <div class="calendar-body">
                     <div class="d-flex small fw-bold text-muted border-bottom mb-1">
                         <span class="calendar-day">Lu</span>
@@ -690,13 +688,13 @@
                         <span class="calendar-day">Sá</span>
                         <span class="calendar-day">Do</span>
                     </div>
-                    
+
                     <div class="d-flex flex-wrap" id="calendar-days">
-                        </div>
-                </div>
-                
-                <div class="small mt-3 pt-2 border-top" id="calendar-today-display">
                     </div>
+                </div>
+
+                <div class="small mt-3 pt-2 border-top" id="calendar-today-display">
+                </div>
             </div>
         </div>
     </div>
@@ -729,7 +727,7 @@
                 <form method="POST" enctype="multipart/form-data" novalidate id="form-publicar">
                     {% csrf_token %}
                     <input type="hidden" name="publicar_post" value="1">
-                    
+
                     <div class="d-flex align-items-center mb-3">
                         {% if user.perfil.foto_perfil %}
                             <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm me-2">
@@ -748,7 +746,7 @@
                         <button type="button" id="emoji-trigger-modal" class="btn btn-sm btn-light position-absolute end-0 top-0 mt-1 me-1 rounded-circle" style="z-index: 10;">
                             <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i>
                         </button>
-                        {{ post_form.contenido|add_class:"form-control"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..." }} 
+                        {{ post_form.contenido|add_class:"form-control"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..." }}
                     </div>
 
                     <div class="border rounded p-3 mb-3 d-flex justify-content-between align-items-center">
@@ -765,10 +763,10 @@
                             <span id="file-name-display" class="file-name-display"></span>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3 d-none">
-                        </div>
-                    
+                    </div>
+
                     {% if user.perfil.rol == 'ADMINISTRADOR' %}
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="es_anuncio" id="esAnuncioCheck">
@@ -803,22 +801,29 @@
         }
         return cookieValue;
     }
-    window.csrftoken_local = getCookie('csrftoken'); 
-    
+    window.csrftoken_local = getCookie('csrftoken'); // Hacerlo global para las funciones inline
+
     // Función para manejar el feedback del nombre del archivo
     function handleFileInput(event) {
         const input = event.target;
         const display = document.getElementById('file-name-display');
+
         let filename = '';
         if (input.files.length > 0) {
             filename = input.files[0].name;
+            // Si ya hay un nombre de archivo, lo establecemos
             display.textContent = filename;
         }
+
+        // Limpiar el campo del otro archivo si se selecciona uno nuevo
+        // Esto asume que solo quieres una imagen O un archivo/video por post
         const otherInputId = input.id === 'id_imagen' ? 'id_archivo' : 'id_imagen';
         const otherInput = document.getElementById(otherInputId);
         if (otherInput && otherInput.files.length > 0 && input.files.length > 0) {
-             otherInput.value = ''; 
+             otherInput.value = ''; // Limpia el valor del input de archivo
         }
+
+        // Si no hay archivos en ninguno, limpiar display
         const imgInput = document.getElementById('id_imagen');
         const fileInput = document.getElementById('id_archivo');
         if (imgInput && fileInput && imgInput.files.length === 0 && fileInput.files.length === 0) {
@@ -835,23 +840,30 @@
             return false;
         }
     }
-    
+
     // Función CRÍTICA: Simplemente redirige el enlace a una nueva pestaña
     function openYouTubeInNewTab(event, url) {
-        event.preventDefault(); 
+        event.preventDefault(); // Previene el comportamiento por defecto de la navegación
+
+        // Muestra una notificación rápida o alerta (Opcional, pero buena UX)
+        alert("Abriendo el video en una nueva pestaña...");
+
         window.open(url, '_blank');
     }
-    
-    // Función para detener el video
+
+    // Función para detener el video (Se mantiene por si se usa en el modal, pero no será llamada aquí)
     function stopVideo() {
         const iframe = document.getElementById('youtube-player');
-        iframe.src = ''; 
+        // Detiene el video al resetear el src
+        iframe.src = '';
     }
 
-    // 2. Toggle Reaction Function
+    // 2. Toggle Reaction Function (MEJORADA PARA FEEDBACK INSTANTÁNEO)
     async function toggleReactionDirecto(id, tipo, btn) {
         const icon = btn.querySelector('i');
         const isLiked = btn.classList.contains('active-primary');
+
+        // Aplicar feedback visual INSTANTÁNEO
         if (tipo === 'post') {
             if (isLiked) {
                 btn.classList.remove('active-primary');
@@ -863,6 +875,8 @@
                 icon.classList.add('fas');
             }
         }
+
+        // Llamada a la API
         try {
             const response = await fetch('/api/social/reaction/', {
                 method: 'POST',
@@ -876,14 +890,16 @@
                     'reaction': 'LIKE'
                 })
             });
+
             const data = await response.json();
+
             if (data.success) {
                 if (tipo === 'post') {
-                    location.reload(); 
+                    location.reload();
                 } else {
                     const counterSpan = document.getElementById(`reaction-count-comment-${id}`);
                     if (counterSpan) {
-                        counterSpan.innerText = data.total > 0 ? data.total : ''; 
+                        counterSpan.innerText = data.total > 0 ? data.total : '';
                     }
                     if (data.action === 'added') {
                         btn.classList.add('text-primary', 'fw-bold', 'comment-liked');
@@ -893,6 +909,8 @@
                 }
             } else {
                 console.error('Error en reacción:', data.error);
+                alert("Error al dar like: " + data.error);
+                // Revertir el feedback instantáneo si la API falla
                 if (tipo === 'post') {
                     if (isLiked) {
                         btn.classList.add('active-primary');
@@ -907,6 +925,8 @@
             }
         } catch (error) {
             console.error('Error de red:', error);
+            alert("Error de red al dar like.");
+            // Revertir el feedback instantáneo si hay error de red
             if (tipo === 'post') {
                 if (isLiked) {
                     btn.classList.add('active-primary');
@@ -935,6 +955,7 @@
     // 4. Moderate Function
     async function moderarContenidoDirecto(id, tipo) {
         if (!confirm("¿Estás seguro de eliminar este contenido permanentemente?")) return;
+
         try {
             const response = await fetch('/api/social/moderate/', {
                 method: 'POST',
@@ -948,7 +969,9 @@
                     'motivo': "Eliminado por el usuario/admin desde el feed"
                 })
             });
+
             const data = await response.json();
+
             if (data.success) {
                 const elemento = document.getElementById(`${tipo}-${id}`);
                 if (elemento) {
@@ -966,14 +989,23 @@
         }
     }
 
-    // 5. Reset Notifications
+    // 🔥 5. LÓGICA DE SINCRONIZACIÓN DE NOTIFICACIONES 🔥
+
+    // Nueva función JS para llamar a la API y resetear el contador
     async function resetNotificationCounter() {
+        // Obtenemos el token CSRF necesario
         const csrftoken = getCookie('csrftoken');
-        const counterElement = document.getElementById('notification-counter'); 
+        // Asumimos que el span que muestra el número de notificaciones tiene el ID 'notification-counter'
+        const counterElement = document.getElementById('notification-counter');
+
+        // Si el contador ya está a cero, salimos
         if (counterElement && parseInt(counterElement.textContent) === 0) {
             return;
         }
+
         try {
+            // Llama al endpoint de Django para marcar como leídas
+            // ASEGÚRATE de que esta URL esté definida en tu urls.py: name='mark_all_notifications_read'
             const response = await fetch('{% url "mark_all_notifications_read" %}', {
                 method: 'POST',
                 headers: {
@@ -982,59 +1014,82 @@
                 },
                 body: JSON.stringify({})
             });
+
             const data = await response.json();
+
             if (data.success) {
                 if (counterElement) {
+                    // Si el servidor confirma la actualización, reseteamos el contador visual
                     counterElement.textContent = '0';
-                    counterElement.style.display = 'none'; 
+                    counterElement.style.display = 'none';
+                    console.log(`Contador de notificaciones reseteado. ${data.updated_items} elementos actualizados.`);
                 }
+            } else {
+                console.warn('El servidor no pudo marcar las notificaciones como leídas.');
             }
         } catch (error) {
             console.error('Error de red al sincronizar notificaciones:', error);
         }
     }
-    
-    // --- INIT SCRIPTS ---
+
+    // 6. Initialize Scripts (Añadimos la llamada de sincronización)
     document.addEventListener('DOMContentLoaded', function() {
+        // --- Asocia los manejadores de eventos de archivo ---
         const imagenInput = document.getElementById('id_imagen');
         const archivoInput = document.getElementById('id_archivo');
+
         if (imagenInput) imagenInput.addEventListener('change', handleFileInput);
         if (archivoInput) archivoInput.addEventListener('change', handleFileInput);
 
+        // --- Aplicar la lógica de NUEVA PESTAÑA a todos los enlaces de YouTube ---
         document.querySelectorAll('.post-content a, .comment-content-wrapper a').forEach(link => {
             const href = link.getAttribute('href');
+            // Busca URLs que parezcan ser de YouTube
             if (isYouTubeLink(href)) {
+                // Sobreescribe el comportamiento normal del click para abrir en nueva pestaña
                 link.onclick = (event) => openYouTubeInNewTab(event, href);
-                link.setAttribute('target', '_blank'); 
+                // Asegura el target en caso de fallo de JS
+                link.setAttribute('target', '_blank');
+
+                // Añade un ícono para que el usuario sepa que es un video
                 if (!link.querySelector('.fa-video')) {
-                     link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`; 
+                     link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`;
                 }
             }
         });
 
-        // Emoji Picker
+        // --- Emoji Picker Logic (ULTRA-FIXED) ---
         const picker = new EmojiButton({
             position: 'bottom-start',
             zIndex: 1060
         });
-        
+
         const triggerModal = document.querySelector('#emoji-trigger-modal');
         const triggerMain = document.querySelector('#emoji-trigger-main');
-        const modalEl = document.getElementById('createPostModal');
-        
+        const modalEl = document.getElementById('createPostModal'); // Referencia al modal
+
+        // --- FUNCIÓN DE INSERCIÓN GARANTIZADA ---
         function insertEmoji(emoji) {
+            // USAMOS EL ID FORZADO ABAJO PARA MÁXIMA FIABILIDAD
             const postInput = document.getElementById('post-content-textarea');
+
             if (postInput) {
+                // MÉTODO ROBUSTO: setRangeText (respeta cursor)
                 try {
-                    postInput.focus(); 
+                    // Forzar el foco justo antes de escribir es crucial si se pierde por el modal
+                    postInput.focus();
+
                     const start = postInput.selectionStart;
                     const end = postInput.selectionEnd;
                     postInput.setRangeText(emoji, start, end, 'end');
                     postInput.focus();
                 } catch (e) {
+                    // FALLBACK: Si setRangeText falla (incompatibilidad de editor), usamos append:
                     postInput.value += emoji;
-                    postInput.focus(); 
+                    postInput.focus();
                 }
+            } else {
+                 console.error("Fallo CRÍTICO: El textarea no fue encontrado por ID.");
             }
         }
 
@@ -1042,28 +1097,40 @@
             insertEmoji(selection.emoji);
         });
 
+        // A. Trigger desde dentro del Modal (Carita feliz pequeña)
         if (triggerModal) {
             triggerModal.addEventListener('click', () => {
                 picker.togglePicker(triggerModal);
             });
         }
 
+        // B. Trigger desde el botón "Sentimiento" (Tarjeta principal)
         if (triggerMain) {
+
+            // 1. Abrir el modal.
             triggerMain.addEventListener('click', () => {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             });
+
+            // 2. Usamos el evento 'shown.bs.modal' para garantizar que el DOM ya está visible
             modalEl.addEventListener('shown.bs.modal', () => {
+                // Selector simple para anclar el picker
                 const modalTrigger = document.querySelector('#emoji-trigger-modal');
+
                 if (modalTrigger) {
-                    picker.showPicker(modalTrigger); 
+                    picker.showPicker(modalTrigger); // Abre el selector anclado al botón
+
+                    // CRÍTICO: Forzar el foco al textarea justo después de abrir el picker
+                    // Esto debe ejecutarse SIEMPRE para asegurar que el input esté listo para la función insertEmoji
                     const postInput = document.querySelector('#post-content-textarea');
                     if(postInput) postInput.focus();
                 }
             });
         }
+        // --- Fin Emoji Picker Logic ---
 
-        // Form Feedback
+        // --- Post Button Feedback ---
         const formPublicar = document.getElementById('form-publicar');
         if(formPublicar) {
             formPublicar.addEventListener('submit', function() {
@@ -1074,16 +1141,27 @@
                 }
             });
         }
-        
+
+        // --- SINCRONIZACIÓN DE NOTIFICACIONES ---
+        // Asumimos que el botón de la campana tiene ID='notification-dropdown-toggle' en base.html
         const notificationToggle = document.querySelector('#notification-dropdown-toggle');
+
+        // Agregamos la lógica para los mensajes (si la campana es también el botón de mensajes)
+        // Si tienes un ícono de mensajes SEPARADO (ej: ID='message-dropdown-toggle'), también debes conectarlo.
+        const messageToggle = document.querySelector('#message-dropdown-toggle'); // ID de ejemplo para mensajes
+
         if (notificationToggle) {
+             // Llama a la función de sincronización de Notificaciones al hacer clic
+             // Esto marcará como leídas las notificaciones generales.
              notificationToggle.addEventListener('click', resetNotificationCounter);
         }
 
-        // 🔥 CALENDARIO EN TIEMPO REAL (JS) - FIX SEPARADO 🔥
-        function initCalendar() {
-            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        // --- CALENDARIO EN TIEMPO REAL (JS) ---
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        // Función para renderizar el calendario
+        function renderCalendar() {
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
@@ -1099,7 +1177,7 @@
                 const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
                 // Ajustar para que Lunes sea 0 y Domingo 6
                 const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
-                
+
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 let html = '';
 
@@ -1118,13 +1196,25 @@
             // 3. Footer (Día actual)
             const footerEl = document.getElementById('calendar-today-display');
             if (footerEl) {
-                footerEl.innerHTML = `<strong class="text-danger">${today}/${monthNames[month].substring(0,3)}:</strong> Día actual.`;
+                footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
             }
         }
-        
-        // Ejecutar calendario
-        initCalendar();
+
+        // Ejecutar la función de renderizado del calendario
+        renderCalendar();
+
+        // Si el sidebar está oculto en móviles, renderizar el calendario cuando se muestre
+        const sidebar = document.querySelector('.col-right-sidebar');
+        if (sidebar) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        renderCalendar();
+                    }
+                });
+            }, { threshold: 0.1 });
+            observer.observe(sidebar);
+        }
     });
 </script>
-
 {% endblock %}
