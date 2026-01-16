@@ -484,7 +484,7 @@
             display: block !important; /* Forzar mostrar */
         }
         
-        /* 3. Barra Derecha (Calendario) (Abajo) */
+        /* 3. Barra Derecha (Video/Calendario) (Abajo) */
         .col-right-sidebar {
             order: 3;
             width: 100%;
@@ -520,6 +520,7 @@
     <div class="row">
         
         {# --- COLUMNA IZQUIERDA (Buscador y Grupos) --- #}
+        {# Eliminé clases d-none para que el CSS controle la visibilidad #}
         <div class="col-md-4 col-lg-3 col-sidebar">
             
             <div class="sidebar-search-card">
@@ -629,21 +630,6 @@
                         <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Feeling
                     </button>
                 </div>
-            </div>
-
-            {# --- VIDEO INSPIRACIÓN (VERSIÓN MÓVIL) --- #}
-            {# Se muestra solo en pantallas pequeñas (d-lg-none) #}
-            <div class="sidebar-card d-lg-none border-primary border-2 shadow-lg">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="sidebar-title mb-0 text-primary"><i class="fas fa-star me-2"></i> DESTACADO</h6>
-                </div>
-                <div class="video-responsive">
-                    <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
-                        <source src="https://res.cloudinary.com/do9orhb4k/video/upload/v1739634103/WhatsApp_Video_2025-02-15_at_8.34.38_AM_v0bpfq.mp4" type="video/mp4">
-                        Tu navegador no soporta el video.
-                    </video>
-                </div>
-                <p class="small text-muted mt-3 mb-0 fst-italic text-center">"Claves para el éxito en el aprendizaje."</p>
             </div>
 
             <div id="posts-list">
@@ -863,9 +849,7 @@
         {# --- COLUMNA DERECHA (Video y Calendario) --- #}
         {# Eliminado d-none y d-lg-block para que el CSS controle la visibilidad #}
         <div class="col-lg-3 col-right-sidebar">
-            {# --- VIDEO INSPIRACIÓN (VERSIÓN DESKTOP) --- #}
-            {# Se oculta en pantallas pequeñas (d-none d-lg-block) para no duplicar #}
-            <div class="sidebar-card d-none d-lg-block">
+            <div class="sidebar-card">
                 <h6 class="sidebar-title mb-3 text-primary"><i class="fas fa-video me-2"></i> INSPIRACIÓN</h6>
                 <div class="video-responsive">
                     <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
