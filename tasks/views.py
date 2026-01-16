@@ -3177,6 +3177,7 @@ def generar_observador_pdf(request, estudiante_id):
 # 🩺 FASE 4: FUNCIONES DE CHAT Y ASISTENCIA (NUEVAS AL FINAL)
 # ===================================================================
 #aqui 
+STAFF_ROLES = ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO', 'ADMINISTRADOR']
 
 @role_required('DOCENTE')
 @require_POST
