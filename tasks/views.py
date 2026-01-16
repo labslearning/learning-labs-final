@@ -3963,6 +3963,7 @@ def dashboard_bienestar(request):
 def reporte_consolidado(request):
     """
     Genera una 'Sábana de Notas' (Matriz Estudiantes vs Materias).
+    CORREGIDO: Ahora incluye la institución en el contexto para evitar errores de renderizado.
     """
     cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
     periodos = None
@@ -3976,54 +3977,68 @@ def reporte_consolidado(request):
     curso_seleccionado = None
     periodo_seleccionado = None
 
-    if curso_id and periodo_id:
-        curso_seleccionado = get_object_or_404(Curso, id=curso_id)
-        periodo_seleccionado = get_object_or_404(Periodo, id=periodo_id)
-        
-        # 1. Obtener todas las materias del curso
-        materias = Materia.objects.filter(curso=curso_seleccionado).order_by('nombre')
-        
-        # 2. Obtener estudiantes matriculados
-        matriculas = Matricula.objects.filter(curso=curso_seleccionado, activo=True).select_related('estudiante').order_by('estudiante__last_name')
-        
-        # 3. Construir la matriz
-        for mat in matriculas:
-            estudiante = mat.estudiante
-            notas_estudiante = []
-            promedio_acumulado = 0
-            materias_perdidas = 0
-            
-            for materia in materias:
-                # Buscar la nota final (numero_nota=5) de este estudiante en esta materia y periodo
-                nota_obj = Nota.objects.filter(
-                    estudiante=estudiante, 
-                    materia=materia, 
-                    periodo=periodo_seleccionado,
-                    numero_nota=5
-                ).first()
-                
-                valor = nota_obj.valor if nota_obj else 0
-                if valor > 0 and valor < 3.0:
-                    materias_perdidas += 1
-                
-                notas_estudiante.append({
-                    'materia_id': materia.id,
-                    'valor': valor
-                })
-                promedio_acumulado += float(valor)
-
-            promedio_general = promedio_acumulado / len(materias) if len(materias) > 0 else 0
-            
-            datos_reporte.append({
-                'estudiante': estudiante,
-                'notas': notas_estudiante,
-                'promedio': round(promedio_general, 2),
-                'perdidas': materias_perdidas
-            })
-
-    # Si se seleccionó curso, cargar sus periodos para el segundo dropdown
     if curso_id:
+        curso_seleccionado = get_object_or_404(Curso, id=curso_id)
+        # Cargamos los periodos del curso seleccionado
         periodos = Periodo.objects.filter(curso_id=curso_id).order_by('id')
+
+        if periodo_id:
+            periodo_seleccionado = get_object_or_404(Periodo, id=periodo_id)
+            
+            # 1. Obtener todas las materias del curso
+            materias = Materia.objects.filter(curso=curso_seleccionado).order_by('nombre')
+            
+            # 2. Obtener estudiantes matriculados
+            matriculas = Matricula.objects.filter(curso=curso_seleccionado, activo=True).select_related('estudiante').order_by('estudiante__last_name')
+            
+            # 3. Construir la matriz
+            for mat in matriculas:
+                estudiante = mat.estudiante
+                notas_estudiante = []
+                promedio_acumulado = 0.0
+                materias_perdidas = 0
+                materias_con_nota = 0 # Contador para saber cuántas materias se promedian
+                
+                for materia in materias:
+                    # Buscar la nota final (numero_nota=5) de este estudiante en esta materia y periodo
+                    # Usamos .first() para seguridad
+                    nota_obj = Nota.objects.filter(
+                        estudiante=estudiante, 
+                        materia=materia, 
+                        periodo=periodo_seleccionado,
+                        numero_nota=5
+                    ).first()
+                    
+                    valor = float(nota_obj.valor) if nota_obj else 0.0
+                    
+                    if valor > 0:
+                        materias_con_nota += 1
+                        if valor < 3.0:
+                            materias_perdidas += 1
+                    
+                    notas_estudiante.append({
+                        'materia_id': materia.id,
+                        'valor': valor
+                    })
+                    promedio_acumulado += valor
+
+                # Cálculo seguro del promedio (Evitar división por cero)
+                if len(materias) > 0:
+                    # Opción A: Promedio sobre total de materias (diluye si faltan notas)
+                    promedio_general = promedio_acumulado / len(materias)
+                    # Opción B (Alternativa): promedio_general = promedio_acumulado / materias_con_nota if materias_con_nota > 0 else 0
+                else:
+                    promedio_general = 0.0
+                
+                datos_reporte.append({
+                    'estudiante': estudiante,
+                    'notas': notas_estudiante,
+                    'promedio': round(promedio_general, 2),
+                    'perdidas': materias_perdidas
+                })
+
+    # 4. CRÍTICO: Obtener la institución para el encabezado del reporte
+    institucion = Institucion.objects.first()
 
     return render(request, 'admin/reporte_consolidado.html', {
         'cursos': cursos,
@@ -4032,10 +4047,15 @@ def reporte_consolidado(request):
         'periodo_seleccionado': periodo_seleccionado,
         'materias': materias,
         'datos_reporte': datos_reporte,
+        'institucion': institucion, # <--- ESTA LÍNEA ES LA QUE FALTABA Y ARREGLA EL ERROR
     })
+
 
 # En views.py
 def sabana_notas(request):
+    """
+    Vista alternativa o complementaria para la sábana de notas.
+    """
     # 1. Configuración inicial
     cursos = Curso.objects.all().order_by('nombre')
     
@@ -4116,7 +4136,7 @@ def sabana_notas(request):
                 for materia in materias:
                     clave = (estudiante.id, materia.id)
                     valor = notas_map.get(clave, 0)
-                    valor = float(round(valor, 1))
+                    valor = float(round(valor, 1)) if valor else 0.0
 
                     if valor > 0:
                         suma_promedios += valor
