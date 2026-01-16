@@ -794,28 +794,39 @@
         }
         return cookieValue;
     }
-    window.csrftoken_local = getCookie('csrftoken'); 
+    window.csrftoken_local = getCookie('csrftoken'); // Hacerlo global para las funciones inline
     
+    // Función para manejar el feedback del nombre del archivo
     function handleFileInput(event) {
         const input = event.target;
         const display = document.getElementById('file-name-display');
+        
         let filename = '';
         if (input.files.length > 0) {
             filename = input.files[0].name;
+            // Si ya hay un nombre de archivo, lo establecemos
             display.textContent = filename;
         }
+        
+        // Limpiar el campo del otro archivo si se selecciona uno nuevo
+        // Esto asume que solo quieres una imagen O un archivo/video por post
         const otherInputId = input.id === 'id_imagen' ? 'id_archivo' : 'id_imagen';
         const otherInput = document.getElementById(otherInputId);
         if (otherInput && otherInput.files.length > 0 && input.files.length > 0) {
-             otherInput.value = '';
+             otherInput.value = ''; // Limpia el valor del input de archivo
         }
+
+        // Si no hay archivos en ninguno, limpiar display
         const imgInput = document.getElementById('id_imagen');
         const fileInput = document.getElementById('id_archivo');
         if (imgInput && fileInput && imgInput.files.length === 0 && fileInput.files.length === 0) {
              display.textContent = '';
         }
+        
     }
 
+
+    // Función auxiliar para detectar si es un link de YouTube
     function isYouTubeLink(url) {
         try {
             const urlObj = new URL(url);
@@ -825,19 +836,29 @@
         }
     }
     
+    // Función CRÍTICA: Simplemente redirige el enlace a una nueva pestaña
     function openYouTubeInNewTab(event, url) {
-        event.preventDefault();
+        event.preventDefault(); // Previene el comportamiento por defecto de la navegación
+        
+        // Muestra una notificación rápida o alerta (Opcional, pero buena UX)
+        alert("Abriendo el video en una nueva pestaña..."); 
+        
         window.open(url, '_blank');
     }
     
+    // Función para detener el video (Se mantiene por si se usa en el modal, pero no será llamada aquí)
     function stopVideo() {
         const iframe = document.getElementById('youtube-player');
+        // Detiene el video al resetear el src
         iframe.src = ''; 
     }
 
+    // 2. Toggle Reaction Function (MEJORADA PARA FEEDBACK INSTANTÁNEO)
     async function toggleReactionDirecto(id, tipo, btn) {
         const icon = btn.querySelector('i');
         const isLiked = btn.classList.contains('active-primary');
+
+        // Aplicar feedback visual INSTANTÁNEO
         if (tipo === 'post') {
             if (isLiked) {
                 btn.classList.remove('active-primary');
@@ -849,6 +870,8 @@
                 icon.classList.add('fas');
             }
         }
+        
+        // Llamada a la API
         try {
             const response = await fetch('/api/social/reaction/', {
                 method: 'POST',
@@ -862,7 +885,9 @@
                     'reaction': 'LIKE'
                 })
             });
+
             const data = await response.json();
+
             if (data.success) {
                 if (tipo === 'post') {
                     location.reload(); 
@@ -879,6 +904,8 @@
                 }
             } else {
                 console.error('Error en reacción:', data.error);
+                alert("Error al dar like: " + data.error);
+                // Revertir el feedback instantáneo si la API falla
                 if (tipo === 'post') {
                     if (isLiked) {
                         btn.classList.add('active-primary');
@@ -893,6 +920,8 @@
             }
         } catch (error) {
             console.error('Error de red:', error);
+            alert("Error de red al dar like.");
+            // Revertir el feedback instantáneo si hay error de red
             if (tipo === 'post') {
                 if (isLiked) {
                     btn.classList.add('active-primary');
@@ -907,6 +936,7 @@
         }
     }
 
+    // 3. Share Function
     function compartirPost(id) {
         const url = window.location.origin + "/social/feed/#post-" + id;
         navigator.clipboard.writeText(url).then(() => {
@@ -917,8 +947,10 @@
         });
     }
 
+    // 4. Moderate Function
     async function moderarContenidoDirecto(id, tipo) {
         if (!confirm("¿Estás seguro de eliminar este contenido permanentemente?")) return;
+
         try {
             const response = await fetch('/api/social/moderate/', {
                 method: 'POST',
@@ -932,7 +964,9 @@
                     'motivo': "Eliminado por el usuario/admin desde el feed"
                 })
             });
+
             const data = await response.json();
+
             if (data.success) {
                 const elemento = document.getElementById(`${tipo}-${id}`);
                 if (elemento) {
@@ -950,13 +984,23 @@
         }
     }
 
+    // 🔥 5. LÓGICA DE SINCRONIZACIÓN DE NOTIFICACIONES 🔥
+    
+    // Nueva función JS para llamar a la API y resetear el contador
     async function resetNotificationCounter() {
+        // Obtenemos el token CSRF necesario
         const csrftoken = getCookie('csrftoken');
+        // Asumimos que el span que muestra el número de notificaciones tiene el ID 'notification-counter'
         const counterElement = document.getElementById('notification-counter'); 
+
+        // Si el contador ya está a cero, salimos
         if (counterElement && parseInt(counterElement.textContent) === 0) {
             return;
         }
+
         try {
+            // Llama al endpoint de Django para marcar como leídas
+            // ASEGÚRATE de que esta URL esté definida en tu urls.py: name='mark_all_notifications_read'
             const response = await fetch('{% url "mark_all_notifications_read" %}', {
                 method: 'POST',
                 headers: {
@@ -965,12 +1009,18 @@
                 },
                 body: JSON.stringify({})
             });
+
             const data = await response.json();
+            
             if (data.success) {
                 if (counterElement) {
+                    // Si el servidor confirma la actualización, reseteamos el contador visual
                     counterElement.textContent = '0';
                     counterElement.style.display = 'none'; 
+                    console.log(`Contador de notificaciones reseteado. ${data.updated_items} elementos actualizados.`);
                 }
+            } else {
+                console.warn('El servidor no pudo marcar las notificaciones como leídas.');
             }
         } catch (error) {
             console.error('Error de red al sincronizar notificaciones:', error);
@@ -978,22 +1028,32 @@
     }
     
     document.addEventListener('DOMContentLoaded', function() {
+        // --- Asocia los manejadores de eventos de archivo ---
         const imagenInput = document.getElementById('id_imagen');
         const archivoInput = document.getElementById('id_archivo');
+
         if (imagenInput) imagenInput.addEventListener('change', handleFileInput);
         if (archivoInput) archivoInput.addEventListener('change', handleFileInput);
 
+        // --- Aplicar la lógica de NUEVA PESTAÑA a todos los enlaces de YouTube ---
         document.querySelectorAll('.post-content a, .comment-content-wrapper a').forEach(link => {
             const href = link.getAttribute('href');
+            // Busca URLs que parezcan ser de YouTube
             if (isYouTubeLink(href)) {
+                // Sobreescribe el comportamiento normal del click para abrir en nueva pestaña
                 link.onclick = (event) => openYouTubeInNewTab(event, href);
+                // Asegura el target en caso de fallo de JS
                 link.setAttribute('target', '_blank'); 
+                
+                // Añade un ícono para que el usuario sepa que es un video
                 if (!link.querySelector('.fa-video')) {
                      link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`; 
                 }
             }
         });
 
+
+        // --- Emoji Picker Logic (ULTRA-FIXED) ---
         const picker = new EmojiButton({
             position: 'bottom-start',
             zIndex: 1060
@@ -1001,21 +1061,30 @@
         
         const triggerModal = document.querySelector('#emoji-trigger-modal');
         const triggerMain = document.querySelector('#emoji-trigger-main');
-        const modalEl = document.getElementById('createPostModal');
+        const modalEl = document.getElementById('createPostModal'); // Referencia al modal
         
+        // --- FUNCIÓN DE INSERCIÓN GARANTIZADA ---
         function insertEmoji(emoji) {
+            // USAMOS EL ID FORZADO ABAJO PARA MÁXIMA FIABILIDAD
             const postInput = document.getElementById('post-content-textarea');
+
             if (postInput) {
+                // MÉTODO ROBUSTO: setRangeText (respeta cursor)
                 try {
+                    // Forzar el foco justo antes de escribir es crucial si se pierde por el modal
                     postInput.focus(); 
+                    
                     const start = postInput.selectionStart;
                     const end = postInput.selectionEnd;
                     postInput.setRangeText(emoji, start, end, 'end');
                     postInput.focus();
                 } catch (e) {
+                    // FALLBACK: Si setRangeText falla (incompatibilidad de editor), usamos append:
                     postInput.value += emoji;
                     postInput.focus(); 
                 }
+            } else {
+                 console.error("Fallo CRÍTICO: El textarea no fue encontrado por ID.");
             }
         }
 
@@ -1023,27 +1092,41 @@
             insertEmoji(selection.emoji);
         });
 
+        // A. Trigger desde dentro del Modal (Carita feliz pequeña)
         if (triggerModal) {
             triggerModal.addEventListener('click', () => {
                 picker.togglePicker(triggerModal);
             });
         }
 
+        // B. Trigger desde el botón "Sentimiento" (Tarjeta principal)
         if (triggerMain) {
+            
+            // 1. Abrir el modal.
             triggerMain.addEventListener('click', () => {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             });
+
+            // 2. Usamos el evento 'shown.bs.modal' para garantizar que el DOM ya está visible
             modalEl.addEventListener('shown.bs.modal', () => {
+                // Selector simple para anclar el picker
                 const modalTrigger = document.querySelector('#emoji-trigger-modal');
+                
                 if (modalTrigger) {
-                    picker.showPicker(modalTrigger); 
+                    picker.showPicker(modalTrigger); // Abre el selector anclado al botón
+                    
+                    // CRÍTICO: Forzar el foco al textarea justo después de abrir el picker
+                    // Esto debe ejecutarse SIEMPRE para asegurar que el input esté listo para la función insertEmoji
                     const postInput = document.querySelector('#post-content-textarea');
                     if(postInput) postInput.focus();
                 }
             });
         }
+        // --- Fin Emoji Picker Logic ---
 
+
+        // --- Post Button Feedback ---
         const formPublicar = document.getElementById('form-publicar');
         if(formPublicar) {
             formPublicar.addEventListener('submit', function() {
@@ -1055,10 +1138,32 @@
             });
         }
         
+        // --- SINCRONIZACIÓN DE NOTIFICACIONES ---
+        // Asumimos que el botón de la campana tiene ID='notification-dropdown-toggle' en base.html
         const notificationToggle = document.querySelector('#notification-dropdown-toggle');
+        
+        // Agregamos la lógica para los mensajes (si la campana es también el botón de mensajes)
+        // Si tienes un ícono de mensajes SEPARADO (ej: ID='message-dropdown-toggle'), también debes conectarlo.
+        const messageToggle = document.querySelector('#message-dropdown-toggle'); // ID de ejemplo para mensajes
+        
         if (notificationToggle) {
+             // Llama a la función de sincronización de Notificaciones al hacer clic
+             // Esto marcará como leídas las notificaciones generales.
              notificationToggle.addEventListener('click', resetNotificationCounter);
         }
+        
+        // Si el contador de mensajes está separado, debes llamar a una función similar para mensajes
+        // Ejemplo de cómo conectarías un botón de mensajes si existiera:
+        /*
+        if (messageToggle) {
+             messageToggle.addEventListener('click', resetMessageCounter); 
+        }
+        
+        // Necesitarías una función y un endpoint para resetear mensajes
+        async function resetMessageCounter() {
+            // ... Lógica para llamar a /api/messages/mark-read/ y resetear el contador de mensajes.
+        }
+        */
 
         // --- CALENDARIO EN TIEMPO REAL (JS) ---
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -1099,7 +1204,19 @@
         if (footerEl) {
             footerEl.innerHTML = `<strong class="text-danger">${today}/${monthNames[month].substring(0,3)}:</strong> Día actual.`;
         }
-    });
-</script>
+    });</script><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">Video Incrustado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="video-modal-iframe-wrapper">
+                    <iframe id="youtube-player" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div></div>
 
 {% endblock %}
