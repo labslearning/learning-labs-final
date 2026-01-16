@@ -3761,7 +3761,7 @@ def historial_asistencia(request):
 def dashboard_bienestar(request):
     """
     Panel principal de Bienestar con Estadísticas PEI, Gestión, Analítica de Asistencia, 
-    Alertas Académicas y RANKING TOP 10 POR CURSO (Competencia Sana).
+    Alertas Académicas y RANKING TOP 10 POR CURSO.
     """
     # 0. LÓGICA DE SUBIDA DEL PEI
     if request.method == 'POST' and 'pei_file' in request.FILES:
@@ -3844,9 +3844,10 @@ def dashboard_bienestar(request):
             cursos_con_datos += 1
 
         # --- LÓGICA TOP 10 ALUMNOS POR CURSO (NUEVO) ---
-        # Calculamos el promedio de notas finales (5) para cada estudiante de ESTE curso específico
+        # Calculamos el promedio de las notas finales (5) de los estudiantes DE ESTE CURSO
+        # ordenados de mayor a menor.
         top_10_qs = Nota.objects.filter(
-            materia__curso=curso,  # Filtramos notas asociadas a materias de este curso
+            materia__curso=curso,  # Filtro clave: Solo materias de este curso
             numero_nota=5
         ).values(
             'estudiante__first_name', 
@@ -3854,7 +3855,7 @@ def dashboard_bienestar(request):
             'estudiante__username'
         ).annotate(
             promedio_final=Avg('valor')
-        ).order_by('-promedio_final')[:10]
+        ).order_by('-promedio_final')[:10] # Top 10
 
         top_10_list = []
         for idx, item in enumerate(top_10_qs, 1):
@@ -3890,7 +3891,7 @@ def dashboard_bienestar(request):
                 'curso': curso,
                 'estudiantes': lista_estudiantes,
                 'stats': {'acad': round(prom_acad_curso, 2), 'conv': round(prom_conv_curso, 2), 'alumnos': num_alumnos},
-                'top_10_academico': top_10_list # <--- Nuevo dato inyectado aquí
+                'top_10_academico': top_10_list # <--- Inyectamos el Top 10 aquí
             })
 
     # Cálculo final de promedios institucionales
