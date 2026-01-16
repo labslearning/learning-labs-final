@@ -95,10 +95,11 @@
     }
     
     /* CALENDAR STYLE */
-    .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; }
+    .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; text-transform: capitalize; }
     .calendar-day { display: inline-block; width: 14.28%; text-align: center; padding: 5px 0; font-size: 0.8rem; }
     .calendar-date { font-weight: 600; color: var(--text-primary); }
     .calendar-today { background-color: var(--edu-accent); color: white !important; border-radius: 50%; }
+    .calendar-empty { background: transparent; }
 
 
     /* --- Post Cards & Input --- */
@@ -677,7 +678,8 @@
             <div class="sidebar-card">
                 <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-calendar-alt me-1"></i> Calendario</h6>
                 
-                <div class="calendar-header">Diciembre 2025</div>
+                <div class="calendar-header" id="calendar-header">Cargando...</div>
+                
                 <div class="calendar-body">
                     <div class="d-flex small fw-bold text-muted border-bottom mb-1">
                         <span class="calendar-day">Lu</span>
@@ -689,20 +691,12 @@
                         <span class="calendar-day">Do</span>
                     </div>
                     
-                    <div class="d-flex flex-wrap">
-                        {% for i in "1234567890123455678901234567890"|make_list %}
-                            {% with num=forloop.counter %}
-                                <span class="calendar-day calendar-date {% if num == 11 %}calendar-today{% endif %}">
-                                    {{ num }}
-                                </span>
-                            {% endwith %}
-                        {% endfor %}
+                    <div class="d-flex flex-wrap" id="calendar-days">
+                        </div>
+                </div>
+                
+                <div class="small mt-3 pt-2 border-top" id="calendar-today-display">
                     </div>
-                    
-                </div>
-                <div class="small mt-3 pt-2 border-top">
-                    <strong class="text-danger">15/Dic:</strong> Entrega Proyecto Final.
-                </div>
             </div>
         </div>
     </div></div><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
@@ -1171,6 +1165,46 @@
             // ... Lógica para llamar a /api/messages/mark-read/ y resetear el contador de mensajes.
         }
         */
+
+        // --- CALENDARIO EN TIEMPO REAL (JS) ---
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const today = now.getDate();
+
+        // 1. Header
+        const headerEl = document.getElementById('calendar-header');
+        if (headerEl) headerEl.textContent = `${monthNames[month]} ${year}`;
+
+        // 2. Días
+        const daysContainer = document.getElementById('calendar-days');
+        if (daysContainer) {
+            const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
+            // Ajustar para que Lunes sea 0 y Domingo 6
+            const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+            
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let html = '';
+
+            // Espacios vacíos
+            for(let i=0; i<adjustedStart; i++) {
+                html += `<span class="calendar-day calendar-empty"></span>`;
+            }
+            // Días reales
+            for(let d=1; d<=daysInMonth; d++) {
+                let cssClass = (d === today) ? 'calendar-today' : '';
+                html += `<span class="calendar-day calendar-date ${cssClass}">${d}</span>`;
+            }
+            daysContainer.innerHTML = html;
+        }
+
+        // 3. Footer (Día actual)
+        const footerEl = document.getElementById('calendar-today-display');
+        if (footerEl) {
+            footerEl.innerHTML = `<strong class="text-danger">${today}/${monthNames[month].substring(0,3)}:</strong> Día actual.`;
+        }
     });</script><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
