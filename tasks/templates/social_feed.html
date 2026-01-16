@@ -34,19 +34,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js"></script>
 
 <style>
-    /* ... (Estilos CSS anteriores - 100% conservados) ... */
+    /* --- Estilos CSS (sin cambios) --- */
     :root {
         --feed-bg: #f0f2f5;
         --card-bg: #ffffff;
         --text-primary: #050505;
         --text-secondary: #65676b;
-        --action-hover: #e4e6eb; /* Hover sutil */
+        --action-hover: #e4e6eb;
         --divider: #dadde1;
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
         --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-        --edu-primary: #4361ee; /* Azul primario */
-        --edu-success: #38b000; /* Verde para Check */
-        --edu-accent: #4cc9f0; /* Color de acento para calendario */
+        --edu-primary: #4361ee;
+        --edu-success: #38b000;
+        --edu-accent: #4cc9f0;
     }
 
     body {
@@ -54,13 +54,12 @@
     }
 
     .feed-container {
-        max-width: 1300px; /* Ancho para las 3 columnas */
+        max-width: 1300px;
         margin: 0 auto;
         padding-top: 20px;
         padding-bottom: 40px;
     }
 
-    /* === SIDEBARS (Izquierda/Derecha) === */
     .sidebar-card {
         background: var(--card-bg);
         border-radius: 12px;
@@ -71,22 +70,54 @@
         margin-bottom: 20px;
     }
 
-    /* Left Sidebar Groups */
     .group-item {
-        display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f2f5;
+        transition: background-color 0.2s;
     }
-    .group-item:hover { background-color: #fafafa; border-radius: 8px; }
-    .group-img-sidebar { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; margin-right: 10px; background-color: #ddd; flex-shrink: 0; }
-    .group-info-sidebar h6 { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
-    .btn-join-group { font-size: 0.75rem; padding: 4px 12px; border-radius: 18px; font-weight: 600; white-space: nowrap; background-color: var(--edu-primary); color: white; border: none; }
-    .btn-join-group:hover { background-color: var(--edu-secondary); color: white; }
+    .group-item:hover {
+        background-color: #fafafa;
+        border-radius: 8px;
+    }
+    .group-img-sidebar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-right: 10px;
+        background-color: #ddd;
+        flex-shrink: 0;
+    }
+    .group-info-sidebar h6 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .btn-join-group {
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 18px;
+        font-weight: 600;
+        white-space: nowrap;
+        background-color: var(--edu-primary);
+        color: white;
+        border: none;
+    }
+    .btn-join-group:hover {
+        background-color: var(--edu-secondary);
+        color: white;
+    }
 
-    /* Right Sidebar Video/Calendar */
     .video-responsive {
-        position: relative; overflow: hidden; width: 100%;
-        border-radius: 8px; margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 15px;
     }
-    /* Estilo para el video nativo */
     .video-responsive video {
         width: 100%;
         height: auto;
@@ -94,33 +125,90 @@
         border-radius: 8px;
     }
 
-    /* CALENDAR STYLE */
-    .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; text-transform: capitalize; }
-    .calendar-day { display: inline-block; width: 14.28%; text-align: center; padding: 5px 0; font-size: 0.8rem; }
-    .calendar-date { font-weight: 600; color: var(--text-primary); }
-    .calendar-today { background-color: var(--edu-accent); color: white !important; border-radius: 50%; }
-    .calendar-empty { background: transparent; }
+    .calendar-header {
+        background-color: var(--edu-primary);
+        color: white;
+        padding: 10px;
+        border-radius: 8px 8px 0 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-align: center;
+        text-transform: capitalize;
+    }
+    .calendar-day {
+        display: inline-block;
+        width: 14.28%;
+        text-align: center;
+        padding: 5px 0;
+        font-size: 0.8rem;
+    }
+    .calendar-date {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .calendar-today {
+        background-color: var(--edu-accent);
+        color: white !important;
+        border-radius: 50%;
+    }
+    .calendar-empty {
+        background: transparent;
+    }
 
-    /* --- Post Cards & Input --- */
     .create-post-card, .post-card {
         border-radius: 12px;
         box-shadow: var(--shadow-md);
         margin-bottom: 20px;
         background: var(--card-bg);
     }
-    .create-post-card { padding: 12px 16px; }
-    .post-input-trigger { background: #f0f2f5; border-radius: 24px; padding: 10px 15px; flex-grow: 1; color: var(--text-secondary); cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
-    .post-input-trigger:hover { background: #e4e6eb; }
+    .create-post-card {
+        padding: 12px 16px;
+    }
+    .post-input-trigger {
+        background: #f0f2f5;
+        border-radius: 24px;
+        padding: 10px 15px;
+        flex-grow: 1;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background 0.2s;
+    }
+    .post-input-trigger:hover {
+        background: #e4e6eb;
+    }
 
-    .post-header { padding: 16px; display: flex; align-items: center; gap: 10px; }
-    .user-avatar-sm { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .post-content { padding: 4px 16px 16px; font-size: 1.0rem; white-space: pre-line; }
+    .post-header {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .user-avatar-sm {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .post-content {
+        padding: 4px 16px 16px;
+        font-size: 1.0rem;
+        white-space: pre-line;
+    }
 
-    /* Stats */
-    .post-stats { padding: 10px 16px; border-bottom: 1px solid var(--divider); }
-    .reaction-icon-group i { color: white; background: var(--edu-primary); padding: 4px; border-radius: 50%; font-size: 0.65rem; border: 2px solid white; }
+    .post-stats {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--divider);
+    }
+    .reaction-icon-group i {
+        color: white;
+        background: var(--edu-primary);
+        padding: 4px;
+        border-radius: 50%;
+        font-size: 0.65rem;
+        border: 2px solid white;
+    }
 
-    /* ACTIONS - ESTILOS PROFESIONALES */
     .post-actions {
         padding: 4px 16px;
         display: flex;
@@ -128,33 +216,61 @@
         border-top: 1px solid var(--divider);
     }
     .action-btn {
-        flex: 1; display: flex; align-items: center; justify-content: center;
-        gap: 6px; padding: 8px; border-radius: 8px; cursor: pointer;
-        color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
-        transition: background 0.2s, color 0.2s; background-color: transparent;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background 0.2s, color 0.2s;
+        background-color: transparent;
         border: none;
     }
-    .action-btn:hover { background-color: var(--action-hover); }
-
-    /* Estado para Me Gusta activo */
+    .action-btn:hover {
+        background-color: var(--action-hover);
+    }
     .action-btn.active-primary {
         color: var(--edu-primary) !important;
         font-weight: 700;
     }
 
-    /* Comments - Facebook/LinkedIn Style */
-    .comments-section { padding: 12px 16px 16px; background-color: #ffffff; border-radius: 0 0 12px 12px; }
+    .comments-section {
+        padding: 12px 16px 16px;
+        background-color: #ffffff;
+        border-radius: 0 0 12px 12px;
+    }
 
-    .comment-item { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+    .comment-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        gap: 8px;
+    }
     .comment-bubble {
         background-color: #f0f2f5;
         padding: 8px 12px;
         border-radius: 18px;
         line-height: 1.3;
     }
-    .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-right: 5px; white-space: nowrap;}
-    .comment-text { font-size: 0.9rem; }
-    .comment-content-wrapper { flex-grow: 1; min-width: 0; }
+    .comment-author {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        margin-right: 5px;
+        white-space: nowrap;
+    }
+    .comment-text {
+        font-size: 0.9rem;
+    }
+    .comment-content-wrapper {
+        flex-grow: 1;
+        min-width: 0;
+    }
 
     .comment-meta {
         font-size: 0.75rem;
@@ -162,10 +278,18 @@
         margin-left: 50px;
         margin-top: 2px;
     }
-    .comment-meta > span { cursor: pointer; }
-    .comment-meta span:not(:last-child)::after { content: "•"; margin: 0 5px; }
+    .comment-meta > span {
+        cursor: pointer;
+    }
+    .comment-meta span:not(:last-child)::after {
+        content: "•";
+        margin: 0 5px;
+    }
 
-    .comment-input-area { margin-top: 15px; align-items: center; }
+    .comment-input-area {
+        margin-top: 15px;
+        align-items: center;
+    }
     .comment-input-area form {
         width: 100%;
         display: flex;
@@ -179,7 +303,7 @@
         background-color: #f0f2f5;
         padding: 8px 12px;
         font-size: 0.9rem;
-        height: 38px; /* Altura adecuada */
+        height: 38px;
     }
     .comment-input:focus {
         outline: none;
@@ -187,12 +311,11 @@
         background-color: #fff;
     }
 
-    /* === MODAL DE VIDEO YOUTUBE === */
     .video-modal-iframe-wrapper {
         position: relative;
         overflow: hidden;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        padding-top: 56.25%;
     }
     .video-modal-iframe-wrapper iframe {
         position: absolute;
@@ -202,7 +325,6 @@
         height: 100%;
     }
 
-    /* ESTILO PARA LOS INPUTS DE ARCHIVO DENTRO DEL MODAL */
     .custom-file-upload {
         position: relative;
         overflow: hidden;
@@ -222,9 +344,9 @@
         position: absolute;
         left: 0;
         top: 0;
-        opacity: 0; /* Oculta el input, pero permite el clic */
+        opacity: 0;
         cursor: pointer;
-        font-size: 0; /* Asegura que no estorbe */
+        font-size: 0;
         width: 100%;
         height: 100%;
     }
@@ -239,7 +361,7 @@
         display: inline-block;
         vertical-align: middle;
     }
-    /* Estilo adicional para reproductores de video incrustados */
+
     .post-video-container {
         max-width: 100%;
         margin: 10px 0;
@@ -247,61 +369,56 @@
         overflow: hidden;
     }
 
-    /* --- ARREGLO DE IMÁGENES EN POSTS --- */
     .post-media {
         margin-top: 10px;
         margin-bottom: 10px;
         border-radius: 8px;
-        overflow: hidden; /* Corta lo que se salga del borde redondeado */
-        background-color: #000000; /* Fondo negro para resaltar la foto (estilo cine) */
-
-        /* Centrado Flexbox */
+        overflow: hidden;
+        background-color: #000000;
         display: flex;
         justify-content: center;
         align-items: center;
-
-        /* Límite de altura: vital para que no rompa el diseño vertical */
         max-height: 500px;
         width: 100%;
     }
 
     .post-media img {
-        /* Asegura que la imagen nunca sea más ancha que el contenedor */
         max-width: 100%;
-
-        /* Asegura que la imagen nunca sea más alta que el límite */
         max-height: 500px;
-
-        /* Mantiene la proporción original (no la estira ni aplasta) */
         width: auto;
         height: auto;
-
-        /* 'contain' muestra toda la foto. Usa 'cover' si prefieres que llene todo el espacio aunque recorte bordes */
         object-fit: contain;
         display: block;
     }
 
-    /* Responsive */
     @media (max-width: 1200px) {
-        .col-right-sidebar { display: none; }
-        .col-main-feed { max-width: 66.66%; flex: 0 0 66.66%; }
+        .col-right-sidebar {
+            display: none;
+        }
+        .col-main-feed {
+            max-width: 66.66%;
+            flex: 0 0 66.66%;
+        }
     }
     @media (max-width: 992px) {
-        .col-sidebar { display: none; }
-        .col-main-feed { max-width: 100%; flex: 0 0 100%; }
+        .col-sidebar {
+            display: none;
+        }
+        .col-main-feed {
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
     }
-    /* FIX: Aumentar el tamaño del textarea en el modal */
+
     #post-content-textarea {
-        min-height: 150px; /* Aumentado para mejor UX */
-        resize: vertical; /* Permitir que el usuario lo ajuste verticalmente */
+        min-height: 150px;
+        resize: vertical;
     }
-    /* Estilo para el buscador */
+
     .search-card {
-        /* Eliminamos el padding y shadow para que el sidebar-search-card lo maneje */
         margin-bottom: 20px;
     }
 
-    /* ESTILOS PARA EL BUSCADOR EN EL SIDEBAR (Cambiado a sidebar-search-card) */
     .sidebar-search-card {
         background: var(--card-bg);
         border-radius: 12px;
@@ -329,7 +446,6 @@
         cursor: pointer;
         transition: background-color 0.2s;
     }
-    /* Fin Estilos Buscador Sidebar */
 
     .search-icon-container {
         position: absolute;
@@ -786,6 +902,8 @@
 </div>
 
 <script>
+    // --- Funciones auxiliares (sin cambios) ---
+
     // 1. Get CSRF Token
     function getCookie(name) {
         let cookieValue = null;
@@ -801,7 +919,7 @@
         }
         return cookieValue;
     }
-    window.csrftoken_local = getCookie('csrftoken'); // Hacerlo global para las funciones inline
+    window.csrftoken_local = getCookie('csrftoken');
 
     // Función para manejar el feedback del nombre del archivo
     function handleFileInput(event) {
@@ -811,19 +929,15 @@
         let filename = '';
         if (input.files.length > 0) {
             filename = input.files[0].name;
-            // Si ya hay un nombre de archivo, lo establecemos
             display.textContent = filename;
         }
 
-        // Limpiar el campo del otro archivo si se selecciona uno nuevo
-        // Esto asume que solo quieres una imagen O un archivo/video por post
         const otherInputId = input.id === 'id_imagen' ? 'id_archivo' : 'id_imagen';
         const otherInput = document.getElementById(otherInputId);
         if (otherInput && otherInput.files.length > 0 && input.files.length > 0) {
-             otherInput.value = ''; // Limpia el valor del input de archivo
+             otherInput.value = '';
         }
 
-        // Si no hay archivos en ninguno, limpiar display
         const imgInput = document.getElementById('id_imagen');
         const fileInput = document.getElementById('id_archivo');
         if (imgInput && fileInput && imgInput.files.length === 0 && fileInput.files.length === 0) {
@@ -843,27 +957,22 @@
 
     // Función CRÍTICA: Simplemente redirige el enlace a una nueva pestaña
     function openYouTubeInNewTab(event, url) {
-        event.preventDefault(); // Previene el comportamiento por defecto de la navegación
-
-        // Muestra una notificación rápida o alerta (Opcional, pero buena UX)
+        event.preventDefault();
         alert("Abriendo el video en una nueva pestaña...");
-
         window.open(url, '_blank');
     }
 
-    // Función para detener el video (Se mantiene por si se usa en el modal, pero no será llamada aquí)
+    // Función para detener el video
     function stopVideo() {
         const iframe = document.getElementById('youtube-player');
-        // Detiene el video al resetear el src
         iframe.src = '';
     }
 
-    // 2. Toggle Reaction Function (MEJORADA PARA FEEDBACK INSTANTÁNEO)
+    // 2. Toggle Reaction Function
     async function toggleReactionDirecto(id, tipo, btn) {
         const icon = btn.querySelector('i');
         const isLiked = btn.classList.contains('active-primary');
 
-        // Aplicar feedback visual INSTANTÁNEO
         if (tipo === 'post') {
             if (isLiked) {
                 btn.classList.remove('active-primary');
@@ -876,7 +985,6 @@
             }
         }
 
-        // Llamada a la API
         try {
             const response = await fetch('/api/social/reaction/', {
                 method: 'POST',
@@ -910,7 +1018,6 @@
             } else {
                 console.error('Error en reacción:', data.error);
                 alert("Error al dar like: " + data.error);
-                // Revertir el feedback instantáneo si la API falla
                 if (tipo === 'post') {
                     if (isLiked) {
                         btn.classList.add('active-primary');
@@ -926,7 +1033,6 @@
         } catch (error) {
             console.error('Error de red:', error);
             alert("Error de red al dar like.");
-            // Revertir el feedback instantáneo si hay error de red
             if (tipo === 'post') {
                 if (isLiked) {
                     btn.classList.add('active-primary');
@@ -991,21 +1097,15 @@
 
     // 🔥 5. LÓGICA DE SINCRONIZACIÓN DE NOTIFICACIONES 🔥
 
-    // Nueva función JS para llamar a la API y resetear el contador
     async function resetNotificationCounter() {
-        // Obtenemos el token CSRF necesario
         const csrftoken = getCookie('csrftoken');
-        // Asumimos que el span que muestra el número de notificaciones tiene el ID 'notification-counter'
         const counterElement = document.getElementById('notification-counter');
 
-        // Si el contador ya está a cero, salimos
         if (counterElement && parseInt(counterElement.textContent) === 0) {
             return;
         }
 
         try {
-            // Llama al endpoint de Django para marcar como leídas
-            // ASEGÚRATE de que esta URL esté definida en tu urls.py: name='mark_all_notifications_read'
             const response = await fetch('{% url "mark_all_notifications_read" %}', {
                 method: 'POST',
                 headers: {
@@ -1019,7 +1119,6 @@
 
             if (data.success) {
                 if (counterElement) {
-                    // Si el servidor confirma la actualización, reseteamos el contador visual
                     counterElement.textContent = '0';
                     counterElement.style.display = 'none';
                     console.log(`Contador de notificaciones reseteado. ${data.updated_items} elementos actualizados.`);
@@ -1032,7 +1131,52 @@
         }
     }
 
-    // 6. Initialize Scripts (Añadimos la llamada de sincronización)
+    // --- CALENDARIO EN TIEMPO REAL (JS) ---
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    // Función para renderizar el calendario
+    function renderCalendar() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const today = now.getDate();
+
+        // Verificar si los elementos del calendario existen
+        const headerEl = document.getElementById('calendar-header');
+        const daysContainer = document.getElementById('calendar-days');
+        const footerEl = document.getElementById('calendar-today-display');
+
+        if (!headerEl || !daysContainer || !footerEl) {
+            console.error("Elementos del calendario no encontrados en el DOM.");
+            return;
+        }
+
+        // 1. Header
+        headerEl.textContent = `${monthNames[month]} ${year}`;
+
+        // 2. Días
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let html = '';
+
+        // Espacios vacíos
+        for(let i=0; i<adjustedStart; i++) {
+            html += `<span class="calendar-day calendar-empty"></span>`;
+        }
+        // Días reales
+        for(let d=1; d<=daysInMonth; d++) {
+            let cssClass = (d === today) ? 'calendar-today' : '';
+            html += `<span class="calendar-day calendar-date ${cssClass}">${d}</span>`;
+        }
+        daysContainer.innerHTML = html;
+
+        // 3. Footer (Día actual)
+        footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
+    }
+
+    // Ejecutar la función de renderizado del calendario
     document.addEventListener('DOMContentLoaded', function() {
         // --- Asocia los manejadores de eventos de archivo ---
         const imagenInput = document.getElementById('id_imagen');
@@ -1044,21 +1188,16 @@
         // --- Aplicar la lógica de NUEVA PESTAÑA a todos los enlaces de YouTube ---
         document.querySelectorAll('.post-content a, .comment-content-wrapper a').forEach(link => {
             const href = link.getAttribute('href');
-            // Busca URLs que parezcan ser de YouTube
             if (isYouTubeLink(href)) {
-                // Sobreescribe el comportamiento normal del click para abrir en nueva pestaña
                 link.onclick = (event) => openYouTubeInNewTab(event, href);
-                // Asegura el target en caso de fallo de JS
                 link.setAttribute('target', '_blank');
-
-                // Añade un ícono para que el usuario sepa que es un video
                 if (!link.querySelector('.fa-video')) {
                      link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`;
                 }
             }
         });
 
-        // --- Emoji Picker Logic (ULTRA-FIXED) ---
+        // --- Emoji Picker Logic ---
         const picker = new EmojiButton({
             position: 'bottom-start',
             zIndex: 1060
@@ -1066,25 +1205,18 @@
 
         const triggerModal = document.querySelector('#emoji-trigger-modal');
         const triggerMain = document.querySelector('#emoji-trigger-main');
-        const modalEl = document.getElementById('createPostModal'); // Referencia al modal
+        const modalEl = document.getElementById('createPostModal');
 
-        // --- FUNCIÓN DE INSERCIÓN GARANTIZADA ---
         function insertEmoji(emoji) {
-            // USAMOS EL ID FORZADO ABAJO PARA MÁXIMA FIABILIDAD
             const postInput = document.getElementById('post-content-textarea');
-
             if (postInput) {
-                // MÉTODO ROBUSTO: setRangeText (respeta cursor)
                 try {
-                    // Forzar el foco justo antes de escribir es crucial si se pierde por el modal
                     postInput.focus();
-
                     const start = postInput.selectionStart;
                     const end = postInput.selectionEnd;
                     postInput.setRangeText(emoji, start, end, 'end');
                     postInput.focus();
                 } catch (e) {
-                    // FALLBACK: Si setRangeText falla (incompatibilidad de editor), usamos append:
                     postInput.value += emoji;
                     postInput.focus();
                 }
@@ -1097,38 +1229,27 @@
             insertEmoji(selection.emoji);
         });
 
-        // A. Trigger desde dentro del Modal (Carita feliz pequeña)
         if (triggerModal) {
             triggerModal.addEventListener('click', () => {
                 picker.togglePicker(triggerModal);
             });
         }
 
-        // B. Trigger desde el botón "Sentimiento" (Tarjeta principal)
         if (triggerMain) {
-
-            // 1. Abrir el modal.
             triggerMain.addEventListener('click', () => {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             });
 
-            // 2. Usamos el evento 'shown.bs.modal' para garantizar que el DOM ya está visible
             modalEl.addEventListener('shown.bs.modal', () => {
-                // Selector simple para anclar el picker
                 const modalTrigger = document.querySelector('#emoji-trigger-modal');
-
                 if (modalTrigger) {
-                    picker.showPicker(modalTrigger); // Abre el selector anclado al botón
-
-                    // CRÍTICO: Forzar el foco al textarea justo después de abrir el picker
-                    // Esto debe ejecutarse SIEMPRE para asegurar que el input esté listo para la función insertEmoji
+                    picker.showPicker(modalTrigger);
                     const postInput = document.querySelector('#post-content-textarea');
                     if(postInput) postInput.focus();
                 }
             });
         }
-        // --- Fin Emoji Picker Logic ---
 
         // --- Post Button Feedback ---
         const formPublicar = document.getElementById('form-publicar');
@@ -1143,80 +1264,34 @@
         }
 
         // --- SINCRONIZACIÓN DE NOTIFICACIONES ---
-        // Asumimos que el botón de la campana tiene ID='notification-dropdown-toggle' en base.html
         const notificationToggle = document.querySelector('#notification-dropdown-toggle');
-
-        // Agregamos la lógica para los mensajes (si la campana es también el botón de mensajes)
-        // Si tienes un ícono de mensajes SEPARADO (ej: ID='message-dropdown-toggle'), también debes conectarlo.
-        const messageToggle = document.querySelector('#message-dropdown-toggle'); // ID de ejemplo para mensajes
-
         if (notificationToggle) {
-             // Llama a la función de sincronización de Notificaciones al hacer clic
-             // Esto marcará como leídas las notificaciones generales.
              notificationToggle.addEventListener('click', resetNotificationCounter);
         }
 
-        // --- CALENDARIO EN TIEMPO REAL (JS) ---
-        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        // --- CALENDARIO ---
+        // Ejecutar el renderizado del calendario después de un pequeño retraso
+        setTimeout(renderCalendar, 500);
 
-        // Función para renderizar el calendario
-        function renderCalendar() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const today = now.getDate();
-
-            // 1. Header
-            const headerEl = document.getElementById('calendar-header');
-            if (headerEl) headerEl.textContent = `${monthNames[month]} ${year}`;
-
-            // 2. Días
-            const daysContainer = document.getElementById('calendar-days');
-            if (daysContainer) {
-                const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
-                // Ajustar para que Lunes sea 0 y Domingo 6
-                const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
-
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                let html = '';
-
-                // Espacios vacíos
-                for(let i=0; i<adjustedStart; i++) {
-                    html += `<span class="calendar-day calendar-empty"></span>`;
-                }
-                // Días reales
-                for(let d=1; d<=daysInMonth; d++) {
-                    let cssClass = (d === today) ? 'calendar-today' : '';
-                    html += `<span class="calendar-day calendar-date ${cssClass}">${d}</span>`;
-                }
-                daysContainer.innerHTML = html;
-            }
-
-            // 3. Footer (Día actual)
-            const footerEl = document.getElementById('calendar-today-display');
-            if (footerEl) {
-                footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
-            }
-        }
-
-        // Ejecutar la función de renderizado del calendario
-        setTimeout(renderCalendar, 500); // Pequeño retraso para asegurar que el DOM esté listo
-
-        // Si el sidebar está oculto en móviles, renderizar el calendario cuando se muestre
+        // Verificar si el sidebar está visible y renderizar el calendario
         const sidebar = document.querySelector('.col-right-sidebar');
         if (sidebar) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (document.body.contains(sidebar) && window.getComputedStyle(sidebar).display !== 'none') {
                         renderCalendar();
                     }
                 });
-            }, { threshold: 0.1 });
-            observer.observe(sidebar);
+            });
+
+            observer.observe(document.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
         }
 
-        // También ejecutar cuando la ventana se redimensione (por si el sidebar aparece/desaparece)
+        // También ejecutar cuando la ventana se redimensione
         window.addEventListener('resize', function() {
             setTimeout(renderCalendar, 300);
         });
