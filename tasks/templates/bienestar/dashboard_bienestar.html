@@ -187,6 +187,7 @@
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
+       
        <div class="col-lg-6 mb-4 mb-lg-0">
            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
@@ -234,12 +235,9 @@
            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                    <div>
-                       <h5 class="fw-bold text-dark"><i class="fas fa-book-dead me-2 text-warning"></i>Riesgo Académico</h5>
-                       <p class="text-muted small mb-0">Materias reprobadas (< 3.0).</p>
+                       <h5 class="fw-bold text-dark"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Riesgo de Convivencia</h5>
+                       <p class="text-muted small mb-0">Bajo promedio en Convivencia (< 3.5).</p>
                    </div>
-                   <a href="{% url 'dashboard_academico' %}" class="btn btn-sm btn-outline-warning text-dark rounded-pill">
-                       <i class="fas fa-chart-bar me-1"></i>Detalles
-                   </a>
                </div>
                <div class="card-body p-0">
                    <div class="table-responsive">
@@ -247,26 +245,26 @@
                            <thead class="bg-light">
                                <tr>
                                    <th class="ps-4">Estudiante</th>
-                                   <th class="text-center">Reprobadas</th>
+                                   <th class="text-center">Nota</th>
                                    <th class="text-end pe-4">Ver</th>
                                </tr>
                            </thead>
                            <tbody>
-                               {% for alerta in alertas_academicas %}
+                               {% for alerta in alertas_convivencia %}
                                <tr>
                                    <td class="ps-4">
                                        <div class="fw-bold text-dark">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</div>
                                        <small class="text-muted">{{ alerta.materia__curso__nombre }}</small>
                                    </td>
                                    <td class="text-center">
-                                       <span class="badge bg-warning text-dark border border-warning">{{ alerta.total_reprobadas }}</span>
+                                       <span class="badge bg-warning text-dark border border-warning">{{ alerta.nota_promedio|floatformat:1 }}</span>
                                    </td>
                                    <td class="text-end pe-4">
                                        <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary"><i class="fas fa-eye"></i></a>
                                    </td>
                                </tr>
                                {% empty %}
-                               <tr><td colspan="3" class="text-center py-4 text-muted">¡Excelente! No hay alertas académicas críticas.</td></tr>
+                               <tr><td colspan="3" class="text-center py-4 text-muted">¡Excelente! Buen clima escolar.</td></tr>
                                {% endfor %}
                            </tbody>
                        </table>
@@ -365,37 +363,44 @@
                <div class="accordion-body p-0">
                    
                    {% if item.top_10_academico %}
-                   <div class="p-4 bg-soft-info border-bottom">
-                       <div class="d-flex justify-content-between align-items-center mb-3">
-                           <h6 class="fw-bold text-dark mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
-                           <small class="text-muted">Calculado con todas las notas disponibles</small>
-                       </div>
-                       <div class="table-responsive">
-                           <table class="table table-sm table-borderless mb-0 align-middle">
-                               <thead>
-                                   <tr class="text-muted small text-uppercase">
-                                       <th class="ps-3">Pos</th>
-                                       <th>Estudiante</th>
-                                       <th class="text-center">Promedio</th>
-                                   </tr>
-                               </thead>
-                               <tbody>
-                                   {% for alumno in item.top_10_academico %}
-                                   <tr class="bg-white rounded mb-2 shadow-sm" style="border-bottom: 5px solid transparent;">
-                                       <td class="ps-3 fw-bold text-primary">
-                                           {% if alumno.posicion == 1 %}🥇
-                                           {% elif alumno.posicion == 2 %}🥈
-                                           {% elif alumno.posicion == 3 %}🥉
-                                           {% else %}{{ alumno.posicion }}{% endif %}
-                                       </td>
-                                       <td class="fw-bold text-dark">{{ alumno.nombre }}</td>
-                                       <td class="text-center">
-                                            <span class="badge bg-success rounded-pill">{{ alumno.promedio }}</span>
-                                       </td>
-                                   </tr>
-                                   {% endfor %}
-                               </tbody>
-                           </table>
+                   <div class="p-3 bg-light border-bottom">
+                       <div class="card border-0 shadow-sm">
+                           <div class="card-header bg-gradient-success text-white py-2 d-flex justify-content-between align-items-center">
+                               <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
+                               <small class="text-white-50">Orden por promedio de notas</small>
+                           </div>
+                           <div class="card-body p-0">
+                               <div class="table-responsive">
+                                   <table class="table table-sm table-striped mb-0 small text-center align-middle">
+                                       <thead class="text-secondary bg-white">
+                                           <tr>
+                                               <th style="width: 50px;">Pos</th>
+                                               <th class="text-start ps-3">Estudiante</th>
+                                               <th style="width: 100px;">Promedio</th>
+                                           </tr>
+                                       </thead>
+                                       <tbody>
+                                           {% for top_est in item.top_10_academico %}
+                                           <tr>
+                                               <td class="fw-bold">
+                                                   {% if forloop.counter == 1 %}🥇
+                                                   {% elif forloop.counter == 2 %}🥈
+                                                   {% elif forloop.counter == 3 %}🥉
+                                                   {% else %}{{ forloop.counter }}
+                                                   {% endif %}
+                                               </td>
+                                               <td class="text-start ps-3">{{ top_est.nombre }}</td>
+                                               <td>
+                                                   <span class="badge bg-success bg-opacity-75 rounded-pill">
+                                                       {{ top_est.promedio }}
+                                                   </span>
+                                               </td>
+                                           </tr>
+                                           {% endfor %}
+                                       </tbody>
+                                   </table>
+                               </div>
+                           </div>
                        </div>
                    </div>
                    {% endif %}

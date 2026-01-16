@@ -3760,8 +3760,11 @@ def historial_asistencia(request):
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
-    Panel principal de Bienestar con Estadísticas PEI, Gestión, Analítica de Asistencia, 
-    Alertas Académicas y RANKING TOP 10 POR CURSO (Versión Robusta: Promedio real).
+    Panel principal de Bienestar: 
+    - Estadísticas PEI y Gestión.
+    - Analítica de Asistencia.
+    - KPI Convivencia (Basado en materia 'Convivencia').
+    - Ranking Top 10 (Académico puro).
     """
     # 0. LÓGICA DE SUBIDA DEL PEI
     if request.method == 'POST' and 'pei_file' in request.FILES:
@@ -3790,7 +3793,7 @@ def dashboard_bienestar(request):
              Q(last_name__icontains=query))
         ).select_related('perfil').distinct()[:20]
 
-    # 2. ESTADÍSTICAS ACADÉMICAS Y DE CONVIVENCIA (KPIs)
+    # 2. ESTADÍSTICAS (KPIs)
     cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
     
     # Definir periodos de encabezado
@@ -3803,7 +3806,8 @@ def dashboard_bienestar(request):
     total_estudiantes_colegio = 0
     suma_promedios_acad = 0.0
     suma_promedios_conv = 0.0
-    cursos_con_datos = 0
+    cursos_con_datos_acad = 0
+    cursos_con_datos_conv = 0
 
     # Arrays para Gráficos Chart.js
     chart_labels = []      
@@ -3812,68 +3816,80 @@ def dashboard_bienestar(request):
 
     vista_cursos = []
     
-    # Pre-carga optimizada de notas de convivencia
-    notas_convivencia_map = {}
-    convivencias_qs = Convivencia.objects.select_related('estudiante', 'periodo').all()
-    for c in convivencias_qs:
-        notas_convivencia_map[(c.estudiante_id, c.periodo_id)] = c.valor
-
     # --- BUCLE PRINCIPAL POR CURSO ---
     for curso in cursos_activos:
         matriculas = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante__perfil').order_by('estudiante__last_name')
         num_alumnos = matriculas.count()
         total_estudiantes_colegio += num_alumnos
 
-        # Promedios del curso (KPIs del gráfico)
-        val_conv = Convivencia.objects.filter(curso=curso).aggregate(avg=Avg('valor'))['avg']
-        prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
+        # -------------------------------------------------------------------------
+        # A. Promedio CONVIVENCIA (Basado en la materia 'Convivencia')
+        # -------------------------------------------------------------------------
+        val_conv = Nota.objects.filter(
+            estudiante__matriculas__curso=curso,
+            materia__nombre__icontains="Convivencia"  # 🔥 CLAVE: Busca por nombre de materia
+        ).aggregate(avg=Avg('valor'))['avg']
         
-        # Promedio académico global del curso (usando todas las notas para mayor realismo)
-        val_acad = Nota.objects.filter(estudiante__matriculas__curso=curso).aggregate(avg=Avg('valor'))['avg']
+        prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
+
+        # -------------------------------------------------------------------------
+        # B. Promedio ACADÉMICO (Excluyendo 'Convivencia')
+        # -------------------------------------------------------------------------
+        val_acad = Nota.objects.filter(
+            estudiante__matriculas__curso=curso
+        ).exclude(materia__nombre__icontains="Convivencia").aggregate(avg=Avg('valor'))['avg']
+        
         prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
 
-        # Agregar datos al gráfico si hay alumnos
+        # Acumular datos para KPIs y Gráficos
         if num_alumnos > 0:
             chart_labels.append(f"{curso.nombre}")
+            
+            # Datos Académicos
             chart_data_acad.append(round(prom_acad_curso, 2))
+            if prom_acad_curso > 0:
+                suma_promedios_acad += prom_acad_curso
+                cursos_con_datos_acad += 1
+            
+            # Datos Convivencia
             chart_data_conv.append(round(prom_conv_curso, 2))
-            suma_promedios_acad += prom_acad_curso
-            suma_promedios_conv += prom_conv_curso
-            cursos_con_datos += 1
+            if prom_conv_curso > 0:
+                suma_promedios_conv += prom_conv_curso
+                cursos_con_datos_conv += 1
 
-        # Construcción de listas para la vista
+        # Construcción de listas para la vista (Acordeón)
         periodos_del_curso = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
         lista_estudiantes = []
-        
-        # --- 🔥 LÓGICA RANKING TOP 10 (CORREGIDA) 🔥 ---
         ranking_temporal = []
-
+        
         for mat in matriculas:
             estudiante = mat.estudiante
             
-            # A. Datos para la tabla de Convivencia (Acordeón)
-            notas_estudiante = {}
-            for i, p_header in enumerate(periodos_header):
-                val = "-"
-                if i < len(periodos_del_curso):
-                    p_local = periodos_del_curso[i]
-                    val = notas_convivencia_map.get((estudiante.id, p_local.id), "-")
-                notas_estudiante[p_header.id] = val
+            # 1. Obtener notas de CONVIVENCIA por periodo para la tabla visual
+            notas_convivencia_est = {}
+            for p in periodos_del_curso:
+                # Buscamos la nota de "Convivencia" en este periodo
+                nota_obj = Nota.objects.filter(
+                    estudiante=estudiante,
+                    periodo=p,
+                    materia__nombre__icontains="Convivencia"
+                ).aggregate(definitiva=Avg('valor'))['definitiva']
+
+                val = round(nota_obj, 1) if nota_obj is not None else "-"
+                notas_convivencia_est[p.id] = val
             
             lista_estudiantes.append({
                 'obj': estudiante,
-                'notas': notas_estudiante
+                'notas': notas_convivencia_est
             })
 
-            # B. Datos para el Ranking Académico
-            # Calculamos promedio de TODAS las notas registradas en materias de este curso
-            # (No solo la nota 5, para que funcione en tiempo real durante el periodo)
+            # 2. Datos para el Ranking Académico (Top 10)
+            # Calculamos promedio académico (sin convivencia)
             promedio_individual = Nota.objects.filter(
                 estudiante=estudiante,
-                materia__curso=curso # Filtramos por materias de este curso
-            ).aggregate(prom=Avg('valor'))['prom']
+                materia__curso=curso
+            ).exclude(materia__nombre__icontains="Convivencia").aggregate(prom=Avg('valor'))['prom']
 
-            # 🛑 CAMBIO CRÍTICO: Si es None (sin notas), ponemos 0.0 para que APAREZCA en la lista
             prom_float = float(promedio_individual) if promedio_individual is not None else 0.0
 
             ranking_temporal.append({
@@ -3881,18 +3897,13 @@ def dashboard_bienestar(request):
                 'promedio': round(prom_float, 2)
             })
 
-        # C. Procesar el Ranking del curso
-        # Ordenamos de mayor a menor nota
+        # Procesar Ranking Top 10
         ranking_temporal.sort(key=lambda x: x['promedio'], reverse=True)
-        
-        # Tomamos los 10 primeros
         top_10_final = ranking_temporal[:10]
         
-        # Asignamos la posición explícita (1, 2, 3...)
         for idx, item in enumerate(top_10_final, 1):
             item['posicion'] = idx
 
-        # D. Empaquetar todo para la vista
         if lista_estudiantes:
             vista_cursos.append({
                 'curso': curso,
@@ -3902,12 +3913,12 @@ def dashboard_bienestar(request):
                     'conv': round(prom_conv_curso, 2), 
                     'alumnos': num_alumnos
                 },
-                'top_10_academico': top_10_final # <--- Ahora esta lista NUNCA estará vacía si hay alumnos
+                'top_10_academico': top_10_final
             })
 
-    # Cálculo final de promedios institucionales
-    promedio_institucional_acad = round(suma_promedios_acad / cursos_con_datos, 2) if cursos_con_datos > 0 else 0
-    promedio_institucional_conv = round(suma_promedios_conv / cursos_con_datos, 2) if cursos_con_datos > 0 else 0
+    # Cálculo final de promedios institucionales globales
+    promedio_institucional_acad = round(suma_promedios_acad / cursos_con_datos_acad, 2) if cursos_con_datos_acad > 0 else 0
+    promedio_institucional_conv = round(suma_promedios_conv / cursos_con_datos_conv, 2) if cursos_con_datos_conv > 0 else 0
 
     # ===================================================================
     # 🩺 MÓDULO 3: ANALÍTICA DE ASISTENCIA
@@ -3925,27 +3936,30 @@ def dashboard_bienestar(request):
         .order_by('-total')[:5]
 
     # ===================================================================
-    # 🩺 MÓDULO 4: ALERTAS ACADÉMICAS
+    # 🩺 MÓDULO 4: ALERTAS DE CONVIVENCIA (NUEVO)
     # ===================================================================
-    # Aquí sí mantenemos el filtro de nota 5 para saber quién reprobó definitivamente el periodo
-    alertas_academicas = Nota.objects.filter(numero_nota=5, valor__lt=3.0)\
-        .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'estudiante__username', 'materia__curso__nombre')\
-        .annotate(total_reprobadas=Count('id'))\
-        .order_by('-total_reprobadas')[:5]
+    # Buscamos estudiantes con promedio bajo en la materia "Convivencia"
+    alertas_convivencia = Nota.objects.filter(
+        materia__nombre__icontains="Convivencia"
+    ).values(
+        'estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 
+        'estudiante__username', 'materia__curso__nombre'
+    ).annotate(
+        promedio=Avg('valor')
+    ).filter(promedio__lt=3.5).order_by('promedio')[:5] # Top 5 notas más bajas
     
-    # Información Institucional
     institucion = Institucion.objects.first()
 
     context = {
         'estudiantes': estudiantes_busqueda, 
         'query': query,
-        'vista_cursos': vista_cursos, # Contiene el Top 10 por curso
+        'vista_cursos': vista_cursos,
         'periodos': periodos_header,
         'institucion': institucion,
         'kpi': {
             'total_alumnos': total_estudiantes_colegio,
             'prom_global_acad': promedio_institucional_acad,
-            'prom_global_conv': promedio_institucional_conv,
+            'prom_global_conv': promedio_institucional_conv, # ✅ DATO ARREGLADO
             'total_cursos': cursos_activos.count()
         },
         'chart_data': {
@@ -3955,7 +3969,7 @@ def dashboard_bienestar(request):
         },
         'stats_asistencia': json.dumps(list(stats_asistencia.values())),
         'top_fallas': top_fallas,
-        'alertas_academicas': alertas_academicas,
+        'alertas_academicas': alertas_convivencia, # ✅ AHORA MUESTRA ALERTAS DE CONVIVENCIA
     }
     return render(request, 'bienestar/dashboard_bienestar.html', context)
 #Hasta Aqui 
