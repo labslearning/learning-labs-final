@@ -34,166 +34,291 @@
 <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js"></script>
 
 <style>
-    /* ... (Estilos CSS anteriores - 100% conservados) ... */
     :root {
-        --feed-bg: #f0f2f5;
+        --feed-bg: #f8f9fa;
         --card-bg: #ffffff;
-        --text-primary: #050505;
-        --text-secondary: #65676b;
-        --action-hover: #e4e6eb; /* Hover sutil */
-        --divider: #dadde1;
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-        --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
-        --edu-primary: #4361ee; /* Azul primario */
-        --edu-success: #38b000; /* Verde para Check */
-        --edu-accent: #4cc9f0; /* Color de acento para calendario */
+        --text-primary: #212529;
+        --text-secondary: #6c757d;
+        --action-hover: #f1f3f5;
+        --divider: #e9ecef;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.1);
+        --edu-primary: #4361ee;
+        --edu-secondary: #3a0ca3;
+        --edu-success: #28a745;
+        --edu-accent: #4cc9f0;
+        --border-radius-sm: 8px;
+        --border-radius-md: 12px;
+        --transition-speed: 0.2s;
     }
 
     body {
         background-color: var(--feed-bg);
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     }
 
     .feed-container {
-        max-width: 1300px; /* Ancho para las 3 columnas */
+        max-width: 1400px;
         margin: 0 auto;
-        padding-top: 20px;
-        padding-bottom: 40px;
+        padding: 1rem 0;
     }
 
     /* === SIDEBARS (Izquierda/Derecha) === */
     .sidebar-card {
         background: var(--card-bg);
-        border-radius: 12px;
+        border-radius: var(--border-radius-md);
         box-shadow: var(--shadow-sm);
-        padding: 15px;
-        position: sticky;
-        top: 80px;
-        margin-bottom: 20px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
     }
-    
+
     /* Left Sidebar Groups */
     .group-item {
-        display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--divider);
+        transition: background-color var(--transition-speed);
+        border-radius: var(--border-radius-sm);
     }
-    .group-item:hover { background-color: #fafafa; border-radius: 8px; }
-    .group-img-sidebar { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; margin-right: 10px; background-color: #ddd; flex-shrink: 0; }
-    .group-info-sidebar h6 { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
-    .btn-join-group { font-size: 0.75rem; padding: 4px 12px; border-radius: 18px; font-weight: 600; white-space: nowrap; background-color: var(--edu-primary); color: white; border: none; }
-    .btn-join-group:hover { background-color: var(--edu-secondary); color: white; }
+    .group-item:hover {
+        background-color: var(--action-hover);
+    }
+    .group-img-sidebar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--border-radius-sm);
+        object-fit: cover;
+        margin-right: 0.75rem;
+        background-color: #e9ecef;
+        flex-shrink: 0;
+    }
+    .group-info-sidebar h6 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .btn-join-group {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        background-color: var(--edu-primary);
+        color: white;
+        border: none;
+        transition: background-color var(--transition-speed);
+    }
+    .btn-join-group:hover {
+        background-color: var(--edu-secondary);
+    }
 
     /* Right Sidebar Video/Calendar */
     .video-responsive {
-        position: relative; overflow: hidden; width: 100%; 
-        border-radius: 8px; margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1rem;
     }
-    /* Estilo para el video nativo */
     .video-responsive video {
         width: 100%;
         height: auto;
         display: block;
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
     }
-    
-    /* CALENDAR STYLE */
-    .calendar-header { background-color: var(--edu-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 1.1rem; text-align: center; text-transform: capitalize; }
-    .calendar-day { display: inline-block; width: 14.28%; text-align: center; padding: 5px 0; font-size: 0.8rem; }
-    .calendar-date { font-weight: 600; color: var(--text-primary); }
-    .calendar-today { background-color: var(--edu-accent); color: white !important; border-radius: 50%; }
-    .calendar-empty { background: transparent; }
 
+    /* CALENDAR STYLE */
+    .calendar-header {
+        background-color: var(--edu-primary);
+        color: white;
+        padding: 0.75rem;
+        border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+        font-weight: 600;
+        text-align: center;
+        text-transform: capitalize;
+    }
+    .calendar-day {
+        display: inline-block;
+        width: 14.28%;
+        text-align: center;
+        padding: 0.5rem 0;
+        font-size: 0.8rem;
+    }
+    .calendar-date {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .calendar-today {
+        background-color: var(--edu-accent);
+        color: white !important;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 
     /* --- Post Cards & Input --- */
     .create-post-card, .post-card {
-        border-radius: 12px;
-        box-shadow: var(--shadow-md);
-        margin-bottom: 20px;
         background: var(--card-bg);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 1.5rem;
     }
-    .create-post-card { padding: 12px 16px; }
-    .post-input-trigger { background: #f0f2f5; border-radius: 24px; padding: 10px 15px; flex-grow: 1; color: var(--text-secondary); cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
-    .post-input-trigger:hover { background: #e4e6eb; }
+    .create-post-card {
+        padding: 1rem;
+    }
+    .post-input-trigger {
+        background: #f8f9fa;
+        border-radius: 2rem;
+        padding: 0.75rem 1rem;
+        flex-grow: 1;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background var(--transition-speed);
+        border: 1px solid var(--divider);
+    }
+    .post-input-trigger:hover {
+        background: var(--action-hover);
+    }
 
-    .post-header { padding: 16px; display: flex; align-items: center; gap: 10px; }
-    .user-avatar-sm { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .post-content { padding: 4px 16px 16px; font-size: 1.0rem; white-space: pre-line; }
+    .post-header {
+        padding: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .user-avatar-sm {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .post-content {
+        padding: 0 1rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        white-space: pre-line;
+    }
 
     /* Stats */
-    .post-stats { padding: 10px 16px; border-bottom: 1px solid var(--divider); }
-    .reaction-icon-group i { color: white; background: var(--edu-primary); padding: 4px; border-radius: 50%; font-size: 0.65rem; border: 2px solid white; }
+    .post-stats {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--divider);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .reaction-icon-group i {
+        color: white;
+        background: var(--edu-primary);
+        padding: 0.25rem;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        border: 1px solid white;
+    }
 
-    /* ACTIONS - ESTILOS PROFESIONALES */
-    .post-actions { 
-        padding: 4px 16px; 
-        display: flex; 
-        gap: 4px; 
+    /* ACTIONS */
+    .post-actions {
+        padding: 0.5rem 1rem;
+        display: flex;
+        gap: 0.25rem;
         border-top: 1px solid var(--divider);
     }
     .action-btn {
-        flex: 1; display: flex; align-items: center; justify-content: center;
-        gap: 6px; padding: 8px; border-radius: 8px; cursor: pointer;
-        color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
-        transition: background 0.2s, color 0.2s; background-color: transparent;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all var(--transition-speed);
+        background-color: transparent;
         border: none;
     }
-    .action-btn:hover { background-color: var(--action-hover); }
-    
-    /* Estado para Me Gusta activo */
+    .action-btn:hover {
+        background-color: var(--action-hover);
+    }
     .action-btn.active-primary {
         color: var(--edu-primary) !important;
         font-weight: 700;
     }
 
-    /* Comments - Facebook/LinkedIn Style */
-    .comments-section { padding: 12px 16px 16px; background-color: #ffffff; border-radius: 0 0 12px 12px; }
-    
-    .comment-item { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
-    .comment-bubble { 
-        background-color: #f0f2f5; 
-        padding: 8px 12px; 
-        border-radius: 18px; 
-        line-height: 1.3; 
+    /* Comments */
+    .comments-section {
+        padding: 1rem;
+        background-color: var(--card-bg);
+        border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
     }
-    .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-right: 5px; white-space: nowrap;}
-    .comment-text { font-size: 0.9rem; }
-    .comment-content-wrapper { flex-grow: 1; min-width: 0; }
-    
-    .comment-meta { 
-        font-size: 0.75rem; 
-        color: var(--text-secondary); 
-        margin-left: 50px; 
-        margin-top: 2px;
+    .comment-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 0.75rem;
     }
-    .comment-meta > span { cursor: pointer; }
-    .comment-meta span:not(:last-child)::after { content: "•"; margin: 0 5px; }
-
-    .comment-input-area { margin-top: 15px; align-items: center; }
+    .comment-bubble {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-radius: 1.5rem;
+        line-height: 1.4;
+    }
+    .comment-author {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        margin-right: 0.5rem;
+    }
+    .comment-text {
+        font-size: 0.9rem;
+        word-break: break-word;
+    }
+    .comment-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-left: 2.5rem;
+        margin-top: 0.25rem;
+    }
+    .comment-meta span {
+        cursor: pointer;
+        margin-right: 0.5rem;
+    }
     .comment-input-area form {
         width: 100%;
         display: flex;
-        gap: 8px;
+        gap: 0.75rem;
         align-items: center;
+        margin-top: 1rem;
     }
     .comment-input {
         flex-grow: 1;
         border: none;
-        border-radius: 20px;
-        background-color: #f0f2f5;
-        padding: 8px 12px;
+        border-radius: 2rem;
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
         font-size: 0.9rem;
-        height: 38px; /* Altura adecuada */
+        transition: all var(--transition-speed);
     }
     .comment-input:focus {
         outline: none;
         box-shadow: 0 0 0 2px var(--edu-primary);
         background-color: #fff;
     }
-    
-    /* === MODAL DE VIDEO YOUTUBE === */
+
+    /* Modal Styles */
     .video-modal-iframe-wrapper {
         position: relative;
         overflow: hidden;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        padding-top: 56.25%;
     }
     .video-modal-iframe-wrapper iframe {
         position: absolute;
@@ -203,163 +328,139 @@
         height: 100%;
     }
 
-    /* ESTILO PARA LOS INPUTS DE ARCHIVO DENTRO DEL MODAL */
+    /* File Upload */
     .custom-file-upload {
         position: relative;
         overflow: hidden;
         display: inline-block;
-        padding: 8px 15px;
+        padding: 0.5rem 1rem;
         border: 1px solid var(--divider);
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
         font-weight: 600;
         font-size: 0.9rem;
-        transition: background 0.2s;
+        transition: all var(--transition-speed);
     }
     .custom-file-upload:hover {
         background-color: var(--action-hover);
     }
-    .custom-file-upload input[type="file"] {
-        position: absolute;
-        left: 0;
-        top: 0;
-        opacity: 0; /* Oculta el input, pero permite el clic */
-        cursor: pointer;
-        font-size: 0; /* Asegura que no estorbe */
-        width: 100%;
-        height: 100%;
-    }
     .file-name-display {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         color: var(--edu-primary);
-        margin-left: 10px;
-        max-width: 150px;
+        margin-left: 0.75rem;
+        max-width: 12rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        display: inline-block;
-        vertical-align: middle;
-    }
-    /* Estilo adicional para reproductores de video incrustados */
-    .post-video-container {
-        max-width: 100%;
-        margin: 10px 0;
-        border-radius: 8px;
-        overflow: hidden;
     }
 
-    /* --- ARREGLO DE IMÁGENES EN POSTS --- */
+    /* Post Media */
     .post-media {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        overflow: hidden; /* Corta lo que se salga del borde redondeado */
-        background-color: #000000; /* Fondo negro para resaltar la foto (estilo cine) */
-        
-        /* Centrado Flexbox */
+        margin: 0.75rem 1rem;
+        border-radius: var(--border-radius-sm);
+        overflow: hidden;
+        background-color: #000;
         display: flex;
         justify-content: center;
         align-items: center;
-        
-        /* Límite de altura: vital para que no rompa el diseño vertical */
-        max-height: 500px; 
-        width: 100%;
+        max-height: 40rem;
     }
-
     .post-media img {
-        /* Asegura que la imagen nunca sea más ancha que el contenedor */
-        max-width: 100%; 
-        
-        /* Asegura que la imagen nunca sea más alta que el límite */
-        max-height: 500px; 
-        
-        /* Mantiene la proporción original (no la estira ni aplasta) */
-        width: auto; 
+        max-width: 100%;
+        max-height: 40rem;
+        width: auto;
         height: auto;
-        
-        /* 'contain' muestra toda la foto. Usa 'cover' si prefieres que llene todo el espacio aunque recorte bordes */
-        object-fit: contain; 
+        object-fit: contain;
         display: block;
     }
 
-    /* Responsive */
-    @media (max-width: 1200px) {
-        .col-right-sidebar { display: none; }
-        .col-main-feed { max-width: 66.66%; flex: 0 0 66.66%; }
-    }
-    @media (max-width: 992px) {
-        .col-sidebar { display: none; }
-        .col-main-feed { max-width: 100%; flex: 0 0 100%; }
-    }
-    /* FIX: Aumentar el tamaño del textarea en el modal */
-    #post-content-textarea {
-        min-height: 150px; /* Aumentado para mejor UX */
-        resize: vertical; /* Permitir que el usuario lo ajuste verticalmente */
-    }
-    /* Estilo para el buscador */
-    .search-card {
-        /* Eliminamos el padding y shadow para que el sidebar-search-card lo maneje */
-        margin-bottom: 20px;
-    }
-    
-    /* ESTILOS PARA EL BUSCADOR EN EL SIDEBAR (Cambiado a sidebar-search-card) */
+    /* Search */
     .sidebar-search-card {
         background: var(--card-bg);
-        border-radius: 12px;
+        border-radius: var(--border-radius-md);
         box-shadow: var(--shadow-sm);
-        padding: 15px;
-        margin-bottom: 20px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
     }
     .sidebar-search-input {
-        border-radius: 24px;
+        border-radius: 2rem;
         border: 1px solid var(--divider);
-        padding: 8px 15px 8px 40px;
-        background-color: #f0f2f5;
-        height: 40px;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: #f8f9fa;
+        height: 2.5rem;
         width: 100%;
+        transition: all var(--transition-speed);
+    }
+    .sidebar-search-input:focus {
+        background-color: #fff;
+        box-shadow: 0 0 0 2px var(--edu-primary);
     }
     .sidebar-search-button {
         width: 100%;
-        height: 40px;
-        border-radius: 8px;
-        margin-top: 10px;
+        height: 2.5rem;
+        border-radius: var(--border-radius-sm);
+        margin-top: 0.75rem;
         background-color: var(--edu-primary);
         color: white;
         border: none;
         font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: background-color var(--transition-speed);
     }
-    /* Fin Estilos Buscador Sidebar */
-    
+    .sidebar-search-button:hover {
+        background-color: var(--edu-secondary);
+    }
     .search-icon-container {
         position: absolute;
-        left: 0;
-        top: 0;
-        height: 40px;
-        width: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .col-right-sidebar {
+            display: none;
+        }
+        .col-main-feed {
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+    }
+    @media (max-width: 992px) {
+        .col-sidebar {
+            display: none;
+        }
+    }
+    #post-content-textarea {
+        min-height: 12rem;
+        resize: vertical;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--divider);
+        padding: 1rem;
+        transition: all var(--transition-speed);
+    }
+    #post-content-textarea:focus {
+        border-color: var(--edu-primary);
+        box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
     }
 </style>
 
 <div class="container feed-container">
     <div class="row">
-        
-        <div class="col-md-4 col-lg-3 col-sidebar">
-            
+        <!-- Left Sidebar (Grupos) -->
+        <div class="col-md-4 col-lg-3 d-none d-md-block col-sidebar">
             <div class="sidebar-search-card">
                 <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
                     <div class="position-relative">
-                        <div class="search-icon-container" style="top: 0px; left: 0px;">
-                            <i class="fas fa-search text-secondary"></i>
+                        <div class="search-icon-container">
+                            <i class="fas fa-search"></i>
                         </div>
-                        <input type="text" 
-                               name="q" 
-                               class="form-control sidebar-search-input" 
-                               placeholder="Buscar publicaciones..." 
+                        <input type="text"
+                               name="q"
+                               class="form-control sidebar-search-input"
+                               placeholder="Buscar publicaciones..."
                                value="{{ request.GET.q|default:'' }}"
                                aria-label="Buscar publicaciones">
                     </div>
@@ -370,14 +471,13 @@
             </div>
             <div class="sidebar-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-layer-group me-1"></i> Explorar Grupos</h5>
+                    <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-layer-group me-2"></i> Explorar Grupos</h5>
                     {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'DOCENTE' %}
                     <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-light text-primary rounded-circle" title="Crear Grupo">
                         <i class="fas fa-plus"></i>
                     </a>
                     {% endif %}
                 </div>
-
                 {% if grupos_sugeridos %}
                     {% for grupo in grupos_sugeridos %}
                     <div class="group-item">
@@ -388,18 +488,16 @@
                                 <i class="fas fa-users"></i>
                             </div>
                         {% endif %}
-                        
                         <div class="group-info-sidebar flex-grow-1">
                             <a href="{% url 'detalle_grupo' grupo.id %}" class="text-decoration-none">
-                                <h6>{{ grupo.name|truncatechars:18 }}</h6>
+                                <h6>{{ grupo.name|truncatechars:20 }}</h6>
                             </a>
                             <small class="text-muted">{{ grupo.members.count }} miembros</small>
                         </div>
-
                         <form action="{% url 'unirse_grupo' grupo.id %}" method="POST" class="ms-2">
                             {% csrf_token %}
                             {% if request.user in grupo.members.all %}
-                                <a href="{% url 'detalle_grupo' grupo.id %}" class="btn btn-sm btn-outline-success btn-join-group" style="font-size: 0.7rem; color: var(--edu-success); border-color: var(--edu-success);">
+                                <a href="{% url 'detalle_grupo' grupo.id %}" class="btn btn-sm btn-outline-success btn-join-group">
                                     <i class="fas fa-check"></i> Ver
                                 </a>
                             {% else %}
@@ -410,7 +508,6 @@
                         </form>
                     </div>
                     {% endfor %}
-                    
                     <div class="text-center mt-3 pt-2 border-top">
                         <a href="{% url 'lista_grupos' %}" class="small fw-bold text-decoration-none text-primary">Ver todos los grupos</a>
                     </div>
@@ -423,10 +520,10 @@
             </div>
         </div>
 
+        <!-- Main Feed -->
         <div class="col-md-8 col-lg-6 col-main-feed">
-            
             <div class="create-post-card">
-                <div class="create-post-top d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
                     {% if user.perfil.foto_perfil %}
                         <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm">
                     {% else %}
@@ -434,20 +531,19 @@
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}
-                    
                     <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
                         ¿Qué estás pensando, {{ user.first_name }}?
                     </div>
                 </div>
-                <div class="create-post-actions d-flex justify-content-around mt-2 pt-2 border-top">
-                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-video text-danger"></i> Video
+                <div class="d-flex justify-content-around mt-2 pt-2 border-top">
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-video text-danger me-1"></i> Video
                     </button>
-                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-images text-success"></i> Foto
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-images text-success me-1"></i> Foto
                     </button>
-                    <button class="cp-action-btn" id="emoji-trigger-main">
-                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Sentimiento
+                    <button class="btn btn-sm btn-light" id="emoji-trigger-main">
+                        <i class="far fa-smile text-warning me-1"></i> Sentimiento
                     </button>
                 </div>
             </div>
@@ -465,28 +561,25 @@
                                 </div>
                             {% endif %}
                         </a>
-                        <div class="post-info flex-grow-1">
-                            <h6>
-                                <a href="{% url 'ver_perfil_social' post.autor.username %}" class="text-decoration-none text-primary">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">
+                                <a href="{% url 'ver_perfil_social' post.autor.username %}" class="text-decoration-none text-dark fw-bold">
                                     {{ post.autor.get_full_name|default:post.autor.username }}
                                 </a>
                                 {% if post.tipo == 'ANUNCIO' %}
-                                    <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">ANUNCIO</span>
+                                    <span class="badge bg-danger ms-1" style="font-size: 0.7rem;">ANUNCIO</span>
                                 {% endif %}
                                 {% if post.grupo %}
-                                    <span class="text-muted fw-normal" style="font-size: 0.85rem;">
+                                    <div class="text-muted small mt-1">
                                         ▶ <a href="{% url 'detalle_grupo' post.grupo.id %}" class="text-decoration-none fw-bold text-dark">{{ post.grupo.name }}</a>
-                                    </span>
+                                    </div>
                                 {% endif %}
                             </h6>
-                            <div class="post-time">
-                                <span class="text-secondary" title="{{ post.creado_en }}">
-                                    {{ post.creado_en|naturaltime }}
-                                </span>
-                                <i class="fas fa-globe-americas ms-1 text-secondary" style="font-size: 0.7rem;"></i>
+                            <div class="post-time small text-muted mt-1">
+                                <span title="{{ post.creado_en }}">{{ post.creado_en|naturaltime }}</span>
+                                <i class="fas fa-globe-americas ms-1"></i>
                             </div>
                         </div>
-                        
                         <div class="dropdown">
                             <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-ellipsis-h"></i>
@@ -504,22 +597,19 @@
                             </ul>
                         </div>
                     </div>
-
                     <div class="post-content">
                         {{ post.contenido|linebreaksbr|urlize|safe }}
                     </div>
-
                     {% if post.imagen %}
                     <div class="post-media">
                         <img src="{{ post.imagen.url }}" alt="Imagen del post" loading="lazy">
                     </div>
                     {% endif %}
-                    
                     {% if post.archivo %}
                         {% with extension=post.archivo.url|slice:"-4:"|lower %}
                             {% if extension == ".mp4" or extension == "webm" or extension == ".ogg" %}
-                                <div class="post-media p-3 post-video-container">
-                                    <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
+                                <div class="post-media p-3">
+                                    <video controls muted playsinline style="width: 100%; height: auto; border-radius: var(--border-radius-sm);">
                                         <source src="{{ post.archivo.url }}" type="video/{{ extension|slice:"1:" }}">
                                         Tu navegador no soporta el formato de video.
                                     </video>
@@ -533,8 +623,6 @@
                             {% endif %}
                         {% endwith %}
                     {% endif %}
-
-
                     <div class="post-stats">
                         <div class="d-flex align-items-center">
                             {% if post.total_reacciones > 0 %}
@@ -542,7 +630,7 @@
                                     <i class="fas fa-thumbs-up text-primary"></i>
                                 </div>
                                 <div class="liked-by-container ms-2">
-                                    <span id="liked-by-text-{{ post.id }}" class="liked-by-text">
+                                    <span id="liked-by-text-{{ post.id }}" class="liked-by-text small">
                                         {% with reactions=post.reacciones.all %}
                                             {% if reactions|length == 1 %}
                                                 <strong>{{ reactions.0.usuario.first_name|default:reactions.0.usuario.username }}</strong>
@@ -555,40 +643,38 @@
                                     </span>
                                 </div>
                             {% else %}
-                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
+                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en reaccionar</span>
                             {% endif %}
                         </div>
-                        <div class="comments-count">
-                            {{ post.total_comentarios }} comentarios
+                        <div class="comments-count small text-muted">
+                            {{ post.total_comentarios }} {% if post.total_comentarios == 1 %}comentario{% else %}comentarios{% endif %}
                         </div>
                     </div>
-
                     <div class="post-actions">
                         <button class="action-btn {% if post.user_has_liked %}active-primary{% endif %}" id="like-btn-{{ post.id }}" onclick="toggleReactionDirecto({{ post.id }}, 'post', this)">
-                            <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-thumbs-up me-2"></i> Me gusta
+                            <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-thumbs-up me-1"></i> Me gusta
                         </button>
                         <button class="action-btn" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
-                            <i class="far fa-comment-alt me-2"></i> Comentar
+                            <i class="far fa-comment-alt me-1"></i> Comentar
                         </button>
                         <button class="action-btn" onclick="compartirPost({{ post.id }})">
-                            <i class="fas fa-share me-2"></i> Compartir
+                            <i class="fas fa-share me-1"></i> Compartir
                         </button>
                     </div>
-
                     <div class="collapse show" id="comments-{{ post.id }}">
                         <div class="comments-section">
                             {% for comentario in post.comentarios.all %}
                                 <div class="comment-item" id="comment-{{ comentario.id }}">
                                     <a href="{% url 'ver_perfil_social' comentario.autor.username %}">
                                         {% if comentario.autor.perfil.foto_perfil %}
-                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 2rem; height: 2rem;">
                                         {% else %}
-                                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-info text-white fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-info text-white fw-bold" style="width: 2rem; height: 2rem; font-size: 0.7rem;">
                                                 {{ comentario.autor.username|slice:":1"|upper }}
                                             </div>
                                         {% endif %}
                                     </a>
-                                    <div class="comment-content-wrapper">
+                                    <div class="flex-grow-1">
                                         <div class="comment-bubble">
                                             <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="comment-author text-decoration-none">
                                                 {{ comentario.autor.get_full_name|default:comentario.autor.username }}
@@ -599,7 +685,7 @@
                                         </div>
                                         <div class="comment-meta">
                                             <span class="text-secondary cursor-pointer" onclick="toggleReactionDirecto({{ comentario.id }}, 'comment', this)">
-                                                Me gusta 
+                                                Me gusta
                                                 <span id="reaction-count-comment-{{ comentario.id }}" class="ms-1 fw-bold">
                                                     {% if comentario.reacciones.count > 0 %}{{ comentario.reacciones.count }}{% endif %}
                                                 </span>
@@ -614,23 +700,22 @@
                                     </div>
                                 </div>
                             {% endfor %}
-                            
                             <div class="comment-input-area">
                                 {% if user.perfil.foto_perfil %}
-                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 2rem; height: 2rem;">
                                 {% else %}
-                                    <div class="user-avatar-sm bg-secondary" style="width: 32px; height: 32px;"></div>
+                                    <div class="user-avatar-sm bg-secondary" style="width: 2rem; height: 2rem;"></div>
                                 {% endif %}
-                                
-                                <form method="POST" action="." class="w-100 d-flex gap-2 align-items-center">
+                                <form method="POST" action="." class="w-100">
                                     {% csrf_token %}
                                     <input type="hidden" name="publicar_comentario" value="1">
                                     <input type="hidden" name="post_id" value="{{ post.id }}">
-                                    
-                                    <input type="text" name="contenido" class="comment-input" placeholder="Escribe un comentario..." required autocomplete="off">
-                                    <button type="submit" class="btn btn-primary btn-sm rounded-circle p-0" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-paper-plane" style="font-size: 0.9rem;"></i>
-                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <input type="text" name="contenido" class="comment-input flex-grow-1" placeholder="Escribe un comentario..." required autocomplete="off">
+                                        <button type="submit" class="btn btn-primary btn-sm rounded-circle p-0" style="width: 2.25rem; height: 2.25rem;">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -647,7 +732,6 @@
                     </div>
                 {% endfor %}
             </div>
-
             {% if page_obj.has_other_pages %}
             <nav class="my-4">
                 <ul class="pagination justify-content-center">
@@ -663,25 +747,23 @@
             {% endif %}
         </div>
 
+        <!-- Right Sidebar (Calendario/Video) -->
         <div class="col-lg-3 d-none d-lg-block col-right-sidebar">
             <div class="sidebar-card">
-                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-video me-1"></i> Video Destacado</h6>
+                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-video me-2"></i> Video Destacado</h6>
                 <div class="video-responsive">
-                    <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
+                    <video controls muted playsinline style="width: 100%; height: auto; border-radius: var(--border-radius-sm);">
                         <source src="https://res.cloudinary.com/do9orhb4k/video/upload/v1739634103/WhatsApp_Video_2025-02-15_at_8.34.38_AM_v0bpfq.mp4" type="video/mp4">
                         Tu navegador no soporta el video.
                     </video>
                 </div>
                 <p class="small text-muted mt-2 mb-0">Video: Claves para el éxito en el aprendizaje.</p>
             </div>
-
             <div class="sidebar-card">
-                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-calendar-alt me-1"></i> Calendario</h6>
-                
+                <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-calendar-alt me-2"></i> Calendario</h6>
                 <div class="calendar-header" id="calendar-header">Cargando...</div>
-                
                 <div class="calendar-body">
-                    <div class="d-flex small fw-bold text-muted border-bottom mb-1">
+                    <div class="d-flex small fw-bold text-muted border-bottom mb-2">
                         <span class="calendar-day">Lu</span>
                         <span class="calendar-day">Ma</span>
                         <span class="calendar-day">Mi</span>
@@ -690,16 +772,16 @@
                         <span class="calendar-day">Sá</span>
                         <span class="calendar-day">Do</span>
                     </div>
-                    
-                    <div class="d-flex flex-wrap" id="calendar-days">
-                        </div>
+                    <div class="d-flex flex-wrap" id="calendar-days"></div>
                 </div>
-                
-                <div class="small mt-3 pt-2 border-top" id="calendar-today-display">
-                    </div>
+                <div class="small mt-3 pt-2 border-top" id="calendar-today-display"></div>
             </div>
         </div>
-    </div></div><div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    </div>
+</div>
+
+<!-- Modals (sin cambios) -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -712,7 +794,10 @@
                 </div>
             </div>
         </div>
-    </div></div><div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+    </div>
+</div>
+
+<div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-bottom-0 text-center">
@@ -723,7 +808,6 @@
                 <form method="POST" enctype="multipart/form-data" novalidate id="form-publicar">
                     {% csrf_token %}
                     <input type="hidden" name="publicar_post" value="1">
-                    
                     <div class="d-flex align-items-center mb-3">
                         {% if user.perfil.foto_perfil %}
                             <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm me-2">
@@ -737,14 +821,12 @@
                             <div class="badge bg-light text-dark border"><i class="fas fa-globe-americas me-1"></i> Público</div>
                         </div>
                     </div>
-
                     <div class="mb-3 position-relative">
                         <button type="button" id="emoji-trigger-modal" class="btn btn-sm btn-light position-absolute end-0 top-0 mt-1 me-1 rounded-circle" style="z-index: 10;">
                             <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i>
                         </button>
-                        {{ post_form.contenido|add_class:"form-control"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..." }} 
+                        {{ post_form.contenido|add_class:"form-control"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..." }}
                     </div>
-
                     <div class="border rounded p-3 mb-3 d-flex justify-content-between align-items-center">
                         <span class="fw-semibold small">Agregar a tu post</span>
                         <div class="d-flex gap-2">
@@ -759,10 +841,6 @@
                             <span id="file-name-display" class="file-name-display"></span>
                         </div>
                     </div>
-                    
-                    <div class="mb-3 d-none">
-                        </div>
-                    
                     {% if user.perfil.rol == 'ADMINISTRADOR' %}
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="es_anuncio" id="esAnuncioCheck">
@@ -771,15 +849,17 @@
                         </label>
                     </div>
                     {% endif %}
-
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary fw-bold">Publicar</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div></div><script>
-    // 1. Get CSRF Token
+    </div>
+</div>
+
+<script>
+    // (Todos los scripts originales, sin cambios)
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -794,8 +874,8 @@
         }
         return cookieValue;
     }
-    window.csrftoken_local = getCookie('csrftoken'); 
-    
+    window.csrftoken_local = getCookie('csrftoken');
+
     function handleFileInput(event) {
         const input = event.target;
         const display = document.getElementById('file-name-display');
@@ -807,7 +887,7 @@
         const otherInputId = input.id === 'id_imagen' ? 'id_archivo' : 'id_imagen';
         const otherInput = document.getElementById(otherInputId);
         if (otherInput && otherInput.files.length > 0 && input.files.length > 0) {
-             otherInput.value = ''; 
+             otherInput.value = '';
         }
         const imgInput = document.getElementById('id_imagen');
         const fileInput = document.getElementById('id_archivo');
@@ -824,15 +904,15 @@
             return false;
         }
     }
-    
+
     function openYouTubeInNewTab(event, url) {
         event.preventDefault();
         window.open(url, '_blank');
     }
-    
+
     function stopVideo() {
         const iframe = document.getElementById('youtube-player');
-        iframe.src = ''; 
+        iframe.src = '';
     }
 
     async function toggleReactionDirecto(id, tipo, btn) {
@@ -865,11 +945,11 @@
             const data = await response.json();
             if (data.success) {
                 if (tipo === 'post') {
-                    location.reload(); 
+                    location.reload();
                 } else {
                     const counterSpan = document.getElementById(`reaction-count-comment-${id}`);
                     if (counterSpan) {
-                        counterSpan.innerText = data.total > 0 ? data.total : ''; 
+                        counterSpan.innerText = data.total > 0 ? data.total : '';
                     }
                     if (data.action === 'added') {
                         btn.classList.add('text-primary', 'fw-bold', 'comment-liked');
@@ -952,7 +1032,7 @@
 
     async function resetNotificationCounter() {
         const csrftoken = getCookie('csrftoken');
-        const counterElement = document.getElementById('notification-counter'); 
+        const counterElement = document.getElementById('notification-counter');
         if (counterElement && parseInt(counterElement.textContent) === 0) {
             return;
         }
@@ -969,14 +1049,14 @@
             if (data.success) {
                 if (counterElement) {
                     counterElement.textContent = '0';
-                    counterElement.style.display = 'none'; 
+                    counterElement.style.display = 'none';
                 }
             }
         } catch (error) {
             console.error('Error de red al sincronizar notificaciones:', error);
         }
     }
-    
+
     document.addEventListener('DOMContentLoaded', function() {
         const imagenInput = document.getElementById('id_imagen');
         const archivoInput = document.getElementById('id_archivo');
@@ -987,9 +1067,9 @@
             const href = link.getAttribute('href');
             if (isYouTubeLink(href)) {
                 link.onclick = (event) => openYouTubeInNewTab(event, href);
-                link.setAttribute('target', '_blank'); 
+                link.setAttribute('target', '_blank');
                 if (!link.querySelector('.fa-video')) {
-                     link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`; 
+                     link.innerHTML = `<i class="fas fa-video me-1 text-danger"></i> ${link.innerHTML}`;
                 }
             }
         });
@@ -998,23 +1078,23 @@
             position: 'bottom-start',
             zIndex: 1060
         });
-        
+
         const triggerModal = document.querySelector('#emoji-trigger-modal');
         const triggerMain = document.querySelector('#emoji-trigger-main');
         const modalEl = document.getElementById('createPostModal');
-        
+
         function insertEmoji(emoji) {
             const postInput = document.getElementById('post-content-textarea');
             if (postInput) {
                 try {
-                    postInput.focus(); 
+                    postInput.focus();
                     const start = postInput.selectionStart;
                     const end = postInput.selectionEnd;
                     postInput.setRangeText(emoji, start, end, 'end');
                     postInput.focus();
                 } catch (e) {
                     postInput.value += emoji;
-                    postInput.focus(); 
+                    postInput.focus();
                 }
             }
         }
@@ -1037,7 +1117,7 @@
             modalEl.addEventListener('shown.bs.modal', () => {
                 const modalTrigger = document.querySelector('#emoji-trigger-modal');
                 if (modalTrigger) {
-                    picker.showPicker(modalTrigger); 
+                    picker.showPicker(modalTrigger);
                     const postInput = document.querySelector('#post-content-textarea');
                     if(postInput) postInput.focus();
                 }
@@ -1054,7 +1134,7 @@
                 }
             });
         }
-        
+
         const notificationToggle = document.querySelector('#notification-dropdown-toggle');
         if (notificationToggle) {
              notificationToggle.addEventListener('click', resetNotificationCounter);
@@ -1066,7 +1146,7 @@
         function initRealTimeCalendar() {
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            
+
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
@@ -1083,11 +1163,11 @@
             if (daysContainer) {
                 // Limpiar contenido previo (por si acaso)
                 daysContainer.innerHTML = '';
-                
+
                 const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
                 // Ajustar para que Lunes sea 0 y Domingo 6
                 const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
-                
+
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 let html = '';
 
@@ -1118,5 +1198,4 @@
         }
     })();
 </script>
-
 {% endblock %}
