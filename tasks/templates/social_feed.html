@@ -3,6 +3,33 @@
 {% load humanize %}
 {% load widget_tweaks %}
 
+{# --- INJERTO QUIRÚRGICO: Botón de Atrás --- #}
+{% block back_button %}
+    <div class="mb-2">
+        {% if user.perfil.rol == 'ADMINISTRADOR' %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Admin
+            </a>
+        {% elif user.perfil.rol == 'DOCENTE' %}
+             <a href="{% url 'dashboard_docente' %}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver a Notas
+            </a>
+        {% elif user.perfil.rol == 'ESTUDIANTE' %}
+             <a href="{% url 'dashboard_estudiante' %}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver a Mi Panel
+            </a>
+        {% elif user.perfil.rol == 'ACUDIENTE' %}
+             <a href="{% url 'dashboard_acudiente' %}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Panel
+            </a>
+        {% else %}
+            <a href="{% url 'dashboard_bienestar' %}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Volver a Bienestar
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js"></script>
 
