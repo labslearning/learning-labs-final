@@ -183,6 +183,7 @@
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
+       
        <div class="col-lg-6 mb-4 mb-lg-0">
            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
@@ -361,44 +362,37 @@
                <div class="accordion-body p-0">
                    
                    {% if item.top_10_academico %}
-                   <div class="p-3 bg-light border-bottom">
-                       <div class="card border-0 shadow-sm">
-                           <div class="card-header bg-gradient-success text-white py-2 d-flex justify-content-between align-items-center">
-                               <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
-                               <small class="text-white-50">Orden por promedio de notas</small>
-                           </div>
-                           <div class="card-body p-0">
-                               <div class="table-responsive">
-                                   <table class="table table-sm table-striped mb-0 small text-center align-middle">
-                                       <thead class="text-secondary bg-white">
-                                           <tr>
-                                               <th style="width: 50px;">Pos</th>
-                                               <th class="text-start ps-3">Estudiante</th>
-                                               <th style="width: 100px;">Promedio</th>
-                                           </tr>
-                                       </thead>
-                                       <tbody>
-                                           {% for top_est in item.top_10_academico %}
-                                           <tr>
-                                               <td class="fw-bold">
-                                                   {% if forloop.counter == 1 %}🥇
-                                                   {% elif forloop.counter == 2 %}🥈
-                                                   {% elif forloop.counter == 3 %}🥉
-                                                   {% else %}{{ forloop.counter }}
-                                                   {% endif %}
-                                               </td>
-                                               <td class="text-start ps-3">{{ top_est.nombre }}</td>
-                                               <td>
-                                                   <span class="badge bg-success bg-opacity-75 rounded-pill">
-                                                       {{ top_est.promedio }}
-                                                   </span>
-                                               </td>
-                                           </tr>
-                                           {% endfor %}
-                                       </tbody>
-                                   </table>
-                               </div>
-                           </div>
+                   <div class="p-4 bg-soft-info border-bottom">
+                       <div class="d-flex justify-content-between align-items-center mb-3">
+                           <h6 class="fw-bold text-dark mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
+                           <small class="text-muted">Calculado con todas las notas disponibles</small>
+                       </div>
+                       <div class="table-responsive">
+                           <table class="table table-sm table-borderless mb-0 align-middle">
+                               <thead>
+                                   <tr class="text-muted small text-uppercase">
+                                       <th class="ps-3">Pos</th>
+                                       <th>Estudiante</th>
+                                       <th class="text-center">Promedio</th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+                                   {% for alumno in item.top_10_academico %}
+                                   <tr class="bg-white rounded mb-2 shadow-sm" style="border-bottom: 5px solid transparent;">
+                                       <td class="ps-3 fw-bold text-primary">
+                                           {% if alumno.posicion == 1 %}🥇
+                                           {% elif alumno.posicion == 2 %}🥈
+                                           {% elif alumno.posicion == 3 %}🥉
+                                           {% else %}{{ alumno.posicion }}{% endif %}
+                                       </td>
+                                       <td class="fw-bold text-dark">{{ alumno.nombre }}</td>
+                                       <td class="text-center">
+                                            <span class="badge bg-success rounded-pill">{{ alumno.promedio }}</span>
+                                       </td>
+                                   </tr>
+                                   {% endfor %}
+                               </tbody>
+                           </table>
                        </div>
                    </div>
                    {% endif %}
@@ -560,7 +554,7 @@
     .bg-warning-subtle { background-color: #fff3cd; }
    .bg-danger-subtle { background-color: #f8d7da; }
    
-   /* Fondo gradiente verde esmeralda para el Top 10 */
+   /* Gradiente esmeralda para Top 10 */
    .bg-gradient-success { background: linear-gradient(135deg, #1cc88a, #13855c); }
   
    .shadow-hover:hover { transform: translateY(-3px); transition: all 0.2s; }
