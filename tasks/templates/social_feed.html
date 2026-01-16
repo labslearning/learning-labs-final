@@ -36,26 +36,32 @@
 <style>
     /* === EDTECH TIER 30 DESIGN SYSTEM === */
     :root {
-        --feed-bg: #f4f6f8; /* Fondo más limpio y profesional */
+        --feed-bg: #f8f9fa; /* Fondo ultra limpio */
         --card-bg: #ffffff;
-        --text-primary: #1a1b1e;
-        --text-secondary: #637381;
-        --action-hover: #f4f6f8;
-        --divider: #eff2f5;
-        --shadow-soft: 0 8px 24px rgba(145, 158, 171, 0.12); /* Sombra difusa moderna */
-        --shadow-hover: 0 12px 32px rgba(145, 158, 171, 0.2);
-        --radius-lg: 16px; /* Bordes más redondeados */
+        --text-primary: #2d3748; /* Gris oscuro elegante */
+        --text-secondary: #718096;
+        --action-hover: #f1f5f9;
+        --divider: #e2e8f0;
+        /* Sombras Tier 30: Suaves, difusas y con profundidad */
+        --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+        
+        --radius-lg: 20px; /* Bordes muy modernos */
         --radius-md: 12px;
-        --edu-primary: #4361ee;
-        --edu-primary-soft: rgba(67, 97, 238, 0.08);
-        --edu-success: #22c55e;
-        --edu-accent: #3f51b5;
-        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --radius-sm: 8px;
+        
+        --edu-primary: #3b82f6; /* Azul moderno vibrante */
+        --edu-primary-dark: #2563eb;
+        --edu-primary-soft: #eff6ff;
+        --edu-success: #10b981;
+        --edu-accent: #6366f1; /* Indigo */
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
         background-color: var(--feed-bg);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
     }
@@ -64,57 +70,62 @@
     .btn-back-custom {
         display: inline-flex;
         align-items: center;
-        padding: 8px 16px;
+        padding: 10px 20px;
         background-color: white;
         color: var(--text-secondary);
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.85rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-soft);
         transition: var(--transition);
-        border: 1px solid transparent;
+        border: 1px solid white;
     }
     .btn-back-custom:hover {
         color: var(--edu-primary);
         background-color: white;
-        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.15);
-        transform: translateX(-2px);
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-2px);
     }
 
     .feed-container {
-        max-width: 1280px;
+        max-width: 1350px;
         margin: 0 auto;
-        padding-top: 20px;
-        padding-bottom: 60px;
+        padding-top: 25px;
+        padding-bottom: 80px;
     }
 
     /* === CARDS GENERAL === */
     .sidebar-card, .create-post-card, .post-card, .sidebar-search-card {
         background: var(--card-bg);
         border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(145, 158, 171, 0.08); /* Borde sutil */
+        box-shadow: var(--shadow-card);
+        border: 1px solid rgba(255, 255, 255, 0.5); /* Borde sutil */
         margin-bottom: 24px;
         overflow: hidden;
         transition: var(--transition);
+        position: relative;
     }
 
     /* === SIDEBARS (Izquierda/Derecha) === */
     .sidebar-card {
-        padding: 20px;
+        padding: 24px;
+        /* Sticky por defecto en Desktop */
         position: sticky;
-        top: 90px;
+        top: 100px;
+        z-index: 10;
     }
     
     .sidebar-title {
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 0.95rem;
+        font-weight: 800;
         color: var(--text-primary);
-        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 20px;
         display: flex;
         align-items: center;
-        letter-spacing: -0.02em;
+        opacity: 0.8;
     }
 
     /* Left Sidebar Groups */
@@ -126,33 +137,36 @@
         border-radius: var(--radius-md);
         transition: var(--transition);
         background-color: transparent;
+        border: 1px solid transparent;
     }
     .group-item:hover {
         background-color: var(--action-hover);
+        border-color: rgba(0,0,0,0.03);
         transform: translateX(4px);
     }
     .group-img-sidebar {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px; /* Squircle */
+        width: 48px;
+        height: 48px;
+        border-radius: 14px; /* Squircle moderno */
         object-fit: cover;
-        margin-right: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-right: 14px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
         flex-shrink: 0;
     }
     .group-info-sidebar h6 {
         margin: 0;
-        font-size: 0.9rem;
-        font-weight: 600;
+        font-size: 0.95rem;
+        font-weight: 700;
         color: var(--text-primary);
         line-height: 1.3;
     }
     .btn-join-group {
         font-size: 0.75rem;
-        padding: 6px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
-        font-weight: 600;
-        box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
     }
 
     /* Right Sidebar Video/Calendar */
@@ -162,178 +176,197 @@
         width: 100%; 
         border-radius: var(--radius-md);
         margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-soft);
     }
     .video-responsive video {
         width: 100%;
         display: block;
+        border-radius: var(--radius-md);
     }
     
-    /* CALENDAR STYLE - MODERNIZADO */
+    /* CALENDAR STYLE - GLASSMORPHIC */
     .calendar-header {
         background: linear-gradient(135deg, var(--edu-primary), var(--edu-accent));
         color: white;
-        padding: 16px;
+        padding: 18px;
         border-radius: var(--radius-md) var(--radius-md) 0 0;
-        font-weight: 700;
-        font-size: 1rem;
+        font-weight: 800;
+        font-size: 1.1rem;
         text-align: center;
         text-transform: capitalize;
         letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
     .calendar-body {
-        padding: 10px;
+        padding: 15px;
         background: white;
     }
     .calendar-day {
         display: inline-block;
         width: 14.28%;
         text-align: center;
-        padding: 8px 0;
-        font-size: 0.85rem;
+        padding: 10px 0;
+        font-size: 0.9rem;
         position: relative;
         z-index: 1;
+        font-weight: 500;
     }
     .calendar-date {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-primary);
-        cursor: default;
+        cursor: pointer;
+        transition: 0.2s;
+        border-radius: 8px;
+    }
+    .calendar-date:hover:not(.calendar-today) {
+        background-color: var(--action-hover);
+        color: var(--edu-primary);
     }
     .calendar-today {
         background-color: var(--edu-primary);
         color: white !important;
-        border-radius: 10px;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transform: scale(1.1);
     }
 
     /* --- Post Cards & Input --- */
     .create-post-card {
-        padding: 20px;
+        padding: 24px;
         background: white;
     }
     .post-input-trigger {
-        background: #f4f6f8;
-        border-radius: 50px;
-        padding: 12px 20px;
+        background: var(--feed-bg);
+        border-radius: 30px;
+        padding: 14px 24px;
         flex-grow: 1;
         color: var(--text-secondary);
         cursor: pointer;
-        font-size: 0.95rem;
+        font-size: 1rem;
         transition: var(--transition);
-        border: 1px solid transparent;
+        border: 2px solid transparent;
         display: flex;
         align-items: center;
     }
     .post-input-trigger:hover {
         background: white;
-        border-color: #dfe3e8;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border-color: #e2e8f0;
+        box-shadow: var(--shadow-soft);
+        color: var(--text-primary);
     }
     .create-post-actions {
-        margin-top: 16px;
-        padding-top: 12px;
+        margin-top: 20px;
+        padding-top: 15px;
         border-top: 1px solid var(--divider);
     }
     .cp-action-btn {
         background: none;
         border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
+        padding: 10px 20px;
+        border-radius: 12px;
         font-weight: 600;
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         transition: var(--transition);
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
     .cp-action-btn:hover {
         background-color: var(--action-hover);
         color: var(--text-primary);
+        transform: translateY(-2px);
     }
 
     /* POST CARD DETAILS */
     .post-card {
-        margin-bottom: 30px;
+        margin-bottom: 35px;
     }
     .post-header {
-        padding: 20px 20px 10px 20px;
+        padding: 24px 24px 12px 24px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px;
     }
     .user-avatar-sm {
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border: 3px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .user-avatar-sm:hover {
+        transform: scale(1.05);
     }
     .post-info h6 a {
-        font-weight: 700;
+        font-weight: 800;
         color: var(--text-primary);
-        font-size: 1rem;
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
     }
     .post-time {
-        font-size: 0.8rem;
-        color: #919eab;
+        font-size: 0.85rem;
+        color: #94a3b8;
         display: flex;
         align-items: center;
+        font-weight: 500;
     }
     .post-content {
-        padding: 10px 20px 20px;
-        font-size: 1.05rem;
-        line-height: 1.6;
-        color: #212b36;
+        padding: 10px 24px 24px;
+        font-size: 1.1rem;
+        line-height: 1.65;
+        color: #334155;
     }
 
     /* MEDIA */
     .post-media {
-        background-color: #000;
+        background-color: #0f172a;
         display: flex;
         justify-content: center;
         align-items: center;
-        max-height: 550px;
+        max-height: 600px;
         width: 100%;
         margin-top: 5px;
+        overflow: hidden;
     }
     .post-media img {
         max-width: 100%;
-        max-height: 550px;
+        max-height: 600px;
         object-fit: contain;
         width: auto;
     }
 
     /* STATS & ACTIONS */
     .post-stats {
-        padding: 12px 20px;
+        padding: 16px 24px;
         border-bottom: 1px solid var(--divider);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: var(--text-secondary);
     }
     .post-actions {
-        padding: 6px 12px;
+        padding: 8px 16px;
         display: flex;
-        gap: 8px;
-        border-top: none; /* Quitamos borde doble */
+        gap: 10px;
+        border-top: none;
     }
     .action-btn {
         flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 10px;
-        border-radius: 8px;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
         cursor: pointer;
         color: var(--text-secondary);
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 1rem;
         transition: var(--transition);
         background-color: transparent;
         border: none;
@@ -349,112 +382,137 @@
 
     /* COMMENTS */
     .comments-section {
-        padding: 16px 20px 24px;
-        background-color: #f9fafb; /* Fondo muy sutil para comentarios */
+        padding: 20px 24px 30px;
+        background-color: #f8fafc;
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
     .comment-bubble {
         background-color: white;
-        padding: 10px 16px;
-        border-radius: 18px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        border: 1px solid #f0f0f0;
+        padding: 12px 18px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        border: 1px solid #f1f5f9;
+        display: inline-block;
     }
     .comment-author {
         font-weight: 700;
         color: var(--text-primary);
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 2px;
     }
     .comment-input {
         background-color: white;
-        border: 1px solid #dfe3e8;
-        border-radius: 24px;
-        padding: 10px 16px;
-        height: 44px;
+        border: 2px solid transparent;
+        border-radius: 25px;
+        padding: 12px 20px;
+        height: 50px;
         transition: var(--transition);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        box-shadow: var(--shadow-soft);
+        font-size: 0.95rem;
     }
     .comment-input:focus {
         background-color: white;
         border-color: var(--edu-primary);
-        box-shadow: 0 0 0 3px var(--edu-primary-soft);
+        box-shadow: 0 0 0 4px var(--edu-primary-soft);
+        outline: none;
     }
 
     /* === BUSCADOR SIDEBAR === */
     .sidebar-search-card {
-        padding: 15px;
+        padding: 20px;
     }
     .sidebar-search-input {
-        background: #f4f6f8;
-        border: 1px solid transparent;
+        background: var(--feed-bg);
+        border: 2px solid transparent;
         transition: var(--transition);
+        border-radius: 12px;
+        padding-left: 45px !important;
+        height: 48px;
+        font-weight: 500;
     }
     .sidebar-search-input:focus {
         background: white;
         border-color: var(--edu-primary);
-        box-shadow: 0 0 0 3px var(--edu-primary-soft);
+        box-shadow: 0 0 0 4px var(--edu-primary-soft);
     }
     .sidebar-search-button {
         background-color: var(--edu-primary);
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        border-radius: 12px;
+        font-weight: 700;
+        height: 48px;
+        width: 100%;
+        border: none;
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: var(--transition);
     }
     .sidebar-search-button:hover {
-        background-color: #3351d6;
-        transform: translateY(-1px);
+        background-color: var(--edu-primary-dark);
+        transform: translateY(-2px);
     }
 
-    /* === RESPONSIVE FIX (SOLUCIÓN MÓVIL) === */
-    /* Aquí está la magia para que aparezca todo en el celular */
-    
-    @media (max-width: 992px) {
-        /* Permitir que las columnas se apilen */
+    /* === MOBILE RESPONSIVE FIX (SOLUCIÓN DEFINITIVA) === */
+    @media (max-width: 991.98px) {
+        .feed-container {
+            padding-top: 10px;
+        }
+
+        /* Usamos Flexbox Column para reordenar visualmente */
         .row {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
 
-        /* 1. Feed Principal: Orden 1 (Aparece primero) */
+        /* ORDEN VISUAL EN MÓVIL */
+        /* 1. Feed Principal (Arriba) */
         .col-main-feed {
+            order: 1;
             width: 100%;
             max-width: 100%;
             flex: 0 0 100%;
-            order: 1;
-            padding-right: 15px; /* Restaurar padding bootstrap */
-            padding-left: 15px;
+            margin-bottom: 20px;
         }
 
-        /* 2. Barra Izquierda (Grupos/Buscador): Orden 2 (Aparece después) */
+        /* 2. Barra Izquierda (Grupos/Buscador) (Medio) */
         .col-sidebar {
-            display: block !important; /* FORZAR VISIBILIDAD */
+            order: 2;
             width: 100%;
             max-width: 100%;
             flex: 0 0 100%;
-            order: 2;
-            margin-top: 30px;
+            margin-bottom: 20px;
+            display: block !important; /* Forzar mostrar */
         }
         
-        /* 3. Barra Derecha (Video/Calendario): Orden 3 (Al final) */
+        /* 3. Barra Derecha (Video/Calendario) (Abajo) */
         .col-right-sidebar {
-            display: block !important; /* FORZAR VISIBILIDAD */
+            order: 3;
             width: 100%;
             max-width: 100%;
             flex: 0 0 100%;
-            order: 3;
-            margin-top: 20px;
+            margin-bottom: 40px;
+            display: block !important; /* Forzar mostrar */
         }
 
-        /* Ajustes visuales para móvil */
+        /* Desactivar sticky en móvil para que fluya natural */
         .sidebar-card {
-            position: static; /* Ya no es sticky en móvil para no estorbar */
+            position: static !important; 
+            z-index: 1;
         }
     }
 
     /* Custom File Upload Styling */
     .custom-file-upload {
-        border: 1px dashed var(--edu-primary);
+        border: 2px dashed var(--edu-primary);
         background: var(--edu-primary-soft);
         color: var(--edu-primary);
+        border-radius: 12px;
+        padding: 10px 20px;
+        transition: var(--transition);
+    }
+    .custom-file-upload:hover {
+        background: white;
+        transform: scale(1.02);
     }
 </style>
 
@@ -462,41 +520,42 @@
     <div class="row">
         
         {# --- COLUMNA IZQUIERDA (Buscador y Grupos) --- #}
+        {# Eliminé clases d-none para que el CSS controle la visibilidad #}
         <div class="col-md-4 col-lg-3 col-sidebar">
             
             <div class="sidebar-search-card">
                 <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
                     <div class="position-relative">
-                        <div class="search-icon-container" style="top: 0px; left: 0px;">
+                        <div class="search-icon-container" style="top: 5px; left: 5px; position: absolute; height: 38px; width: 38px; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-search text-secondary"></i>
                         </div>
                         <input type="text" 
                                name="q" 
                                class="form-control sidebar-search-input" 
-                               placeholder="Buscar..." 
+                               placeholder="Buscar publicación..." 
                                value="{{ request.GET.q|default:'' }}"
                                aria-label="Buscar publicaciones">
                     </div>
-                    <button type="submit" class="sidebar-search-button mt-2">
-                        Buscar
+                    <button type="submit" class="sidebar-search-button mt-3">
+                        <i class="fas fa-filter me-2"></i> Buscar
                     </button>
                 </form>
             </div>
 
             <div class="sidebar-card">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="sidebar-title mb-0">
-                        <i class="fas fa-layer-group text-primary me-2"></i> Mis Grupos
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="sidebar-title mb-0 text-primary">
+                        <i class="fas fa-users me-2"></i> GRUPOS
                     </h5>
                     {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'DOCENTE' %}
-                    <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Crear Grupo">
+                    <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="Crear Grupo">
                         <i class="fas fa-plus"></i>
                     </a>
                     {% endif %}
                 </div>
 
                 {% if grupos_sugeridos %}
-                    <div class="d-flex flex-column gap-1">
+                    <div class="d-flex flex-column gap-2">
                     {% for grupo in grupos_sugeridos %}
                     <div class="group-item">
                         {% if grupo.image %}
@@ -511,7 +570,7 @@
                             <a href="{% url 'detalle_grupo' grupo.id %}" class="text-decoration-none">
                                 <h6>{{ grupo.name|truncatechars:18 }}</h6>
                             </a>
-                            <small class="text-muted" style="font-size: 0.75rem;">{{ grupo.members.count }} miembros</small>
+                            <small class="text-muted fw-bold" style="font-size: 0.75rem;">{{ grupo.members.count }} miembros</small>
                         </div>
 
                         <form action="{% url 'unirse_grupo' grupo.id %}" method="POST" class="ms-2">
@@ -521,7 +580,7 @@
                                     <i class="fas fa-check"></i>
                                 </a>
                             {% else %}
-                                <button type="submit" class="btn btn-primary btn-join-group shadow-sm">
+                                <button type="submit" class="btn btn-primary btn-join-group shadow-sm text-white border-0">
                                     Unirse
                                 </button>
                             {% endif %}
@@ -530,14 +589,14 @@
                     {% endfor %}
                     </div>
                     
-                    <div class="text-center mt-3 pt-2 border-top">
-                        <a href="{% url 'lista_grupos' %}" class="btn btn-link btn-sm text-decoration-none text-primary fw-bold">Ver todos los grupos</a>
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <a href="{% url 'lista_grupos' %}" class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" style="letter-spacing: 0.5px;">VER TODOS</a>
                     </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <div class="text-muted mb-3"><i class="far fa-folder-open fa-2x"></i></div>
-                        <p class="text-muted small mb-2">No hay grupos sugeridos.</p>
-                        <a href="{% url 'lista_grupos' %}" class="btn btn-outline-primary btn-sm rounded-pill">Explorar</a>
+                    <div class="text-center py-5">
+                        <div class="text-muted mb-3 opacity-50"><i class="far fa-compass fa-3x"></i></div>
+                        <p class="text-muted small mb-3 fw-semibold">No hay grupos sugeridos por ahora.</p>
+                        <a href="{% url 'lista_grupos' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">Explorar</a>
                     </div>
                 {% endif %}
             </div>
@@ -588,15 +647,15 @@
                         </a>
                         <div class="post-info flex-grow-1">
                             <h6>
-                                <a href="{% url 'ver_perfil_social' post.autor.username %}">
+                                <a href="{% url 'ver_perfil_social' post.autor.username %}" class="text-dark text-decoration-none hover-underline">
                                     {{ post.autor.get_full_name|default:post.autor.username }}
                                 </a>
                                 {% if post.tipo == 'ANUNCIO' %}
-                                    <span class="badge bg-danger ms-1 rounded-pill px-2">ANUNCIO</span>
+                                    <span class="badge bg-danger ms-1 rounded-pill px-2" style="font-size: 0.7rem; vertical-align: middle;">ANUNCIO</span>
                                 {% endif %}
                                 {% if post.grupo %}
                                     <span class="text-muted fw-normal ms-1" style="font-size: 0.9rem;">
-                                        <i class="fas fa-caret-right mx-1"></i> <a href="{% url 'detalle_grupo' post.grupo.id %}" class="text-dark fw-bold text-decoration-none">{{ post.grupo.name }}</a>
+                                        <i class="fas fa-caret-right mx-1 text-secondary"></i> <a href="{% url 'detalle_grupo' post.grupo.id %}" class="text-dark fw-bold text-decoration-none">{{ post.grupo.name }}</a>
                                     </span>
                                 {% endif %}
                             </h6>
@@ -604,23 +663,23 @@
                                 <span title="{{ post.creado_en }}">
                                     {{ post.creado_en|naturaltime }}
                                 </span>
-                                <i class="fas fa-globe-americas ms-2" style="font-size: 0.7rem;"></i>
+                                <i class="fas fa-globe-americas ms-2" style="font-size: 0.75rem;"></i>
                             </div>
                         </div>
                         
                         <div class="dropdown">
-                            <button class="btn btn-link text-secondary p-0 rounded-circle" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown">
+                            <button class="btn btn-light rounded-circle text-secondary p-0 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-ellipsis-h"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 overflow-hidden p-0">
                                 {% if request.user == post.autor or request.user.perfil.rol == 'ADMINISTRADOR' %}
                                     <li>
-                                        <button class="dropdown-item text-danger" onclick="moderarContenidoDirecto({{ post.id }}, 'post')">
+                                        <button class="dropdown-item text-danger py-2 px-3 fw-bold" onclick="moderarContenidoDirecto({{ post.id }}, 'post')">
                                             <i class="far fa-trash-alt me-2"></i> Eliminar publicación
                                         </button>
                                     </li>
                                 {% else %}
-                                     <li><a class="dropdown-item" href="#"><i class="far fa-flag me-2"></i> Reportar contenido</a></li>
+                                     <li><a class="dropdown-item py-2 px-3 fw-semibold" href="#"><i class="far fa-flag me-2"></i> Reportar contenido</a></li>
                                 {% endif %}
                             </ul>
                         </div>
@@ -646,12 +705,14 @@
                                     </video>
                                 </div>
                             {% else %}
-                                <div class="p-3">
-                                    <a href="{{ post.archivo.url }}" target="_blank" class="d-flex align-items-center p-3 border rounded bg-light text-decoration-none text-dark hover-shadow transition">
-                                        <i class="fas fa-file-download fa-2x me-3 text-primary"></i>
+                                <div class="p-4">
+                                    <a href="{{ post.archivo.url }}" target="_blank" class="d-flex align-items-center p-3 border rounded-3 bg-light text-decoration-none text-dark shadow-sm transition-transform hover-scale">
+                                        <div class="bg-white p-3 rounded-circle shadow-sm me-3 text-primary">
+                                            <i class="fas fa-file-download fa-2x"></i>
+                                        </div>
                                         <div>
-                                            <h6 class="mb-0 fw-bold">Archivo adjunto</h6>
-                                            <small class="text-muted">Clic para descargar</small>
+                                            <h6 class="mb-0 fw-bold">Archivo adjunto disponible</h6>
+                                            <small class="text-muted">Clic para ver o descargar</small>
                                         </div>
                                     </a>
                                 </div>
@@ -663,11 +724,11 @@
                     <div class="post-stats">
                         <div class="d-flex align-items-center">
                             {% if post.total_reacciones > 0 %}
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 18px; height: 18px; font-size: 10px;">
+                                <div class="d-flex align-items-center cursor-pointer">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 20px; height: 20px; font-size: 10px; border: 2px solid white;">
                                         <i class="fas fa-thumbs-up"></i>
                                     </div>
-                                    <span class="ms-2 small" id="liked-by-text-{{ post.id }}">
+                                    <span class="ms-2 small fw-bold text-dark" id="liked-by-text-{{ post.id }}">
                                         {{ post.total_reacciones }} likes
                                     </span>
                                 </div>
@@ -675,20 +736,23 @@
                                 <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
                             {% endif %}
                         </div>
-                        <div class="comments-count small">
+                        <div class="comments-count small fw-bold text-muted cursor-pointer" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
                             {{ post.total_comentarios }} comentarios
                         </div>
                     </div>
 
                     <div class="post-actions">
                         <button class="action-btn {% if post.user_has_liked %}active-primary{% endif %}" id="like-btn-{{ post.id }}" onclick="toggleReactionDirecto({{ post.id }}, 'post', this)">
-                            <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-thumbs-up"></i> Me gusta
+                            <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-thumbs-up fa-lg"></i>
+                            <span class="d-none d-sm-inline">Me gusta</span>
                         </button>
                         <button class="action-btn" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
-                            <i class="far fa-comment-alt"></i> Comentar
+                            <i class="far fa-comment-alt fa-lg"></i>
+                            <span class="d-none d-sm-inline">Comentar</span>
                         </button>
                         <button class="action-btn" onclick="compartirPost({{ post.id }})">
-                            <i class="fas fa-share"></i> Compartir
+                            <i class="fas fa-share fa-lg"></i>
+                            <span class="d-none d-sm-inline">Compartir</span>
                         </button>
                     </div>
 
@@ -696,31 +760,32 @@
                         <div class="comments-section">
                             {% for comentario in post.comentarios.all %}
                                 <div class="comment-item" id="comment-{{ comentario.id }}">
-                                    <a href="{% url 'ver_perfil_social' comentario.autor.username %}">
+                                    <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="flex-shrink-0">
                                         {% if comentario.autor.perfil.foto_perfil %}
-                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 36px; height: 36px;">
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 40px; height: 40px; border-width: 0;">
                                         {% else %}
-                                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-info text-white fw-bold" style="width: 36px; height: 36px; font-size: 0.8rem;">
+                                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 40px; height: 40px; font-size: 0.9rem;">
                                                 {{ comentario.autor.username|slice:":1"|upper }}
                                             </div>
                                         {% endif %}
                                     </a>
-                                    <div class="comment-content-wrapper">
+                                    <div class="comment-content-wrapper ms-2">
                                         <div class="comment-bubble">
                                             <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="comment-author text-decoration-none">
                                                 {{ comentario.autor.get_full_name|default:comentario.autor.username }}
                                             </a>
-                                            <div class="comment-text mt-1">
+                                            <div class="comment-text">
                                                 {{ comentario.contenido|urlize|safe }}
                                             </div>
                                         </div>
-                                        <div class="comment-meta d-flex gap-3 mt-1 ms-2">
-                                            <span class="text-secondary cursor-pointer fw-semibold" style="font-size: 0.75rem;" onclick="toggleReactionDirecto({{ comentario.id }}, 'comment', this)">
-                                                Me gusta <span id="reaction-count-comment-{{ comentario.id }}" class="ms-1">{% if comentario.reacciones.count > 0 %}{{ comentario.reacciones.count }}{% endif %}</span>
+                                        <div class="comment-meta d-flex gap-3 mt-1 ms-3 align-items-center">
+                                            <span class="text-secondary cursor-pointer fw-bold" style="font-size: 0.75rem;" onclick="toggleReactionDirecto({{ comentario.id }}, 'comment', this)">
+                                                Me gusta <span id="reaction-count-comment-{{ comentario.id }}" class="ms-1 text-primary">{% if comentario.reacciones.count > 0 %}{{ comentario.reacciones.count }}{% endif %}</span>
                                             </span>
+                                            <span style="font-size: 0.75rem; color: #cbd5e1;">•</span>
                                             <span style="font-size: 0.75rem;">{{ comentario.creado_en|naturaltime }}</span>
                                             {% if request.user == comentario.autor or request.user == post.autor or request.user.perfil.rol == 'ADMINISTRADOR' %}
-                                                <span class="text-danger cursor-pointer fw-semibold" style="font-size: 0.75rem;" onclick="moderarContenidoDirecto({{ comentario.id }}, 'comment')" title="Eliminar">
+                                                <span class="text-danger cursor-pointer fw-bold ms-auto me-2" style="font-size: 0.7rem; text-transform: uppercase;" onclick="moderarContenidoDirecto({{ comentario.id }}, 'comment')" title="Eliminar">
                                                     Eliminar
                                                 </span>
                                             {% endif %}
@@ -729,11 +794,11 @@
                                 </div>
                             {% endfor %}
                             
-                            <div class="comment-input-area d-flex gap-2 mt-3">
+                            <div class="comment-input-area d-flex gap-2 mt-4 align-items-center">
                                 {% if user.perfil.foto_perfil %}
-                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm" style="width: 38px; height: 38px;">
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm flex-shrink-0" style="width: 40px; height: 40px; border: 0;">
                                 {% else %}
-                                    <div class="user-avatar-sm bg-secondary rounded-circle" style="width: 38px; height: 38px;"></div>
+                                    <div class="user-avatar-sm bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 40px; height: 40px;"></div>
                                 {% endif %}
                                 
                                 <form method="POST" action="." class="w-100 position-relative">
@@ -741,9 +806,9 @@
                                     <input type="hidden" name="publicar_comentario" value="1">
                                     <input type="hidden" name="post_id" value="{{ post.id }}">
                                     
-                                    <input type="text" name="contenido" class="comment-input w-100" placeholder="Escribe un comentario..." required autocomplete="off" style="padding-right: 45px;">
-                                    <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-3">
-                                        <i class="fas fa-paper-plane"></i>
+                                    <input type="text" name="contenido" class="comment-input w-100 ps-3 pe-5" placeholder="Escribe un comentario..." required autocomplete="off">
+                                    <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-3 hover-scale">
+                                        <i class="fas fa-paper-plane fa-lg"></i>
                                     </button>
                                 </form>
                             </div>
@@ -751,28 +816,30 @@
                     </div>
                 </div>
                 {% empty %}
-                    <div class="text-center py-5 bg-white rounded-3 shadow-sm">
-                        <div class="mb-3">
-                            <i class="fas fa-stream fa-3x text-light-gray"></i>
+                    <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
+                        <div class="mb-4">
+                            <div class="bg-light d-inline-block rounded-circle p-4 text-primary">
+                                <i class="fas fa-stream fa-3x"></i>
+                            </div>
                         </div>
-                        <h4 class="fw-bold text-dark">¡Bienvenido a tu Muro Social!</h4>
-                        <p class="text-muted">Aún no hay publicaciones. ¡Sé el primero!</p>
-                        {% if request.GET.q %}
-                            <p class="text-muted small">No se encontraron resultados para "{{ request.GET.q }}".</p>
-                        {% endif %}
+                        <h4 class="fw-bold text-dark mb-2">¡Tu muro está tranquilo!</h4>
+                        <p class="text-muted mb-4">Aún no hay publicaciones recientes.</p>
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                            <i class="fas fa-plus me-2"></i> Crear primera publicación
+                        </button>
                     </div>
                 {% endfor %}
             </div>
 
             {% if page_obj.has_other_pages %}
-            <nav class="my-4">
+            <nav class="my-5">
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link rounded-pill px-3 me-2" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                        <li class="page-item"><a class="page-link rounded-pill px-4 me-2 border-0 shadow-sm fw-bold" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
                     {% endif %}
                     <li class="page-item disabled"><span class="page-link border-0 bg-transparent text-dark fw-bold">Página {{ page_obj.number }}</span></li>
                     {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link rounded-pill px-3 ms-2" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+                        <li class="page-item"><a class="page-link rounded-pill px-4 ms-2 border-0 shadow-sm fw-bold" href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -780,24 +847,24 @@
         </div>
 
         {# --- COLUMNA DERECHA (Video y Calendario) --- #}
-        {# NOTA: Quité 'd-none d-lg-block' y lo manejé con CSS para que aparezca en móvil al final #}
+        {# Eliminado d-none y d-lg-block para que el CSS controle la visibilidad #}
         <div class="col-lg-3 col-right-sidebar">
             <div class="sidebar-card">
-                <h6 class="sidebar-title mb-3"><i class="fas fa-video text-primary me-2"></i> Inspiración</h6>
+                <h6 class="sidebar-title mb-3 text-primary"><i class="fas fa-video me-2"></i> INSPIRACIÓN</h6>
                 <div class="video-responsive">
                     <video controls muted autoplay playsinline style="width: 100%; height: auto; border-radius: 8px;">
                         <source src="https://res.cloudinary.com/do9orhb4k/video/upload/v1739634103/WhatsApp_Video_2025-02-15_at_8.34.38_AM_v0bpfq.mp4" type="video/mp4">
                         Tu navegador no soporta el video.
                     </video>
                 </div>
-                <p class="small text-muted mt-2 mb-0 fst-italic">"Claves para el éxito en el aprendizaje."</p>
+                <p class="small text-muted mt-3 mb-0 fst-italic text-center">"Claves para el éxito en el aprendizaje."</p>
             </div>
 
-            <div class="sidebar-card p-0 overflow-hidden">
+            <div class="sidebar-card p-0 overflow-hidden border-0">
                 <div class="calendar-header" id="calendar-header">Cargando...</div>
                 
                 <div class="calendar-body">
-                    <div class="d-flex justify-content-between small fw-bold text-muted border-bottom pb-2 mb-2 px-1">
+                    <div class="d-flex justify-content-between small fw-bold text-muted border-bottom pb-3 mb-2 px-1">
                         <span class="calendar-day">L</span>
                         <span class="calendar-day">M</span>
                         <span class="calendar-day">M</span>
@@ -811,20 +878,20 @@
                         </div>
                 </div>
                 
-                <div class="p-3 bg-light small border-top" id="calendar-today-display">
+                <div class="p-3 bg-light small border-top text-center fw-bold text-primary" id="calendar-today-display">
                     </div>
             </div>
         </div>
     </div>
 </div>
 
-{# --- MODALES --- #}
-<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+{# --- MODALES (Con efecto Glassmorphism y sombras mejoradas) --- #}
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-black">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-white" id="videoModalLabel">Video Incrustado</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
+        <div class="modal-content bg-black shadow-2xl rounded-4 overflow-hidden">
+            <div class="modal-header border-0 position-absolute w-100 z-10" style="background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); z-index: 10;">
+                <h5 class="modal-title text-white fw-bold ps-2" id="videoModalLabel">Reproductor</h5>
+                <button type="button" class="btn-close btn-close-white opacity-100" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="video-modal-iframe-wrapper">
@@ -835,67 +902,67 @@
     </div>
 </div>
 
-<div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0" style="border-radius: 16px;">
-            <div class="modal-header border-bottom px-4 py-3">
-                <h5 class="modal-title w-100 fw-bold text-center">Crear publicación</h5>
-                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                <h5 class="modal-title w-100 fw-bold text-center text-primary">Crear publicación</h5>
+                <button type="button" class="btn-close position-absolute end-0 me-4" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body px-4 py-4">
+            <div class="modal-body px-4 py-4 bg-white">
                 <form method="POST" enctype="multipart/form-data" novalidate id="form-publicar">
                     {% csrf_token %}
                     <input type="hidden" name="publicar_post" value="1">
                     
                     <div class="d-flex align-items-center mb-4">
                         {% if user.perfil.foto_perfil %}
-                            <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm me-3" style="width: 48px; height: 48px;">
+                            <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-sm me-3 shadow-sm" style="width: 56px; height: 56px;">
                         {% else %}
-                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold me-3" style="width: 48px; height: 48px;">
+                            <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold me-3 shadow-sm" style="width: 56px; height: 56px; font-size: 1.2rem;">
                                 {{ user.username|slice:":1"|upper }}
                             </div>
                         {% endif %}
                         <div>
-                            <span class="fw-bold d-block" style="font-size: 1.1rem;">{{ user.get_full_name }}</span>
-                            <div class="badge bg-light text-secondary border rounded-pill fw-normal mt-1"><i class="fas fa-globe-americas me-1"></i> Público</div>
+                            <span class="fw-bold d-block text-dark" style="font-size: 1.1rem;">{{ user.get_full_name }}</span>
+                            <div class="badge bg-light text-secondary border rounded-pill fw-bold mt-1 px-3 py-1"><i class="fas fa-globe-americas me-1"></i> Público</div>
                         </div>
                     </div>
 
                     <div class="mb-4 position-relative">
-                        <button type="button" id="emoji-trigger-modal" class="btn btn-sm btn-light position-absolute end-0 top-0 mt-2 me-2 rounded-circle border shadow-sm" style="z-index: 10;">
-                            <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i>
+                        <button type="button" id="emoji-trigger-modal" class="btn btn-light position-absolute end-0 top-0 mt-2 me-2 rounded-circle border shadow-sm" style="z-index: 10; width: 40px; height: 40px;">
+                            <i class="far fa-smile text-warning" style="font-size: 1.4rem;"></i>
                         </button>
-                        {{ post_form.contenido|add_class:"form-control border-0 fs-5"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..."|attr:"style:min-height: 120px; resize: none; box-shadow: none;" }} 
+                        {{ post_form.contenido|add_class:"form-control border-0 fs-5"|attr:"id:post-content-textarea"|attr:"placeholder:¿Qué estás pensando? Comparte algo con tu clase..."|attr:"style:min-height: 150px; resize: none; box-shadow: none; background-color: #f8fafc; border-radius: 16px; padding: 20px;" }} 
                     </div>
 
-                    <div class="border rounded-3 p-3 mb-4 shadow-sm">
+                    <div class="border rounded-4 p-3 mb-4 shadow-sm bg-light">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold text-muted small">Agregar a tu post</span>
+                            <span class="fw-bold text-secondary small text-uppercase ls-1">Añadir a tu post</span>
                             <div class="d-flex gap-3">
-                                <label for="id_imagen" class="cursor-pointer text-success hover-scale transition" title="Foto">
-                                    <i class="fas fa-images fa-lg"></i>
+                                <label for="id_imagen" class="cursor-pointer text-success p-2 rounded-circle hover-bg-white transition" title="Foto">
+                                    <i class="fas fa-images fa-2x"></i>
                                     {{ post_form.imagen|add_class:"d-none" }}
                                 </label>
-                                <label for="id_archivo" class="cursor-pointer text-danger hover-scale transition" title="Archivo">
-                                    <i class="fas fa-file-video fa-lg"></i>
+                                <label for="id_archivo" class="cursor-pointer text-danger p-2 rounded-circle hover-bg-white transition" title="Archivo">
+                                    <i class="fas fa-file-video fa-2x"></i>
                                     {{ post_form.archivo|add_class:"d-none" }}
                                 </label>
                             </div>
                         </div>
-                        <div id="file-name-display" class="file-name-display mt-2 text-primary small fw-bold"></div>
+                        <div id="file-name-display" class="file-name-display mt-2 text-primary small fw-bold text-end"></div>
                     </div>
                     
                     {% if user.perfil.rol == 'ADMINISTRADOR' %}
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="es_anuncio" id="esAnuncioCheck">
-                        <label class="form-check-label small text-muted" for="esAnuncioCheck">
+                    <div class="form-check form-switch mb-4 ms-2">
+                        <input class="form-check-input" type="checkbox" name="es_anuncio" id="esAnuncioCheck" style="transform: scale(1.3);">
+                        <label class="form-check-label ms-2 small fw-bold text-secondary" for="esAnuncioCheck">
                             Marcar como Anuncio Oficial
                         </label>
                     </div>
                     {% endif %}
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary fw-bold py-2 rounded-pill shadow-sm">Publicar</button>
+                        <button type="submit" class="btn btn-primary fw-bold py-3 rounded-pill shadow-lg hover-scale" style="font-size: 1.1rem; letter-spacing: 0.5px;">Publicar ahora</button>
                     </div>
                 </form>
             </div>
