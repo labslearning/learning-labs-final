@@ -24,14 +24,18 @@
        </div>
        <div class="col-md-5 text-end">
            <div class="d-flex justify-content-end gap-2 align-items-center">
-                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-purple shadow-sm fw-bold animate__animated animate__pulse animate__infinite">
+                <a href="{% url 'reporte_consolidado' %}" class="btn btn-success shadow-sm fw-bold animate__animated animate__pulse">
+                    <i class="fas fa-table me-2"></i>Sábana de Notas
+                </a>
+
+                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-purple shadow-sm fw-bold">
                     <i class="fas fa-robot me-2"></i>Auditoría IA (PEI)
                 </a>
                 <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-sm" title="Recargar">
                     <i class="fas fa-sync-alt me-1"></i> Actualizar
                 </a>
                 <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold">
-                    <i class="fas fa-brain me-2"></i>Inteligencia Académica
+                    <i class="fas fa-brain me-2"></i>IA Académica
                 </a>
            </div>
            <div class="d-inline-block text-end mt-3">
