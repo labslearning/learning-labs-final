@@ -3755,14 +3755,15 @@ def historial_asistencia(request):
 # ===================================================================
 
 # Roles permitidos para el módulo
-STAFF_ROLES = ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO', 'ADMINISTRADOR']
+#Desde aqui
 
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
-    Panel principal de Bienestar con Estadísticas PEI, Gestión, Analítica de Asistencia y Alertas Académicas.
+    Panel principal de Bienestar con Estadísticas PEI, Gestión, Analítica de Asistencia, 
+    Alertas Académicas y RANKING TOP 10 POR CURSO (Competencia Sana).
     """
-    # 0. LÓGICA DE SUBIDA DEL PEI (Solo para Coord. Académico o Admin)
+    # 0. LÓGICA DE SUBIDA DEL PEI
     if request.method == 'POST' and 'pei_file' in request.FILES:
         if request.user.perfil.rol in ['COORD_ACADEMICO', 'ADMINISTRADOR']:
             institucion = Institucion.objects.first()
@@ -3817,13 +3818,13 @@ def dashboard_bienestar(request):
     for c in convivencias_qs:
         notas_convivencia_map[(c.estudiante_id, c.periodo_id)] = c.valor
 
-    # Iteración por cursos para cálculos
+    # --- BUCLE PRINCIPAL POR CURSO ---
     for curso in cursos_activos:
         matriculas = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante__perfil').order_by('estudiante__last_name')
         num_alumnos = matriculas.count()
         total_estudiantes_colegio += num_alumnos
 
-        # Promedios del curso
+        # Promedios del curso (KPIs del gráfico)
         val_conv = Convivencia.objects.filter(curso=curso).aggregate(avg=Avg('valor'))['avg']
         prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
         
@@ -3842,7 +3843,30 @@ def dashboard_bienestar(request):
             suma_promedios_conv += prom_conv_curso
             cursos_con_datos += 1
 
-        # Construcción de lista de estudiantes para la tabla visual (Acordeón)
+        # --- LÓGICA TOP 10 ALUMNOS POR CURSO (NUEVO) ---
+        # Calculamos el promedio de notas finales (5) para cada estudiante de ESTE curso específico
+        top_10_qs = Nota.objects.filter(
+            materia__curso=curso,  # Filtramos notas asociadas a materias de este curso
+            numero_nota=5
+        ).values(
+            'estudiante__first_name', 
+            'estudiante__last_name', 
+            'estudiante__username'
+        ).annotate(
+            promedio_final=Avg('valor')
+        ).order_by('-promedio_final')[:10]
+
+        top_10_list = []
+        for idx, item in enumerate(top_10_qs, 1):
+            nombre = f"{item['estudiante__first_name']} {item['estudiante__last_name']}".strip() or item['estudiante__username']
+            top_10_list.append({
+                'posicion': idx,
+                'nombre': nombre,
+                'promedio': round(item['promedio_final'], 2)
+            })
+        # ------------------------------------------------
+
+        # Construcción de lista de estudiantes para la tabla visual (Acordeón de Convivencia)
         periodos_del_curso = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
         lista_estudiantes = []
         
@@ -3865,7 +3889,8 @@ def dashboard_bienestar(request):
             vista_cursos.append({
                 'curso': curso,
                 'estudiantes': lista_estudiantes,
-                'stats': {'acad': round(prom_acad_curso, 2), 'conv': round(prom_conv_curso, 2), 'alumnos': num_alumnos}
+                'stats': {'acad': round(prom_acad_curso, 2), 'conv': round(prom_conv_curso, 2), 'alumnos': num_alumnos},
+                'top_10_academico': top_10_list # <--- Nuevo dato inyectado aquí
             })
 
     # Cálculo final de promedios institucionales
@@ -3873,10 +3898,8 @@ def dashboard_bienestar(request):
     promedio_institucional_conv = round(suma_promedios_conv / cursos_con_datos, 2) if cursos_con_datos > 0 else 0
 
     # ===================================================================
-    # 🩺 MÓDULO 3: ANALÍTICA DE ASISTENCIA (Fallas y Retardos)
+    # 🩺 MÓDULO 3: ANALÍTICA DE ASISTENCIA
     # ===================================================================
-    
-    # 1. Estadísticas Totales para Gráfico de Torta
     stats_asistencia = {
         'asistio': Asistencia.objects.filter(estado='ASISTIO').count(),
         'falla': Asistencia.objects.filter(estado='FALLA').count(),
@@ -3884,31 +3907,26 @@ def dashboard_bienestar(request):
         'tarde': Asistencia.objects.filter(estado='TARDE').count(),
     }
     
-    # 2. Top 5 Estudiantes con más Fallas (Alerta de Ausentismo)
     top_fallas = Asistencia.objects.filter(estado='FALLA')\
         .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'estudiante__username', 'curso__nombre')\
         .annotate(total=Count('id'))\
         .order_by('-total')[:5]
 
     # ===================================================================
-    # 🩺 MÓDULO 4: ALERTAS ACADÉMICAS (Notas Malas)
+    # 🩺 MÓDULO 4: ALERTAS ACADÉMICAS
     # ===================================================================
-    # Buscamos estudiantes con notas finales < 3.0 (Top 5 críticos)
     alertas_academicas = Nota.objects.filter(numero_nota=5, valor__lt=3.0)\
         .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'estudiante__username', 'materia__curso__nombre')\
         .annotate(total_reprobadas=Count('id'))\
         .order_by('-total_reprobadas')[:5]
     
-    # ===================================================================
-
     # Información Institucional
     institucion = Institucion.objects.first()
 
-    # Contexto Final para el Template
     context = {
         'estudiantes': estudiantes_busqueda, 
         'query': query,
-        'vista_cursos': vista_cursos,
+        'vista_cursos': vista_cursos, # Contiene el Top 10 por curso
         'periodos': periodos_header,
         'institucion': institucion,
         'kpi': {
@@ -3922,12 +3940,13 @@ def dashboard_bienestar(request):
             'acad': json.dumps(chart_data_acad),
             'conv': json.dumps(chart_data_conv)
         },
-        'stats_asistencia': json.dumps(list(stats_asistencia.values())), # Orden: Asistio, Falla, Excusa, Tarde
+        'stats_asistencia': json.dumps(list(stats_asistencia.values())),
         'top_fallas': top_fallas,
-        'alertas_academicas': alertas_academicas, # Nueva variable disponible en el template
+        'alertas_academicas': alertas_academicas,
     }
     return render(request, 'bienestar/dashboard_bienestar.html', context)
 
+#Hasta Aqui 
 @role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
 def reporte_consolidado(request):
     """
