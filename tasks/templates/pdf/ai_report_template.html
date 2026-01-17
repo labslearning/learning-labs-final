@@ -4,33 +4,42 @@
     <meta charset="UTF-8">
     <title>Informe Pedagógico Institucional</title>
     <style>
+        /* === 1. CONFIGURACIÓN DE PÁGINA (MÁRGENES OFICIALES A4) === */
         @page {
             size: A4;
-            margin-top: 3.5cm;
-            margin-bottom: 2.5cm;
+            margin-top: 3.5cm;     /* Espacio reservado para encabezado */
+            margin-bottom: 2.5cm;  /* Espacio reservado para pie de página */
             margin-left: 2.5cm;
             margin-right: 2.5cm;
-            @top-center { content: element(header); }
-            @bottom-center { content: element(footer); }
+
+            @top-center {
+                content: element(header);
+            }
+            @bottom-center {
+                content: element(footer);
+            }
         }
 
+        /* === 2. TIPOGRAFÍA Y CUERPO === */
         body {
-            font-family: 'Times New Roman', 'Georgia', serif;
+            /* Usamos fuentes genéricas para asegurar compatibilidad en Linux/Railway */
+            font-family: serif; 
             color: #1a1a1a;
             font-size: 11pt;
             line-height: 1.4;
             text-align: justify;
         }
 
+        /* === 3. VARIABLES DE COLOR (Tier 50 - Profesional) === */
         :root {
-            --primary-blue: #002B5B;
-            --accent-gold: #C5A059;
+            --primary-blue: #002B5B;  /* Azul Oxford */
+            --accent-gold: #C5A059;   /* Dorado Académico */
             --text-grey: #4a4a4a;
             --line-color: #d1d1d1;
             --bg-light: #f8f9fa;
         }
 
-        /* ENCABEZADO */
+        /* === 4. ENCABEZADO FLOTANTE === */
         .header-container {
             position: running(header);
             width: 100%;
@@ -43,7 +52,7 @@
         .logo-cell { 
             width: 18%; 
             vertical-align: middle; 
-            text-align: center; /* Centrar logo */
+            text-align: left;
         }
         
         .logo-img { 
@@ -52,7 +61,7 @@
             object-fit: contain; 
         }
 
-        /* SVG de respaldo por si no hay imagen */
+        /* SVG de respaldo (Birrete Académico) */
         .logo-placeholder svg {
             height: 80px;
             width: 80px;
@@ -63,7 +72,7 @@
             width: 82%; 
             text-align: right; 
             vertical-align: middle; 
-            font-family: 'Arial', sans-serif; 
+            font-family: sans-serif; 
         }
         .school-name {
             font-size: 16pt;
@@ -87,19 +96,19 @@
             line-height: 1.3;
         }
 
-        /* PIE DE PÁGINA */
+        /* === 5. PIE DE PÁGINA FLOTANTE === */
         .footer-container {
             position: running(footer);
             width: 100%;
             border-top: 1px solid var(--accent-gold);
             padding-top: 8px;
-            font-family: 'Arial', sans-serif;
+            font-family: sans-serif;
             font-size: 7pt;
             color: #888;
             text-align: center;
         }
 
-        /* MARCA DE AGUA (SOLO SI HAY LOGO REAL) */
+        /* === 6. MARCA DE AGUA (WATERMARK) === */
         .watermark {
             position: fixed;
             top: 50%;
@@ -111,7 +120,7 @@
             filter: grayscale(100%);
         }
 
-        /* TÍTULO */
+        /* === 7. TÍTULO DEL REPORTE === */
         .doc-title-box {
             text-align: center;
             margin-top: 0px;
@@ -122,7 +131,7 @@
             border-radius: 4px;
         }
         .doc-title {
-            font-family: 'Arial', sans-serif;
+            font-family: sans-serif;
             font-size: 14pt;
             font-weight: bold;
             color: var(--primary-blue);
@@ -131,12 +140,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* METADATA */
+        /* === 8. TABLA DE DATOS (METADATA) === */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
-            font-family: 'Arial', sans-serif;
+            font-family: sans-serif;
             font-size: 9pt;
         }
         .meta-table td {
@@ -154,37 +163,46 @@
         .value { width: 32%; color: #333; }
         .full-val { width: 82%; font-style: italic; color: #555; }
 
-        /* CONTENIDO */
+        /* === 9. CONTENIDO DEL INFORME (Body) === */
         .content-body {
             min-height: 450px;
             margin-bottom: 40px;
             padding: 0 10px;
         }
+        /* Estilos específicos para el Markdown convertido */
         .content-body h1 {
-            font-size: 13pt; color: var(--primary-blue); 
+            font-size: 13pt; 
+            color: var(--primary-blue); 
             border-bottom: 2px solid var(--accent-gold); 
-            padding-bottom: 3px; margin-top: 25px;
-            font-family: 'Arial', sans-serif;
+            padding-bottom: 3px;
+            margin-top: 25px;
+            font-family: sans-serif;
         }
         .content-body h2 {
-            font-size: 12pt; color: #333; font-weight: bold; 
-            margin-top: 20px; text-transform: uppercase;
-            font-family: 'Arial', sans-serif;
+            font-size: 12pt; 
+            color: #333; 
+            font-weight: bold; 
+            margin-top: 20px;
+            text-transform: uppercase;
+            font-family: sans-serif;
         }
         .content-body h3 {
-            font-size: 11pt; font-weight: bold; color: #555; margin-top: 15px;
+            font-size: 11pt; 
+            font-weight: bold; 
+            color: #555;
+            margin-top: 15px;
         }
         .content-body ul { margin-left: 20px; padding-left: 10px; }
         .content-body li { margin-bottom: 5px; text-align: justify; }
         .content-body p { margin-bottom: 12px; text-align: justify; }
         .content-body strong { color: #000; font-weight: bold; }
 
-        /* FIRMAS */
+        /* === 10. ZONA DE FIRMAS === */
         .signatures-wrapper {
             margin-top: 50px;
             page-break-inside: avoid;
             width: 100%;
-            font-family: 'Arial', sans-serif;
+            font-family: sans-serif;
         }
         .sig-table { width: 100%; border-collapse: collapse; border: none; }
         .sig-cell {
@@ -210,6 +228,8 @@
             color: #666;
             text-transform: uppercase;
         }
+        
+        /* Espaciador de firmas */
         .sig-space { height: 70px; } 
 
     </style>
@@ -307,18 +327,14 @@
         <table class="sig-table">
             <tr>
                 <td class="sig-cell">
-                    <div class="sig-space"></div>
-                    <div class="sig-line"></div>
+                    <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ solicitante.get_full_name|default:solicitante.username|upper }}</div>
                     <div class="sig-role">PROFESIONAL RESPONSABLE</div>
                     <div class="sig-role" style="font-weight: normal; margin-top: 3px;">C.C. _______________</div>
                 </td>
                 
-                <td style="width: 20%; border: none;"></td> 
-                
-                <td class="sig-cell">
-                    <div class="sig-space"></div>
-                    <div class="sig-line"></div>
+                <td style="width: 20%; border: none;"></td> <td class="sig-cell">
+                    <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
                     <div class="sig-role">RECIBIDO A SATISFACCIÓN</div>
                     <div class="sig-role" style="font-weight: normal; margin-top: 3px;">FECHA: ____/____/______</div>
