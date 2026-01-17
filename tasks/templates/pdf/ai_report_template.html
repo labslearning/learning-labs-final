@@ -7,20 +7,17 @@
         /* === 1. CONFIGURACIÓN DE PÁGINA BLINDADA === */
         @page {
             size: A4;
-            /* Márgenes amplios y seguros */
             margin-top: 4cm;     
             margin-bottom: 3cm;
             margin-left: 2.5cm;
             margin-right: 2.5cm;
-            
-            /* Definimos las áreas reservadas */
             @top-center { content: element(header); }
             @bottom-center { content: element(footer); }
         }
 
         /* === 2. TIPOGRAFÍA === */
         body {
-            font-family: 'Times New Roman', serif; /* Fuente estándar universal */
+            font-family: 'Times New Roman', serif;
             color: #1a1a1a;
             font-size: 11pt;
             line-height: 1.5;
@@ -29,7 +26,7 @@
             padding: 0;
         }
 
-        /* === 3. PALETA DE COLORES === */
+        /* === 3. COLORES === */
         :root {
             --primary: #002B5B;
             --accent: #C5A059;
@@ -37,29 +34,20 @@
             --border: #dcdde1;
         }
 
-        /* === 4. ENCABEZADO FIJO (TIER 50) === */
+        /* === 4. ENCABEZADO FIJO === */
         .header-container {
             position: running(header);
             width: 100%;
-            /* Ajuste vertical para que no choque con el borde del papel */
             margin-top: -1cm; 
             border-bottom: 2px solid var(--primary);
             padding-bottom: 10px;
             margin-bottom: 0px;
         }
         
-        .header-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .logo-cell { width: 20%; vertical-align: middle; text-align: left; }
         
-        .logo-cell { 
-            width: 20%; 
-            vertical-align: middle; 
-            text-align: left;
-        }
-        
-        /* Forzamos el tamaño de la imagen para que no rompa el diseño */
+        /* IMAGEN DE LOGO */
         .logo-img { 
             height: 80px; 
             width: 80px; 
@@ -82,7 +70,6 @@
             margin: 0;
             letter-spacing: 0.5px;
         }
-        
         .school-sub {
             font-size: 9pt;
             color: var(--accent);
@@ -90,7 +77,6 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
         .school-legal {
             font-size: 7pt;
             color: var(--text-light);
@@ -109,7 +95,7 @@
             text-align: center;
         }
 
-        /* === 6. MARCA DE AGUA (FONDO) === */
+        /* === 6. MARCA DE AGUA === */
         .watermark {
             position: fixed;
             top: 50%;
@@ -120,7 +106,7 @@
             z-index: -1000;
         }
 
-        /* === 7. TÍTULO Y CAJETÍN === */
+        /* === 7. TÍTULO === */
         .doc-title-box {
             text-align: center;
             margin-top: 0px;
@@ -139,7 +125,7 @@
             margin: 0;
         }
 
-        /* === 8. TABLA DE METADATOS (Diseño Técnico) === */
+        /* === 8. TABLA DE METADATOS === */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
@@ -162,27 +148,11 @@
         .value { width: 32%; }
         .full-val { width: 82%; font-style: italic; color: #555; }
 
-        /* === 9. CONTENIDO DEL REPORTE === */
-        .content-body {
-            /* Asegura que el contenido respete los márgenes */
-            width: 100%;
-            overflow: hidden; 
-        }
-        /* Estilos Markdown */
-        .content-body h1 { 
-            font-size: 13pt; color: var(--primary); 
-            border-bottom: 2px solid var(--accent); 
-            padding-bottom: 3px; margin-top: 25px; 
-            font-family: Helvetica, Arial, sans-serif;
-        }
-        .content-body h2 { 
-            font-size: 12pt; color: #333; font-weight: bold; 
-            margin-top: 20px; text-transform: uppercase;
-            font-family: Helvetica, Arial, sans-serif;
-        }
-        .content-body h3 { 
-            font-size: 11pt; font-weight: bold; color: #555; margin-top: 15px; 
-        }
+        /* === 9. CONTENIDO === */
+        .content-body { width: 100%; overflow: hidden; }
+        .content-body h1 { font-size: 13pt; color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 3px; margin-top: 25px; font-family: Helvetica, Arial, sans-serif;}
+        .content-body h2 { font-size: 12pt; color: #333; font-weight: bold; margin-top: 20px; text-transform: uppercase; font-family: Helvetica, Arial, sans-serif;}
+        .content-body h3 { font-size: 11pt; font-weight: bold; color: #555; margin-top: 15px; }
         .content-body ul { margin-left: 20px; padding-left: 10px; }
         .content-body li { margin-bottom: 5px; }
         .content-body p { margin-bottom: 12px; }
@@ -212,11 +182,7 @@
             text-transform: uppercase;
             margin-bottom: 2px;
         }
-        .sig-role {
-            font-size: 8pt;
-            color: #666;
-            text-transform: uppercase;
-        }
+        .sig-role { font-size: 8pt; color: #666; text-transform: uppercase; }
         .sig-space { height: 70px; }
 
     </style>
@@ -234,7 +200,7 @@
                     {% if institucion.logo %}
                         <img src="{{ institucion.logo.path|default:institucion.logo.url }}" class="logo-img">
                     {% else %}
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNTEyIj48IS0tISBGb250IEF3ZXNvbWUgUHJvIDYuNC4wIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlIChDb21tZXJjaWFsIExpY2Vuc2UpIENvcHlyaWdodCAyMDIzIEZvbnRpY29ucywgSW5jLi0tPjxwYXRoIGZpbGw9IiMwMDJCNUIiIGQ9Ik0zMjMuNCA1MTAuNWMtNS44IDMuMy0xMi44IDMuMy0xOC43IDBMNjQuNSAzNjcuQzYgMzMxLjkgMCAzMTguNCAwIDI3OS41VjkwLjdjMC0yMi4xIDExLjMtNDIuOSAzMC4yLTU1LjdMMzAzLjEgMi41YzYuNS0zLjQgMTQuMy0zLjQgMjAuOCAwTDYwOS44IDM1YzE4LjkgMTIuOCAzMC4yIDMzLjYgMzAuMiA1NS43djE4OC44YzAgMzguOS02IDUyLjQtNjQuNSA4Ny43bC0yNTEuNyAxNDMuM3pNNDggOTAuN3YxODguOGMwIDYuMSAzIDkuMiAyMy41IDIxLjRMMzIwIDQ1Mmw4NS00OS40Yy00OS40LTIxLjQtODUtNzAuOC04NS0xMjguNnYtNjQuMWMwLTEyLjYgNi40LTI0LjIgMTYuOC0zMC43bDE2LjgtMTAuNWMxNy0xMC42IDM4LjctMTAuNiA1NS43IDBsMTYuOCAxMC41YzEwLjQgNi41IDE2LjggMTguMSAxNi44IDMwLjd2NjQuMWMwIDU3LjgtMzUuNiAxMDcuMi04NSAxMjguNmw3MC4yIDQxLjFjMjAuNi0xMi4yIDIzLjUtMTUuMyAyMy41LTIxLjRWOTAuN2wwIDBjMC00LjItMi4xLTguMS01LjctMTAuNUwzMjAgMzEuNiA1My43IDgwLjFjLTMuNiAyLjQtNS43IDYuMy01LjcgMTAuNnoiLz48L3N2Zz4=" class="logo-img">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNTEyIj48cGF0aCBmaWxsPSIjMDAyQjVCIiBkPSJNMzIzLjQgNTEwLjVjLTUuOCAzLjMtMTIuOCAzLjMtMTguNyAwTDY0LjUgMzY3LkM2IDMzMS45IDAgMzE4LjQgMCAyNzkuNVY5MC43YzAtMjIuMSAxMS4zLTQyLjkgMzAuMi01NS43TDMwMy4xIDIuNWM2LjUtMy40IDE0LjMtMy40IDIwLjggMEw2MDkuOCAzNWMxOC45IDEyLjggMzAuMiAzMy42IDMwLjIgNTUuN3YxODguOGMwIDM4LjktNiA1Mi40LTY0LjUgODcuN2wtMjUxLjcgMTQzLjN6TTQ4IDkwLjd2MTg4LjhjMCA2LjEgMyA5LjIgMjMuNSAyMS40TDMyMCA0NTJsODUtNDkuNGMtNDkuNC0yMS40LTg1LTcwLjgtODUtMTI4LjZ2LTY0LjFjMC0xMi42IDYuNC0yNC4yIDE2LjgtMzAuN2wxNi44LTEwLjVjMTctMTAuNiAzOC43LTEwLjYgNTUuNyAwbDE2LjggMTAuNWMxMC40IDYuNSAxNi44IDE4LjEgMTYuOCAzMC43djY0LjFjMCA1Ny44LTM1LjYgMTA3LjItODUgMTI4LjZsNzAuMiA0MS4xYzIwLjYtMTIuMiAyMy41LTE1LjMgMjMuNS0yMS40VjkwLjdsMCAwYzAtNC4yLTIuMS04LjEtNS43LTEwLjVMMzIwIDMxLjYgNTMuNyA4MC4xYy0zLjYgMi40LTUuNyA2LjMtNS43IDEwLjZ6Ii8+PC9zdmc+" class="logo-img">
                     {% endif %}
                 </td>
                 <td class="info-cell">
