@@ -205,5 +205,5 @@ urlpatterns = [
     path('api/chat-socratico/', ai_views.chat_socratico_api, name='api_chat_socratico'),
     path('ia/engine/', views.ai_analysis_engine, name='ai_engine'),
     #path('ia/engine/', views.ai_analysis_engine, name='ai_analysis_engine'),
-    path('api/post/<int:post_id>/likes/', views.api_obtener_likes, name='api_post_likes'), 
+    path('api/social/post/<int:post_id>/likes/', views.api_obtener_likes, name='api_post_likes'),
 ]
