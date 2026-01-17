@@ -5214,28 +5214,44 @@ def dashboard_ia_estudiante(request):
     return render(request, 'tasks/ai_dashboard.html', context)
 
 def api_obtener_likes(request, post_id):
-    # 1. Verificamos que el post exista
-    post = get_object_or_404(Post, id=post_id)
-    
-    # 2. Buscamos todas las reacciones tipo 'LIKE' de ese post
-    # Asumo que tu modelo se llama 'Reaccion' y tiene campos 'post', 'autor' y 'tipo'
-    likes = Reaccion.objects.filter(post=post, tipo='LIKE').select_related('autor__perfil')
-    
-    users_data = []
-    
-    for like in likes:
-        usuario = like.autor
+    try:
+        # 1. Verificamos que el post exista
+        post = get_object_or_404(Post, id=post_id)
         
-        # Obtenemos la URL de la foto o null si no tiene
-        avatar_url = None
-        if hasattr(usuario, 'perfil') and usuario.perfil.foto_perfil:
-            avatar_url = usuario.perfil.foto_perfil.url
+        # 2. Obtenemos el ContentType del modelo Post
+        # (Esto es necesario porque tu sistema usa relaciones genéricas)
+        ct = ContentType.objects.get_for_model(Post)
+        
+        # 3. Buscamos en el modelo Reaction (inglés) usando content_type y object_id
+        likes = Reaction.objects.filter(
+            content_type=ct,
+            object_id=post.id,
+            tipo='LIKE'
+        ).select_related('usuario__perfil') # Ojo: en api_reaction usas 'usuario', no 'autor'
+        
+        users_data = []
+        
+        for reaction in likes:
+            # En tu modelo Reaction el campo es 'usuario', no 'autor'
+            user = reaction.usuario 
             
-        users_data.append({
-            'username': usuario.username,
-            'full_name': usuario.get_full_name() or usuario.username,
-            'avatar_url': avatar_url
-        })
-        
-    # 3. Devolvemos la lista en formato JSON para que el Javascript la lea
-    return JsonResponse({'users': users_data})
+            # Obtenemos la URL de la foto o null si no tiene
+            avatar_url = None
+            try:
+                if hasattr(user, 'perfil') and user.perfil.foto_perfil:
+                    avatar_url = user.perfil.foto_perfil.url
+            except Exception:
+                pass
+                
+            users_data.append({
+                'username': user.username,
+                'full_name': user.get_full_name() or user.username,
+                'avatar_url': avatar_url
+            })
+            
+        return JsonResponse({'users': users_data})
+
+    except Exception as e:
+        # Esto imprimirá el error real en tu terminal negra para que sepamos qué pasa
+        print(f"ERROR EN api_obtener_likes: {e}") 
+        return JsonResponse({'error': str(e)}, status=500)
