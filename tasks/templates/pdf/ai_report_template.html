@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <title>Informe Pedagógico Institucional</title>
     <style>
-        /* === CONFIGURACIÓN DE PÁGINA E IMPRESIÓN === */
+        /* === 1. CONFIGURACIÓN DE PÁGINA (MÁRGENES OFICIALES) === */
         @page {
             size: A4;
-            margin-top: 3cm;
-            margin-bottom: 3cm;
+            margin-top: 3.5cm;     /* Espacio para encabezado */
+            margin-bottom: 2.5cm;  /* Espacio para pie de página */
             margin-left: 2.5cm;
             margin-right: 2.5cm;
 
@@ -20,178 +20,192 @@
             }
         }
 
-        /* === TIPOGRAFÍA Y COLORES === */
+        /* === 2. TIPOGRAFÍA Y CUERPO === */
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            color: #2c3e50; /* Gris oscuro elegante */
+            font-family: 'Times New Roman', 'Georgia', serif; /* Fuente Seria */
+            color: #1a1a1a;
             font-size: 11pt;
-            line-height: 1.5;
+            line-height: 1.4;
             text-align: justify;
         }
 
-        /* Paleta de Colores Institucional */
+        /* === 3. VARIABLES DE COLOR (Tier 50) === */
         :root {
-            --primary: #003366; /* Azul Oscuro Académico */
-            --accent: #b71c1c;  /* Rojo Institucional sutil */
-            --light: #f4f6f7;   /* Gris muy claro para fondos */
-            --border: #dcdde1;
+            --primary-blue: #002B5B;  /* Azul Oxford */
+            --accent-gold: #C5A059;   /* Dorado Académico */
+            --text-grey: #4a4a4a;
+            --line-color: #d1d1d1;
         }
 
-        /* === ENCABEZADO (Repetido en cada página) === */
+        /* === 4. ENCABEZADO FLOTANTE === */
         .header-container {
             position: running(header);
             width: 100%;
-            border-bottom: 3px double var(--primary);
+            border-bottom: 2px solid var(--primary-blue);
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         .header-table { width: 100%; border-collapse: collapse; }
-        
-        .logo-cell { 
-            width: 20%; 
-            vertical-align: middle; 
-            text-align: left;
-        }
-        .logo-img { 
-            height: 80px; 
-            width: auto;
-            object-fit: contain; 
-        }
+        .logo-cell { width: 18%; vertical-align: middle; }
+        .logo-img { height: 90px; width: auto; object-fit: contain; }
         
         .info-cell { 
-            width: 80%; 
+            width: 82%; 
             text-align: right; 
             vertical-align: middle; 
+            font-family: 'Arial', sans-serif; /* Sans-serif para datos técnicos */
         }
         .school-name {
-            font-size: 15pt;
+            font-size: 18pt;
+            font-weight: 900;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .school-sub {
+            font-size: 8pt;
+            color: var(--text-grey);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+        .school-legal {
+            font-size: 7pt;
+            color: #666;
+            line-height: 1.2;
+        }
+
+        /* === 5. PIE DE PÁGINA FLOTANTE === */
+        .footer-container {
+            position: running(footer);
+            width: 100%;
+            border-top: 1px solid var(--accent-gold);
+            padding-top: 8px;
+            font-family: 'Arial', sans-serif;
+            font-size: 7pt;
+            color: #888;
+            text-align: center;
+        }
+
+        /* === 6. MARCA DE AGUA (WATERMARK) === */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 80%; /* Más grande */
+            transform: translate(-50%, -50%); /* Centrado perfecto */
+            opacity: 0.04; 
+            z-index: -1000;
+            filter: grayscale(100%);
+        }
+
+        /* === 7. TÍTULO DEL REPORTE === */
+        .doc-title-box {
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            border: 1px solid var(--line-color);
+            padding: 8px;
+        }
+        .doc-title {
+            font-family: 'Arial', sans-serif;
+            font-size: 14pt;
             font-weight: bold;
-            color: var(--primary);
+            color: var(--primary-blue);
             text-transform: uppercase;
             margin: 0;
             letter-spacing: 0.5px;
         }
-        .school-legal {
-            font-size: 7.5pt;
-            color: #555;
-            margin-top: 4px;
-            line-height: 1.2;
-        }
 
-        /* === PIE DE PÁGINA === */
-        .footer-container {
-            position: running(footer);
-            width: 100%;
-            border-top: 1px solid var(--border);
-            padding-top: 8px;
-            font-size: 8pt;
-            color: #7f8c8d;
-            text-align: center;
-        }
-
-        /* === MARCA DE AGUA (Fondo Institucional) === */
-        .watermark {
-            position: fixed;
-            top: 35%;
-            left: 25%;
-            width: 50%;
-            opacity: 0.05; /* Muy sutil para no estorbar lectura */
-            z-index: -1000;
-            transform: rotate(-30deg);
-            filter: grayscale(100%);
-        }
-
-        /* === TÍTULO DEL DOCUMENTO === */
-        .doc-title {
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 25px;
-        }
-        .doc-title h2 {
-            font-size: 14pt;
-            color: var(--primary);
-            text-transform: uppercase;
-            background-color: var(--light);
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        /* === TABLA DE METADATOS (Estudiante) === */
+        /* === 8. TABLA DE DATOS (METADATA) === */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
-            font-size: 10pt;
+            font-family: 'Arial', sans-serif;
+            font-size: 9pt;
         }
         .meta-table td {
             padding: 6px 10px;
-            border: 1px solid var(--border);
+            border: 1px solid #ccc;
         }
         .label {
             font-weight: bold;
-            color: var(--primary);
-            width: 20%;
-            background-color: #f0f3f5;
+            color: var(--primary-blue);
+            background-color: #eef2f5;
+            width: 18%;
             text-transform: uppercase;
-            font-size: 9pt;
         }
-        .value {
-            width: 30%;
-        }
-        .full-width {
-            width: 80%;
-        }
+        .value { width: 32%; }
+        .full-val { width: 82%; font-style: italic; }
 
-        /* === CONTENIDO DEL REPORTE (Markdown renderizado) === */
+        /* === 9. CONTENIDO DEL INFORME (Body) === */
         .content-body {
-            min-height: 400px;
+            min-height: 450px;
+            margin-bottom: 40px;
         }
-        .content-body h1, .content-body h2 {
-            color: var(--primary);
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
+        /* Estilos específicos para el Markdown convertido */
+        .content-body h1 {
+            font-size: 14pt; 
+            color: var(--primary-blue); 
+            border-bottom: 2px solid var(--accent-gold); 
+            padding-bottom: 3px;
             margin-top: 25px;
-            font-size: 13pt;
+        }
+        .content-body h2 {
+            font-size: 12pt; 
+            color: #333; 
+            font-weight: bold; 
+            margin-top: 20px;
+            text-transform: uppercase;
         }
         .content-body h3 {
-            color: #444;
-            font-size: 12pt;
+            font-size: 11pt; 
+            font-weight: bold; 
+            color: #555;
             margin-top: 15px;
-            font-weight: bold;
         }
-        .content-body ul { margin-left: 15px; padding-left: 15px; }
-        .content-body li { margin-bottom: 4px; }
-        .content-body strong { color: #000; font-weight: 700; }
-        .content-body p { margin-bottom: 10px; }
+        .content-body ul { margin-left: 20px; padding-left: 10px; }
+        .content-body li { margin-bottom: 5px; text-align: justify; }
+        .content-body p { margin-bottom: 12px; text-align: justify; }
+        .content-body strong { color: #000; }
 
-        /* === ZONA DE FIRMAS (Al final) === */
+        /* === 10. ZONA DE FIRMAS === */
         .signatures-wrapper {
-            margin-top: 60px;
+            margin-top: 50px;
             page-break-inside: avoid;
             width: 100%;
+            font-family: 'Arial', sans-serif;
         }
-        .sig-table { width: 100%; margin-top: 40px; }
+        .sig-table { width: 100%; border-collapse: collapse; border: none; }
         .sig-cell {
             width: 40%;
             text-align: center;
             vertical-align: top;
+            border: none;
         }
         .sig-line {
             border-top: 1px solid #000;
-            margin: 0 30px 5px 30px;
+            margin: 0 20px 5px 20px;
+            height: 1px;
         }
         .sig-name {
             font-weight: bold;
-            font-size: 10pt;
+            font-size: 9pt;
             text-transform: uppercase;
+            margin-bottom: 2px;
         }
         .sig-role {
-            font-size: 9pt;
+            font-size: 8pt;
             color: #666;
             text-transform: uppercase;
         }
+        
+        /* Espaciador de firmas */
+        .sig-space { height: 70px; } 
+
     </style>
 </head>
 <body>
@@ -207,16 +221,17 @@
                     {% if institucion.logo %}
                         <img src="{{ institucion.logo.path }}" class="logo-img">
                     {% else %}
-                        <div style="font-size: 30pt; color: #ccc;">🏛️</div>
+                        <div style="font-size: 35pt; color: #ccc; text-align: center;">🏛️</div>
                     {% endif %}
                 </td>
                 <td class="info-cell">
-                    <h1 class="school-name">{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA" }}</h1>
+                    <h1 class="school-name">{{ institucion.nombre|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
+                    <div class="school-sub">EXCELENCIA ACADÉMICA Y FORMACIÓN INTEGRAL</div>
                     <div class="school-legal">
-                        NIT: {{ institucion.nit|default:"800.000.000-0" }} | DANE: {{ institucion.dane|default:"123456789012" }}<br>
-                        Resolución de Aprobación No. {{ institucion.resolucion|default:"0000" }} del {{ institucion.fecha_resolucion|default:"01/01/2020" }}<br>
-                        {{ institucion.direccion|default:"Dirección Institucional" }} | {{ institucion.telefono|default:"Teléfono Oficial" }}<br>
-                        {{ institucion.email|default:"contacto@institucion.edu.co" }}
+                        NIT: {{ institucion.nit|default:"800.000.000-0" }} &nbsp;|&nbsp; DANE: {{ institucion.dane|default:"000000000000" }}<br>
+                        Aprobación Oficial No. {{ institucion.resolucion|default:"0000" }} del {{ institucion.fecha_resolucion|default:"01/01/2020" }}<br>
+                        {{ institucion.direccion|default:"Dirección Principal, Ciudad" }} &nbsp;|&nbsp; PBX: {{ institucion.telefono|default:"(601) 000 0000" }}<br>
+                        {{ institucion.email|default:"info@institucion.edu.co" }}
                     </div>
                 </td>
             </tr>
@@ -224,13 +239,17 @@
     </div>
 
     <div class="footer-container">
-        Documento oficial generado por la Plataforma Educativa Learning Labs. <br>
-        La información contenida es de carácter pedagógico y confidencial.<br>
-        Página <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span>
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="text-align: left; width: 33%; border: none;">Generado por: Learning Labs v2.0</td>
+                <td style="text-align: center; width: 33%; border: none; font-weight: bold;">USO CONFIDENCIAL</td>
+                <td style="text-align: right; width: 33%; border: none;">Pág. <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span></td>
+            </tr>
+        </table>
     </div>
 
-    <div class="doc-title">
-        <h2>INFORME DE ANÁLISIS ESTRATÉGICO I.A.</h2>
+    <div class="doc-title-box">
+        <h2 class="doc-title">INFORME DE ANÁLISIS ESTRATÉGICO I.A.</h2>
     </div>
 
     <table class="meta-table">
@@ -238,23 +257,24 @@
             <td class="label">ESTUDIANTE:</td>
             <td class="value"><strong>{{ objetivo.get_full_name|default:objetivo.username|upper }}</strong></td>
             <td class="label">IDENTIFICACIÓN:</td>
-            <td class="value">{{ objetivo.username }}</td> </tr>
+            <td class="value">{{ objetivo.username }}</td>
+        </tr>
         <tr>
             <td class="label">SOLICITADO POR:</td>
             <td class="value">{{ solicitante.get_full_name|title }}</td>
-            <td class="label">CARGO/ROL:</td>
+            <td class="label">ROL/CARGO:</td>
             <td class="value">{{ solicitante.perfil.rol|title }}</td>
         </tr>
         <tr>
-            <td class="label">TIPO DE ANÁLISIS:</td>
+            <td class="label">TIPO REPORTE:</td>
             <td class="value">{{ tipo_reporte }}</td>
             <td class="label">FECHA EMISIÓN:</td>
             <td class="value">{{ fecha_impresion|date:"d/m/Y - h:i A" }}</td>
         </tr>
         {% if query_original %}
         <tr>
-            <td class="label">FOCO / TEMA:</td>
-            <td colspan="3" class="full-width"><em>"{{ query_original }}"</em></td>
+            <td class="label">FOCO TEMÁTICO:</td>
+            <td colspan="3" class="full-val">"{{ query_original }}"</td>
         </tr>
         {% endif %}
     </table>
@@ -267,21 +287,24 @@
         <table class="sig-table">
             <tr>
                 <td class="sig-cell">
-                    <div style="height: 50px;"></div> <div class="sig-line"></div>
+                    <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ solicitante.get_full_name|default:solicitante.username|upper }}</div>
                     <div class="sig-role">PROFESIONAL RESPONSABLE</div>
+                    <div class="sig-role">C.C. _______________</div>
                 </td>
-                <td style="width: 20%;"></td> <td class="sig-cell">
-                    <div style="height: 50px;"></div> <div class="sig-line"></div>
+                
+                <td style="width: 20%; border: none;"></td> <td class="sig-cell">
+                    <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
-                    <div class="sig-role">RECIBIDO / VISTO BUENO</div>
+                    <div class="sig-role">RECIBIDO A SATISFACCIÓN</div>
+                    <div class="sig-role">FECHA: ____/____/______</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <div style="margin-top: 30px; font-size: 7pt; color: #999; text-align: center;">
-        * Este reporte contiene sugerencias generadas mediante Inteligencia Artificial y debe ser validado por el criterio del profesional a cargo.
+    <div style="text-align: center; font-size: 6pt; color: #aaa; margin-top: 20px;">
+        * Documento de apoyo pedagógico generado mediante Inteligencia Artificial. Su contenido debe ser validado por el profesional a cargo bajo su criterio y responsabilidad.
     </div>
 
 </body>
