@@ -7,11 +7,10 @@
         /* === 1. CONFIGURACIÓN DE PÁGINA (A4 OFICIAL) === */
         @page {
             size: A4;
-            /* Aumentamos el margen superior para que el logo respire */
-            margin-top: 4.5cm;     
-            margin-bottom: 2.5cm;
-            margin-left: 2.5cm;
-            margin-right: 2.5cm;
+            margin-top: 4.5cm;     /* Margen superior amplio para encabezado */
+            margin-bottom: 2.5cm;  /* Margen inferior para pie de página */
+            margin-left: 2.5cm;    /* Margen izquierdo estándar */
+            margin-right: 2.5cm;   /* Margen derecho estándar */
 
             /* Definimos las cajas flotantes */
             @top-center { content: element(header); }
@@ -20,32 +19,32 @@
 
         /* === 2. TIPOGRAFÍA Y CUERPO === */
         body {
-            font-family: 'Times New Roman', serif;
-            color: #1a1a1a;
+            font-family: 'Georgia', 'Times New Roman', serif; /* Elegancia académica */
+            color: #2c3e50;
             font-size: 11pt;
-            line-height: 1.5; 
+            line-height: 1.6; /* Lectura cómoda */
             text-align: justify;
             margin: 0; 
             padding: 0;
         }
 
-        /* === 3. PALETA DE COLORES === */
+        /* === 3. PALETA DE COLORES PREMIUM === */
         :root {
-            --primary: #002B5B; /* Azul Oxford */
-            --accent: #C5A059;  /* Dorado Académico */
-            --text-light: #555;
-            --border: #dcdde1;
+            --primary: #002B5B; /* Azul Oxford Profundo */
+            --accent: #C5A059;  /* Dorado Antiguo */
+            --text-grey: #555;
+            --border: #e0e0e0;
+            --bg-table: #f9f9f9;
         }
 
         /* === 4. ENCABEZADO FIJO (Se repite en todas las páginas) === */
         .header-container {
             position: running(header);
             width: 100%;
-            /* Quitamos el margen negativo que lo pegaba al borde */
-            margin-top: 0; 
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 15px; /* Más espacio abajo del logo */
-            margin-bottom: 0px;
+            margin-top: 0; /* Sin margen negativo para respetar el borde */
+            border-bottom: 3px solid var(--primary); /* Línea sólida de autoridad */
+            padding-bottom: 15px;
+            margin-bottom: 0;
         }
         
         .header-table { 
@@ -57,10 +56,9 @@
             width: 20%; 
             vertical-align: middle; 
             text-align: left;
-            padding-top: 10px; /* Un poco de aire arriba del logo */
+            padding-top: 10px;
         }
         
-        /* Estilo para el logo */
         .logo-img { 
             height: 90px; 
             width: 90px; 
@@ -72,31 +70,32 @@
             width: 80%; 
             text-align: right; 
             vertical-align: middle; 
-            font-family: Helvetica, Arial, sans-serif; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
             padding-top: 10px;
         }
         
         .school-name {
-            font-size: 16pt;
+            font-size: 18pt;
             font-weight: 900;
             color: var(--primary);
             text-transform: uppercase;
             margin: 0;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
         
         .school-sub {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: var(--accent);
             text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
         }
         
         .school-legal {
-            font-size: 7pt;
-            color: var(--text-light);
-            line-height: 1.3;
+            font-size: 7.5pt;
+            color: var(--text-grey);
+            line-height: 1.4;
         }
 
         /* === 5. PIE DE PÁGINA === */
@@ -105,8 +104,8 @@
             width: 100%;
             border-top: 1px solid var(--accent);
             padding-top: 10px;
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 7pt;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 7.5pt;
             color: #888;
             text-align: center;
         }
@@ -116,9 +115,9 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 70%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            opacity: 0.08; /* Transparencia ideal */
+            width: 65%;
+            transform: translate(-50%, -50%); /* Centrado geométrico */
+            opacity: 0.06; /* Muy sutil */
             z-index: -1000;
             filter: grayscale(100%);
         }
@@ -126,76 +125,78 @@
         /* === 7. TÍTULO DEL DOCUMENTO === */
         .doc-title-box {
             text-align: center;
-            margin-top: 20px; /* Separación del encabezado */
-            margin-bottom: 30px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
+            margin-top: 25px;
+            margin-bottom: 35px;
+            padding: 12px;
+            background-color: var(--bg-table);
+            border: 1px solid var(--border);
+            border-radius: 2px;
         }
         .doc-title {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 14pt;
-            font-weight: bold;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 15pt;
+            font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
             margin: 0;
+            letter-spacing: 0.5px;
         }
 
-        /* === 8. TABLA DE METADATOS === */
+        /* === 8. TABLA DE METADATOS (Minimalista) === */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 9pt;
+            margin-bottom: 35px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
         }
         .meta-table td {
-            padding: 7px 10px;
-            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border); /* Solo líneas horizontales */
             vertical-align: middle;
         }
         .label {
-            font-weight: bold;
+            font-weight: 700;
             color: var(--primary);
-            background-color: #eef2f5;
-            width: 18%;
+            width: 20%;
             text-transform: uppercase;
+            font-size: 8.5pt;
         }
-        .value { width: 32%; }
-        .full-val { width: 82%; font-style: italic; color: #555; }
+        .value { width: 30%; color: #333; }
+        .full-val { width: 80%; font-style: italic; color: #555; }
 
         /* === 9. CONTENIDO DEL REPORTE === */
         .content-body {
             width: 100%;
-            overflow: hidden; 
+            overflow: hidden;
+            margin-bottom: 50px;
         }
-        /* Estilos específicos para el Markdown de la IA */
+        /* Estilos Markdown */
         .content-body h1 { 
-            font-size: 13pt; color: var(--primary); 
+            font-size: 14pt; color: var(--primary); 
             border-bottom: 2px solid var(--accent); 
-            padding-bottom: 3px; margin-top: 25px; 
-            font-family: Helvetica, Arial, sans-serif;
+            padding-bottom: 5px; margin-top: 30px; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         .content-body h2 { 
-            font-size: 12pt; color: #333; font-weight: bold; 
-            margin-top: 20px; text-transform: uppercase;
-            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12.5pt; color: #333; font-weight: 700; 
+            margin-top: 25px; text-transform: uppercase;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         .content-body h3 { 
-            font-size: 11pt; font-weight: bold; color: #555; margin-top: 15px; 
+            font-size: 11.5pt; font-weight: 700; color: #555; margin-top: 20px; 
         }
         .content-body ul { margin-left: 20px; padding-left: 10px; }
-        .content-body li { margin-bottom: 5px; }
-        .content-body p { margin-bottom: 12px; }
-        .content-body strong { color: #000; font-weight: bold; }
+        .content-body li { margin-bottom: 8px; }
+        .content-body p { margin-bottom: 15px; }
+        .content-body strong { color: var(--primary); font-weight: 700; }
 
         /* === 10. FIRMAS === */
         .signatures-wrapper {
             margin-top: 60px;
             page-break-inside: avoid;
             width: 100%;
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         .sig-table { width: 100%; border-collapse: collapse; border: none; }
         .sig-cell {
@@ -204,22 +205,24 @@
             vertical-align: top;
         }
         .sig-line {
-            border-top: 1px solid #000;
-            margin: 0 20px 5px 20px;
+            border-top: 1px solid #333;
+            margin: 0 25px 8px 25px;
             height: 1px;
         }
         .sig-name {
-            font-weight: bold;
-            font-size: 9pt;
+            font-weight: 700;
+            font-size: 9.5pt;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            color: #000;
         }
         .sig-role {
             font-size: 8pt;
             color: #666;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .sig-space { height: 70px; }
+        .sig-space { height: 80px; }
 
     </style>
 </head>
@@ -253,7 +256,7 @@
         <table style="width: 100%; border: none;">
             <tr>
                 <td style="text-align: left; width: 33%; border: none;">Plataforma Learning Labs</td>
-                <td style="text-align: center; width: 33%; border: none; font-weight: bold; color: #555;">CONFIDENCIAL</td>
+                <td style="text-align: center; width: 33%; border: none; font-weight: bold; color: #555;">DOCUMENTO CONFIDENCIAL</td>
                 <td style="text-align: right; width: 33%; border: none;">Pág. <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span></td>
             </tr>
         </table>
@@ -301,7 +304,7 @@
                     <div class="sig-space"></div>
                     <div class="sig-line"></div>
                     <div class="sig-name">{{ solicitante.get_full_name|default:solicitante.username|upper }}</div>
-                    <div class="sig-role">PROFESIONAL RESPONSABLE</div>
+                    <div class="sig-role">{{ solicitante.perfil.rol|default:"DOCENTE" }}</div>
                     <div class="sig-role" style="font-weight: normal; margin-top: 3px; font-size: 7pt;">Firma Digital / Electrónica</div>
                 </td>
                 
@@ -318,7 +321,7 @@
         </table>
     </div>
 
-    <div style="text-align: center; font-size: 6pt; color: #999; margin-top: 30px; border-top: 1px dotted #ccc; padding-top: 5px;">
+    <div style="text-align: center; font-size: 7pt; color: #999; margin-top: 35px; border-top: 1px dotted #ccc; padding-top: 8px;">
         * Este documento ha sido generado mediante algoritmos de Inteligencia Artificial como herramienta de apoyo pedagógico. Su contenido debe ser validado por el profesional a cargo bajo su criterio y responsabilidad ética.
     </div>
 
