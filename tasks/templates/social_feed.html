@@ -60,7 +60,6 @@
         --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-        --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
         
         --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -276,8 +275,6 @@
     }
 
     /* === FEED CENTRAL === */
-    
-    /* Crear Post */
     .create-post-card { padding: 20px 24px; }
     .post-input-trigger {
         background: #f0f2f5;
@@ -382,69 +379,36 @@
         outline: none; background: #e4e6eb;
     }
 
-    /* === RESPONSIVE FIX DEFINITIVO (TIER 50 MOBILE) === */
-    /* AQUÍ ESTÁ LA SOLUCIÓN QUE FORZA QUE TODO SE VEA */
+    /* === CSS PARA RESPONSIVE Y UTILIDADES === */
+    /* Ya no dependemos de un Media Query complejo para ocultar/mostrar */
+    /* Dejamos que Bootstrap haga el trabajo con las clases order-* y col-* */
     
     @media (max-width: 991.98px) {
         .feed-container {
             padding-left: 10px;
             padding-right: 10px;
         }
-
-        /* 1. Usar Flexbox Columna en el ROW principal */
-        .feed-container > .row {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 2. REORDENAMIENTO LÓGICO Y FORZADO DE VISIBILIDAD */
-        /* Usamos !important para asegurar que Bootstrap no oculte nada */
         
-        /* A. Barra Lateral Izquierda (Buscador/Grupos) -> ARRIBA */
-        .col-sidebar {
-            order: 1;
-            width: 100% !important;
-            flex: 0 0 100% !important;
-            max-width: 100% !important;
-            display: block !important; /* CRUCIAL: Muestra el buscador y grupos */
-            margin-bottom: 20px;
-        }
-
-        /* B. Feed Principal -> CENTRO */
-        .col-main-feed {
-            order: 2;
-            width: 100% !important;
-            flex: 0 0 100% !important;
-            max-width: 100% !important;
-            display: block !important;
-            margin-bottom: 20px;
-        }
-
-        /* C. Barra Lateral Derecha (Video/Calendario) -> ABAJO */
-        .col-right-sidebar {
-            order: 3;
-            width: 100% !important;
-            flex: 0 0 100% !important;
-            max-width: 100% !important;
-            display: block !important; /* CRUCIAL: Muestra el video y calendario */
-            margin-bottom: 40px;
-        }
-        
-        /* Ajustes específicos de mobile */
+        /* Ajuste estético para tarjetas en móvil */
         .sidebar-card, .post-card {
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
             border-radius: 12px;
         }
-        .sidebar-card { position: static !important; }
+        
+        /* En móvil, el sidebar derecho (video) tiene margen inferior extra */
+        .col-right-sidebar {
+            margin-bottom: 60px !important; 
+        }
     }
 </style>
 
 <div class="container feed-container">
-    <div class="row">
+    {# AQUI ESTA EL CAMBIO CLAVE: Usamos flex-column (móvil) y flex-lg-row (escritorio) explícitamente #}
+    <div class="row d-flex flex-column flex-lg-row">
         
         {# --- COLUMNA 1: SIDEBAR IZQUIERDA (BUSCADOR Y GRUPOS) --- #}
-        {# La clase col-sidebar ahora es forzada a mostrarse en mobile por el CSS #}
-        <div class="col-md-4 col-lg-3 col-sidebar">
+        {# order-1: Aparece primero en móvil. col-12: Ocupa todo el ancho en móvil #}
+        {# style="display: block !important": Obliga a mostrarse sí o sí #}
+        <div class="col-12 col-md-4 col-lg-3 order-1 order-lg-1 col-sidebar" style="display: block !important;">
             
             <div class="sidebar-search-card">
                 <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
@@ -526,8 +490,8 @@
         </div>
 
         {# --- COLUMNA 2: FEED CENTRAL --- #}
-        {# La clase col-main-feed ahora es forzada a mostrarse en mobile por el CSS #}
-        <div class="col-md-8 col-lg-6 col-main-feed">
+        {# order-2: Aparece segundo en móvil. col-12: Ancho total en móvil #}
+        <div class="col-12 col-md-8 col-lg-6 order-2 order-lg-2 col-main-feed" style="display: block !important;">
             
             <div class="create-post-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -770,8 +734,9 @@
         </div>
 
         {# --- COLUMNA 3: SIDEBAR DERECHA (VIDEO Y CALENDARIO) --- #}
-        {# La clase col-right-sidebar ahora es forzada a mostrarse en mobile por el CSS #}
-        <div class="col-lg-3 col-right-sidebar">
+        {# order-3: Aparece tercero en móvil (después del feed). col-12: Ancho total en móvil #}
+        {# style="display: block !important": Obliga a mostrarse sí o sí #}
+        <div class="col-12 col-lg-3 order-3 order-lg-3 col-right-sidebar" style="display: block !important;">
             <div class="sidebar-card">
                 <h6 class="sidebar-title mb-3"><i class="fas fa-video me-2"></i> VIDEO DESTACADO</h6>
                 <div class="video-responsive">
@@ -810,7 +775,7 @@
     </div>
 </div>
 
-{# --- MODALES (Con efecto Glassmorphism y sombras mejoradas) --- #}
+{# --- MODALES --- #}
 <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-black shadow-2xl rounded-4 overflow-hidden">
@@ -1002,7 +967,6 @@
             } else {
                 console.error('Error en reacción:', data.error);
                 if (tipo === 'post') {
-                    // Revert UI if error
                     if (isLiked) {
                         btn.classList.add('active-primary');
                         icon.classList.remove('far');
