@@ -38,27 +38,27 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --feed-bg: #f0f2f5; 
+        --feed-bg: #f3f4f6; 
         --card-bg: #ffffff;
-        --text-primary: #1c1e21;
-        --text-secondary: #65676b;
-        --text-tertiary: #b0b3b8;
+        --text-primary: #111827; 
+        --text-secondary: #6b7280; 
+        --text-tertiary: #9ca3af;
         
-        --primary-color: #2563eb; /* Azul Royal */
-        --primary-hover: #1d4ed8;
-        --primary-light: #eff6ff;
+        --primary-color: #4f46e5; 
+        --primary-hover: #4338ca;
+        --primary-light: #e0e7ff;
         
         --success-color: #10b981;
         --danger-color: #ef4444;
         --warning-color: #f59e0b;
         
-        --border-radius-xl: 20px;
-        --border-radius-lg: 16px;
-        --border-radius-md: 12px;
+        --border-radius-xl: 1.5rem; 
+        --border-radius-lg: 1rem;
+        --border-radius-md: 0.75rem;
         
         /* Sombras de alta fidelidad */
         --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
         --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
         
@@ -148,7 +148,7 @@
     }
     .group-item:hover {
         background-color: var(--primary-light);
-        border-color: rgba(37, 99, 235, 0.1);
+        border-color: rgba(79, 70, 229, 0.1);
     }
     .group-img-sidebar {
         width: 44px;
@@ -171,13 +171,13 @@
         padding: 6px 14px;
         border-radius: 20px;
         font-weight: 700;
-        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
     }
 
     /* Buscador */
     .sidebar-search-card { padding: 20px; }
     .sidebar-search-input {
-        background: #f3f4f6;
+        background: #f9fafb;
         border: 2px solid transparent;
         border-radius: var(--border-radius-md);
         padding: 12px 15px 12px 45px;
@@ -205,7 +205,7 @@
         letter-spacing: 0.5px;
         cursor: pointer;
         transition: var(--transition);
-        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
     }
     .sidebar-search-button:hover {
         background-color: var(--primary-hover);
@@ -237,7 +237,7 @@
         overflow: hidden;
     }
     .calendar-header {
-        background: linear-gradient(135deg, var(--primary-color), #6366f1);
+        background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
         color: white;
         padding: 16px;
         font-weight: 800;
@@ -271,7 +271,7 @@
         background-color: var(--primary-color);
         color: white !important;
         font-weight: 800;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
         transform: scale(1.05);
     }
 
@@ -366,7 +366,7 @@
         border-top: 1px solid var(--divider);
     }
     .comment-bubble {
-        background: #f0f2f5; padding: 8px 12px;
+        background: #f0f2f5; padding: 12px 16px;
         border-radius: 18px; display: inline-block;
     }
     .comment-input {
@@ -429,7 +429,6 @@
         /* Ajustes específicos de mobile */
         .sidebar-card, .post-card {
             box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Sombras más ligeras en móvil */
-            border-radius: 0; /* Full width look si se desea, o mantener radius */
             border-radius: 12px;
         }
         .sidebar-card { position: static !important; } /* Quitar sticky en móvil */
@@ -526,28 +525,28 @@
         <div class="col-md-8 col-lg-6 col-main-feed">
             
             <div class="create-post-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="create-post-top d-flex align-items-center gap-3">
                     {% if user.perfil.foto_perfil %}
-                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm" style="width: 48px; height: 48px; border-radius: 50%;">
+                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm">
                     {% else %}
-                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold" style="width: 48px; height: 48px; border-radius: 50%;">
+                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold">
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}
                     
-                    <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                    <div class="post-input-trigger shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
                         <span>¿Qué estás pensando, {{ user.first_name }}?</span>
                     </div>
                 </div>
-                <div class="create-post-actions">
-                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-video text-danger"></i> <span>Video</span>
+                <div class="create-post-actions d-flex justify-content-around mt-3 pt-2 border-top">
+                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-video text-danger"></i> Video
                     </button>
-                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-images text-success"></i> <span>Foto</span>
+                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-images text-success"></i> Foto
                     </button>
-                    <button class="cp-action-btn" id="emoji-trigger-main">
-                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> <span>Feeling</span>
+                    <button class="action-btn" id="emoji-trigger-main">
+                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Ánimo
                     </button>
                 </div>
             </div>
@@ -583,7 +582,7 @@
                                 <span title="{{ post.creado_en }}">
                                     {{ post.creado_en|naturaltime }}
                                 </span>
-                                <i class="fas fa-globe-americas ms-2"></i>
+                                <i class="fas fa-globe-americas ms-2 opacity-50"></i>
                             </div>
                         </div>
                         
@@ -648,11 +647,11 @@
                                         <i class="fas fa-thumbs-up"></i>
                                     </div>
                                     <span class="ms-2 small fw-bold text-dark" id="liked-by-text-{{ post.id }}">
-                                        {{ post.total_reacciones }}
+                                        {{ post.total_reacciones }} likes
                                     </span>
                                 </div>
                             {% else %}
-                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero</span>
+                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
                             {% endif %}
                         </div>
                         <div class="comments-count small fw-bold text-muted cursor-pointer" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
@@ -681,9 +680,9 @@
                                 <div class="comment-item" id="comment-{{ comentario.id }}">
                                     <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="flex-shrink-0">
                                         {% if comentario.autor.perfil.foto_perfil %}
-                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 32px; height: 32px; border-width: 0;">
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 36px; height: 36px; border-width: 0;">
                                         {% else %}
-                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 36px; height: 36px; font-size: 0.8rem;">
                                                 {{ comentario.autor.username|slice:":1"|upper }}
                                             </div>
                                         {% endif %}
@@ -715,9 +714,9 @@
                             
                             <div class="comment-input-area d-flex gap-2 mt-4 align-items-center">
                                 {% if user.perfil.foto_perfil %}
-                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 32px; height: 32px; border: 0;">
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 40px; height: 40px; border: 0;">
                                 {% else %}
-                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 32px; height: 32px;"></div>
+                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 40px; height: 40px;"></div>
                                 {% endif %}
                                 
                                 <form method="POST" action="." class="w-100 position-relative">
@@ -727,7 +726,7 @@
                                     
                                     <input type="text" name="contenido" class="comment-input w-100 ps-3 pe-5" placeholder="Escribe un comentario..." required autocomplete="off">
                                     <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-2 hover-scale">
-                                        <i class="fas fa-paper-plane"></i>
+                                        <i class="fas fa-paper-plane fa-lg"></i>
                                     </button>
                                 </form>
                             </div>
@@ -738,7 +737,7 @@
                     <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
                         <div class="mb-4">
                             <div class="bg-light d-inline-block rounded-circle p-4 text-primary">
-                                <i class="fas fa-stream fa-3x"></i>
+                                <i class="fas fa-stream fa-3x text-muted"></i>
                             </div>
                         </div>
                         <h4 class="fw-bold text-dark mb-2">¡Tu muro está tranquilo!</h4>
@@ -1169,7 +1168,7 @@
         }
     });
 
-    // 🔥 SCRIPT DEL CALENDARIO (TOTALMENTE AISLADO Y AUTOEJECUTABLE) 🔥
+    // 🔥 SCRIPT DEL CALENDARIO (LÓGICA INTACTA) 🔥
     (function() {
         function initRealTimeCalendar() {
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -1189,11 +1188,9 @@
             // 2. Días
             const daysContainer = document.getElementById('calendar-days');
             if (daysContainer) {
-                // Limpiar contenido previo (por si acaso)
                 daysContainer.innerHTML = '';
                 
                 const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
-                // Ajustar para que Lunes sea 0 y Domingo 6
                 const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
                 
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1214,11 +1211,10 @@
             // 3. Footer (Día actual)
             const footerEl = document.getElementById('calendar-today-display');
             if (footerEl) {
-                footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
+                footerEl.innerHTML = `<i class="far fa-clock me-1 text-primary"></i> Hoy es <strong class="text-dark">${today} de ${monthNames[month]}</strong>`;
             }
         }
 
-        // Ejecutar inmediatamente si el DOM está listo, o esperar
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initRealTimeCalendar);
         } else {
