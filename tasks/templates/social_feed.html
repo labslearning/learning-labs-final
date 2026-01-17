@@ -38,27 +38,27 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --feed-bg: #f3f4f6; /* Gris muy suave, profesional y descansado */
+        --feed-bg: #f0f2f5; 
         --card-bg: #ffffff;
-        --text-primary: #111827; /* Casi negro para máxima legibilidad */
-        --text-secondary: #6b7280; /* Gris medio elegante */
-        --text-tertiary: #9ca3af;
+        --text-primary: #1c1e21;
+        --text-secondary: #65676b;
+        --text-tertiary: #b0b3b8;
         
-        --primary-color: #4f46e5; /* Indigo vibrante moderno */
-        --primary-hover: #4338ca;
-        --primary-light: #e0e7ff;
+        --primary-color: #2563eb; /* Azul Royal */
+        --primary-hover: #1d4ed8;
+        --primary-light: #eff6ff;
         
         --success-color: #10b981;
         --danger-color: #ef4444;
         --warning-color: #f59e0b;
         
-        --border-radius-xl: 1.5rem; /* Bordes muy redondeados modernos */
-        --border-radius-lg: 1rem;
-        --border-radius-md: 0.75rem;
+        --border-radius-xl: 20px;
+        --border-radius-lg: 16px;
+        --border-radius-md: 12px;
         
         /* Sombras de alta fidelidad */
         --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
         --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
         
@@ -67,7 +67,7 @@
 
     body {
         background-color: var(--feed-bg);
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Inter', sans-serif;
         color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
     }
@@ -148,7 +148,7 @@
     }
     .group-item:hover {
         background-color: var(--primary-light);
-        border-color: rgba(79, 70, 229, 0.1);
+        border-color: rgba(37, 99, 235, 0.1);
     }
     .group-img-sidebar {
         width: 44px;
@@ -171,13 +171,13 @@
         padding: 6px 14px;
         border-radius: 20px;
         font-weight: 700;
-        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
 
     /* Buscador */
     .sidebar-search-card { padding: 20px; }
     .sidebar-search-input {
-        background: #f9fafb;
+        background: #f3f4f6;
         border: 2px solid transparent;
         border-radius: var(--border-radius-md);
         padding: 12px 15px 12px 45px;
@@ -205,7 +205,7 @@
         letter-spacing: 0.5px;
         cursor: pointer;
         transition: var(--transition);
-        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
     }
     .sidebar-search-button:hover {
         background-color: var(--primary-hover);
@@ -237,7 +237,7 @@
         overflow: hidden;
     }
     .calendar-header {
-        background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+        background: linear-gradient(135deg, var(--primary-color), #6366f1);
         color: white;
         padding: 16px;
         font-weight: 800;
@@ -271,7 +271,7 @@
         background-color: var(--primary-color);
         color: white !important;
         font-weight: 800;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
         transform: scale(1.05);
     }
 
@@ -383,7 +383,7 @@
     }
 
     /* === RESPONSIVE FIX DEFINITIVO (TIER 50 MOBILE) === */
-    /* Aquí ocurre la magia para que aparezca todo en el celular */
+    /* AQUÍ ESTÁ LA SOLUCIÓN QUE FORZA QUE TODO SE VEA */
     
     @media (max-width: 991.98px) {
         .feed-container {
@@ -397,14 +397,16 @@
             flex-direction: column;
         }
 
-        /* 2. REORDENAMIENTO LÓGICO */
+        /* 2. REORDENAMIENTO LÓGICO Y FORZADO DE VISIBILIDAD */
+        /* Usamos !important para asegurar que Bootstrap no oculte nada */
         
         /* A. Barra Lateral Izquierda (Buscador/Grupos) -> ARRIBA */
         .col-sidebar {
             order: 1;
             width: 100% !important;
+            flex: 0 0 100% !important;
             max-width: 100% !important;
-            display: block !important; /* Fuerza bruta para mostrar */
+            display: block !important; /* CRUCIAL: Muestra el buscador y grupos */
             margin-bottom: 20px;
         }
 
@@ -412,6 +414,7 @@
         .col-main-feed {
             order: 2;
             width: 100% !important;
+            flex: 0 0 100% !important;
             max-width: 100% !important;
             display: block !important;
             margin-bottom: 20px;
@@ -421,18 +424,18 @@
         .col-right-sidebar {
             order: 3;
             width: 100% !important;
+            flex: 0 0 100% !important;
             max-width: 100% !important;
-            display: block !important; /* Fuerza bruta para mostrar */
+            display: block !important; /* CRUCIAL: Muestra el video y calendario */
             margin-bottom: 40px;
         }
         
         /* Ajustes específicos de mobile */
         .sidebar-card, .post-card {
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Sombras más ligeras en móvil */
-            border-radius: 0; /* Full width look si se desea, o mantener radius */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
             border-radius: 12px;
         }
-        .sidebar-card { position: static !important; } /* Quitar sticky en móvil */
+        .sidebar-card { position: static !important; }
     }
 </style>
 
@@ -440,7 +443,7 @@
     <div class="row">
         
         {# --- COLUMNA 1: SIDEBAR IZQUIERDA (BUSCADOR Y GRUPOS) --- #}
-        {# NOTA: He eliminado d-none d-lg-block para que el CSS controle la visibilidad #}
+        {# La clase col-sidebar ahora es forzada a mostrarse en mobile por el CSS #}
         <div class="col-md-4 col-lg-3 col-sidebar">
             
             <div class="sidebar-search-card">
@@ -523,19 +526,20 @@
         </div>
 
         {# --- COLUMNA 2: FEED CENTRAL --- #}
+        {# La clase col-main-feed ahora es forzada a mostrarse en mobile por el CSS #}
         <div class="col-md-8 col-lg-6 col-main-feed">
             
             <div class="create-post-card">
-                <div class="create-post-top d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
                     {% if user.perfil.foto_perfil %}
-                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm">
+                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm" style="width: 48px; height: 48px; border-radius: 50%;">
                     {% else %}
-                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold">
+                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold" style="width: 48px; height: 48px; border-radius: 50%;">
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}
                     
-                    <div class="post-input-trigger shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                    <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
                         <span>¿Qué estás pensando, {{ user.first_name }}?</span>
                     </div>
                 </div>
@@ -648,11 +652,11 @@
                                         <i class="fas fa-thumbs-up"></i>
                                     </div>
                                     <span class="ms-2 small fw-bold text-dark" id="liked-by-text-{{ post.id }}">
-                                        {{ post.total_reacciones }} likes
+                                        {{ post.total_reacciones }}
                                     </span>
                                 </div>
                             {% else %}
-                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
+                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero</span>
                             {% endif %}
                         </div>
                         <div class="comments-count small fw-bold text-muted cursor-pointer" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
@@ -681,9 +685,9 @@
                                 <div class="comment-item" id="comment-{{ comentario.id }}">
                                     <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="flex-shrink-0">
                                         {% if comentario.autor.perfil.foto_perfil %}
-                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 36px; height: 36px; border-width: 0;">
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 32px; height: 32px; border-width: 0;">
                                         {% else %}
-                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 36px; height: 36px; font-size: 0.8rem;">
+                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 32px; height: 32px; font-size: 0.8rem;">
                                                 {{ comentario.autor.username|slice:":1"|upper }}
                                             </div>
                                         {% endif %}
@@ -715,9 +719,9 @@
                             
                             <div class="comment-input-area d-flex gap-2 mt-4 align-items-center">
                                 {% if user.perfil.foto_perfil %}
-                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 40px; height: 40px; border: 0;">
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 32px; height: 32px; border: 0;">
                                 {% else %}
-                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 40px; height: 40px;"></div>
+                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 32px; height: 32px;"></div>
                                 {% endif %}
                                 
                                 <form method="POST" action="." class="w-100 position-relative">
@@ -727,7 +731,7 @@
                                     
                                     <input type="text" name="contenido" class="comment-input w-100 ps-3 pe-5" placeholder="Escribe un comentario..." required autocomplete="off">
                                     <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-2 hover-scale">
-                                        <i class="fas fa-paper-plane fa-lg"></i>
+                                        <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </form>
                             </div>
@@ -738,7 +742,7 @@
                     <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
                         <div class="mb-4">
                             <div class="bg-light d-inline-block rounded-circle p-4 text-primary">
-                                <i class="fas fa-stream fa-3x text-muted"></i>
+                                <i class="fas fa-stream fa-3x"></i>
                             </div>
                         </div>
                         <h4 class="fw-bold text-dark mb-2">¡Tu muro está tranquilo!</h4>
@@ -766,7 +770,7 @@
         </div>
 
         {# --- COLUMNA 3: SIDEBAR DERECHA (VIDEO Y CALENDARIO) --- #}
-        {# Eliminadas restricciones de visibilidad #}
+        {# La clase col-right-sidebar ahora es forzada a mostrarse en mobile por el CSS #}
         <div class="col-lg-3 col-right-sidebar">
             <div class="sidebar-card">
                 <h6 class="sidebar-title mb-3"><i class="fas fa-video me-2"></i> VIDEO DESTACADO</h6>
@@ -1169,7 +1173,7 @@
         }
     });
 
-    // 🔥 SCRIPT DEL CALENDARIO (LÓGICA INTACTA) 🔥
+    // 🔥 SCRIPT DEL CALENDARIO (TOTALMENTE AISLADO Y AUTOEJECUTABLE) 🔥
     (function() {
         function initRealTimeCalendar() {
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -1189,9 +1193,11 @@
             // 2. Días
             const daysContainer = document.getElementById('calendar-days');
             if (daysContainer) {
+                // Limpiar contenido previo (por si acaso)
                 daysContainer.innerHTML = '';
                 
                 const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
+                // Ajustar para que Lunes sea 0 y Domingo 6
                 const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
                 
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1212,10 +1218,11 @@
             // 3. Footer (Día actual)
             const footerEl = document.getElementById('calendar-today-display');
             if (footerEl) {
-                footerEl.innerHTML = `<i class="far fa-clock me-1 text-primary"></i> Hoy es <strong class="text-dark">${today} de ${monthNames[month]}</strong>`;
+                footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
             }
         }
 
+        // Ejecutar inmediatamente si el DOM está listo, o esperar
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initRealTimeCalendar);
         } else {
