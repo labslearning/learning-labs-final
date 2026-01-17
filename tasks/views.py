@@ -5212,3 +5212,30 @@ def dashboard_ia_estudiante(request):
         'usuario_nombre': request.user.first_name or request.user.username,
     }
     return render(request, 'tasks/ai_dashboard.html', context)
+
+def api_obtener_likes(request, post_id):
+    # 1. Verificamos que el post exista
+    post = get_object_or_404(Post, id=post_id)
+    
+    # 2. Buscamos todas las reacciones tipo 'LIKE' de ese post
+    # Asumo que tu modelo se llama 'Reaccion' y tiene campos 'post', 'autor' y 'tipo'
+    likes = Reaccion.objects.filter(post=post, tipo='LIKE').select_related('autor__perfil')
+    
+    users_data = []
+    
+    for like in likes:
+        usuario = like.autor
+        
+        # Obtenemos la URL de la foto o null si no tiene
+        avatar_url = None
+        if hasattr(usuario, 'perfil') and usuario.perfil.foto_perfil:
+            avatar_url = usuario.perfil.foto_perfil.url
+            
+        users_data.append({
+            'username': usuario.username,
+            'full_name': usuario.get_full_name() or usuario.username,
+            'avatar_url': avatar_url
+        })
+        
+    # 3. Devolvemos la lista en formato JSON para que el Javascript la lea
+    return JsonResponse({'users': users_data})
