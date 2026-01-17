@@ -3,28 +3,28 @@
 {% load humanize %}
 {% load widget_tweaks %}
 
-{# --- INJERTO QUIRÚRGICO: Botón de Atrás (Lógica Intacta & Estilo Mejorado) --- #}
+{# --- INJERTO QUIRÚRGICO: Botón de Atrás (Estética Tier 50) --- #}
 {% block back_button %}
     <div class="mb-4 animate__animated animate__fadeInDown">
         {% if user.perfil.rol == 'ADMINISTRADOR' %}
             <a href="{% url 'admin_dashboard' %}" class="btn-back-tier-50">
-                <i class="fas fa-arrow-left me-2"></i> Volver al Admin
+                <i class="fas fa-arrow-left"></i> <span>Volver al Admin</span>
             </a>
         {% elif user.perfil.rol == 'DOCENTE' %}
              <a href="{% url 'dashboard_docente' %}" class="btn-back-tier-50">
-                <i class="fas fa-arrow-left me-2"></i> Volver a Notas
+                <i class="fas fa-arrow-left"></i> <span>Volver a Notas</span>
             </a>
         {% elif user.perfil.rol == 'ESTUDIANTE' %}
              <a href="{% url 'dashboard_estudiante' %}" class="btn-back-tier-50">
-                <i class="fas fa-arrow-left me-2"></i> Volver a Mi Panel
+                <i class="fas fa-arrow-left"></i> <span>Volver a Mi Panel</span>
             </a>
         {% elif user.perfil.rol == 'ACUDIENTE' %}
              <a href="{% url 'dashboard_acudiente' %}" class="btn-back-tier-50">
-                <i class="fas fa-arrow-left me-2"></i> Volver al Panel
+                <i class="fas fa-arrow-left"></i> <span>Volver al Panel</span>
             </a>
         {% else %}
             <a href="{% url 'dashboard_bienestar' %}" class="btn-back-tier-50">
-                <i class="fas fa-arrow-left me-2"></i> Volver a Bienestar
+                <i class="fas fa-arrow-left"></i> <span>Volver a Bienestar</span>
             </a>
         {% endif %}
     </div>
@@ -34,61 +34,65 @@
 <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.0/dist/index.min.js"></script>
 
 <style>
-    /* === EDTECH TIER 50 DESIGN SYSTEM (Premium & Clean) === */
+    /* === EDTECH TIER 50 DESIGN SYSTEM (Premium, Clean & Responsive) === */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
     :root {
-        --feed-bg: #f3f4f6; /* Gris muy suave, profesional y descansado */
+        --feed-bg: #f0f2f5; 
         --card-bg: #ffffff;
-        --text-primary: #111827; /* Casi negro para máxima legibilidad */
-        --text-secondary: #6b7280; /* Gris medio elegante */
-        --action-hover: #f9fafb;
-        --divider: #e5e7eb;
+        --text-primary: #1c1e21;
+        --text-secondary: #65676b;
+        --text-tertiary: #b0b3b8;
         
-        /* Sombras Tier 50: Alta profundidad, suavidad y realismo */
+        --primary-color: #2563eb; /* Azul Royal */
+        --primary-hover: #1d4ed8;
+        --primary-light: #eff6ff;
+        
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        
+        --border-radius-xl: 20px;
+        --border-radius-lg: 16px;
+        --border-radius-md: 12px;
+        
+        /* Sombras de alta fidelidad */
         --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
         --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
         
-        --radius-xl: 1.5rem; /* Bordes muy redondeados modernos */
-        --radius-lg: 1rem;
-        --radius-md: 0.75rem;
-        
-        --edu-primary: #4f46e5; /* Indigo vibrante moderno */
-        --edu-primary-dark: #4338ca;
-        --edu-primary-light: #e0e7ff;
-        --edu-success: #10b981;
-        --edu-accent: #8b5cf6;
-        
-        --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
         background-color: var(--feed-bg);
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Inter', sans-serif;
         color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
     }
 
-    /* Botón Atrás Estilizado Premium */
+    /* --- Botón Atrás Premium --- */
     .btn-back-tier-50 {
         display: inline-flex;
         align-items: center;
-        padding: 0.6rem 1.25rem;
+        gap: 8px;
+        padding: 10px 20px;
         background-color: white;
         color: var(--text-secondary);
-        border-radius: 9999px;
+        border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         box-shadow: var(--shadow-sm);
-        border: 1px solid transparent;
-        transition: var(--transition-fast);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: var(--transition);
     }
     .btn-back-tier-50:hover {
-        color: var(--edu-primary);
         background-color: white;
+        color: var(--primary-color);
         box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
     }
 
     .feed-container {
@@ -98,341 +102,337 @@
         padding-bottom: 80px;
     }
 
-    /* === TARJETAS GENERALES (Glassmorphism sutil) === */
+    /* === TARJETAS BASE === */
     .sidebar-card, .create-post-card, .post-card, .sidebar-search-card {
         background: var(--card-bg);
-        border-radius: var(--radius-lg);
+        border-radius: var(--border-radius-lg);
         box-shadow: var(--shadow-sm);
-        border: 1px solid rgba(229, 231, 235, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.03);
         margin-bottom: 24px;
         overflow: hidden;
-        transition: var(--transition-fast);
+        transition: var(--transition);
+        position: relative;
     }
     
     .sidebar-card:hover, .post-card:hover {
         box-shadow: var(--shadow-md);
-        border-color: rgba(229, 231, 235, 1);
+        transform: translateY(-1px);
     }
 
-    /* === SIDEBAR IZQUIERDA Y DERECHA === */
-    .sidebar-card {
-        padding: 24px;
-    }
+    /* === SIDEBARS ESTILIZADOS === */
+    .sidebar-card { padding: 24px; }
     
-    /* Títulos de sección */
     .sidebar-title {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 800;
-        color: #9ca3af; /* Gris claro uppercase */
+        color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 1.5rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 1.25rem;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
-    .sidebar-title i { color: var(--edu-primary); }
+    .sidebar-title i { color: var(--primary-color); font-size: 1rem; }
 
-    /* GRUPOS */
+    /* Grupos */
     .group-item {
         display: flex;
         align-items: center;
         padding: 10px;
-        margin-bottom: 8px;
-        border-radius: var(--radius-md);
-        transition: var(--transition-fast);
-        background-color: transparent;
+        margin-bottom: 6px;
+        border-radius: var(--border-radius-md);
+        transition: var(--transition);
         text-decoration: none;
+        border: 1px solid transparent;
     }
     .group-item:hover {
-        background-color: var(--edu-primary-light);
+        background-color: var(--primary-light);
+        border-color: rgba(37, 99, 235, 0.1);
     }
     .group-img-sidebar {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         border-radius: 12px;
         object-fit: cover;
-        margin-right: 16px;
+        margin-right: 14px;
         box-shadow: var(--shadow-sm);
+        background-color: #e2e8f0;
     }
     .group-info-sidebar h6 {
         margin: 0;
         font-size: 0.95rem;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--text-primary);
         line-height: 1.2;
     }
     .btn-join-group {
         font-size: 0.75rem;
-        padding: 6px 16px;
-        border-radius: 9999px;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-weight: 700;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
 
-    /* BUSCADOR ESTILIZADO */
+    /* Buscador */
     .sidebar-search-card { padding: 20px; }
     .sidebar-search-input {
-        background: #f9fafb;
+        background: #f3f4f6;
         border: 2px solid transparent;
-        border-radius: var(--radius-md);
+        border-radius: var(--border-radius-md);
         padding: 12px 15px 12px 45px;
-        height: 50px;
+        height: 48px;
         width: 100%;
         font-weight: 500;
-        transition: var(--transition-fast);
+        color: var(--text-primary);
+        transition: var(--transition);
     }
     .sidebar-search-input:focus {
         background: white;
-        border-color: var(--edu-primary);
-        box-shadow: 0 0 0 4px var(--edu-primary-light);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px var(--primary-light);
         outline: none;
     }
     .sidebar-search-button {
         width: 100%;
-        height: 46px;
-        border-radius: var(--radius-md);
+        height: 44px;
+        border-radius: var(--border-radius-md);
         margin-top: 12px;
-        background-color: var(--edu-primary);
+        background: var(--primary-color);
         color: white;
         border: none;
         font-weight: 700;
+        letter-spacing: 0.5px;
         cursor: pointer;
-        transition: var(--transition-fast);
+        transition: var(--transition);
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
     }
     .sidebar-search-button:hover {
-        background-color: var(--edu-primary-dark);
+        background-color: var(--primary-hover);
         transform: translateY(-1px);
     }
     .search-icon-container {
-        position: absolute; left: 20px; top: 22px; 
-        color: #9ca3af; pointer-events: none;
+        position: absolute; left: 20px; top: 20px; 
+        color: var(--text-secondary); pointer-events: none;
+        font-size: 1.1rem;
     }
 
-    /* VIDEO WIDGET */
+    /* Video Widget */
     .video-responsive {
         position: relative;
         overflow: hidden;
         width: 100%; 
-        border-radius: var(--radius-md);
+        border-radius: var(--border-radius-md);
         margin-bottom: 16px;
         box-shadow: var(--shadow-md);
         background: black;
+        border: 1px solid rgba(0,0,0,0.1);
     }
-    .video-responsive video {
-        width: 100%;
-        display: block;
-    }
+    .video-responsive video { width: 100%; display: block; }
 
-    /* CALENDAR WIDGET (Estilo iOS) */
+    /* Calendario Premium */
     .calendar-widget-container {
         background: white;
-        border-radius: var(--radius-lg);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
     }
     .calendar-header {
-        background: var(--text-primary);
+        background: linear-gradient(135deg, var(--primary-color), #6366f1);
         color: white;
         padding: 16px;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        font-weight: 700;
+        font-weight: 800;
         font-size: 1.1rem;
         text-align: center;
         text-transform: capitalize;
+        letter-spacing: 0.5px;
     }
-    .calendar-body { padding: 15px; }
+    .calendar-body { padding: 16px; }
     .calendar-day {
         display: inline-block;
         width: 14.28%;
         text-align: center;
         padding: 8px 0;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 500;
+        color: var(--text-secondary);
         border-radius: 8px;
     }
     .calendar-date {
         font-weight: 600;
         color: var(--text-primary);
         cursor: default;
+        transition: 0.2s;
+    }
+    .calendar-date:hover:not(.calendar-today) {
+        background-color: var(--feed-bg);
+        color: var(--primary-color);
     }
     .calendar-today {
-        background-color: var(--edu-primary);
+        background-color: var(--primary-color);
         color: white !important;
         font-weight: 800;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        transform: scale(1.05);
     }
 
-    /* === FEED PRINCIPAL === */
+    /* === FEED CENTRAL === */
     
-    /* Create Post */
-    .create-post-card { padding: 24px; }
+    /* Crear Post */
+    .create-post-card { padding: 20px 24px; }
     .post-input-trigger {
-        background: #f3f4f6;
-        border-radius: 9999px;
-        padding: 14px 24px;
+        background: #f0f2f5;
+        border-radius: 30px;
+        padding: 12px 20px;
         flex-grow: 1;
         color: var(--text-secondary);
         cursor: pointer;
         font-size: 1rem;
-        transition: var(--transition-fast);
+        font-weight: 500;
+        transition: var(--transition);
         border: 1px solid transparent;
     }
     .post-input-trigger:hover {
-        background: white;
-        border-color: #d1d5db;
-        box-shadow: var(--shadow-sm);
+        background: #e4e6eb;
+        color: var(--text-primary);
+    }
+    .create-post-actions {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid var(--divider);
+        display: flex;
+        justify-content: space-around;
     }
     .cp-action-btn {
         background: none; border: none;
-        padding: 8px 16px; border-radius: var(--radius-md);
+        padding: 8px 12px; border-radius: 8px;
         font-weight: 600; color: var(--text-secondary);
-        font-size: 0.9rem; transition: var(--transition-fast);
+        font-size: 0.95rem; transition: var(--transition);
         display: flex; align-items: center; gap: 8px;
     }
-    .cp-action-btn:hover { background-color: var(--action-hover); color: var(--text-primary); }
+    .cp-action-btn:hover { background-color: var(--action-hover); }
 
-    /* Post Item */
-    .post-header { padding: 20px 24px 10px; display: flex; align-items: center; gap: 16px; }
+    /* Post Individual */
+    .post-header { padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px; }
     .user-avatar-post {
-        width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
-        box-shadow: var(--shadow-sm);
+        width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+        box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05);
     }
     .post-info h6 a {
-        font-weight: 800; color: var(--text-primary);
+        font-weight: 700; color: var(--text-primary);
         text-decoration: none; font-size: 1rem;
     }
-    .post-time { font-size: 0.85rem; color: #94a3b8; font-weight: 500; }
+    .post-time { font-size: 0.8rem; color: var(--text-tertiary); font-weight: 500; display: flex; align-items: center; gap: 4px; }
     
     .post-content {
-        padding: 5px 24px 20px;
-        font-size: 1.05rem;
-        line-height: 1.6;
-        color: #374151;
+        padding: 8px 20px 16px;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #050505;
     }
     
     .post-media {
         background-color: black;
         display: flex; justify-content: center; align-items: center;
         max-height: 600px; width: 100%; overflow: hidden;
+        border-top: 1px solid var(--divider);
+        border-bottom: 1px solid var(--divider);
     }
     .post-media img { max-width: 100%; max-height: 600px; object-fit: contain; }
 
-    /* Actions & Stats */
+    /* Stats & Actions */
     .post-stats {
-        padding: 12px 24px;
+        padding: 10px 20px;
         border-bottom: 1px solid var(--divider);
         display: flex; justify-content: space-between;
-        align-items: center;
-        font-size: 0.95rem;
-        color: var(--text-secondary);
+        font-size: 0.9rem; color: var(--text-secondary);
     }
     .post-actions {
-        padding: 8px 16px;
-        display: flex;
-        gap: 10px;
-        border-top: none;
+        padding: 4px 12px; display: flex; gap: 4px;
+        justify-content: space-between;
     }
     .action-btn {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px;
-        border-radius: 12px;
-        cursor: pointer;
-        color: var(--text-secondary);
-        font-weight: 600;
-        font-size: 1rem;
-        transition: var(--transition-fast);
-        background-color: transparent;
-        border: none;
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        gap: 8px; padding: 10px; border-radius: 6px;
+        cursor: pointer; color: var(--text-secondary);
+        font-weight: 600; font-size: 0.95rem;
+        background: transparent; border: none; transition: var(--transition);
     }
-    .action-btn:hover {
-        background-color: var(--action-hover);
-        color: var(--text-primary);
-    }
-    .action-btn.active-primary {
-        color: var(--edu-primary) !important;
-        background-color: var(--edu-primary-light);
-    }
+    .action-btn:hover { background-color: var(--action-hover); }
+    .action-btn.active-primary { color: var(--primary-color) !important; }
 
     /* Comentarios */
     .comments-section {
-        padding: 20px 24px; background-color: #f9fafb;
+        padding: 12px 20px 20px; background-color: white;
         border-top: 1px solid var(--divider);
     }
     .comment-bubble {
-        background: white; padding: 12px 16px;
-        border-radius: 0 16px 16px 16px;
-        box-shadow: var(--shadow-xs);
-        border: 1px solid #f3f4f6;
+        background: #f0f2f5; padding: 8px 12px;
+        border-radius: 18px; display: inline-block;
     }
     .comment-input {
-        border-radius: 9999px;
-        border: 1px solid #d1d5db;
-        padding: 10px 20px;
-        height: 44px;
+        background: #f0f2f5;
+        border-radius: 20px;
+        border: none;
+        padding: 8px 16px;
+        height: 40px;
         width: 100%;
-        transition: var(--transition-fast);
+        transition: var(--transition);
     }
     .comment-input:focus {
-        outline: none; border-color: var(--edu-primary);
-        box-shadow: 0 0 0 3px var(--edu-primary-light);
+        outline: none; background: #e4e6eb;
     }
 
-    /* === MOBILE RESPONSIVE FIX (SOLUCIÓN DEFINITIVA) === */
-    /* La clave para que se vea en celular es el orden de Flexbox y quitar los d-none */
+    /* === RESPONSIVE FIX DEFINITIVO (TIER 50 MOBILE) === */
+    /* Aquí ocurre la magia para que aparezca todo en el celular */
     
     @media (max-width: 991.98px) {
         .feed-container {
-            padding-left: 15px;
-            padding-right: 15px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
-        /* Convertimos la fila en columna flexible */
+        /* 1. Usar Flexbox Columna en el ROW principal */
         .feed-container > .row {
             display: flex;
             flex-direction: column;
         }
 
-        /* 1. ORDEN SUPERIOR: Buscador y Grupos */
+        /* 2. REORDENAMIENTO LÓGICO */
+        
+        /* A. Barra Lateral Izquierda (Buscador/Grupos) -> ARRIBA */
         .col-sidebar {
             order: 1;
-            width: 100%;
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important; /* Fuerza bruta para mostrar */
             margin-bottom: 20px;
-            /* Forzar visibilidad anulando cualquier clase de bootstrap */
-            display: block !important; 
         }
 
-        /* 2. ORDEN MEDIO: Feed Principal */
+        /* B. Feed Principal -> CENTRO */
         .col-main-feed {
             order: 2;
-            width: 100%;
-            max-width: 100%;
-            flex: 0 0 100%;
-            margin-bottom: 30px;
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important;
+            margin-bottom: 20px;
         }
 
-        /* 3. ORDEN INFERIOR: Video y Calendario */
+        /* C. Barra Lateral Derecha (Video/Calendario) -> ABAJO */
         .col-right-sidebar {
             order: 3;
-            width: 100%;
-            max-width: 100%;
-            flex: 0 0 100%;
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important; /* Fuerza bruta para mostrar */
             margin-bottom: 40px;
-            /* Forzar visibilidad anulando cualquier clase de bootstrap */
-            display: block !important; 
         }
         
-        /* Ajustes visuales para móvil */
-        .sidebar-card { 
-            position: static; /* Quitar sticky en móvil */
-            padding: 20px;
+        /* Ajustes específicos de mobile */
+        .sidebar-card, .post-card {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Sombras más ligeras en móvil */
+            border-radius: 0; /* Full width look si se desea, o mantener radius */
+            border-radius: 12px;
         }
-        
-        .sidebar-search-input {
-            font-size: 16px; /* Evitar zoom en iOS */
-        }
+        .sidebar-card { position: static !important; } /* Quitar sticky en móvil */
     }
 </style>
 
@@ -440,24 +440,24 @@
     <div class="row">
         
         {# --- COLUMNA 1: SIDEBAR IZQUIERDA (BUSCADOR Y GRUPOS) --- #}
-        {# Eliminé clases d-none para que el CSS controle la visibilidad #}
+        {# NOTA: He eliminado d-none d-lg-block para que el CSS controle la visibilidad #}
         <div class="col-md-4 col-lg-3 col-sidebar">
             
             <div class="sidebar-search-card">
                 <form method="GET" action="{% url 'social_feed' %}" class="position-relative">
                     <div class="position-relative">
-                        <div class="search-icon-container" style="top: 5px; left: 5px; position: absolute; height: 38px; width: 38px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-search text-secondary"></i>
+                        <div class="search-icon-container">
+                            <i class="fas fa-search"></i>
                         </div>
                         <input type="text" 
                                name="q" 
                                class="form-control sidebar-search-input" 
-                               placeholder="Buscar publicación..." 
+                               placeholder="Buscar en la comunidad..." 
                                value="{{ request.GET.q|default:'' }}"
                                aria-label="Buscar publicaciones">
                     </div>
-                    <button type="submit" class="sidebar-search-button mt-3">
-                        <i class="fas fa-filter me-2"></i> Buscar
+                    <button type="submit" class="sidebar-search-button mt-2">
+                        BUSCAR
                     </button>
                 </form>
             </div>
@@ -465,10 +465,10 @@
             <div class="sidebar-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="sidebar-title mb-0 text-primary">
-                        <i class="fas fa-users me-2"></i> GRUPOS
+                        <i class="fas fa-users me-2"></i> TUS GRUPOS
                     </h5>
                     {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'DOCENTE' %}
-                    <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="Crear Grupo">
+                    <a href="{% url 'crear_grupo' %}" class="btn btn-sm btn-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Crear Grupo">
                         <i class="fas fa-plus"></i>
                     </a>
                     {% endif %}
@@ -481,14 +481,14 @@
                             {% if grupo.image %}
                                 <img src="{{ grupo.image.url }}" alt="{{ grupo.name }}" class="group-img-sidebar">
                             {% else %}
-                                <div class="group-img-sidebar d-flex align-items-center justify-content-center bg-light text-primary border">
+                                <div class="group-img-sidebar d-flex align-items-center justify-content-center bg-white text-primary border">
                                     <i class="fas fa-users fa-lg"></i>
                                 </div>
                             {% endif %}
                             
                             <div class="group-info-sidebar flex-grow-1">
                                 <a href="{% url 'detalle_grupo' grupo.id %}" class="text-decoration-none text-dark">
-                                    <h6>{{ grupo.name|truncatechars:18 }}</h6>
+                                    <h6>{{ grupo.name|truncatechars:20 }}</h6>
                                 </a>
                                 <small class="text-muted fw-bold" style="font-size: 0.75rem;">{{ grupo.members.count }} miembros</small>
                             </div>
@@ -510,12 +510,12 @@
                     </div>
                     
                     <div class="text-center mt-4 pt-3 border-top">
-                        <a href="{% url 'lista_grupos' %}" class="btn btn-link btn-sm text-decoration-none fw-bold" style="color: var(--edu-primary); letter-spacing: 0.5px;">VER TODOS LOS GRUPOS</a>
+                        <a href="{% url 'lista_grupos' %}" class="btn btn-link btn-sm text-decoration-none fw-bold" style="color: var(--primary-color); letter-spacing: 0.5px;">VER TODOS</a>
                     </div>
                 {% else %}
                     <div class="text-center py-5">
                         <div class="text-muted mb-3 opacity-50"><i class="far fa-compass fa-3x"></i></div>
-                        <p class="text-muted small mb-3 fw-semibold">No perteneces a ningún grupo aún.</p>
+                        <p class="text-muted small mb-3 fw-semibold">Explora para unirte a grupos.</p>
                         <a href="{% url 'lista_grupos' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">Explorar</a>
                     </div>
                 {% endif %}
@@ -526,28 +526,28 @@
         <div class="col-md-8 col-lg-6 col-main-feed">
             
             <div class="create-post-card">
-                <div class="create-post-top d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
                     {% if user.perfil.foto_perfil %}
-                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm">
+                        <img src="{{ user.perfil.foto_perfil.url }}" alt="Yo" class="user-avatar-sm" style="width: 48px; height: 48px; border-radius: 50%;">
                     {% else %}
-                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold">
+                        <div class="user-avatar-sm d-flex align-items-center justify-content-center bg-secondary text-white fw-bold" style="width: 48px; height: 48px; border-radius: 50%;">
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}
                     
-                    <div class="post-input-trigger shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <span>¿Qué quieres compartir hoy, {{ user.first_name }}?</span>
+                    <div class="post-input-trigger" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <span>¿Qué estás pensando, {{ user.first_name }}?</span>
                     </div>
                 </div>
-                <div class="create-post-actions d-flex justify-content-around mt-3 pt-2 border-top">
-                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-video text-danger"></i> Video
+                <div class="create-post-actions">
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-video text-danger"></i> <span>Video</span>
                     </button>
-                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-images text-success"></i> Foto
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-images text-success"></i> <span>Foto</span>
                     </button>
-                    <button class="action-btn" id="emoji-trigger-main">
-                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Ánimo
+                    <button class="cp-action-btn" id="emoji-trigger-main">
+                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> <span>Feeling</span>
                     </button>
                 </div>
             </div>
@@ -571,7 +571,7 @@
                                     {{ post.autor.get_full_name|default:post.autor.username }}
                                 </a>
                                 {% if post.tipo == 'ANUNCIO' %}
-                                    <span class="badge bg-danger ms-1 rounded-pill px-2" style="font-size: 0.65rem; vertical-align: middle;">OFICIAL</span>
+                                    <span class="badge bg-danger ms-1 rounded-pill px-2" style="font-size: 0.65rem; vertical-align: middle;">ANUNCIO</span>
                                 {% endif %}
                                 {% if post.grupo %}
                                     <span class="text-muted fw-normal ms-1" style="font-size: 0.9rem;">
@@ -583,7 +583,7 @@
                                 <span title="{{ post.creado_en }}">
                                     {{ post.creado_en|naturaltime }}
                                 </span>
-                                <i class="fas fa-globe-americas ms-2 opacity-50"></i>
+                                <i class="fas fa-globe-americas ms-2"></i>
                             </div>
                         </div>
                         
@@ -648,11 +648,11 @@
                                         <i class="fas fa-thumbs-up"></i>
                                     </div>
                                     <span class="ms-2 small fw-bold text-dark" id="liked-by-text-{{ post.id }}">
-                                        {{ post.total_reacciones }} likes
+                                        {{ post.total_reacciones }}
                                     </span>
                                 </div>
                             {% else %}
-                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero en dar like</span>
+                                <span class="text-muted small" id="liked-by-text-{{ post.id }}">Sé el primero</span>
                             {% endif %}
                         </div>
                         <div class="comments-count small fw-bold text-muted cursor-pointer" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
@@ -681,9 +681,9 @@
                                 <div class="comment-item" id="comment-{{ comentario.id }}">
                                     <a href="{% url 'ver_perfil_social' comentario.autor.username %}" class="flex-shrink-0">
                                         {% if comentario.autor.perfil.foto_perfil %}
-                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 36px; height: 36px; border-width: 0;">
+                                            <img src="{{ comentario.autor.perfil.foto_perfil.url }}" class="user-avatar-post" style="width: 32px; height: 32px; border-width: 0;">
                                         {% else %}
-                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 36px; height: 36px; font-size: 0.8rem;">
+                                            <div class="user-avatar-post d-flex align-items-center justify-content-center bg-info text-white fw-bold border-0" style="width: 32px; height: 32px; font-size: 0.8rem;">
                                                 {{ comentario.autor.username|slice:":1"|upper }}
                                             </div>
                                         {% endif %}
@@ -715,9 +715,9 @@
                             
                             <div class="comment-input-area d-flex gap-2 mt-4 align-items-center">
                                 {% if user.perfil.foto_perfil %}
-                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 40px; height: 40px; border: 0;">
+                                    <img src="{{ user.perfil.foto_perfil.url }}" class="user-avatar-post flex-shrink-0" style="width: 32px; height: 32px; border: 0;">
                                 {% else %}
-                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 40px; height: 40px;"></div>
+                                    <div class="user-avatar-post bg-secondary rounded-circle flex-shrink-0 border-0" style="width: 32px; height: 32px;"></div>
                                 {% endif %}
                                 
                                 <form method="POST" action="." class="w-100 position-relative">
@@ -726,8 +726,8 @@
                                     <input type="hidden" name="post_id" value="{{ post.id }}">
                                     
                                     <input type="text" name="contenido" class="comment-input w-100 ps-3 pe-5" placeholder="Escribe un comentario..." required autocomplete="off">
-                                    <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-3 hover-scale">
-                                        <i class="fas fa-paper-plane fa-lg"></i>
+                                    <button type="submit" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y p-0 me-2 hover-scale">
+                                        <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </form>
                             </div>
@@ -738,7 +738,7 @@
                     <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
                         <div class="mb-4">
                             <div class="bg-light d-inline-block rounded-circle p-4 text-primary">
-                                <i class="fas fa-stream fa-3x text-muted"></i>
+                                <i class="fas fa-stream fa-3x"></i>
                             </div>
                         </div>
                         <h4 class="fw-bold text-dark mb-2">¡Tu muro está tranquilo!</h4>
@@ -766,6 +766,7 @@
         </div>
 
         {# --- COLUMNA 3: SIDEBAR DERECHA (VIDEO Y CALENDARIO) --- #}
+        {# Eliminadas restricciones de visibilidad #}
         <div class="col-lg-3 col-right-sidebar">
             <div class="sidebar-card">
                 <h6 class="sidebar-title mb-3"><i class="fas fa-video me-2"></i> VIDEO DESTACADO</h6>
@@ -1168,7 +1169,7 @@
         }
     });
 
-    // 🔥 SCRIPT DEL CALENDARIO (LÓGICA INTACTA) 🔥
+    // 🔥 SCRIPT DEL CALENDARIO (TOTALMENTE AISLADO Y AUTOEJECUTABLE) 🔥
     (function() {
         function initRealTimeCalendar() {
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -1188,9 +1189,11 @@
             // 2. Días
             const daysContainer = document.getElementById('calendar-days');
             if (daysContainer) {
+                // Limpiar contenido previo (por si acaso)
                 daysContainer.innerHTML = '';
                 
                 const firstDayIndex = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
+                // Ajustar para que Lunes sea 0 y Domingo 6
                 const adjustedStart = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
                 
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1211,10 +1214,11 @@
             // 3. Footer (Día actual)
             const footerEl = document.getElementById('calendar-today-display');
             if (footerEl) {
-                footerEl.innerHTML = `<i class="far fa-clock me-1 text-primary"></i> Hoy es <strong class="text-dark">${today} de ${monthNames[month]}</strong>`;
+                footerEl.innerHTML = `<strong class="text-danger">${today} ${monthNames[month].substring(0,3)} ${year}:</strong> Día actual.`;
             }
         }
 
+        // Ejecutar inmediatamente si el DOM está listo, o esperar
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initRealTimeCalendar);
         } else {
