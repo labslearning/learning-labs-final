@@ -38,13 +38,13 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --feed-bg: #f3f4f6; 
+        --feed-bg: #f3f4f6; /* Gris muy suave, profesional y descansado */
         --card-bg: #ffffff;
-        --text-primary: #111827; 
-        --text-secondary: #6b7280; 
+        --text-primary: #111827; /* Casi negro para máxima legibilidad */
+        --text-secondary: #6b7280; /* Gris medio elegante */
         --text-tertiary: #9ca3af;
         
-        --primary-color: #4f46e5; 
+        --primary-color: #4f46e5; /* Indigo vibrante moderno */
         --primary-hover: #4338ca;
         --primary-light: #e0e7ff;
         
@@ -52,7 +52,7 @@
         --danger-color: #ef4444;
         --warning-color: #f59e0b;
         
-        --border-radius-xl: 1.5rem; 
+        --border-radius-xl: 1.5rem; /* Bordes muy redondeados modernos */
         --border-radius-lg: 1rem;
         --border-radius-md: 0.75rem;
         
@@ -67,7 +67,7 @@
 
     body {
         background-color: var(--feed-bg);
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
     }
@@ -366,7 +366,7 @@
         border-top: 1px solid var(--divider);
     }
     .comment-bubble {
-        background: #f0f2f5; padding: 12px 16px;
+        background: #f0f2f5; padding: 8px 12px;
         border-radius: 18px; display: inline-block;
     }
     .comment-input {
@@ -429,6 +429,7 @@
         /* Ajustes específicos de mobile */
         .sidebar-card, .post-card {
             box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Sombras más ligeras en móvil */
+            border-radius: 0; /* Full width look si se desea, o mantener radius */
             border-radius: 12px;
         }
         .sidebar-card { position: static !important; } /* Quitar sticky en móvil */
@@ -538,15 +539,15 @@
                         <span>¿Qué estás pensando, {{ user.first_name }}?</span>
                     </div>
                 </div>
-                <div class="create-post-actions d-flex justify-content-around mt-3 pt-2 border-top">
-                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-video text-danger"></i> Video
+                <div class="create-post-actions">
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-video text-danger"></i> <span>Video</span>
                     </button>
-                    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-images text-success"></i> Foto
+                    <button class="cp-action-btn" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-images text-success"></i> <span>Foto</span>
                     </button>
-                    <button class="action-btn" id="emoji-trigger-main">
-                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> Ánimo
+                    <button class="cp-action-btn" id="emoji-trigger-main">
+                        <i class="far fa-smile text-warning" style="font-size: 1.2rem;"></i> <span>Feeling</span>
                     </button>
                 </div>
             </div>
@@ -582,7 +583,7 @@
                                 <span title="{{ post.creado_en }}">
                                     {{ post.creado_en|naturaltime }}
                                 </span>
-                                <i class="fas fa-globe-americas ms-2 opacity-50"></i>
+                                <i class="fas fa-globe-americas ms-2"></i>
                             </div>
                         </div>
                         
