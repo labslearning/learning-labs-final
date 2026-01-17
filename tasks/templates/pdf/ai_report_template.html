@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Institucional IA</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica', sans-serif;
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+        body {
+            font-family: 'Helvetica', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            font-size: 11pt;
+        }
+        /* Encabezado */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #004085; /* Azul Institucional */
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #004085;
+            font-size: 18pt;
+            text-transform: uppercase;
+        }
+        .header h2 {
+            margin: 5px 0;
+            font-size: 14pt;
+            font-weight: normal;
+        }
+        .meta-info {
+            width: 100%;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .meta-row { margin-bottom: 5px; }
+        .label { font-weight: bold; color: #004085; width: 140px; display: inline-block;}
+        
+        /* Contenido del Reporte */
+        .report-content {
+            text-align: justify;
+            min-height: 400px;
+        }
+        .report-content h3 { color: #004085; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;}
+        .report-content strong { color: #000; }
+        .report-content ul { padding-left: 20px; }
+        .report-content li { margin-bottom: 5px; }
+
+        /* Zona de Firmas */
+        .signatures {
+            margin-top: 80px;
+            width: 100%;
+            page-break-inside: avoid;
+        }
+        .signature-box {
+            float: left;
+            width: 45%;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin: 0 20px;
+            margin-bottom: 10px;
+        }
+        .signature-role {
+            font-weight: bold;
+            font-size: 10pt;
+        }
+        
+        /* Disclaimer */
+        .footer-disclaimer {
+            margin-top: 50px;
+            font-size: 8pt;
+            color: #999;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        {% if institucion.logo %}
+            <img src="{{ institucion.logo.path }}" style="height: 60px; margin-bottom: 10px;">
+        {% endif %}
+        <h1>{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA" }}</h1>
+        <h2>Informe de Análisis Pedagógico & IA</h2>
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-row"><span class="label">TIPO DE REPORTE:</span> {{ tipo_reporte }}</div>
+        <div class="meta-row"><span class="label">ESTUDIANTE/USUARIO:</span> {{ objetivo.get_full_name|default:objetivo.username|upper }}</div>
+        <div class="meta-row"><span class="label">SOLICITADO POR:</span> {{ solicitante.get_full_name|default:solicitante.username|title }} ({{ solicitante.perfil.rol }})</div>
+        <div class="meta-row"><span class="label">FECHA DE EMISIÓN:</span> {{ fecha_impresion|date:"d de F de Y, H:i" }}</div>
+        {% if query_original %}
+        <div class="meta-row"><span class="label">FOCO DE ANÁLISIS:</span> <em>"{{ query_original }}"</em></div>
+        {% endif %}
+    </div>
+
+    <div class="report-content">
+        {{ contenido_html }}
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">
+            <div style="height: 40px;"></div> <div class="signature-line"></div>
+            <div class="signature-role">PROFESIONAL A CARGO</div>
+            <div>{{ solicitante.get_full_name|default:solicitante.username|title }}</div>
+        </div>
+        
+        <div class="signature-box" style="float: right;">
+            <div style="height: 40px;"></div>
+            <div class="signature-line"></div>
+            <div class="signature-role">COORDINACIÓN / ACUDIENTE</div>
+            <div>Visto Bueno</div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="footer-disclaimer">
+        Este documento ha sido generado mediante herramientas de Inteligencia Artificial como apoyo al proceso pedagógico. 
+        Su contenido debe ser validado por el profesional a cargo. Generado por la plataforma Learning Labs.
+    </div>
+
+</body>
+</html>

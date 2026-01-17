@@ -8,9 +8,10 @@ from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-
-
-
+#Aqui importaciones para hacer el pdf con el reporte de la AI 
+import markdown # <--- NECESARIO
+from django.utils.html import mark_safe
+#Hasta aqui
 
 from .ai.orchestrator import ai_orchestrator
 from .ai.constants import ACCION_MEJORAS_ESTUDIANTE
@@ -5255,3 +5256,74 @@ def api_obtener_likes(request, post_id):
         # Esto imprimirá el error real en tu terminal negra para que sepamos qué pasa
         print(f"ERROR EN api_obtener_likes: {e}") 
         return JsonResponse({'error': str(e)}, status=500)
+
+
+#Aqui inicia la funcion para el reporte de la AI 
+
+# ===================================================================
+# 🖨️ CIRUGÍA: GENERADOR DE REPORTE IA EN PDF (INSTITUCIONAL)
+# ===================================================================
+
+@login_required
+def download_ai_report_pdf(request):
+    """
+    Genera un PDF oficial con el análisis de la IA, formato institucional y firmas.
+    Recibe los mismos parámetros que el motor de IA para reconstruir el contexto.
+    """
+    # 1. Recuperar parámetros
+    action_type = request.GET.get('action')
+    target_id = request.GET.get('target_id')
+    user_query = request.GET.get('user_query', '')
+    
+    # 2. Identificar al usuario objetivo (Target)
+    target_user = request.user
+    if target_id:
+        target_user = get_object_or_404(User, id=target_id)
+    
+    # 3. Obtener/Regenerar el análisis de la IA (Orquestador)
+    # Reutilizamos tu lógica existente para obtener la data cruda
+    try:
+        resultado = ai_orchestrator.process_request(
+            user=request.user,
+            action_type=action_type,
+            user_query=user_query,
+            target_user=target_user,
+            historial=[] # Para el reporte oficial, usamos el contexto fresco
+        )
+        
+        contenido_raw = resultado.get('content', 'No se pudo generar el contenido.')
+        
+        # 4. Convertir Markdown a HTML para el PDF (Negritas, listas, etc.)
+        contenido_html = markdown.markdown(contenido_raw)
+
+    except Exception as e:
+        logger.error(f"Error generando PDF IA: {e}")
+        contenido_html = f"<p>Error al generar el reporte: {str(e)}</p>"
+
+    # 5. Datos Institucionales
+    institucion = Institucion.objects.first()
+    
+    # 6. Contexto para el Template PDF
+    context = {
+        'institucion': institucion,
+        'fecha_impresion': timezone.now(),
+        'solicitante': request.user,
+        'objetivo': target_user,
+        'tipo_reporte': action_type.replace('_', ' ').upper() if action_type else "REPORTE GENERAL",
+        'contenido_html': mark_safe(contenido_html), # Marcamos como seguro para renderizar HTML
+        'query_original': user_query
+    }
+
+    # 7. Renderizado con WeasyPrint
+    if HTML is None:
+        return HttpResponse("Error: WeasyPrint no está instalado en el servidor.", status=500)
+
+    html_string = render_to_string('pdf/ai_report_template.html', context)
+    base_url = request.build_absolute_uri('/')
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    filename = f"Reporte_IA_{target_user.username}_{timezone.now().strftime('%Y%m%d')}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    return response
