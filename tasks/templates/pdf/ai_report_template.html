@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <title>Informe Pedagógico Institucional</title>
     <style>
-        /* === 1. CONFIGURACIÓN DE PÁGINA (MÁRGENES OFICIALES) === */
+        /* === 1. CONFIGURACIÓN DE PÁGINA (MÁRGENES OFICIALES A4) === */
         @page {
             size: A4;
-            margin-top: 3.5cm;     /* Espacio para encabezado */
-            margin-bottom: 2.5cm;  /* Espacio para pie de página */
+            margin-top: 3.5cm;     /* Espacio reservado para encabezado */
+            margin-bottom: 2.5cm;  /* Espacio reservado para pie de página */
             margin-left: 2.5cm;
             margin-right: 2.5cm;
 
@@ -22,19 +22,20 @@
 
         /* === 2. TIPOGRAFÍA Y CUERPO === */
         body {
-            font-family: 'Times New Roman', 'Georgia', serif; /* Fuente Seria */
+            font-family: 'Times New Roman', 'Georgia', serif; /* Fuente Seria y Académica */
             color: #1a1a1a;
             font-size: 11pt;
             line-height: 1.4;
             text-align: justify;
         }
 
-        /* === 3. VARIABLES DE COLOR (Tier 50) === */
+        /* === 3. VARIABLES DE COLOR (Tier 50 - Profesional) === */
         :root {
             --primary-blue: #002B5B;  /* Azul Oxford */
             --accent-gold: #C5A059;   /* Dorado Académico */
             --text-grey: #4a4a4a;
             --line-color: #d1d1d1;
+            --bg-light: #f8f9fa;
         }
 
         /* === 4. ENCABEZADO FLOTANTE === */
@@ -46,17 +47,17 @@
             margin-bottom: 30px;
         }
         .header-table { width: 100%; border-collapse: collapse; }
-        .logo-cell { width: 18%; vertical-align: middle; }
-        .logo-img { height: 90px; width: auto; object-fit: contain; }
+        .logo-cell { width: 18%; vertical-align: middle; text-align: left; }
+        .logo-img { height: 85px; width: auto; object-fit: contain; }
         
         .info-cell { 
             width: 82%; 
             text-align: right; 
             vertical-align: middle; 
-            font-family: 'Arial', sans-serif; /* Sans-serif para datos técnicos */
+            font-family: 'Arial', sans-serif; 
         }
         .school-name {
-            font-size: 18pt;
+            font-size: 16pt;
             font-weight: 900;
             color: var(--primary-blue);
             text-transform: uppercase;
@@ -67,13 +68,14 @@
             font-size: 8pt;
             color: var(--text-grey);
             text-transform: uppercase;
-            margin-bottom: 4px;
-            letter-spacing: 2px;
+            margin-bottom: 5px;
+            letter-spacing: 1.5px;
+            font-weight: bold;
         }
         .school-legal {
             font-size: 7pt;
             color: #666;
-            line-height: 1.2;
+            line-height: 1.3;
         }
 
         /* === 5. PIE DE PÁGINA FLOTANTE === */
@@ -93,8 +95,8 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 80%; /* Más grande */
-            transform: translate(-50%, -50%); /* Centrado perfecto */
+            width: 70%; 
+            transform: translate(-50%, -50%) rotate(-30deg); 
             opacity: 0.04; 
             z-index: -1000;
             filter: grayscale(100%);
@@ -105,9 +107,10 @@
             text-align: center;
             margin-top: 0px;
             margin-bottom: 30px;
-            background-color: #f8f9fa;
+            background-color: var(--bg-light);
             border: 1px solid var(--line-color);
-            padding: 8px;
+            padding: 10px;
+            border-radius: 4px;
         }
         .doc-title {
             font-family: 'Arial', sans-serif;
@@ -128,8 +131,9 @@
             font-size: 9pt;
         }
         .meta-table td {
-            padding: 6px 10px;
+            padding: 6px 12px;
             border: 1px solid #ccc;
+            vertical-align: middle;
         }
         .label {
             font-weight: bold;
@@ -138,21 +142,23 @@
             width: 18%;
             text-transform: uppercase;
         }
-        .value { width: 32%; }
-        .full-val { width: 82%; font-style: italic; }
+        .value { width: 32%; color: #333; }
+        .full-val { width: 82%; font-style: italic; color: #555; }
 
         /* === 9. CONTENIDO DEL INFORME (Body) === */
         .content-body {
             min-height: 450px;
             margin-bottom: 40px;
+            padding: 0 10px;
         }
         /* Estilos específicos para el Markdown convertido */
         .content-body h1 {
-            font-size: 14pt; 
+            font-size: 13pt; 
             color: var(--primary-blue); 
             border-bottom: 2px solid var(--accent-gold); 
             padding-bottom: 3px;
             margin-top: 25px;
+            font-family: 'Arial', sans-serif;
         }
         .content-body h2 {
             font-size: 12pt; 
@@ -160,6 +166,7 @@
             font-weight: bold; 
             margin-top: 20px;
             text-transform: uppercase;
+            font-family: 'Arial', sans-serif;
         }
         .content-body h3 {
             font-size: 11pt; 
@@ -170,7 +177,7 @@
         .content-body ul { margin-left: 20px; padding-left: 10px; }
         .content-body li { margin-bottom: 5px; text-align: justify; }
         .content-body p { margin-bottom: 12px; text-align: justify; }
-        .content-body strong { color: #000; }
+        .content-body strong { color: #000; font-weight: bold; }
 
         /* === 10. ZONA DE FIRMAS === */
         .signatures-wrapper {
@@ -196,6 +203,7 @@
             font-size: 9pt;
             text-transform: uppercase;
             margin-bottom: 2px;
+            color: #000;
         }
         .sig-role {
             font-size: 8pt;
@@ -220,18 +228,25 @@
                 <td class="logo-cell">
                     {% if institucion.logo %}
                         <img src="{{ institucion.logo.path }}" class="logo-img">
-                    {% else %}
-                        <div style="font-size: 35pt; color: #ccc; text-align: center;">🏛️</div>
                     {% endif %}
-                </td>
+                    </td>
                 <td class="info-cell">
-                    <h1 class="school-name">{{ institucion.nombre|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
-                    <div class="school-sub">EXCELENCIA ACADÉMICA Y FORMACIÓN INTEGRAL</div>
+                    <h1 class="school-name">{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA" }}</h1>
+                    <div class="school-sub">Formación Integral y Excelencia Académica</div>
+                    
                     <div class="school-legal">
-                        NIT: {{ institucion.nit|default:"800.000.000-0" }} &nbsp;|&nbsp; DANE: {{ institucion.dane|default:"000000000000" }}<br>
-                        Aprobación Oficial No. {{ institucion.resolucion|default:"0000" }} del {{ institucion.fecha_resolucion|default:"01/01/2020" }}<br>
-                        {{ institucion.direccion|default:"Dirección Principal, Ciudad" }} &nbsp;|&nbsp; PBX: {{ institucion.telefono|default:"(601) 000 0000" }}<br>
-                        {{ institucion.email|default:"info@institucion.edu.co" }}
+                        {% if institucion.nit %} NIT: {{ institucion.nit }} {% endif %}
+                        {% if institucion.dane %} | DANE: {{ institucion.dane }} {% endif %}
+                        <br>
+                        {% if institucion.resolucion %}
+                            Resolución No. {{ institucion.resolucion }} 
+                            {% if institucion.fecha_resolucion %} del {{ institucion.fecha_resolucion }} {% endif %}
+                        {% endif %}
+                        <br>
+                        {% if institucion.direccion %} {{ institucion.direccion }} {% endif %}
+                        {% if institucion.telefono %} | Tel: {{ institucion.telefono }} {% endif %}
+                        <br>
+                        {% if institucion.email %} {{ institucion.email }} {% endif %}
                     </div>
                 </td>
             </tr>
@@ -241,8 +256,8 @@
     <div class="footer-container">
         <table style="width: 100%; border: none;">
             <tr>
-                <td style="text-align: left; width: 33%; border: none;">Generado por: Learning Labs v2.0</td>
-                <td style="text-align: center; width: 33%; border: none; font-weight: bold;">USO CONFIDENCIAL</td>
+                <td style="text-align: left; width: 33%; border: none;">Plataforma Educativa Learning Labs</td>
+                <td style="text-align: center; width: 33%; border: none; font-weight: bold;">DOCUMENTO CONFIDENCIAL</td>
                 <td style="text-align: right; width: 33%; border: none;">Pág. <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span></td>
             </tr>
         </table>
@@ -290,20 +305,20 @@
                     <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ solicitante.get_full_name|default:solicitante.username|upper }}</div>
                     <div class="sig-role">PROFESIONAL RESPONSABLE</div>
-                    <div class="sig-role">C.C. _______________</div>
+                    <div class="sig-role" style="font-weight: normal; margin-top: 3px;">C.C. _______________</div>
                 </td>
                 
                 <td style="width: 20%; border: none;"></td> <td class="sig-cell">
                     <div class="sig-space"></div> <div class="sig-line"></div>
                     <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
                     <div class="sig-role">RECIBIDO A SATISFACCIÓN</div>
-                    <div class="sig-role">FECHA: ____/____/______</div>
+                    <div class="sig-role" style="font-weight: normal; margin-top: 3px;">FECHA: ____/____/______</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <div style="text-align: center; font-size: 6pt; color: #aaa; margin-top: 20px;">
+    <div style="text-align: center; font-size: 6pt; color: #aaa; margin-top: 20px; border-top: 1px dotted #ddd; padding-top: 5px;">
         * Documento de apoyo pedagógico generado mediante Inteligencia Artificial. Su contenido debe ser validado por el profesional a cargo bajo su criterio y responsabilidad.
     </div>
 
