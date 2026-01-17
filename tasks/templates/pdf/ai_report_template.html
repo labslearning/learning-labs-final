@@ -7,10 +7,11 @@
         /* === 1. CONFIGURACIÓN DE PÁGINA (A4 OFICIAL) === */
         @page {
             size: A4;
-            margin-top: 3.5cm;     /* Espacio para el encabezado */
-            margin-bottom: 2.5cm;  /* Espacio para el pie de página */
-            margin-left: 2.5cm;    /* Margen izquierdo estándar */
-            margin-right: 2.5cm;   /* Margen derecho estándar */
+            /* Aumentamos el margen superior para que el logo respire */
+            margin-top: 4.5cm;     
+            margin-bottom: 2.5cm;
+            margin-left: 2.5cm;
+            margin-right: 2.5cm;
 
             /* Definimos las cajas flotantes */
             @top-center { content: element(header); }
@@ -22,7 +23,7 @@
             font-family: 'Times New Roman', serif;
             color: #1a1a1a;
             font-size: 11pt;
-            line-height: 1.5; /* Interlineado cómodo */
+            line-height: 1.5; 
             text-align: justify;
             margin: 0; 
             padding: 0;
@@ -32,7 +33,7 @@
         :root {
             --primary: #002B5B; /* Azul Oxford */
             --accent: #C5A059;  /* Dorado Académico */
-            --text-grey: #555;
+            --text-light: #555;
             --border: #dcdde1;
         }
 
@@ -40,10 +41,10 @@
         .header-container {
             position: running(header);
             width: 100%;
-            /* Ajuste negativo para pegarlo arriba sin invadir margen */
-            margin-top: -1cm; 
+            /* Quitamos el margen negativo que lo pegaba al borde */
+            margin-top: 0; 
             border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
+            padding-bottom: 15px; /* Más espacio abajo del logo */
             margin-bottom: 0px;
         }
         
@@ -56,6 +57,7 @@
             width: 20%; 
             vertical-align: middle; 
             text-align: left;
+            padding-top: 10px; /* Un poco de aire arriba del logo */
         }
         
         /* Estilo para el logo */
@@ -71,6 +73,7 @@
             text-align: right; 
             vertical-align: middle; 
             font-family: Helvetica, Arial, sans-serif; 
+            padding-top: 10px;
         }
         
         .school-name {
@@ -92,7 +95,7 @@
         
         .school-legal {
             font-size: 7pt;
-            color: var(--text-grey);
+            color: var(--text-light);
             line-height: 1.3;
         }
 
@@ -123,7 +126,7 @@
         /* === 7. TÍTULO DEL DOCUMENTO === */
         .doc-title-box {
             text-align: center;
-            margin-top: 0px;
+            margin-top: 20px; /* Separación del encabezado */
             margin-bottom: 30px;
             padding: 10px;
             background-color: #f8f9fa;
@@ -162,7 +165,7 @@
         .value { width: 32%; }
         .full-val { width: 82%; font-style: italic; color: #555; }
 
-        /* === 9. CONTENIDO === */
+        /* === 9. CONTENIDO DEL REPORTE === */
         .content-body {
             width: 100%;
             overflow: hidden; 
