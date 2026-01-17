@@ -2,138 +2,286 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Institucional IA</title>
+    <title>Informe Pedagógico Institucional</title>
     <style>
+        /* === CONFIGURACIÓN DE PÁGINA E IMPRESIÓN === */
         @page {
             size: A4;
-            margin: 2.5cm;
+            margin-top: 3cm;
+            margin-bottom: 3cm;
+            margin-left: 2.5cm;
+            margin-right: 2.5cm;
+
+            @top-center {
+                content: element(header);
+            }
             @bottom-center {
-                content: "Página " counter(page) " de " counter(pages);
-                font-family: 'Helvetica', sans-serif;
-                font-size: 9pt;
-                color: #666;
+                content: element(footer);
             }
         }
-        body {
-            font-family: 'Helvetica', sans-serif;
-            color: #333;
-            line-height: 1.6;
-            font-size: 11pt;
-        }
-        /* Encabezado */
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #004085; /* Azul Institucional */
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            margin: 0;
-            color: #004085;
-            font-size: 18pt;
-            text-transform: uppercase;
-        }
-        .header h2 {
-            margin: 5px 0;
-            font-size: 14pt;
-            font-weight: normal;
-        }
-        .meta-info {
-            width: 100%;
-            margin-bottom: 30px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #e9ecef;
-        }
-        .meta-row { margin-bottom: 5px; }
-        .label { font-weight: bold; color: #004085; width: 140px; display: inline-block;}
-        
-        /* Contenido del Reporte */
-        .report-content {
-            text-align: justify;
-            min-height: 400px;
-        }
-        .report-content h3 { color: #004085; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;}
-        .report-content strong { color: #000; }
-        .report-content ul { padding-left: 20px; }
-        .report-content li { margin-bottom: 5px; }
 
-        /* Zona de Firmas */
-        .signatures {
-            margin-top: 80px;
-            width: 100%;
-            page-break-inside: avoid;
+        /* === TIPOGRAFÍA Y COLORES === */
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #2c3e50; /* Gris oscuro elegante */
+            font-size: 11pt;
+            line-height: 1.5;
+            text-align: justify;
         }
-        .signature-box {
-            float: left;
-            width: 45%;
+
+        /* Paleta de Colores Institucional */
+        :root {
+            --primary: #003366; /* Azul Oscuro Académico */
+            --accent: #b71c1c;  /* Rojo Institucional sutil */
+            --light: #f4f6f7;   /* Gris muy claro para fondos */
+            --border: #dcdde1;
+        }
+
+        /* === ENCABEZADO (Repetido en cada página) === */
+        .header-container {
+            position: running(header);
+            width: 100%;
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-table { width: 100%; border-collapse: collapse; }
+        
+        .logo-cell { 
+            width: 20%; 
+            vertical-align: middle; 
+            text-align: left;
+        }
+        .logo-img { 
+            height: 80px; 
+            width: auto;
+            object-fit: contain; 
+        }
+        
+        .info-cell { 
+            width: 80%; 
+            text-align: right; 
+            vertical-align: middle; 
+        }
+        .school-name {
+            font-size: 15pt;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        .school-legal {
+            font-size: 7.5pt;
+            color: #555;
+            margin-top: 4px;
+            line-height: 1.2;
+        }
+
+        /* === PIE DE PÁGINA === */
+        .footer-container {
+            position: running(footer);
+            width: 100%;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            font-size: 8pt;
+            color: #7f8c8d;
             text-align: center;
         }
-        .signature-line {
-            border-top: 1px solid #000;
-            margin: 0 20px;
-            margin-bottom: 10px;
+
+        /* === MARCA DE AGUA (Fondo Institucional) === */
+        .watermark {
+            position: fixed;
+            top: 35%;
+            left: 25%;
+            width: 50%;
+            opacity: 0.05; /* Muy sutil para no estorbar lectura */
+            z-index: -1000;
+            transform: rotate(-30deg);
+            filter: grayscale(100%);
         }
-        .signature-role {
-            font-weight: bold;
+
+        /* === TÍTULO DEL DOCUMENTO === */
+        .doc-title {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+        .doc-title h2 {
+            font-size: 14pt;
+            color: var(--primary);
+            text-transform: uppercase;
+            background-color: var(--light);
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* === TABLA DE METADATOS (Estudiante) === */
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
             font-size: 10pt;
         }
-        
-        /* Disclaimer */
-        .footer-disclaimer {
-            margin-top: 50px;
-            font-size: 8pt;
-            color: #999;
+        .meta-table td {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+        }
+        .label {
+            font-weight: bold;
+            color: var(--primary);
+            width: 20%;
+            background-color: #f0f3f5;
+            text-transform: uppercase;
+            font-size: 9pt;
+        }
+        .value {
+            width: 30%;
+        }
+        .full-width {
+            width: 80%;
+        }
+
+        /* === CONTENIDO DEL REPORTE (Markdown renderizado) === */
+        .content-body {
+            min-height: 400px;
+        }
+        .content-body h1, .content-body h2 {
+            color: var(--primary);
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            font-size: 13pt;
+        }
+        .content-body h3 {
+            color: #444;
+            font-size: 12pt;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .content-body ul { margin-left: 15px; padding-left: 15px; }
+        .content-body li { margin-bottom: 4px; }
+        .content-body strong { color: #000; font-weight: 700; }
+        .content-body p { margin-bottom: 10px; }
+
+        /* === ZONA DE FIRMAS (Al final) === */
+        .signatures-wrapper {
+            margin-top: 60px;
+            page-break-inside: avoid;
+            width: 100%;
+        }
+        .sig-table { width: 100%; margin-top: 40px; }
+        .sig-cell {
+            width: 40%;
             text-align: center;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
+            vertical-align: top;
+        }
+        .sig-line {
+            border-top: 1px solid #000;
+            margin: 0 30px 5px 30px;
+        }
+        .sig-name {
+            font-weight: bold;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+        .sig-role {
+            font-size: 9pt;
+            color: #666;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        {% if institucion.logo %}
-            <img src="{{ institucion.logo.path }}" style="height: 60px; margin-bottom: 10px;">
-        {% endif %}
-        <h1>{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA" }}</h1>
-        <h2>Informe de Análisis Pedagógico & IA</h2>
+    {% if institucion.logo %}
+        <img src="{{ institucion.logo.path }}" class="watermark">
+    {% endif %}
+
+    <div class="header-container">
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    {% if institucion.logo %}
+                        <img src="{{ institucion.logo.path }}" class="logo-img">
+                    {% else %}
+                        <div style="font-size: 30pt; color: #ccc;">🏛️</div>
+                    {% endif %}
+                </td>
+                <td class="info-cell">
+                    <h1 class="school-name">{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA" }}</h1>
+                    <div class="school-legal">
+                        NIT: {{ institucion.nit|default:"800.000.000-0" }} | DANE: {{ institucion.dane|default:"123456789012" }}<br>
+                        Resolución de Aprobación No. {{ institucion.resolucion|default:"0000" }} del {{ institucion.fecha_resolucion|default:"01/01/2020" }}<br>
+                        {{ institucion.direccion|default:"Dirección Institucional" }} | {{ institucion.telefono|default:"Teléfono Oficial" }}<br>
+                        {{ institucion.email|default:"contacto@institucion.edu.co" }}
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="meta-info">
-        <div class="meta-row"><span class="label">TIPO DE REPORTE:</span> {{ tipo_reporte }}</div>
-        <div class="meta-row"><span class="label">ESTUDIANTE/USUARIO:</span> {{ objetivo.get_full_name|default:objetivo.username|upper }}</div>
-        <div class="meta-row"><span class="label">SOLICITADO POR:</span> {{ solicitante.get_full_name|default:solicitante.username|title }} ({{ solicitante.perfil.rol }})</div>
-        <div class="meta-row"><span class="label">FECHA DE EMISIÓN:</span> {{ fecha_impresion|date:"d de F de Y, H:i" }}</div>
+    <div class="footer-container">
+        Documento oficial generado por la Plataforma Educativa Learning Labs. <br>
+        La información contenida es de carácter pedagógico y confidencial.<br>
+        Página <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span>
+    </div>
+
+    <div class="doc-title">
+        <h2>INFORME DE ANÁLISIS ESTRATÉGICO I.A.</h2>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td class="label">ESTUDIANTE:</td>
+            <td class="value"><strong>{{ objetivo.get_full_name|default:objetivo.username|upper }}</strong></td>
+            <td class="label">IDENTIFICACIÓN:</td>
+            <td class="value">{{ objetivo.username }}</td> </tr>
+        <tr>
+            <td class="label">SOLICITADO POR:</td>
+            <td class="value">{{ solicitante.get_full_name|title }}</td>
+            <td class="label">CARGO/ROL:</td>
+            <td class="value">{{ solicitante.perfil.rol|title }}</td>
+        </tr>
+        <tr>
+            <td class="label">TIPO DE ANÁLISIS:</td>
+            <td class="value">{{ tipo_reporte }}</td>
+            <td class="label">FECHA EMISIÓN:</td>
+            <td class="value">{{ fecha_impresion|date:"d/m/Y - h:i A" }}</td>
+        </tr>
         {% if query_original %}
-        <div class="meta-row"><span class="label">FOCO DE ANÁLISIS:</span> <em>"{{ query_original }}"</em></div>
+        <tr>
+            <td class="label">FOCO / TEMA:</td>
+            <td colspan="3" class="full-width"><em>"{{ query_original }}"</em></td>
+        </tr>
         {% endif %}
-    </div>
+    </table>
 
-    <div class="report-content">
+    <div class="content-body">
         {{ contenido_html }}
     </div>
 
-    <div class="signatures">
-        <div class="signature-box">
-            <div style="height: 40px;"></div> <div class="signature-line"></div>
-            <div class="signature-role">PROFESIONAL A CARGO</div>
-            <div>{{ solicitante.get_full_name|default:solicitante.username|title }}</div>
-        </div>
-        
-        <div class="signature-box" style="float: right;">
-            <div style="height: 40px;"></div>
-            <div class="signature-line"></div>
-            <div class="signature-role">COORDINACIÓN / ACUDIENTE</div>
-            <div>Visto Bueno</div>
-        </div>
-        <div style="clear: both;"></div>
+    <div class="signatures-wrapper">
+        <table class="sig-table">
+            <tr>
+                <td class="sig-cell">
+                    <div style="height: 50px;"></div> <div class="sig-line"></div>
+                    <div class="sig-name">{{ solicitante.get_full_name|default:solicitante.username|upper }}</div>
+                    <div class="sig-role">PROFESIONAL RESPONSABLE</div>
+                </td>
+                <td style="width: 20%;"></td> <td class="sig-cell">
+                    <div style="height: 50px;"></div> <div class="sig-line"></div>
+                    <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
+                    <div class="sig-role">RECIBIDO / VISTO BUENO</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="footer-disclaimer">
-        Este documento ha sido generado mediante herramientas de Inteligencia Artificial como apoyo al proceso pedagógico. 
-        Su contenido debe ser validado por el profesional a cargo. Generado por la plataforma Learning Labs.
+    <div style="margin-top: 30px; font-size: 7pt; color: #999; text-align: center;">
+        * Este reporte contiene sugerencias generadas mediante Inteligencia Artificial y debe ser validado por el criterio del profesional a cargo.
     </div>
 
 </body>

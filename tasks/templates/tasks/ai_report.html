@@ -49,17 +49,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const emptyState = document.getElementById('empty-state');
     const loadingState = document.getElementById('loading-state');
 
-    // --- VARIABLES DE CONTEXTO DESDE DJANGO ---
-    // Capturamos estos valores al cargar la página para construir el link del PDF luego
-    const targetUserId = "{{ target_user.id|default:request.user.id }}";
-    // Si viene por URL toma ese, sino asume 'mejoras_estudiante' por defecto
-    let currentAction = "{{ request.GET.action|default:'mejoras_estudiante' }}"; 
-    let currentQuery = "{{ request.GET.user_query|escapejs }}";
-
     // Datos iniciales seguros (escapejs evita errores de comillas)
     const initialDataRaw = "{{ ai_json_response|escapejs|default:'null' }}";
     
-    // CASO 1: ESTUDIANTE (Ya trae datos al cargar la página)
+    // CASO 1: ESTUDIANTE (Ya trae datos)
     if (initialDataRaw && initialDataRaw !== 'null' && initialDataRaw !== 'None') {
         try {
             if(emptyState) emptyState.style.display = 'none';
@@ -75,20 +68,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // CASO 2: DOCENTE (Clic en botón "Generar Estrategia")
+    // CASO 2: DOCENTE (Clic en botón)
     if (btnGenerar) {
         btnGenerar.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            // Actualizamos la acción porque el botón dispara una acción específica de docente
-            currentAction = "mejoras_docente"; 
-
             // UI Loading
             if(emptyState) emptyState.style.display = 'none';
             if(loadingState) loadingState.style.display = 'block';
             
             try {
-                // Forzamos la URL exacta que funciona
+                // 🔴 AQUÍ ESTÁ LA SOLUCIÓN DEFINITIVA 🔴
+                // Forzamos la URL exacta que descubriste que sí funciona: /ia/engine/
+                // No usamos tags dinámicos que puedan fallar, vamos directo al grano.
                 const url = "/ia/engine/?action=mejoras_docente&format=json";
                 
                 const response = await fetch(url, {
@@ -123,26 +115,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- FUNCIÓN DE RENDERIZADO VISUAL (CON INYECCIÓN DE BOTÓN PDF) ---
+    // RENDERIZADO VISUAL
     function renderResult(markdownText) {
         const htmlContent = typeof marked !== 'undefined' ? marked.parse(markdownText) : markdownText;
-        
-        // Construimos la URL del PDF dinámicamente con los datos actuales
-        const pdfUrl = `{% url 'download_ai_report_pdf' %}?action=${currentAction}&target_id=${targetUserId}&user_query=${encodeURIComponent(currentQuery)}`;
-
         container.innerHTML = `
             <div class="markdown-body text-dark animate__animated animate__fadeIn">
                 ${htmlContent}
             </div>
-
-            <div class="mt-5 pt-3 border-top d-flex justify-content-between align-items-center">
-                <span class="text-muted small">
-                    <i class="fas fa-check-circle text-success me-1"></i> Datos verificados por IA
-                </span>
-                
-                <a href="${pdfUrl}" class="btn btn-danger shadow-sm" target="_blank">
-                    <i class="fas fa-file-pdf me-2"></i> Descargar Reporte Oficial PDF
-                </a>
+            <div class="mt-4 pt-3 border-top text-end text-muted small">
+                <i class="fas fa-check-circle text-success"></i> Datos obtenidos de /ia/engine/
             </div>
         `;
     }
@@ -165,9 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-    .markdown-body h1, .markdown-body h2 { color: #0d6efd; margin-top: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; }
+    .markdown-body h1, .markdown-body h2 { color: #0d6efd; margin-top: 1rem; }
     .markdown-body ul { padding-left: 1.2rem; }
-    .markdown-body strong { font-weight: 700; color: #333; }
-    .markdown-body p { margin-bottom: 1rem; line-height: 1.6; }
+    .markdown-body strong { font-weight: 600; }
 </style>
 {% endblock %}
