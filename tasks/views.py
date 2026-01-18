@@ -5417,27 +5417,29 @@ def ver_documentos_institucionales(request):
 def historial_global_observaciones(request):
     """
     Vista de Inteligencia: Historial Global de Observaciones.
-    Muestra estadísticas y una tabla detallada de TODOS los procesos disciplinarios,
-    académicos y psicológicos de la institución.
     """
-    # 1. Obtener todas las observaciones ordenadas por fecha (más reciente primero)
+    # 1. Obtener todas las observaciones (Optimizada con select_related para evitar lentitud)
     observaciones = Observacion.objects.select_related('estudiante', 'creado_por').all().order_by('-fecha_creacion')
 
-    # 2. Filtrado Rápido (Opcional: Si envían búsqueda por GET)
+    # 2. Filtrado Rápido (Buscador)
     query = request.GET.get('q')
     if query:
         observaciones = observaciones.filter(
             Q(estudiante__first_name__icontains=query) |
             Q(estudiante__last_name__icontains=query) |
+            Q(estudiante__username__icontains=query) | # Busca también por documento/usuario
             Q(descripcion__icontains=query)
         )
 
-    # 3. Calcular Estadísticas (KPIs) en tiempo real
-    # Ajusta los strings 'CONVIVENCIA', 'ACADEMICA', etc. según como los tengas en tu models.py
+    # 3. Calcular Estadísticas (KPIs) de forma segura
     total_obs = observaciones.count()
+    
+    # Usamos filtros directos para contar (más eficiente)
     count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
-    count_academica = observaciones.filter(tipo='ACADEMICO').count() # O 'ACADEMICA' revisa tu modelo
-    count_psicologia = observaciones.filter(tipo='PSICOLOGIA').count() # O 'PSICOLOGICA'
+    
+    # Manejamos variaciones de nombre (ACADEMICO vs ACADEMICA) por seguridad
+    count_academica = observaciones.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
+    count_psicologia = observaciones.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
 
     context = {
         'observaciones': observaciones,
@@ -5449,4 +5451,6 @@ def historial_global_observaciones(request):
         },
         'query': query
     }
+    
+    # IMPORTANTE: El archivo debe estar en esta ruta exacta
     return render(request, 'bienestar/historial_global_observaciones.html', context)
