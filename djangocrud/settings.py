@@ -69,9 +69,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            # Usamos la sintaxis moderna con '/' que es compatible con tu BASE_DIR
-            BASE_DIR / 'templates', 
-            BASE_DIR / 'tasks' / 'templates',
+            os.path.join(BASE_DIR, 'templates'), # Global templates
+            os.path.join(BASE_DIR, 'tasks', 'templates'), # Tasks app templates
         ],
         'APP_DIRS': True,
         'OPTIONS': {
