@@ -5412,14 +5412,13 @@ def ver_documentos_institucionales(request):
     }
     return render(request, 'institucion/documentos_publicos.html', context)
 
-
 @role_required(['ADMINISTRADOR', 'COORD_ACADEMICO', 'COORD_CONVIVENCIA', 'PSICOLOGO'])
 def historial_global_observaciones(request):
     """
     Vista de Inteligencia: Historial Global de Observaciones.
     """
-    # 1. Obtener todas las observaciones (Optimizada con select_related para evitar lentitud)
-    observaciones = Observacion.objects.select_related('estudiante', 'creado_por').all().order_by('-fecha_creacion')
+    # 1. CORRECCIÓN: Usamos 'autor' en vez de 'creado_por'
+    observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
 
     # 2. Filtrado Rápido (Buscador)
     query = request.GET.get('q')
@@ -5427,17 +5426,15 @@ def historial_global_observaciones(request):
         observaciones = observaciones.filter(
             Q(estudiante__first_name__icontains=query) |
             Q(estudiante__last_name__icontains=query) |
-            Q(estudiante__username__icontains=query) | # Busca también por documento/usuario
+            Q(estudiante__username__icontains=query) |
             Q(descripcion__icontains=query)
         )
 
-    # 3. Calcular Estadísticas (KPIs) de forma segura
+    # 3. Estadísticas
     total_obs = observaciones.count()
-    
-    # Usamos filtros directos para contar (más eficiente)
     count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
     
-    # Manejamos variaciones de nombre (ACADEMICO vs ACADEMICA) por seguridad
+    # Filtro robusto para lo académico y psicológico
     count_academica = observaciones.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
     count_psicologia = observaciones.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
 
@@ -5452,5 +5449,4 @@ def historial_global_observaciones(request):
         'query': query
     }
     
-    # IMPORTANTE: El archivo debe estar en esta ruta exacta
     return render(request, 'bienestar/historial_global_observaciones.html', context)
