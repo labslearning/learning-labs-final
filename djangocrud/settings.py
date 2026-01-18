@@ -69,20 +69,14 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Path to templates directory
-        'DIRS': [BASE_DIR / 'tasks' / 'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'tasks', 'templates')], # Use os.path.join for safety
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
-                # ===================================================================
-                # 🚑 LA LÍNEA MÁGICA: ESTO ARREGLA LAS FOTOS NEGRAS
-                # ===================================================================
                 'django.template.context_processors.media', 
-                # ===================================================================
-                
                 'tasks.context_processors.datos_globales_usuario', 
             ],
         },
