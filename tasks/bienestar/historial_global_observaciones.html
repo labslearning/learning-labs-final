@@ -9,12 +9,12 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
         <div class="d-flex align-items-center gap-4">
             <div class="icon-box-xxl bg-gradient-dark text-white rounded-4 shadow-lg d-flex align-items-center justify-content-center">
-                <i class="fas fa-brain fa-2x"></i>
+                <i class="fas fa-chart-line fa-2x"></i>
             </div>
             <div>
-                <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Intelligence Panel</h6>
+                <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Intelligence Command Center</h6>
                 <h1 class="fw-bolder text-dark mb-0">Student Tracking 360°</h1>
-                <p class="text-muted lead mb-0">Predictive analytics for Behavior, Academic Performance, and Psycho-Orientation.</p>
+                <p class="text-muted lead mb-0">Real-time analytics for Behavior, Academics, and Mental Health.</p>
             </div>
         </div>
         
@@ -22,15 +22,15 @@
             <div class="text-end d-none d-lg-block border-end pe-3 me-2">
                 <small class="d-block text-muted text-uppercase fw-bold x-small">System Status</small>
                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                    <i class="fas fa-wifi me-1"></i>Online &bull; {% now "H:i" %}
+                    <i class="fas fa-satellite-dish me-1"></i>Live &bull; {% now "H:i" %}
                 </span>
             </div>
 
             <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white border shadow-sm rounded-pill px-4 hover-lift fw-medium transition-all">
-                <i class="fas fa-chart-pie me-2 text-secondary"></i>Dashboard
+                <i class="fas fa-columns me-2 text-secondary"></i>Dashboard
             </a>
             <button onclick="window.print()" class="btn btn-primary bg-gradient-primary border-0 rounded-pill px-4 shadow-lg hover-lift fw-medium transition-all">
-                <i class="fas fa-file-pdf me-2"></i>Official Report
+                <i class="fas fa-file-pdf me-2"></i>Generate Report
             </button>
         </div>
     </div>
@@ -41,22 +41,22 @@
             <div class="card border-0 shadow-sm h-100 kpi-summary-card bg-white position-relative overflow-hidden">
                 <div class="card-body p-4 d-flex flex-column justify-content-between z-1 position-relative">
                     <div>
-                        <h6 class="text-uppercase text-muted fw-bold x-small mb-3">Total Active Reports</h6>
+                        <h6 class="text-uppercase text-muted fw-bold x-small mb-3">Active Cases</h6>
                         <div class="d-flex align-items-baseline gap-2 mb-2">
                             <h2 class="display-3 fw-bolder text-dark mb-0">{{ kpi.total }}</h2>
                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                                <i class="fas fa-arrow-up me-1"></i>Active
+                                <i class="fas fa-caret-up me-1"></i>Active
                             </span>
                         </div>
-                        <p class="text-muted small opacity-75">Records currently being tracked this period.</p>
+                        <p class="text-muted small opacity-75">Total open records requiring monitoring.</p>
                     </div>
                     
                     <div class="mt-4 border-top pt-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="x-small fw-bold text-secondary text-uppercase">Academic</span>
+                            <span class="x-small fw-bold text-secondary text-uppercase">Academic Alerts</span>
                             <span class="fw-bold text-dark">{{ kpi.academica }}</span>
                         </div>
-                        <div class="progress bg-light" style="height: 4px;">
+                        <div class="progress bg-light" style="height: 6px;">
                             <div class="progress-bar bg-info" role="progressbar" style="width: 40%"></div>
                         </div>
                     </div>
@@ -67,8 +67,11 @@
         <div class="col-xl-5 col-md-6">
             <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold text-dark mb-0">Case Distribution</h6>
-                    <i class="fas fa-chart-pie text-muted"></i>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Case Distribution</h6>
+                        <small class="text-muted x-small">By Category</small>
+                    </div>
+                    <i class="fas fa-chart-pie text-muted opacity-50"></i>
                 </div>
                 <div class="card-body d-flex align-items-center justify-content-center">
                     <div style="height: 200px; width: 100%;">
@@ -83,31 +86,31 @@
                 <div class="card-body p-4 position-relative z-1">
                     <div class="d-flex align-items-center mb-4">
                         <div class="icon-box bg-white-20 rounded-circle me-3">
-                            <i class="fas fa-shield-alt text-warning"></i>
+                            <i class="fas fa-lightbulb text-warning"></i>
                         </div>
-                        <h5 class="fw-bold mb-0">Priority Alerts</h5>
+                        <h5 class="fw-bold mb-0">Insights & Actions</h5>
                     </div>
                     
-                    <p class="opacity-75 mb-4 x-small">Areas requiring immediate intervention from the interdisciplinary team.</p>
+                    <p class="opacity-75 mb-4 x-small">AI-driven suggestions based on current patterns.</p>
                     
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="x-small fw-bold text-uppercase ls-1">Academic Risk</span>
-                            <span class="x-small fw-bold">{{ kpi.academica }} Cases</span>
-                        </div>
-                        <div class="progress bg-white-10" style="height: 8px; border-radius: 4px;">
-                            <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 75%"></div>
+                    <div class="bg-white-10 rounded p-3 mb-3 border border-white-10">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle text-danger me-2 mt-1"></i>
+                            <div>
+                                <span class="fw-bold d-block x-small text-uppercase ls-1">Critical Focus</span>
+                                <span class="small">High volume of <strong>Academic</strong> alerts. Consider scheduling a remedial workshop.</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="d-grid">
                         <button class="btn btn-light rounded-pill fw-bold text-dark hover-scale">
-                            View Alerts Report
+                            View Detailed Analysis
                         </button>
                     </div>
                 </div>
                 <div class="position-absolute top-0 end-0 opacity-10 p-4">
-                    <i class="fas fa-radar fa-6x text-white transform-rotate-12"></i>
+                    <i class="fas fa-chess-knight fa-8x text-white transform-rotate-12"></i>
                 </div>
             </div>
         </div>
@@ -119,10 +122,10 @@
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="fas fa-bolt text-danger me-2"></i>Academic Risk Radar
                 </h5>
-                <p class="text-muted x-small mb-0">Students with recent low performance reports.</p>
+                <p class="text-muted x-small mb-0">Students flagged for immediate academic intervention.</p>
             </div>
-            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1">
-                Intervention Required
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 animate__animated animate__pulse animate__infinite">
+                Action Required
             </span>
         </div>
         
@@ -140,20 +143,20 @@
                                     <div class="ms-3 overflow-hidden">
                                         <h6 class="fw-bold text-dark mb-0 text-truncate">{{ obs.estudiante.get_full_name }}</h6>
                                         <div class="d-flex align-items-center gap-1 mt-1">
-                                            <span class="badge bg-danger text-white x-small">ALERT</span>
-                                            <small class="text-muted x-small ms-1">Subject Pending</small>
+                                            <span class="badge bg-danger text-white x-small">CRITICAL</span>
+                                            <small class="text-muted x-small ms-1">Failing Grades</small>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="bg-body-secondary rounded-3 p-3 mb-3 border border-dashed border-secondary-subtle">
-                                    <h6 class="text-secondary text-uppercase x-small fw-bold mb-1">Observation:</h6>
-                                    <p class="small text-dark mb-0 fst-italic text-truncate-3">"{{ obs.descripcion }}"</p>
+                                <div class="bg-body-secondary rounded-3 p-3 mb-3 border border-dashed border-secondary-subtle position-relative">
+                                    <i class="fas fa-quote-left text-secondary opacity-25 position-absolute top-0 start-0 m-2"></i>
+                                    <p class="small text-dark mb-0 fst-italic text-truncate-3 ps-2">"{{ obs.descripcion }}"</p>
                                 </div>
 
                                 <div class="d-grid">
                                     <a href="{% url 'ver_observador' obs.estudiante.id %}" class="btn btn-outline-danger btn-sm rounded-pill fw-bold">
-                                        <i class="fas fa-stethoscope me-2"></i>Start Protocol
+                                        <i class="fas fa-user-md me-2"></i>Intervene
                                     </a>
                                 </div>
                             </div>
@@ -170,20 +173,20 @@
         <div class="card-header bg-white border-bottom py-4 px-4">
             <div class="row align-items-center g-3">
                 <div class="col-lg-5">
-                    <h5 class="fw-bold text-dark mb-1">Case Log</h5>
-                    <p class="text-muted x-small mb-0">Unified database of incidents and tracking.</p>
+                    <h5 class="fw-bold text-dark mb-1">Master Case Log</h5>
+                    <p class="text-muted x-small mb-0">Complete historical registry of all student interactions.</p>
                 </div>
                 <div class="col-lg-7">
                     <form method="GET" class="d-flex gap-2 justify-content-lg-end">
                         <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-light w-100" style="max-width: 450px;">
                             <span class="input-group-text bg-light border-0 ps-3 text-muted"><i class="fas fa-filter"></i></span>
-                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="Search by student, code..." value="{{ query|default:'' }}">
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="Search student, code, or keyword..." value="{{ query|default:'' }}">
                             {% if query %}
                                 <a href="{% url 'historial_global_observaciones' %}" class="btn btn-light border-0 text-muted px-3"><i class="fas fa-times"></i></a>
                             {% endif %}
                         </div>
                         <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1">
-                            <i class="fas fa-search me-2"></i>Search
+                            Filter
                         </button>
                     </form>
                 </div>
@@ -196,10 +199,10 @@
                     <tr>
                         <th class="ps-4 py-3 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 25%;">Student</th>
                         <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Category</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 30%;">Case Details</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Authority</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 30%;">Details</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Reported By</th>
                         <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 10%;">Date</th>
-                        <th class="text-end pe-4 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 5%;">Action</th>
+                        <th class="text-end pe-4 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 5%;"></th>
                     </tr>
                 </thead>
                 <tbody class="border-top-0">
@@ -211,12 +214,11 @@
                                     <div class="avatar-md rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold gradient-avatar" style="width: 42px; height: 42px;">
                                         {{ obs.estudiante.first_name|slice:":1"|default:obs.estudiante.username|slice:":1" }}
                                     </div>
-                                    <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
                                 </div>
                                 <div class="ms-3">
                                     <div class="fw-bold text-dark">{{ obs.estudiante.get_full_name|default:obs.estudiante.username }}</div>
                                     <div class="x-small text-muted d-flex align-items-center gap-1">
-                                        <i class="far fa-id-card"></i> {{ obs.estudiante.username }}
+                                        <i class="far fa-id-badge"></i> {{ obs.estudiante.username }}
                                     </div>
                                 </div>
                             </div>
@@ -242,16 +244,8 @@
 
                         <td>
                             <div class="d-flex flex-column" style="max-width: 450px;">
-                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"General Observation" }}</span>
+                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observation" }}</span>
                                 <p class="text-muted small mb-0 text-truncate-2" style="line-height: 1.4;">{{ obs.descripcion }}</p>
-                                
-                                {% if obs.tipo == 'ACADEMICO' %}
-                                    <div class="mt-2">
-                                        <span class="badge bg-light text-secondary border px-2 py-1 x-small shadow-sm">
-                                            <i class="fas fa-search me-1"></i>Academic Follow-up
-                                        </span>
-                                    </div>
-                                {% endif %}
                             </div>
                         </td>
 
@@ -260,44 +254,33 @@
                                 <div class="avatar-xs rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border" style="width: 28px; height: 28px;">
                                     <i class="fas fa-user-edit x-small"></i>
                                 </div>
-                                <div>
-                                    <span class="d-block x-small text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">Recorded by</span>
-                                    <span class="small fw-semibold text-dark">{{ obs.autor.get_full_name|default:obs.autor.username|truncatechars:15 }}</span>
-                                </div>
+                                <span class="small fw-semibold text-dark">{{ obs.autor.get_full_name|default:obs.autor.username|truncatechars:15 }}</span>
                             </div>
                         </td>
 
                         <td>
                             <div class="d-flex flex-column">
                                 <span class="fw-bold text-dark small">{{ obs.fecha_creacion|date:"d M, Y" }}</span>
-                                <span class="text-muted x-small d-flex align-items-center gap-1">
-                                    <i class="far fa-clock"></i> {{ obs.fecha_creacion|date:"H:i A" }}
-                                </span>
+                                <span class="text-muted x-small">{{ obs.fecha_creacion|date:"H:i A" }}</span>
                             </div>
                         </td>
 
                         <td class="text-end pe-4">
                             <div class="dropdown">
                                 <button class="btn btn-light btn-sm rounded-circle shadow-sm hover-scale border" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v text-secondary"></i>
+                                    <i class="fas fa-ellipsis-h text-secondary"></i>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 rounded-4 p-2 animate__animated animate__fadeIn" style="min-width: 200px;">
-                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Management</h6></li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 rounded-4 p-2 animate__animated animate__fadeIn">
+                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Actions</h6></li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
-                                            <i class="fas fa-folder-open text-primary me-2"></i>View File
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Open File
                                         </a>
                                     </li>
+                                    {% if obs.tipo == 'ACADEMICO' %}
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="#">
-                                            <i class="fas fa-print text-dark me-2"></i>Print Case
-                                        </a>
-                                    </li>
-                                    {% if obs.tipo == 'PSICOLOGIA' %}
-                                    <li><hr class="dropdown-divider my-2"></li>
-                                    <li>
-                                        <a class="dropdown-item rounded-3 py-2 text-purple bg-purple-subtle-hover" href="#">
-                                            <i class="fas fa-notes-medical me-2"></i>Care Route
+                                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>Notify Teacher
                                         </a>
                                     </li>
                                     {% endif %}
@@ -309,11 +292,11 @@
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <div class="py-5">
-                                <div class="mb-3 text-light-gray opacity-25 animate__animated animate__pulse animate__infinite">
+                                <div class="mb-3 text-light-gray opacity-25">
                                     <i class="fas fa-clipboard-check fa-5x"></i>
                                 </div>
                                 <h5 class="text-dark fw-bold">All Clear</h5>
-                                <p class="text-muted small">No records found matching the applied filters.</p>
+                                <p class="text-muted small">No records match your search criteria.</p>
                             </div>
                         </td>
                     </tr>
@@ -325,15 +308,6 @@
         <div class="card-footer bg-white border-top py-3 px-4">
             <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">Showing <span class="fw-bold text-dark">{{ observaciones.count }}</span> records.</small>
-                
-                <nav>
-                    <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item disabled"><a class="page-link border-0 rounded-start-pill" href="#"><i class="fas fa-chevron-left"></i></a></li>
-                        <li class="page-item active"><a class="page-link border-0 bg-dark" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link border-0 text-dark" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link border-0 rounded-end-pill text-dark" href="#"><i class="fas fa-chevron-right"></i></a></li>
-                    </ul>
-                </nav>
             </div>
         </div>
     </div>
@@ -341,13 +315,10 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Data brought from Django (KPIs)
-        const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
         const acad = {{ kpi.academica|default:0 }};
         const psico = {{ kpi.psicologia|default:0 }};
 
-        // 1. Distribution Chart (Doughnut)
         const ctxDistribucion = document.getElementById('chartDistribucion');
         if (ctxDistribucion) {
             new Chart(ctxDistribucion, {
@@ -356,11 +327,7 @@
                     labels: ['Behavior', 'Academic', 'Psychology'],
                     datasets: [{
                         data: [conv, acad, psico],
-                        backgroundColor: [
-                            '#ffc107', // Warning (Yellow)
-                            '#0dcaf0', // Info (Blue)
-                            '#6610f2'  // Purple (Purple)
-                        ],
+                        backgroundColor: ['#ffc107', '#0dcaf0', '#6610f2'],
                         borderWidth: 0,
                         hoverOffset: 15
                     }]
@@ -368,19 +335,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '80%', // Thinner doughnut (Modern style)
+                    cutout: '85%',
                     plugins: {
                         legend: {
                             position: 'right',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 11
-                                },
-                                color: '#6c757d'
-                            }
+                            labels: { usePointStyle: true, padding: 20, font: { family: "'Inter', sans-serif", size: 11 }, color: '#6c757d' }
                         }
                     }
                 }
@@ -398,7 +357,6 @@
         --dark-overlay: rgba(33, 37, 41, 0.03);
     }
 
-    /* Fonts and Utilities */
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .ls-1 { letter-spacing: 0.05em; }
     .ls-2 { letter-spacing: 0.1em; }
@@ -406,7 +364,6 @@
     .bg-white-10 { background-color: rgba(255, 255, 255, 0.1); }
     .bg-white-20 { background-color: rgba(255, 255, 255, 0.2); }
 
-    /* Gradients and Colors */
     .bg-gradient-dark { background: linear-gradient(135deg, #212529 0%, #343a40 100%); }
     .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
     .bg-gradient-warning { background: linear-gradient(135deg, #ffc107 0%, #ff9e00 100%); }
@@ -419,16 +376,8 @@
     
     .gradient-avatar { background: linear-gradient(135deg, #4361ee, #7209b7); }
 
-    /* Icon Boxes */
     .icon-box-xxl { width: 80px; height: 80px; font-size: 1.8rem; }
-    .icon-box-xl { width: 64px; height: 64px; font-size: 1.5rem; }
-    .icon-box {
-        width: 48px; height: 48px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-    }
-
-    /* Cards & Glassmorphism */
+    
     .risk-card {
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         border-left: 4px solid #dc3545 !important;
@@ -445,13 +394,11 @@
         background: linear-gradient(90deg, transparent, rgba(220, 53, 69, 0.2));
     }
 
-    /* KPI Cards */
     .kpi-summary-card {
         border-radius: 1rem;
         background: radial-gradient(circle at top right, #f8f9fa, #fff);
     }
 
-    /* Table Styles */
     .custom-table thead th {
         background-color: #f8f9fa;
         color: #6c757d;
@@ -471,32 +418,19 @@
         overflow: hidden;
     }
 
-    /* Dropdowns & Interactions */
     .dropdown-menu {
         box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         border: 1px solid rgba(0,0,0,0.05);
-    }
-    .dropdown-item {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #495057;
-        transition: all 0.2s ease;
     }
     .dropdown-item:hover {
         background-color: #f8f9fa;
         color: var(--blue-primary);
         padding-left: 1.5rem;
     }
-    .bg-purple-subtle-hover:hover {
-        background-color: rgba(102, 16, 242, 0.15) !important;
-        color: var(--purple-primary) !important;
-    }
 
-    /* Transitions */
     .transition-all { transition: all 0.2s ease; }
     .group-hover:hover { background-color: #fcfcfc; }
     .border-bottom-hover { border-bottom: 1px solid #f1f3f5; }
-    
     .transform-rotate-12 { transform: rotate(12deg); }
 </style>
 {% endblock %}
