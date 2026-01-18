@@ -3,6 +3,7 @@
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px;">
 
@@ -19,12 +20,11 @@
         </div>
         
         <div class="d-flex gap-3 align-items-center mt-3 mt-xl-0">
-            <div class="text-end d-none d-lg-block border-end pe-3 me-2">
-                <small class="d-block text-muted text-uppercase fw-bold x-small">Estado del Sistema</small>
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                    <i class="fas fa-wifi me-1"></i>En Línea &bull; {% now "H:i" %}
-                </span>
-            </div>
+            <button type="button" class="btn btn-ai-magic rounded-pill px-4 shadow-lg hover-lift fw-bold transition-all text-white" onclick="iniciarAnalisisIA()">
+                <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
+            </button>
+
+            <div class="vr mx-2 opacity-25"></div>
 
             <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white border shadow-sm rounded-pill px-4 hover-lift fw-medium transition-all">
                 <i class="fas fa-chart-pie me-2 text-secondary"></i>Dashboard
@@ -91,7 +91,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center h-100">
-                         <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end pe-4">
+                        <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end pe-4">
                              <div style="height: 160px; width: 100%;">
                                 <canvas id="chartDistribucion"></canvas>
                             </div>
@@ -133,7 +133,7 @@
                         </div>
                         <div class="d-flex align-items-center mt-1">
                             <i class="fas fa-info-circle text-muted x-small me-1"></i>
-                            <small class="text-muted x-small">Estudiantes reprobando 2+ materias clave.</small>
+                            <small class="text-muted x-small">Estudiantes reprobando 2+ materias.</small>
                         </div>
                     </div>
 
@@ -165,7 +165,7 @@
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
                 </h5>
-                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención académica inmediata basada en datos de rendimiento recientes.</p>
+                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención académica inmediata.</p>
             </div>
             <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
                 <i class="fas fa-bell me-1"></i>Intervención Requerida
@@ -222,7 +222,7 @@
             <div class="row align-items-center g-3">
                 <div class="col-lg-5">
                     <h5 class="fw-bold text-dark mb-1">Bitácora Maestra de Casos</h5>
-                    <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones y reportes estudiantiles.</p>
+                    <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones.</p>
                 </div>
                 <div class="col-lg-7">
                     <form method="GET" class="d-flex gap-2 justify-content-lg-end">
@@ -364,6 +364,55 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+            <div class="modal-header border-0 p-4 bg-gradient-ai text-white position-relative">
+                <div class="position-relative z-1 d-flex align-items-center w-100">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-robot fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold">Stratos AI: Analista Educativo</h5>
+                        <p class="mb-0 small opacity-75">Cruzando PEI, Manual de Convivencia y Datos en Tiempo Real</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="position-absolute top-0 end-0 h-100 w-100 overflow-hidden opacity-25">
+                    <i class="fas fa-network-wired fa-10x position-absolute" style="top: -20px; right: -20px;"></i>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 bg-light-subtle" style="min-height: 400px;">
+                
+                <div id="aiLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Analizando patrones...</h5>
+                    <p class="text-muted small" id="aiStatusText">Leyendo Manual de Convivencia Art. 24...</p>
+                    
+                    <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; max-width: 300px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div id="aiResults" class="d-none animate__animated animate__fadeIn">
+                    <div class="ai-content-wrapper bg-white p-4 rounded-3 border shadow-sm">
+                        <div id="aiTextContent" class="markdown-body"></div>
+                    </div>
+                    
+                    <div class="mt-4 text-end">
+                        <button class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-primary rounded-pill px-4" onclick="window.print()">
+                            <i class="fas fa-download me-2"></i>Descargar Plan de Acción
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
@@ -371,7 +420,7 @@
         const acad = {{ kpi.academica|default:0 }};
         const psico = {{ kpi.psicologia|default:0 }};
 
-        // 1. Gráfico de Dona de Distribución
+        // 1. Gráfico de Dona
         const ctxDistribucion = document.getElementById('chartDistribucion');
         if (ctxDistribucion) {
             new Chart(ctxDistribucion, {
@@ -389,16 +438,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '80%',
-                    plugins: {
-                        legend: {
-                            display: false, // Ocultar leyenda por defecto para limpieza
-                        }
-                    }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
-        // 2. Gráfico de Línea de Tendencia Mensual (Simulado para visuales)
+        // 2. Gráfico de Línea
         const ctxTendencia = document.getElementById('chartTendencia');
         if (ctxTendencia) {
             new Chart(ctxTendencia, {
@@ -407,7 +452,7 @@
                     labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                     datasets: [{
                         label: 'Total Casos',
-                        data: [12, 19, 15, 25, 22, {{ kpi.total }}], // Valor dinámico al final
+                        data: [12, 19, 15, 25, 22, {{ kpi.total }}],
                         borderColor: '#4361ee',
                         backgroundColor: (context) => {
                             const ctx = context.chart.ctx;
@@ -427,20 +472,78 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
-                            display: true, 
-                            grid: { display: true, color: 'rgba(0,0,0,0.05)' },
-                            ticks: { font: { size: 10 } }
-                        },
-                        x: { 
-                            grid: { display: false },
-                            ticks: { font: { size: 10 } }
-                        }
+                        y: { display: true, grid: { display: true, color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
         }
     });
+
+    // Lógica para la IA Stratos
+    function iniciarAnalisisIA() {
+        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
+        const loading = document.getElementById('aiLoading');
+        const results = document.getElementById('aiResults');
+        const statusText = document.getElementById('aiStatusText');
+        const contentDiv = document.getElementById('aiTextContent');
+
+        modal.show();
+        loading.classList.remove('d-none');
+        results.classList.add('d-none');
+
+        // Simulación de pasos de análisis
+        const steps = [
+            "Conectando con base de datos estudiantil...",
+            "Escaneando Manual de Convivencia (Cap. Faltas Graves)...",
+            "Analizando patrones de rendimiento académico...",
+            "Cruzando datos con el PEI Institucional...",
+            "Generando estrategias de mejora..."
+        ];
+
+        let stepIndex = 0;
+        const interval = setInterval(() => {
+            if (stepIndex < steps.length) {
+                statusText.innerText = steps[stepIndex];
+                stepIndex++;
+            } else {
+                clearInterval(interval);
+                mostrarResultadosSimulados(contentDiv, loading, results);
+            }
+        }, 1200); // Cambia de mensaje cada 1.2 segundos
+    }
+
+    function mostrarResultadosSimulados(container, loading, results) {
+        // Aquí iría la llamada fetch real al backend. Por ahora simulamos la respuesta.
+        const mockResponse = `
+### 🧠 Análisis Estratégico Stratos
+
+Basado en el análisis de **{{ kpi.total }} registros activos**, el Manual de Convivencia y el PEI, se han detectado los siguientes patrones:
+
+#### 1. 🚨 Alerta de Convivencia (Tendencia)
+Se observa un incremento en reportes tipo **"Interrupción de clase"** en Grado 9°.
+* **Referencia Manual:** Art. 34 - Faltas Leves reiterativas.
+* **Acción Sugerida:** Activar protocolo de mediación escolar antes de escalar a suspensión. Implementar talleres de escucha activa.
+
+#### 2. 📉 Foco Académico
+El **{{ kpi.academica }}%** de las alertas académicas están concentradas en Matemáticas y Ciencias.
+* **Estrategia PEI:** Aplicar "Refuerzo Pedagógico Diferenciado" (Página 45 del PEI).
+* **Recomendación:** Programar tutorías entre pares para las próximas 2 semanas.
+
+#### 3. 💡 Oportunidad Psico-Orientación
+Se detectan patrones de ansiedad pre-evaluación.
+* **Acción:** Taller de manejo de estrés y técnicas de estudio (Modelo Cognitivo-Conductual).
+
+---
+**Conclusión:** Se recomienda priorizar la intervención en **Grado 9°** para reducir la reincidencia disciplinaria.
+        `;
+
+        // Renderizar Markdown
+        container.innerHTML = marked.parse(mockResponse);
+        
+        loading.classList.add('d-none');
+        results.classList.remove('d-none');
+    }
 </script>
 
 <style>
@@ -457,10 +560,33 @@
     .ls-2 { letter-spacing: 0.1em; }
     .x-small { font-size: 0.75rem; }
     .bg-white-10 { background-color: rgba(255, 255, 255, 0.1); }
+    .bg-white-20 { background-color: rgba(255, 255, 255, 0.2); }
 
     .bg-gradient-dark { background: linear-gradient(135deg, #212529 0%, #343a40 100%); }
     .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
     
+    /* Gradiente Especial para IA */
+    .bg-gradient-ai { 
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%); 
+    }
+    .btn-ai-magic {
+        background: linear-gradient(90deg, #6366f1, #d946ef);
+        border: none;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    .btn-ai-magic::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, #d946ef, #6366f1);
+        z-index: -1;
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+    .btn-ai-magic:hover::before { opacity: 1; }
+
     .bg-purple-subtle { background-color: var(--purple-soft) !important; }
     .text-purple { color: var(--purple-primary) !important; }
     .bg-warning-subtle { background-color: rgba(255, 193, 7, 0.12) !important; }
@@ -516,6 +642,11 @@
         background-color: rgba(102, 16, 242, 0.15) !important;
         color: var(--purple-primary) !important;
     }
+
+    /* Markdown Styles para la IA */
+    .markdown-body h4 { font-size: 1.1rem; font-weight: 700; margin-top: 1.5rem; color: #212529; }
+    .markdown-body ul { padding-left: 1.2rem; }
+    .markdown-body li { margin-bottom: 0.5rem; }
 
     .transition-all { transition: all 0.2s ease; }
     .group-hover:hover { background-color: #fcfcfc; }
