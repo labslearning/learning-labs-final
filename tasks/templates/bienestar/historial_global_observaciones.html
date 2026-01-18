@@ -12,17 +12,17 @@
                 <i class="fas fa-brain fa-2x"></i>
             </div>
             <div>
-                <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Intelligence Panel</h6>
-                <h1 class="fw-bolder text-dark mb-0">Student Tracking 360°</h1>
-                <p class="text-muted lead mb-0">Predictive analytics for Behavior, Academic Performance, and Psycho-Orientation.</p>
+                <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Panel de Inteligencia</h6>
+                <h1 class="fw-bolder text-dark mb-0">Seguimiento Estudiantil 360°</h1>
+                <p class="text-muted lead mb-0">Analítica predictiva de Convivencia, Desempeño Académico y Psico-Orientación.</p>
             </div>
         </div>
         
         <div class="d-flex gap-3 align-items-center mt-3 mt-xl-0">
             <div class="text-end d-none d-lg-block border-end pe-3 me-2">
-                <small class="d-block text-muted text-uppercase fw-bold x-small">System Status</small>
+                <small class="d-block text-muted text-uppercase fw-bold x-small">Estado del Sistema</small>
                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                    <i class="fas fa-wifi me-1"></i>Online &bull; {% now "H:i" %}
+                    <i class="fas fa-wifi me-1"></i>En Línea &bull; {% now "H:i" %}
                 </span>
             </div>
 
@@ -30,7 +30,7 @@
                 <i class="fas fa-chart-pie me-2 text-secondary"></i>Dashboard
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 rounded-pill px-4 shadow-lg hover-lift fw-medium transition-all">
-                <i class="fas fa-file-pdf me-2"></i>Official Report
+                <i class="fas fa-file-pdf me-2"></i>Informe Oficial
             </button>
         </div>
     </div>
@@ -42,34 +42,34 @@
                 <div class="card-body p-4 d-flex flex-column justify-content-between z-1 position-relative">
                     <div>
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                             <h6 class="text-uppercase text-muted fw-bold x-small">Total Active Reports</h6>
+                             <h6 class="text-uppercase text-muted fw-bold x-small">Total Reportes Activos</h6>
                              <span class="icon-box-sm bg-light text-secondary rounded-circle"><i class="fas fa-users"></i></span>
                         </div>
                         <div class="d-flex align-items-baseline gap-2 mb-2">
                             <h2 class="display-3 fw-bolder text-dark mb-0">{{ kpi.total }}</h2>
                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                                <i class="fas fa-arrow-up me-1"></i>Active
+                                <i class="fas fa-arrow-up me-1"></i>Activos
                             </span>
                         </div>
-                        <p class="text-muted small opacity-75">Records currently being tracked across all categories this period.</p>
+                        <p class="text-muted small opacity-75">Registros actualmente en seguimiento en todas las categorías.</p>
                     </div>
                     
                     <div class="mt-4 border-top pt-3">
                         <div class="row g-2 text-center">
                             <div class="col-4 border-end">
                                 <span class="d-block fw-bold text-dark fs-5">{{ kpi.convivencia }}</span>
-                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Behavior</span>
-                                <span class="badge bg-warning-subtle text-warning x-small mt-1 rounded-pill">Focus</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Convivencia</span>
+                                <span class="badge bg-warning-subtle text-warning x-small mt-1 rounded-pill">Foco</span>
                             </div>
                             <div class="col-4 border-end">
                                 <span class="d-block fw-bold text-dark fs-5">{{ kpi.academica }}</span>
-                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Academic</span>
-                                <span class="badge bg-info-subtle text-info x-small mt-1 rounded-pill">Stable</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Académico</span>
+                                <span class="badge bg-info-subtle text-info x-small mt-1 rounded-pill">Estable</span>
                             </div>
                             <div class="col-4">
                                 <span class="d-block fw-bold text-dark fs-5">{{ kpi.psicologia }}</span>
-                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psych</span>
-                                <span class="badge bg-purple-subtle text-purple x-small mt-1 rounded-pill">Review</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psico</span>
+                                <span class="badge bg-purple-subtle text-purple x-small mt-1 rounded-pill">Revisar</span>
                             </div>
                         </div>
                     </div>
@@ -81,12 +81,12 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="fw-bold text-dark mb-0">Case Analytics</h6>
-                        <small class="text-muted x-small">Distribution & Trends Overview</small>
+                        <h6 class="fw-bold text-dark mb-0">Analítica de Casos</h6>
+                        <small class="text-muted x-small">Distribución y Tendencias Generales</small>
                     </div>
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary active">Month</button>
-                        <button type="button" class="btn btn-outline-secondary">Quarter</button>
+                        <button type="button" class="btn btn-outline-secondary active">Mes</button>
+                        <button type="button" class="btn btn-outline-secondary">Trimestre</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -95,10 +95,10 @@
                              <div style="height: 160px; width: 100%;">
                                 <canvas id="chartDistribucion"></canvas>
                             </div>
-                            <small class="text-muted x-small mt-2 text-center d-block">Current Distribution</small>
+                            <small class="text-muted x-small mt-2 text-center d-block">Distribución Actual</small>
                         </div>
                         <div class="col-md-7 ps-md-4">
-                            <h6 class="fw-bold text-secondary x-small text-uppercase mb-3">6-Month Activity Trend</h6>
+                            <h6 class="fw-bold text-secondary x-small text-uppercase mb-3">Tendencia de Actividad (6 Meses)</h6>
                             <div style="height: 160px; width: 100%;">
                                 <canvas id="chartTendencia"></canvas>
                             </div>
@@ -117,42 +117,42 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold text-dark mb-0">Focus Areas</h5>
-                                <small class="text-muted">High priority intervention required</small>
+                                <h5 class="fw-bold text-dark mb-0">Áreas de Foco</h5>
+                                <small class="text-muted">Intervención prioritaria requerida</small>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Academic Risk</span>
-                            <span class="x-small fw-bold text-danger">{{ kpi.academica }} Cases</span>
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Riesgo Académico</span>
+                            <span class="x-small fw-bold text-danger">{{ kpi.academica }} Casos</span>
                         </div>
                         <div class="progress bg-light" style="height: 6px;">
                             <div class="progress-bar bg-danger" role="progressbar" style="width: 75%"></div>
                         </div>
                         <div class="d-flex align-items-center mt-1">
                             <i class="fas fa-info-circle text-muted x-small me-1"></i>
-                            <small class="text-muted x-small">Students failing 2+ core subjects.</small>
+                            <small class="text-muted x-small">Estudiantes reprobando 2+ materias clave.</small>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Behavioral</span>
-                            <span class="x-small fw-bold text-warning">{{ kpi.convivencia }} Cases</span>
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Conductual</span>
+                            <span class="x-small fw-bold text-warning">{{ kpi.convivencia }} Casos</span>
                         </div>
                         <div class="progress bg-light" style="height: 6px;">
                             <div class="progress-bar bg-warning" role="progressbar" style="width: 45%"></div>
                         </div>
                          <div class="d-flex align-items-center mt-1">
                             <i class="fas fa-info-circle text-muted x-small me-1"></i>
-                            <small class="text-muted x-small">Recent disciplinary actions.</small>
+                            <small class="text-muted x-small">Acciones disciplinarias recientes.</small>
                         </div>
                     </div>
 
                     <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold hover-scale shadow-sm">
-                        View Critical Reports <i class="fas fa-arrow-right ms-1"></i>
+                        Ver Reportes Críticos <i class="fas fa-arrow-right ms-1"></i>
                     </button>
                 </div>
             </div>
@@ -163,12 +163,12 @@
         <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
-                    <i class="fas fa-bolt text-danger me-2"></i>Academic Risk Radar
+                    <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
                 </h5>
-                <p class="text-muted x-small mb-0">Students flagged for immediate academic intervention based on recent performance data.</p>
+                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención académica inmediata basada en datos de rendimiento recientes.</p>
             </div>
             <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
-                <i class="fas fa-bell me-1"></i>Intervention Required
+                <i class="fas fa-bell me-1"></i>Intervención Requerida
             </span>
         </div>
         
@@ -185,27 +185,27 @@
                                             {{ obs.estudiante.first_name|slice:":1" }}
                                         </div>
                                         <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                            <span class="visually-hidden">Critical Alert</span>
+                                            <span class="visually-hidden">Alerta Crítica</span>
                                         </span>
                                     </div>
                                     <div class="ms-3 overflow-hidden">
                                         <h6 class="fw-bold text-dark mb-0 text-truncate">{{ obs.estudiante.get_full_name }}</h6>
                                         <div class="d-flex align-items-center gap-1 mt-0">
-                                            <span class="badge bg-danger-subtle text-danger x-small border border-danger-subtle">CRITICAL</span>
-                                            <span class="badge bg-light text-muted x-small border">Grade 9</span>
+                                            <span class="badge bg-danger-subtle text-danger x-small border border-danger-subtle">CRÍTICO</span>
+                                            <span class="badge bg-light text-muted x-small border">Grado 9</span>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div class="bg-light rounded-3 p-3 mb-3 border border-light-subtle">
-                                    <h6 class="text-secondary text-uppercase x-small fw-bold mb-1">Observation:</h6>
+                                    <h6 class="text-secondary text-uppercase x-small fw-bold mb-1">Observación:</h6>
                                     <p class="small text-dark mb-0 fst-italic text-truncate-3">"{{ obs.descripcion }}"</p>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mt-3">
                                     <span class="text-muted x-small fw-bold"><i class="far fa-clock me-1"></i>{{ obs.fecha_creacion|date:"d M" }}</span>
                                     <a href="{% url 'ver_observador' obs.estudiante.id %}" class="btn btn-dark btn-sm rounded-pill fw-bold px-3 shadow-sm hover-scale">
-                                        Review Case
+                                        Revisar Caso
                                     </a>
                                 </div>
                             </div>
@@ -221,20 +221,20 @@
         <div class="card-header bg-white border-bottom py-4 px-4">
             <div class="row align-items-center g-3">
                 <div class="col-lg-5">
-                    <h5 class="fw-bold text-dark mb-1">Master Case Log</h5>
-                    <p class="text-muted x-small mb-0">Unified database of all student interactions and reports.</p>
+                    <h5 class="fw-bold text-dark mb-1">Bitácora Maestra de Casos</h5>
+                    <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones y reportes estudiantiles.</p>
                 </div>
                 <div class="col-lg-7">
                     <form method="GET" class="d-flex gap-2 justify-content-lg-end">
                         <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-light w-100" style="max-width: 450px;">
                             <span class="input-group-text bg-light border-0 ps-3 text-muted"><i class="fas fa-filter"></i></span>
-                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="Search by student name, ID..." value="{{ query|default:'' }}">
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="Buscar por nombre, ID..." value="{{ query|default:'' }}">
                             {% if query %}
                                 <a href="{% url 'historial_global_observaciones' %}" class="btn btn-light border-0 text-muted px-3"><i class="fas fa-times"></i></a>
                             {% endif %}
                         </div>
                         <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1">
-                            <i class="fas fa-search me-2"></i>Search
+                            <i class="fas fa-search me-2"></i>Buscar
                         </button>
                     </form>
                 </div>
@@ -245,12 +245,12 @@
             <table class="table align-middle mb-0 table-hover custom-table">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4 py-3 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 25%;">Student</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Category</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 30%;">Details</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Authority</th>
-                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 10%;">Date</th>
-                        <th class="text-end pe-4 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 5%;">Action</th>
+                        <th class="ps-4 py-3 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 25%;">Estudiante</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Categoría</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 30%;">Detalles</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Autoridad</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 10%;">Fecha</th>
+                        <th class="text-end pe-4 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 5%;">Acción</th>
                     </tr>
                 </thead>
                 <tbody class="border-top-0">
@@ -276,15 +276,15 @@
                         <td>
                             {% if obs.tipo == 'CONVIVENCIA' %}
                                 <div class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                                    <i class="fas fa-bullhorn"></i> Behavior
+                                    <i class="fas fa-bullhorn"></i> Convivencia
                                 </div>
                             {% elif obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
                                 <div class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                                    <i class="fas fa-graduation-cap"></i> Academic
+                                    <i class="fas fa-graduation-cap"></i> Académico
                                 </div>
                             {% elif obs.tipo == 'PSICOLOGIA' or obs.tipo == 'PSICOLOGICA' %}
                                 <div class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                                    <i class="fas fa-brain"></i> Psychology
+                                    <i class="fas fa-brain"></i> Psicología
                                 </div>
                             {% else %}
                                 <div class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">{{ obs.tipo }}</div>
@@ -293,7 +293,7 @@
 
                         <td>
                             <div class="d-flex flex-column" style="max-width: 450px;">
-                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observation" }}</span>
+                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observación" }}</span>
                                 <p class="text-muted small mb-0 text-truncate-2" style="line-height: 1.4;">{{ obs.descripcion }}</p>
                             </div>
                         </td>
@@ -322,16 +322,16 @@
                                     <i class="fas fa-ellipsis-h text-secondary"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 rounded-4 p-2 animate__animated animate__fadeIn">
-                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Actions</h6></li>
+                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Acciones</h6></li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
-                                            <i class="fas fa-folder-open text-primary me-2"></i>Open File
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Abrir Expediente
                                         </a>
                                     </li>
                                     {% if obs.tipo == 'ACADEMICO' %}
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="#">
-                                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>Notify Teacher
+                                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>Notificar Docente
                                         </a>
                                     </li>
                                     {% endif %}
@@ -346,8 +346,8 @@
                                 <div class="mb-3 text-light-gray opacity-25">
                                     <i class="fas fa-clipboard-check fa-5x"></i>
                                 </div>
-                                <h5 class="text-dark fw-bold">All Clear</h5>
-                                <p class="text-muted small">No records match your search criteria.</p>
+                                <h5 class="text-dark fw-bold">Todo en Orden</h5>
+                                <p class="text-muted small">No hay registros que coincidan con tus criterios de búsqueda.</p>
                             </div>
                         </td>
                     </tr>
@@ -358,7 +358,7 @@
         
         <div class="card-footer bg-white border-top py-3 px-4">
             <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">Showing <span class="fw-bold text-dark">{{ observaciones.count }}</span> records.</small>
+                <small class="text-muted">Mostrando <span class="fw-bold text-dark">{{ observaciones.count }}</span> registros.</small>
             </div>
         </div>
     </div>
@@ -371,13 +371,13 @@
         const acad = {{ kpi.academica|default:0 }};
         const psico = {{ kpi.psicologia|default:0 }};
 
-        // 1. Distribution Doughnut Chart
+        // 1. Gráfico de Dona de Distribución
         const ctxDistribucion = document.getElementById('chartDistribucion');
         if (ctxDistribucion) {
             new Chart(ctxDistribucion, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Behavior', 'Academic', 'Psychology'],
+                    labels: ['Convivencia', 'Académico', 'Psicología'],
                     datasets: [{
                         data: [conv, acad, psico],
                         backgroundColor: ['#ffc107', '#0dcaf0', '#6610f2'],
@@ -391,23 +391,23 @@
                     cutout: '80%',
                     plugins: {
                         legend: {
-                            display: false, // Hide default legend for cleaner look
+                            display: false, // Ocultar leyenda por defecto para limpieza
                         }
                     }
                 }
             });
         }
 
-        // 2. Monthly Trend Line Chart (Simulated for visuals)
+        // 2. Gráfico de Línea de Tendencia Mensual (Simulado para visuales)
         const ctxTendencia = document.getElementById('chartTendencia');
         if (ctxTendencia) {
             new Chart(ctxTendencia, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                     datasets: [{
-                        label: 'Total Cases',
-                        data: [12, 19, 15, 25, 22, {{ kpi.total }}], // Dynamic last value
+                        label: 'Total Casos',
+                        data: [12, 19, 15, 25, 22, {{ kpi.total }}], // Valor dinámico al final
                         borderColor: '#4361ee',
                         backgroundColor: (context) => {
                             const ctx = context.chart.ctx;
@@ -444,7 +444,7 @@
 </script>
 
 <style>
-    /* === EDTECH TIER 100,000 ULTIMATE PRO STYLES === */
+    /* === ESTILOS EDTECH TIER 100,000 ULTIMATE PRO === */
     :root {
         --purple-primary: #6610f2;
         --purple-soft: rgba(102, 16, 242, 0.1);
