@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.utils.text import slugify
 
+
 from .ai.constants import (
     # 1. Configuración General y Roles
     ROLES_IA_PERMITIDOS,
@@ -240,9 +241,15 @@ class Acudiente(models.Model):
 # INSTITUCIONAL Y ACADÉMICO BÁSICO
 # ===================================================================
 
+# === MODELO INSTITUCIONAL ===
 class Institucion(models.Model):
+    # 1. Información Básica
     nombre = models.CharField(max_length=150)
     logo = models.ImageField(upload_to="logos_institucionales/", null=True, blank=True)
+    lema = models.CharField(max_length=200, blank=True, null=True)
+    anio_lectivo = models.CharField(max_length=10, default="2025")
+
+    # 2. Información de Contacto y Legal
     direccion = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.CharField(max_length=50, blank=True, null=True)
     correo = models.EmailField(blank=True, null=True)
@@ -250,25 +257,62 @@ class Institucion(models.Model):
     ciudad = models.CharField(max_length=100, blank=True, null=True)
     departamento = models.CharField(max_length=100, blank=True, null=True)
     resolucion = models.CharField(max_length=200, blank=True, null=True)
-    lema = models.CharField(max_length=200, blank=True, null=True)
-    anio_lectivo = models.CharField(max_length=10, default="2025")
+    
+    # 3. Centro de Documentación (PDFs)
+    # Nota: He unificado la ruta de subida a 'institucion/documentos/' para mantener el orden.
     
     archivo_pei = models.FileField(
-        upload_to='documentos_institucionales/', 
+        upload_to='institucion/documentos/', 
         null=True, 
         blank=True, 
         verbose_name="Documento PEI (PDF)",
         help_text="Carga aquí el Proyecto Educativo Institucional en formato PDF."
     )
 
+    archivo_manual_convivencia = models.FileField(
+        upload_to='institucion/documentos/', 
+        null=True, 
+        blank=True, 
+        verbose_name="Manual de Convivencia"
+    )
+
+    archivo_proyectos = models.FileField(
+        upload_to='institucion/documentos/', 
+        null=True, 
+        blank=True, 
+        verbose_name="Proyectos Transversales"
+    )
+
+    archivo_malla_curricular = models.FileField(
+        upload_to='institucion/documentos/', 
+        null=True, 
+        blank=True, 
+        verbose_name="Malla Curricular"
+    )
+
+    archivo_calendario = models.FileField(
+        upload_to='institucion/documentos/', 
+        null=True, 
+        blank=True, 
+        verbose_name="Calendario Académico"
+    )
+
+    # 4. Configuración del Modelo
     class Meta:
         verbose_name = "Institución"
         verbose_name_plural = "Información Institucional"
 
+    # 5. Métodos
     def __str__(self):
         return getattr(self, 'nombre', f"Institución sin nombre (ID: {self.pk or 'Nueva'})")
 
+        class Meta:
+            verbose_name = "Institución"
+            verbose_name_plural = "Información Institucional"
 
+        def __str__(self):
+            return getattr(self, 'nombre', f"Institución sin nombre (ID: {self.pk or 'Nueva'})")
+        
 class Curso(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, verbose_name='Descripción')
