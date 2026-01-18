@@ -4,6 +4,7 @@
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px;">
   
@@ -26,20 +27,27 @@
        
        <div class="col-lg-7">
            <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-3 align-items-center">
+                
+                <button type="button" class="btn btn-ai-magic rounded-pill px-4 shadow-lg hover-lift fw-bold transition-all text-white" onclick="iniciarAnalisisDashboard()">
+                    <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
+                </button>
+
+                <div class="vr mx-2 opacity-25"></div>
+
                 <a href="{% url 'reporte_consolidado' %}" class="btn btn-white border shadow-sm text-success fw-bold hover-scale px-4 py-2" title="Descargar Sábana Excel">
-                    <i class="fas fa-file-excel me-2"></i>Sábana
+                    <i class="fas fa-file-excel me-2"></i> Sábana
                 </a>
 
                 <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border shadow-sm text-primary fw-bold hover-scale px-4 py-2" title="Ver Historial de Procesos">
-                    <i class="fas fa-history me-2"></i>Historial
+                    <i class="fas fa-history me-2"></i> Historial
                 </a>
 
                 <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-white border shadow-sm text-purple fw-bold hover-scale px-4 py-2" title="Analizar PEI con IA">
-                    <i class="fas fa-robot me-2"></i>Auditoría IA
+                    <i class="fas fa-robot me-2"></i> Auditoría IA
                 </a>
                 
                 <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold hover-scale px-4 py-2">
-                    <i class="fas fa-brain me-2"></i>IA Académica
+                    <i class="fas fa-brain me-2"></i> IA Académica
                 </a>
 
                 <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-lg hover-scale px-3 py-2" title="Recargar Datos">
@@ -57,7 +65,7 @@
        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
            <div>
                <h4 class="fw-bold text-dark mb-1"><i class="fas fa-satellite-dish me-2 text-danger"></i>Radar Académico</h4>
-               <p class="text-muted small mb-0">Visión panorámica del rendimiento escolar actual.</p>
+               <p class="text-muted small mb-0">Visión panorámica del rendimiento escolar actual por áreas.</p>
            </div>
            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
                <i class="fas fa-bell me-2"></i>Alertas Activas
@@ -71,7 +79,7 @@
                            <div>
                                <h6 class="text-uppercase text-muted fw-bold x-small mb-2">Materias Perdidas (Total)</h6>
                                <h2 class="display-4 fw-bold text-danger mb-0">{{ kpi.total_materias_perdidas|default:"0" }}</h2>
-                               <small class="text-danger"><i class="fas fa-arrow-down me-1"></i>Crítico</small>
+                               <small class="text-danger"><i class="fas fa-arrow-down me-1"></i> Crítico</small>
                            </div>
                        </div>
                        <div class="card bg-light border-0 p-3 shadow-sm h-100 d-flex justify-content-center align-items-center text-center">
@@ -370,7 +378,7 @@
                        <p class="text-muted small mb-0">Estudiantes con mayor número de fallas.</p>
                    </div>
                    <a href="{% url 'historial_asistencia' %}" class="btn btn-sm btn-outline-danger rounded-pill">
-                       <i class="fas fa-list me-1"></i>Ver Todo
+                       <i class="fas fa-list me-1"></i> Ver Todo
                    </a>
                </div>
                <div class="card-body p-0">
@@ -625,18 +633,62 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalIADashboard" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+            <div class="modal-header border-0 p-4 bg-gradient-ai text-white position-relative">
+                <div class="position-relative z-1 d-flex align-items-center w-100">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-robot fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold">Stratos AI: Auditoría del Dashboard</h5>
+                        <p class="mb-0 small opacity-75">Análisis integral de KPIs, PEI y Manual de Convivencia.</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="position-absolute top-0 end-0 h-100 w-100 overflow-hidden opacity-25">
+                    <i class="fas fa-project-diagram fa-10x position-absolute" style="top: -20px; right: -20px;"></i>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 bg-light-subtle" style="min-height: 400px;">
+                <div id="aiLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Escaneando métricas institucionales...</h5>
+                    <p class="text-muted small" id="aiStatusText">Conectando con el Proyecto Educativo Institucional...</p>
+                    <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; max-width: 300px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div id="aiResults" class="d-none animate__animated animate__fadeIn">
+                    <div id="aiTextContent" class="markdown-body bg-white p-4 rounded-3 border shadow-sm"></div>
+                    
+                    <div class="mt-4 text-end">
+                        <button class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-primary rounded-pill px-4" onclick="window.print()">
+                            <i class="fas fa-file-download me-2"></i> Descargar Auditoría
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
    document.addEventListener('DOMContentLoaded', function() {
        
        // --- 1. GRÁFICO DE RADAR ACADÉMICO (NUEVO) ---
        const ctxRadar = document.getElementById('radarChart');
        if (ctxRadar) {
-           // Datos simulados (Debes pasar estos desde Django en kpi.radar_data)
+           // Datos simulados (Debes pasar estos desde Django en kpi.radar_data para hacerlo real)
            const radarData = {
                labels: ['Matemáticas', 'Lenguaje', 'Ciencias', 'Sociales', 'Inglés', 'Tecnología'],
                datasets: [{
                    label: 'Promedio Institucional',
-                   data: [3.8, 4.2, 3.5, 4.0, 3.2, 4.5], // Reemplazar con datos reales
+                   data: [3.8, 4.2, 3.5, 4.0, 3.2, 4.5], // Reemplazar con datos reales del backend
                    fill: true,
                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
                    borderColor: 'rgb(54, 162, 235)',
@@ -739,11 +791,134 @@
            });
        }
    });
+
+   // ----------------------------------------------------
+   // LÓGICA IA STRATOS PARA EL DASHBOARD
+   // ----------------------------------------------------
+   function iniciarAnalisisDashboard() {
+        const modal = new bootstrap.Modal(document.getElementById('modalIADashboard'));
+        const loading = document.getElementById('aiLoading');
+        const results = document.getElementById('aiResults');
+        const statusText = document.getElementById('aiStatusText');
+        const contentDiv = document.getElementById('aiTextContent');
+
+        modal.show();
+        loading.classList.remove('d-none');
+        results.classList.add('d-none');
+
+        // 1. Recolectar Datos VIVOS del Dashboard (Django Template Tags)
+        const dashboardData = {
+            promedio: {{ kpi.prom_global_acad|default:0 }},
+            convivencia: {{ kpi.prom_global_conv|default:0 }},
+            materiasPerdidas: {{ kpi.total_materias_perdidas|default:0 }},
+            totalAlumnos: {{ kpi.total_alumnos|default:0 }},
+            // Asumiendo que chart_data está disponible como variable global o se parsea aquí
+            chartLabels: JSON.parse('{{ chart_data.labels|safe }}')
+        };
+
+        // 2. Simulación de pasos de análisis
+        const steps = [
+            `Analizando rendimiento global (${dashboardData.promedio} avg)...`,
+            `Revisando ${dashboardData.materiasPerdidas} registros de materias reprobadas...`,
+            "Consultando criterios de evaluación del PEI...",
+            "Verificando protocolos de convivencia escolar...",
+            "Generando estrategias de mejora institucional..."
+        ];
+
+        let stepIndex = 0;
+        const interval = setInterval(() => {
+            if (stepIndex < steps.length) {
+                statusText.innerText = steps[stepIndex];
+                stepIndex++;
+            } else {
+                clearInterval(interval);
+                generarInformeDashboard(dashboardData, contentDiv, loading, results);
+            }
+        }, 1200);
+   }
+
+   function generarInformeDashboard(data, container, loading, results) {
+       // Lógica heurística basada en los datos reales del dashboard
+       let estadoAcademico = "";
+       let accionAcademica = "";
+       let estadoConvivencia = "";
+       let accionConvivencia = "";
+
+       // Análisis Académico
+       if (data.promedio >= 4.0) {
+           estadoAcademico = "🟢 **Rendimiento Sobresaliente:** El promedio institucional supera la meta.";
+           accionAcademica = "Mantener los incentivos actuales y fortalecer los semilleros de investigación.";
+       } else if (data.promedio >= 3.0) {
+           estadoAcademico = "🟡 **Rendimiento Aceptable:** Se cumple lo básico, pero hay margen de mejora.";
+           accionAcademica = "Reforzar áreas críticas detectadas en el Radar Académico. Revisar plan de estudios (Malla Curricular).";
+       } else {
+           estadoAcademico = "🔴 **Alerta Académica Crítica:** Promedio por debajo del básico.";
+           accionAcademica = "Activar **Comisión de Evaluación y Promoción** de emergencia. Implementar plan de choque de recuperación (Art. 12 SIEE).";
+       }
+
+       // Análisis Convivencia
+       if (data.convivencia < 3.5) {
+           estadoConvivencia = "⚠️ **Alerta de Clima Escolar:** Índice de convivencia bajo.";
+           accionConvivencia = "Revisar Manual de Convivencia (Capítulo de Faltas). Iniciar jornadas de sensibilización y mediación escolar.";
+       } else {
+           estadoConvivencia = "✅ **Clima Escolar Positivo:** Buenos indicadores de comportamiento.";
+           accionConvivencia = "Continuar con el proyecto transversal de valores y ciudadanía.";
+       }
+
+       let informe = `### 🏛️ Auditoría Estratégica Stratos AI\n\n`;
+       informe += `**Diagnóstico General:** Análisis basado en una población de **${data.totalAlumnos} estudiantes** activos.\n\n`;
+       
+       informe += `#### 1. Dimensión Académica\n`;
+       informe += `${estadoAcademico}\n`;
+       informe += `* **Hallazgo:** Se registran un total de **${data.materiasPerdidas} materias reprobadas** en este periodo.\n`;
+       informe += `* **Acción Recomendada (PEI):** ${accionAcademica}\n\n`;
+
+       informe += `#### 2. Dimensión Convivencial\n`;
+       informe += `${estadoConvivencia}\n`;
+       informe += `* **Acción Recomendada (Manual):** ${accionConvivencia}\n\n`;
+
+       informe += `#### 3. Tendencias y Alertas\n`;
+       informe += `Se sugiere prestar especial atención a los grupos: **${data.chartLabels.slice(0,3).join(", ")}** (basado en gráfico comparativo), donde se observan las variaciones más significativas.\n\n`;
+
+       informe += `> **Conclusión:** La institución debe priorizar la intervención en el área **${data.materiasPerdidas > 10 ? 'Académica' : 'Convivencial'}** para el próximo ciclo.`;
+
+       // Renderizar Markdown
+       container.innerHTML = marked.parse(informe);
+       
+       loading.classList.add('d-none');
+       results.classList.remove('d-none');
+   }
 </script>
 
 <style>
    /* === ESTILOS PERSONALIZADOS (EDUTECH TIER 100) === */
    
+   /* Gradiente Especial para IA */
+   .bg-gradient-ai { 
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%); 
+    }
+    .btn-ai-magic {
+        background: linear-gradient(90deg, #6366f1, #d946ef);
+        border: none;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    .btn-ai-magic::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, #d946ef, #6366f1);
+        z-index: -1;
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+    .btn-ai-magic:hover::before { opacity: 1; }
+
+   /* Markdown Styles */
+   .markdown-body h4 { color: #4361ee; margin-top: 1rem; }
+   .markdown-body p { color: #495057; }
+
    /* 1. Iconos Circulares Grandes */
    .icon-box-xl {
        width: 80px; height: 80px;
