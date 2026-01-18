@@ -68,8 +68,11 @@ ROOT_URLCONF = 'djangocrud.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Path to templates directory
-        'DIRS': [os.path.join(BASE_DIR, 'tasks', 'templates')], # Use os.path.join for safety
+        'DIRS': [
+            # Usamos la sintaxis moderna con '/' que es compatible con tu BASE_DIR
+            BASE_DIR / 'templates', 
+            BASE_DIR / 'tasks' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
