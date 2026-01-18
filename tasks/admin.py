@@ -1,6 +1,7 @@
 # tasks/admin.py
 
 from django.contrib import admin
+from .models import ObservadorArchivado # <--- Agrega el import arriba
 
 from .models import PeriodoAcademico, PEIResumen, AIUsageLog, AIDocumento
 # 1. IMPORTS UNIFICADOS (Tus modelos viejos + Los nuevos de IA)
@@ -112,3 +113,10 @@ class AIDocumentoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+@admin.register(ObservadorArchivado)
+class ObservadorArchivadoAdmin(admin.ModelAdmin):
+    list_display = ('estudiante_nombre', 'estudiante_username', 'fecha_archivado', 'eliminado_por')
+    search_fields = ('estudiante_nombre', 'estudiante_username')
+    readonly_fields = ('fecha_archivado', 'archivo_pdf', 'eliminado_por')
+    list_filter = ('fecha_archivado',)

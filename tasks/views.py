@@ -1876,6 +1876,8 @@ def asignar_curso_estudiante(request):
 # 🩺 INICIO DE CIRUGÍA B: Vista de "Retiro" Profesional (AÑADIDA)
 # (Plan )
 # ===================================================================
+#Desde aqui 
+
 @role_required('ADMINISTRADOR')
 @require_POST
 @csrf_protect
@@ -1883,10 +1885,14 @@ def admin_eliminar_estudiante(request):
     """
     "Retira" a un estudiante (Soft Delete) y archiva sus boletines.
     1. Genera un boletín por CADA AÑO (matrícula) cursado.
-    2. Guarda los PDFs en BoletinArchivado.
-    3. Desactiva al Estudiante (User.is_active = False).
-    4. Desactiva al Acudiente (si queda huérfano).
+    2. [NUEVO] Genera y archiva el Observador del Alumno.
+    3. Guarda los PDFs en BoletinArchivado y ObservadorArchivado.
+    4. Desactiva al Estudiante (User.is_active = False).
+    5. Desactiva al Acudiente (si queda huérfano).
     """
+    # Imports necesarios para la generación del PDF dentro de la vista
+    from .models import ObservadorArchivado, Observacion, Institucion
+
     estudiante_id = request.POST.get('estudiante_id')
     if not estudiante_id:
         messages.error(request, "No se proporcionó un ID de estudiante.")
@@ -1906,6 +1912,7 @@ def admin_eliminar_estudiante(request):
 
         boletines_generados = 0
         boletines_fallidos = 0
+        observador_archivado = False # Bandera para controlar el mensaje final
 
         # Usamos una transacción para todo el proceso de retiro
         with transaction.atomic():
@@ -1966,6 +1973,56 @@ def admin_eliminar_estudiante(request):
                     logger.exception(f"Fallo al generar boletín histórico para {estudiante_nombre} (Año: {matricula.anio_escolar}): {e}")
                     boletines_fallidos += 1
 
+            # ===================================================================
+            # 🩺 CIRUGÍA NUEVA: GENERAR Y ARCHIVAR OBSERVADOR
+            # ===================================================================
+            try:
+                # 1. Obtener datos para el observador
+                observaciones = Observacion.objects.filter(estudiante=estudiante_a_retirar).order_by('fecha_creacion')
+                institucion = Institucion.objects.first()
+                # Tomamos el último curso conocido para el encabezado
+                ultimo_curso = todas_las_matriculas.last().curso if todas_las_matriculas.exists() else None
+
+                # 2. Preparar contexto (mismo usado en ver_observador)
+                ctx_observador = {
+                    'estudiante': estudiante_a_retirar,
+                    'observaciones': observaciones,
+                    'institucion': institucion,
+                    'curso': ultimo_curso,
+                    'fecha_impresion': timezone.now(),
+                    'generado_por': request.user.get_full_name(),
+                    'es_oficial': True,
+                    'es_archivo_retiro': True, # Marca para indicar que es el archivo final
+                    'request': request
+                }
+
+                # 3. Generar PDF del Observador
+                html_obs = render_to_string('pdf/observador_template.html', ctx_observador)
+                base_url_obs = request.build_absolute_uri('/')
+                pdf_content_obs = HTML(string=html_obs, base_url=base_url_obs).write_pdf()
+
+                # 4. Crear archivo en memoria
+                nombre_archivo_obs = f"OBSERVADOR_FINAL_{estudiante_a_retirar.username}.pdf"
+                pdf_file_obs = ContentFile(pdf_content_obs, name=nombre_archivo_obs)
+
+                # 5. Guardar en el modelo ObservadorArchivado
+                ObservadorArchivado.objects.create(
+                    estudiante_nombre=estudiante_nombre,
+                    estudiante_username=estudiante_a_retirar.username,
+                    eliminado_por=request.user,
+                    archivo_pdf=pdf_file_obs
+                )
+                observador_archivado = True
+            
+            except Exception as e:
+                # Logueamos el error pero NO detenemos el retiro, para asegurar que el alumno se vaya
+                logger.error(f"Error generando Observador Archivado para {estudiante_nombre}: {e}")
+            
+            # ===================================================================
+            # 🩺 FIN CIRUGÍA OBSERVADOR
+            # ===================================================================
+
+
             # --- 4. Desactivación (Retiro) ---
 
             # Desactivar todas las matrículas
@@ -1994,10 +2051,18 @@ def admin_eliminar_estudiante(request):
 
             # 5. Mensajes de Éxito
             messages.success(request, f"Estudiante '{estudiante_nombre}' retirado y movido a 'Ex Alumnos' exitosamente.")
+            
             if boletines_generados > 0:
-                messages.info(request, f"Se generaron y archivaron {boletines_generados} boletines de respaldo (uno por año cursado).")
+                messages.info(request, f"Se generaron y archivaron {boletines_generados} boletines de respaldo.")
+            
+            if observador_archivado:
+                messages.info(request, "✅ Observador del Alumno generado y archivado correctamente.")
+            else:
+                messages.warning(request, "⚠️ No se pudo archivar el Observador (verificar logs).")
+
             if boletines_fallidos > 0:
                 messages.warning(request, f"Falló la generación de {boletines_fallidos} boletines históricos (revisar logs).")
+            
             if acudientes_retirados_nombres:
                 messages.info(request, f"Acudientes retirados (por no tener más estudiantes activos): {', '.join(acudientes_retirados_nombres)}")
 
@@ -2008,6 +2073,8 @@ def admin_eliminar_estudiante(request):
         messages.error(request, f"Ocurrió un error inesperado al retirar al estudiante: {e}")
 
     return redirect('asignar_curso_estudiante')
+
+#Hasta aqui 
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA B
 # ===================================================================
