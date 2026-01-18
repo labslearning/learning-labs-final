@@ -8,7 +8,7 @@
 <div class="container py-5">
   
    <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
-       <div class="col-lg-6 mb-3 mb-lg-0">
+       <div class="col-lg-5 mb-3 mb-lg-0">
            <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
                <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-3 d-flex align-items-center justify-content-center">
                    <i class="fas fa-chart-pie fa-2x"></i>
@@ -17,20 +17,24 @@
                    <h1 class="fw-bold mb-0 text-dark display-6">Gestión & Bienestar</h1>
                    <p class="text-muted mb-0">
                        <span class="badge bg-soft-primary text-primary me-2">{{ user.perfil.get_rol_display }}</span>
-                       Panel de Control Institucional
+                       Panel de Control
                    </p>
                </div>
            </div>
        </div>
        
-       <div class="col-lg-6">
+       <div class="col-lg-7">
            <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-2 align-items-center">
-                <a href="{% url 'reporte_consolidado' %}" class="btn btn-light border shadow-sm text-success fw-bold hover-scale" title="Descargar Excel">
+                <a href="{% url 'reporte_consolidado' %}" class="btn btn-light border shadow-sm text-success fw-bold hover-scale" title="Descargar Sábana Excel">
                     <i class="fas fa-file-excel me-2"></i>Sábana
                 </a>
 
+                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-light border shadow-sm text-primary fw-bold hover-scale" title="Ver Historial de Procesos">
+                    <i class="fas fa-history me-2"></i>Historial
+                </a>
+
                 <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-light border shadow-sm text-purple fw-bold hover-scale" title="Analizar PEI con IA">
-                    <i class="fas fa-robot me-2"></i>Auditoría IA
+                    <i class="fas fa-robot me-2"></i>Auditoría
                 </a>
                 
                 <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold hover-scale">
