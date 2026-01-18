@@ -7,30 +7,28 @@
         /* === 1. CONFIGURACIÓN DE PÁGINA (A4 OFICIAL) === */
         @page {
             size: A4;
-            /* Márgenes oficiales para documentos académicos */
-            margin-top: 4.5cm;     
-            margin-bottom: 2.5cm;  
-            margin-left: 3cm;      /* Margen izquierdo un poco más amplio para encuadernación */
-            margin-right: 2.5cm;   
+            margin-top: 4.5cm;     /* Margen superior amplio para encabezado */
+            margin-bottom: 2.5cm;  /* Margen inferior para pie de página */
+            margin-left: 2.5cm;    /* Margen izquierdo estándar */
+            margin-right: 2.5cm;   /* Margen derecho estándar */
 
-            /* Cajas flotantes */
+            /* Definimos las cajas flotantes */
             @top-center { content: element(header); }
             @bottom-center { content: element(footer); }
         }
 
         /* === 2. TIPOGRAFÍA Y CUERPO === */
         body {
-            /* Fuente profesional con excelente legibilidad en impresos */
-            font-family: 'Georgia', 'Times New Roman', serif;
+            font-family: 'Georgia', 'Times New Roman', serif; /* Elegancia académica */
             color: #2c3e50;
             font-size: 11pt;
-            line-height: 1.6;
+            line-height: 1.6; /* Lectura cómoda */
             text-align: justify;
             margin: 0; 
             padding: 0;
         }
 
-        /* === 3. PALETA DE COLORES PREMIUM (EdTech Tier 100) === */
+        /* === 3. PALETA DE COLORES PREMIUM === */
         :root {
             --primary: #002B5B; /* Azul Oxford Profundo */
             --accent: #C5A059;  /* Dorado Antiguo */
@@ -39,17 +37,20 @@
             --bg-table: #f9f9f9;
         }
 
-        /* === 4. ENCABEZADO FIJO === */
+        /* === 4. ENCABEZADO FIJO (Se repite en todas las páginas) === */
         .header-container {
             position: running(header);
             width: 100%;
-            margin-top: 0;
+            margin-top: 0; /* Sin margen negativo para respetar el borde */
             border-bottom: 3px solid var(--primary); /* Línea sólida de autoridad */
             padding-bottom: 15px;
             margin-bottom: 0;
         }
         
-        .header-table { width: 100%; border-collapse: collapse; }
+        .header-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
         
         .logo-cell { 
             width: 20%; 
@@ -69,7 +70,6 @@
             width: 80%; 
             text-align: right; 
             vertical-align: middle; 
-            /* Fuente sans-serif moderna para datos técnicos */
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
             padding-top: 10px;
         }
@@ -117,7 +117,7 @@
             left: 50%;
             width: 65%;
             transform: translate(-50%, -50%); /* Centrado geométrico */
-            opacity: 0.06; /* Muy sutil para no interferir con la lectura */
+            opacity: 0.06; /* Muy sutil */
             z-index: -1000;
             filter: grayscale(100%);
         }
@@ -152,7 +152,7 @@
         }
         .meta-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid var(--border); /* Solo líneas horizontales para limpieza visual */
+            border-bottom: 1px solid var(--border); /* Solo líneas horizontales */
             vertical-align: middle;
         }
         .label {
@@ -171,7 +171,7 @@
             overflow: hidden;
             margin-bottom: 50px;
         }
-        /* Estilos Markdown Ajustados */
+        /* Estilos Markdown */
         .content-body h1 { 
             font-size: 14pt; color: var(--primary); 
             border-bottom: 2px solid var(--accent); 
@@ -314,7 +314,7 @@
                     <div class="sig-space"></div>
                     <div class="sig-line"></div>
                     <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
-                    <div class="sig-role">RECIBIDO / VISTO BUENO</div>
+                    <div class="sig-role">RECIBIDO A SATISFACCIÓN</div>
                     <div class="sig-role" style="font-weight: normal; margin-top: 3px;">FECHA: ____/____/______</div>
                 </td>
             </tr>
