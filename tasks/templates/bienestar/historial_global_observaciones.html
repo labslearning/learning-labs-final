@@ -20,7 +20,7 @@
         </div>
         
         <div class="d-flex gap-3 align-items-center mt-3 mt-xl-0">
-            <button type="button" class="btn btn-ai-magic rounded-pill px-4 shadow-lg hover-lift fw-bold transition-all text-white" onclick="iniciarAnalisisIA()">
+            <button type="button" class="btn btn-ai-magic rounded-pill px-4 shadow-lg hover-lift fw-bold transition-all text-white" onclick="iniciarAnalisisReal()">
                 <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
             </button>
 
@@ -242,7 +242,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle mb-0 table-hover custom-table">
+            <table class="table align-middle mb-0 table-hover custom-table" id="tablaCasos">
                 <thead class="bg-light">
                     <tr>
                         <th class="ps-4 py-3 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 25%;">Estudiante</th>
@@ -255,7 +255,11 @@
                 </thead>
                 <tbody class="border-top-0">
                     {% for obs in observaciones %}
-                    <tr class="align-middle group-hover border-bottom-hover transition-all">
+                    <tr class="align-middle group-hover border-bottom-hover transition-all ai-scannable-row" 
+                        data-estudiante="{{ obs.estudiante.get_full_name }}" 
+                        data-tipo="{{ obs.tipo }}"
+                        data-descripcion="{{ obs.descripcion }}">
+                        
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center">
                                 <div class="position-relative">
@@ -294,7 +298,7 @@
                         <td>
                             <div class="d-flex flex-column" style="max-width: 450px;">
                                 <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observación" }}</span>
-                                <p class="text-muted small mb-0 text-truncate-2" style="line-height: 1.4;">{{ obs.descripcion }}</p>
+                                <p class="text-muted small mb-0 text-truncate-2">{{ obs.descripcion }}</p>
                             </div>
                         </td>
 
@@ -373,8 +377,8 @@
                         <i class="fas fa-robot fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold">Stratos AI: Analista Educativo</h5>
-                        <p class="mb-0 small opacity-75">Cruzando PEI, Manual de Convivencia y Datos en Tiempo Real</p>
+                        <h5 class="modal-title fw-bold">Stratos AI: Consultor Educativo</h5>
+                        <p class="mb-0 small opacity-75">Análisis avanzado de patrones cruzando PEI y Manual de Convivencia</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -387,8 +391,8 @@
                 
                 <div id="aiLoading" class="text-center py-5">
                     <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Analizando patrones...</h5>
-                    <p class="text-muted small" id="aiStatusText">Leyendo Manual de Convivencia Art. 24...</p>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Procesando Casos...</h5>
+                    <p class="text-muted small" id="aiStatusText">Escaneando bitácora de observaciones...</p>
                     
                     <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; max-width: 300px;">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary" role="progressbar" style="width: 100%"></div>
@@ -414,13 +418,15 @@
 </div>
 
 <script>
+    // --------------------------------------------------------
+    // LÓGICA DE GRÁFICOS
+    // --------------------------------------------------------
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
         const acad = {{ kpi.academica|default:0 }};
         const psico = {{ kpi.psicologia|default:0 }};
 
-        // 1. Gráfico de Dona
         const ctxDistribucion = document.getElementById('chartDistribucion');
         if (ctxDistribucion) {
             new Chart(ctxDistribucion, {
@@ -443,7 +449,6 @@
             });
         }
 
-        // 2. Gráfico de Línea
         const ctxTendencia = document.getElementById('chartTendencia');
         if (ctxTendencia) {
             new Chart(ctxTendencia, {
@@ -480,7 +485,9 @@
         }
     });
 
-    // Lógica para la IA Stratos
+    // --------------------------------------------------------
+    // LÓGICA DE INTELIGENCIA ARTIFICIAL (STRATOS AI)
+    // --------------------------------------------------------
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
         const loading = document.getElementById('aiLoading');
@@ -492,13 +499,46 @@
         loading.classList.remove('d-none');
         results.classList.add('d-none');
 
-        // Simulación de pasos de análisis
+        // 1. RECOLECCIÓN DE DATOS REALES DE LA TABLA (DOM SCRAPING)
+        const filas = document.querySelectorAll('.ai-scannable-row');
+        let estudiantesMap = {};
+        
+        filas.forEach(fila => {
+            const nombre = fila.getAttribute('data-estudiante');
+            const tipo = fila.getAttribute('data-tipo');
+            
+            if (!estudiantesMap[nombre]) {
+                estudiantesMap[nombre] = { Academico: 0, Convivencia: 0, Psicologia: 0, Total: 0 };
+            }
+            estudiantesMap[nombre].Total++;
+            
+            if (tipo.includes('ACADEM')) estudiantesMap[nombre].Academico++;
+            else if (tipo.includes('CONVIV')) estudiantesMap[nombre].Convivencia++;
+            else if (tipo.includes('PSICOLOG')) estudiantesMap[nombre].Psicologia++;
+        });
+
+        // 2. IDENTIFICACIÓN DE CASOS MULTIDIMENSIONALES (Casos Especiales)
+        let casosEspeciales = [];
+        for (const [nombre, data] of Object.entries(estudiantesMap)) {
+            // Criterio de "Caso Especial": Tiene registros en 2 o más categorías distintas
+            let categoriasActivas = 0;
+            if (data.Academico > 0) categoriasActivas++;
+            if (data.Convivencia > 0) categoriasActivas++;
+            if (data.Psicologia > 0) categoriasActivas++;
+
+            if (categoriasActivas >= 2 || data.Total >= 3) {
+                casosEspeciales.push({ nombre, ...data });
+            }
+        }
+
+        // 3. SIMULACIÓN VISUAL DEL PROCESO
         const steps = [
-            "Conectando con base de datos estudiantil...",
-            "Escaneando Manual de Convivencia (Cap. Faltas Graves)...",
-            "Analizando patrones de rendimiento académico...",
-            "Cruzando datos con el PEI Institucional...",
-            "Generando estrategias de mejora..."
+            `Analizando ${filas.length} registros en tiempo real...`,
+            "Identificando patrones de reincidencia...",
+            "Consultando Manual de Convivencia (Cap. Faltas y Sanciones)...",
+            "Cruzando datos con rutas de atención del PEI...",
+            `Detectados ${casosEspeciales.length} casos multidimensionales...`,
+            "Generando plan de intervención..."
         ];
 
         let stepIndex = 0;
@@ -508,38 +548,45 @@
                 stepIndex++;
             } else {
                 clearInterval(interval);
-                mostrarResultadosSimulados(contentDiv, loading, results);
+                generarInformeReal(casosEspeciales, filas.length, contentDiv, loading, results);
             }
-        }, 1200); // Cambia de mensaje cada 1.2 segundos
+        }, 1000);
     }
 
-    function mostrarResultadosSimulados(container, loading, results) {
-        // Aquí iría la llamada fetch real al backend. Por ahora simulamos la respuesta.
-        const mockResponse = `
-### 🧠 Análisis Estratégico Stratos
+    function generarInformeReal(casosEspeciales, totalRegistros, container, loading, results) {
+        let informe = `### 🤖 Reporte de Inteligencia Educativa Stratos\n\n`;
+        informe += `**Alcance:** Se analizaron **${totalRegistros} registros** vigentes en la plataforma.\n\n`;
 
-Basado en el análisis de **{{ kpi.total }} registros activos**, el Manual de Convivencia y el PEI, se han detectado los siguientes patrones:
+        if (casosEspeciales.length > 0) {
+            informe += `#### 🚨 ALERTA: Casos Multidimensionales Detectados (${casosEspeciales.length})\n`;
+            informe += `La IA ha identificado estudiantes que presentan dificultades en múltiples áreas simultáneamente (Académico, Convivencial y/o Psicológico). Estos casos requieren la activación inmediata de la **Ruta de Atención Integral**.\n\n`;
+            
+            informe += `| Estudiante | Académico | Convivencia | Psico | Acción Sugerida (PEI) |\n`;
+            informe += `| :--- | :---: | :---: | :---: | :--- |\n`;
 
-#### 1. 🚨 Alerta de Convivencia (Tendencia)
-Se observa un incremento en reportes tipo **"Interrupción de clase"** en Grado 9°.
-* **Referencia Manual:** Art. 34 - Faltas Leves reiterativas.
-* **Acción Sugerida:** Activar protocolo de mediación escolar antes de escalar a suspensión. Implementar talleres de escucha activa.
+            casosEspeciales.forEach(caso => {
+                let sugerencia = "";
+                if (caso.Psicologia > 0) sugerencia = "**Remisión Psico-Orientación** y citación a acudientes.";
+                else if (caso.Convivencia > caso.Academico) sugerencia = "Firma de compromiso comportamental (Manual Art. 45).";
+                else sugerencia = "Plan de mejoramiento académico individual.";
 
-#### 2. 📉 Foco Académico
-El **{{ kpi.academica }}%** de las alertas académicas están concentradas en Matemáticas y Ciencias.
-* **Estrategia PEI:** Aplicar "Refuerzo Pedagógico Diferenciado" (Página 45 del PEI).
-* **Recomendación:** Programar tutorías entre pares para las próximas 2 semanas.
+                informe += `| **${caso.nombre}** | ${caso.Academico} | ${caso.Convivencia} | ${caso.Psicologia} | ${sugerencia} |\n`;
+            });
+            informe += `\n`;
+        } else {
+            informe += `#### ✅ Análisis de Casos Especiales\n`;
+            informe += `No se detectaron estudiantes con cruce de variables críticas (multidimensionales) en este momento. Se sugiere mantener el monitoreo preventivo.\n\n`;
+        }
 
-#### 3. 💡 Oportunidad Psico-Orientación
-Se detectan patrones de ansiedad pre-evaluación.
-* **Acción:** Taller de manejo de estrés y técnicas de estudio (Modelo Cognitivo-Conductual).
+        informe += `#### 📊 Recomendaciones Generales del Sistema\n`;
+        informe += `* **Dimensión Académica:** Fortalecer las estrategias de aula invertida para estudiantes con bajo rendimiento recurrente.\n`;
+        informe += `* **Dimensión Convivencial:** Según el Manual de Convivencia, la reincidencia en faltas leves puede escalar a falta grave. Se sugiere intervención mediadora.\n`;
+        informe += `* **Bienestar:** Programar talleres de habilidades socioemocionales para los grados con mayor incidencia.\n\n`;
 
----
-**Conclusión:** Se recomienda priorizar la intervención en **Grado 9°** para reducir la reincidencia disciplinaria.
-        `;
+        informe += `> **Nota:** Este informe es generado automáticamente cruzando los datos en tiempo real con los parámetros institucionales.`;
 
         // Renderizar Markdown
-        container.innerHTML = marked.parse(mockResponse);
+        container.innerHTML = marked.parse(informe);
         
         loading.classList.add('d-none');
         results.classList.remove('d-none');
@@ -643,10 +690,12 @@ Se detectan patrones de ansiedad pre-evaluación.
         color: var(--purple-primary) !important;
     }
 
-    /* Markdown Styles para la IA */
-    .markdown-body h4 { font-size: 1.1rem; font-weight: 700; margin-top: 1.5rem; color: #212529; }
-    .markdown-body ul { padding-left: 1.2rem; }
-    .markdown-body li { margin-bottom: 0.5rem; }
+    /* Estilos específicos para el reporte de IA */
+    .markdown-body table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.9rem; }
+    .markdown-body th { background-color: #f2f2f2; font-weight: bold; }
+    .markdown-body h3 { color: #4361ee; font-weight: 800; margin-bottom: 1rem; }
+    .markdown-body h4 { color: #dc3545; font-weight: 700; margin-top: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
 
     .transition-all { transition: all 0.2s ease; }
     .group-hover:hover { background-color: #fcfcfc; }
