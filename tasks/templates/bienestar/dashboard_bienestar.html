@@ -7,69 +7,73 @@
 
 <div class="container py-5">
   
-   <div class="row mb-4 align-items-center animate__animated animate__fadeInDown">
-       <div class="col-md-7 mb-3 mb-md-0">
-           <div class="d-flex align-items-center justify-content-center justify-content-md-start">
-               <div class="icon-box bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-lg" style="width: 70px; height: 70px;">
+   <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
+       <div class="col-lg-6 mb-3 mb-lg-0">
+           <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
+               <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-3 d-flex align-items-center justify-content-center">
                    <i class="fas fa-chart-pie fa-2x"></i>
                </div>
-               <div class="text-center text-md-start">
-                   <h1 class="fw-bold mb-0 text-dark">Tablero de Gestión & Bienestar</h1>
+               <div class="text-center text-lg-start">
+                   <h1 class="fw-bold mb-0 text-dark display-6">Gestión & Bienestar</h1>
                    <p class="text-muted mb-0">
-                       <span class="badge bg-soft-info text-info me-2">{{ user.perfil.get_rol_display }}</span>
-                       Gestión Académica y Convivencial
+                       <span class="badge bg-soft-primary text-primary me-2">{{ user.perfil.get_rol_display }}</span>
+                       Panel de Control Institucional
                    </p>
                </div>
            </div>
        </div>
        
-       <div class="col-md-5">
-           <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-2 align-items-center">
-                <a href="{% url 'reporte_consolidado' %}" class="btn btn-success shadow-sm fw-bold animate__animated animate__pulse">
-                    <i class="fas fa-table me-2"></i>Sábana de Notas
+       <div class="col-lg-6">
+           <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-2 align-items-center">
+                <a href="{% url 'reporte_consolidado' %}" class="btn btn-light border shadow-sm text-success fw-bold hover-scale" title="Descargar Excel">
+                    <i class="fas fa-file-excel me-2"></i>Sábana
                 </a>
 
-                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-purple shadow-sm fw-bold">
-                    <i class="fas fa-robot me-2"></i>Auditoría IA (PEI)
+                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-light border shadow-sm text-purple fw-bold hover-scale" title="Analizar PEI con IA">
+                    <i class="fas fa-robot me-2"></i>Auditoría IA
                 </a>
                 
-                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold">
+                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold hover-scale">
                     <i class="fas fa-brain me-2"></i>IA Académica
                 </a>
 
-                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-sm" title="Recargar">
-                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-sm hover-scale" title="Recargar Datos">
+                    <i class="fas fa-sync-alt"></i>
                 </a>
            </div>
            
-           <div class="text-center text-md-end mt-3">
-               <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Fecha de Corte</small>
-               <span class="h5 fw-bold text-primary mb-0">{% now "d M, Y" %}</span>
+           <div class="text-center text-lg-end mt-2">
+               <small class="text-muted fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">FECHA DE CORTE: <span class="text-dark">{% now "d M, Y" %}</span></small>
            </div>
        </div>
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeIn">
-       <div class="col-12 mb-3">
-           <h4 class="fw-bold text-dark border-bottom pb-2"><i class="fas fa-folder-open me-2 text-secondary"></i>Centro de Documentación</h4>
+       <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-2">
+           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-open me-2 text-secondary"></i>Documentación Oficial</h4>
+           <span class="badge bg-light text-muted ms-3 border">Archivos Rectores</span>
        </div>
 
-       <div class="col-md-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #6f42c1 !important;">
+       <div class="col-md-6 col-lg-4 mb-4">
+           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-purple"><i class="fas fa-book-reader me-2"></i>PEI</h5>
                        {% if institucion.archivo_pei %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Proyecto Educativo Institucional. Documento rector.</p>
+                   <p class="text-muted small">Proyecto Educativo Institucional.</p>
+                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_pei %}
-                           <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-purple btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-sm btn-outline-purple"><i class="fas fa-eye me-1"></i> Ver PDF</a>
                        {% endif %}
+                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI"><i class="fas fa-upload me-1"></i> Cargar</button>
+                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI">
+                               <i class="fas fa-upload me-1"></i> Actualizar
+                           </button>
                            <div class="collapse mt-2" id="uploadPEI">
-                               <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
                                    <input type="file" name="pei_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
                                    <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
                                </form>
@@ -80,22 +84,26 @@
            </div>
        </div>
 
-       <div class="col-md-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #fd7e14 !important;">
+       <div class="col-md-6 col-lg-4 mb-4">
+           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-orange"><i class="fas fa-hands-helping me-2"></i>Manual</h5>
                        {% if institucion.archivo_manual_convivencia %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Normas, derechos y deberes de la comunidad.</p>
+                   <p class="text-muted small">Normas de convivencia escolar.</p>
+                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_manual_convivencia %}
-                           <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-orange btn-sm text-white"><i class="fas fa-download me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange"><i class="fas fa-eye me-1"></i> Ver PDF</a>
                        {% endif %}
+                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_CONVIVENCIA' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadManual"><i class="fas fa-upload me-1"></i> Cargar</button>
+                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadManual">
+                               <i class="fas fa-upload me-1"></i> Actualizar
+                           </button>
                            <div class="collapse mt-2" id="uploadManual">
-                               <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
                                    <input type="file" name="manual_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
                                    <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
                                </form>
@@ -106,22 +114,26 @@
            </div>
        </div>
 
-       <div class="col-md-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #20c997 !important;">
+       <div class="col-md-6 col-lg-4 mb-4">
+           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc proyectos-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-teal"><i class="fas fa-project-diagram me-2"></i>Proyectos</h5>
                        {% if institucion.archivo_proyectos %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Proyectos transversales y planes de aula.</p>
+                   <p class="text-muted small">Transversales y planes de aula.</p>
+                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_proyectos %}
-                           <a href="{{ institucion.archivo_proyectos.url }}" target="_blank" class="btn btn-teal btn-sm text-white"><i class="fas fa-download me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_proyectos.url }}" target="_blank" class="btn btn-sm btn-outline-teal"><i class="fas fa-eye me-1"></i> Ver PDF</a>
                        {% endif %}
+                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadProyectos"><i class="fas fa-upload me-1"></i> Cargar</button>
+                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadProyectos">
+                               <i class="fas fa-upload me-1"></i> Actualizar
+                           </button>
                            <div class="collapse mt-2" id="uploadProyectos">
-                               <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
                                    <input type="file" name="proyectos_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
                                    <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
                                </form>
@@ -132,22 +144,26 @@
            </div>
        </div>
 
-       <div class="col-md-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #0d6efd !important;">
+       <div class="col-md-6 col-lg-4 mb-4">
+           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-sitemap me-2"></i>Malla</h5>
                        {% if institucion.archivo_malla_curricular %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Estructura curricular y planes de estudio.</p>
+                   <p class="text-muted small">Estructura curricular por áreas.</p>
+                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_malla_curricular %}
-                           <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i> Ver PDF</a>
                        {% endif %}
+                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadMalla"><i class="fas fa-upload me-1"></i> Cargar</button>
+                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadMalla">
+                               <i class="fas fa-upload me-1"></i> Actualizar
+                           </button>
                            <div class="collapse mt-2" id="uploadMalla">
-                               <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
                                    <input type="file" name="malla_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
                                    <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
                                </form>
@@ -158,22 +174,26 @@
            </div>
        </div>
 
-       <div class="col-md-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #dc3545 !important;">
+       <div class="col-md-6 col-lg-4 mb-4">
+           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-calendar-alt me-2"></i>Calendario</h5>
                        {% if institucion.archivo_calendario %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
                    <p class="text-muted small">Cronograma de actividades académicas.</p>
+                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_calendario %}
-                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-danger btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-eye me-1"></i> Ver PDF</a>
                        {% endif %}
+                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario"><i class="fas fa-upload me-1"></i> Cargar</button>
+                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario">
+                               <i class="fas fa-upload me-1"></i> Actualizar
+                           </button>
                            <div class="collapse mt-2" id="uploadCalendario">
-                               <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
                                    <input type="file" name="calendario_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
                                    <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
                                </form>
@@ -185,17 +205,18 @@
        </div>
 
    </div>
+
    <div class="row g-4 mb-5 animate__animated animate__fadeIn">
        <div class="col-md-3">
-           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden">
+           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden hover-elevate">
                <div class="card-body position-relative">
                    <div class="d-flex justify-content-between align-items-start">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted small mb-1">Población Total</p>
+                           <p class="text-uppercase fw-bold text-muted small mb-1">Población</p>
                             <h2 class="fw-bold text-dark mb-0">{{ kpi.total_alumnos }}</h2>
-                           <small class="text-success"><i class="fas fa-check-circle me-1"></i>Matriculados</small>
+                           <small class="text-success"><i class="fas fa-check-circle me-1"></i>Activos</small>
                        </div>
-                       <div class="bg-light rounded p-2 text-primary">
+                       <div class="bg-soft-primary rounded p-3 text-primary">
                            <i class="fas fa-users fa-2x"></i>
                        </div>
                    </div>
@@ -207,15 +228,15 @@
        </div>
 
        <div class="col-md-3">
-           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden">
+           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden hover-elevate">
                <div class="card-body position-relative">
                    <div class="d-flex justify-content-between align-items-start">
                         <div>
                            <p class="text-uppercase fw-bold text-muted small mb-1">Prom. Académico</p>
                            <h2 class="fw-bold text-dark mb-0">{{ kpi.prom_global_acad }}</h2>
-                           <small class="text-muted">Meta PEI: > 4.0</small>
+                           <small class="text-muted">Meta: > 4.0</small>
                        </div>
-                       <div class="bg-light rounded p-2 text-info">
+                       <div class="bg-soft-info rounded p-3 text-info">
                            <i class="fas fa-book-open fa-2x"></i>
                        </div>
                    </div>
@@ -227,15 +248,15 @@
        </div>
 
        <div class="col-md-3">
-           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden">
+           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden hover-elevate">
                 <div class="card-body position-relative">
                    <div class="d-flex justify-content-between align-items-start">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted small mb-1">Prom. Convivencia</p>
+                           <p class="text-uppercase fw-bold text-muted small mb-1">Convivencia</p>
                            <h2 class="fw-bold text-dark mb-0">{{ kpi.prom_global_conv }}</h2>
-                           <small class="text-muted">Clima escolar</small>
+                           <small class="text-muted">Índice Global</small>
                        </div>
-                       <div class="bg-light rounded p-2 text-warning">
+                       <div class="bg-soft-warning rounded p-3 text-warning">
                            <i class="fas fa-smile fa-2x"></i>
                         </div>
                    </div>
@@ -247,15 +268,15 @@
        </div>
 
          <div class="col-md-3">
-           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden">
+           <div class="card border-0 shadow-sm h-100 bg-white overflow-hidden hover-elevate">
                <div class="card-body position-relative">
                    <div class="d-flex justify-content-between align-items-start">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted small mb-1">Grupos Activos</p>
+                           <p class="text-uppercase fw-bold text-muted small mb-1">Grupos</p>
                            <h2 class="fw-bold text-dark mb-0">{{ kpi.total_cursos }}</h2>
                            <small class="text-primary">Gestionados</small>
                        </div>
-                        <div class="bg-light rounded p-2 text-success">
+                        <div class="bg-soft-success rounded p-3 text-success">
                            <i class="fas fa-layer-group fa-2x"></i>
                        </div>
                    </div>
@@ -268,14 +289,27 @@
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
-       <div class="col-12">
-           <div class="card border-0 shadow-lg" style="border-radius: 1rem;">
+       <div class="col-lg-8 mb-4 mb-lg-0">
+           <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4">
-                   <h5 class="fw-bold text-dark"><i class="fas fa-chart-bar me-2 text-primary"></i>Comparativo Institucional por Curso</h5>
+                   <h5 class="fw-bold text-dark"><i class="fas fa-chart-bar me-2 text-primary"></i>Comparativo Institucional</h5>
                </div>
                 <div class="card-body p-4">
                    <div style="height: 350px;">
                        <canvas id="peiChart"></canvas>
+                   </div>
+               </div>
+           </div>
+       </div>
+       
+       <div class="col-lg-4">
+            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
+               <div class="card-header bg-white border-0 pt-4 px-4 text-center">
+                   <h5 class="fw-bold text-dark"><i class="fas fa-user-clock me-2 text-success"></i>Asistencia Hoy</h5>
+               </div>
+               <div class="card-body p-4 d-flex justify-content-center align-items-center">
+                   <div style="height: 250px; width: 100%; position: relative;">
+                       <canvas id="asistenciaChart"></canvas>
                    </div>
                </div>
            </div>
@@ -312,7 +346,7 @@
                                        <div class="fw-bold text-dark">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</div>
                                        <small class="text-muted">{{ alerta.curso__nombre }}</small>
                                    </td>
-                                   <td class="text-center"><span class="badge bg-danger">{{ alerta.total }}</span></td>
+                                   <td class="text-center"><span class="badge bg-danger rounded-pill px-3">{{ alerta.total }}</span></td>
                                    <td class="text-end pe-4">
                                        <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary"><i class="fas fa-eye"></i></a>
                                    </td>
@@ -331,8 +365,8 @@
            <div class="card border-0 shadow-lg h-100" style="border-radius: 1rem;">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                    <div>
-                       <h5 class="fw-bold text-dark"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Riesgo de Convivencia</h5>
-                       <p class="text-muted small mb-0">Bajo promedio en Convivencia (< 3.5).</p>
+                       <h5 class="fw-bold text-dark"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Riesgo Convivencial</h5>
+                       <p class="text-muted small mb-0">Promedio bajo en Convivencia (< 3.5).</p>
                    </div>
                </div>
                <div class="card-body p-0">
@@ -353,7 +387,7 @@
                                        <small class="text-muted">{{ alerta.materia__curso__nombre }}</small>
                                    </td>
                                    <td class="text-center">
-                                       <span class="badge bg-warning text-dark border border-warning">{{ alerta.nota_promedio|floatformat:1 }}</span>
+                                       <span class="badge bg-warning text-dark border border-warning rounded-pill px-3">{{ alerta.nota_promedio|floatformat:1 }}</span>
                                    </td>
                                    <td class="text-end pe-4">
                                        <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary"><i class="fas fa-eye"></i></a>
@@ -369,30 +403,15 @@
            </div>
        </div>
    </div>
-   
-   <div class="row mb-5 justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 1rem;">
-               <div class="card-header bg-white border-0 pt-4 px-4 text-center">
-                   <h5 class="fw-bold text-dark"><i class="fas fa-user-clock me-2 text-success"></i>Asistencia Global Hoy</h5>
-               </div>
-               <div class="card-body p-4 d-flex justify-content-center align-items-center">
-                   <div style="height: 250px; width: 100%; position: relative;">
-                       <canvas id="asistenciaChart"></canvas>
-                   </div>
-               </div>
-           </div>
-        </div>
-   </div>
 
-   <div class="card border-0 shadow-sm mb-5 overflow-hidden animate__animated animate__fadeInUp" style="border-radius: 1rem; background-color: #eef2f6;">
+   <div class="card border-0 shadow-sm mb-5 overflow-hidden animate__animated animate__fadeInUp" style="border-radius: 1rem; background-color: #f8f9fa;">
        <div class="card-body p-4 text-center">
-           <h4 class="fw-bold mb-3 text-dark">Búsqueda Rápida de Estudiantes</h4>
+           <h4 class="fw-bold mb-3 text-dark">Búsqueda Rápida</h4>
            <form method="GET" action="">
                <div class="input-group input-group-lg shadow-sm">
                    <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-muted"></i></span>
                    <input type="text" name="q" class="form-control bg-white border-0"
-                          placeholder="Escribe nombre o documento..."
+                          placeholder="Nombre o documento del estudiante..."
                           value="{{ query|default:'' }}">
                     <button class="btn btn-primary px-5 fw-bold" type="submit">BUSCAR</button>
                </div>
@@ -402,7 +421,7 @@
 
    {% if query %}
        <div class="mb-5 animate__animated animate__fadeIn">
-           <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-list me-2"></i>Resultados:</h5>
+           <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-list me-2"></i>Resultados de Búsqueda:</h5>
             {% if estudiantes %}
                <div class="row g-3">
                    {% for estudiante in estudiantes %}
@@ -425,7 +444,7 @@
                    {% endfor %}
                 </div>
            {% else %}
-               <div class="alert alert-warning border-0 shadow-sm">No se encontraron estudiantes.</div>
+               <div class="alert alert-warning border-0 shadow-sm">No se encontraron estudiantes con ese criterio.</div>
            {% endif %}
        </div>
    {% endif %}
@@ -462,8 +481,8 @@
                    <div class="p-3 bg-light border-bottom">
                        <div class="card border-0 shadow-sm">
                            <div class="card-header bg-gradient-success text-white py-2 d-flex justify-content-between align-items-center">
-                               <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento Académico</h6>
-                               <small class="text-white-50">Orden por promedio de notas</small>
+                               <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 10 Rendimiento</h6>
+                               <small class="text-white-50">Orden por promedio</small>
                            </div>
                            <div class="card-body p-0">
                                <div class="table-responsive">
@@ -641,32 +660,53 @@
 </script>
 
 <style>
-   /* Nuevos Estilos para Documentos */
-   .doc-card { transition: transform 0.2s; }
-   .doc-card:hover { transform: translateY(-3px); }
+   /* === ESTILOS PERSONALIZADOS (EDUTECH TIER 100) === */
    
-   .text-purple { color: #6610f2; }
-   .text-orange { color: #fd7e14; }
-   .text-teal { color: #20c997; }
-   
-   .btn-purple { background-color: #6610f2; color: white; border: none; }
-   .btn-purple:hover { background-color: #520dc2; color: white; }
-   
-   .btn-orange { background-color: #fd7e14; color: white; border: none; }
-   .btn-orange:hover { background-color: #e36d0a; color: white; }
-   
-   .btn-teal { background-color: #20c997; color: white; border: none; }
-   .btn-teal:hover { background-color: #1aa179; color: white; }
+   /* 1. Iconos Circulares Grandes */
+   .icon-box-xl {
+       width: 80px; height: 80px;
+   }
 
-   /* Estilos existentes */
-   .bg-gradient-primary { background: linear-gradient(135deg, #4361ee, #3f37c9); }
-   .bg-soft-info { background-color: rgba(13, 202, 240, 0.15); color: #0dcaf0; }
+   /* 2. Colores Soft (Fondo Pastel) */
+   .bg-soft-primary { background-color: rgba(67, 97, 238, 0.15); }
+   .bg-soft-info { background-color: rgba(13, 202, 240, 0.15); }
+   .bg-soft-success { background-color: rgba(25, 135, 84, 0.15); }
+   .bg-soft-warning { background-color: rgba(255, 193, 7, 0.15); }
+   
+   /* 3. Colores Documentos */
+   .text-purple { color: #6610f2; }
+   .btn-outline-purple { color: #6610f2; border-color: #6610f2; }
+   .btn-outline-purple:hover { background-color: #6610f2; color: white; }
+   .pei-border { border-top: 4px solid #6610f2 !important; }
+
+   .text-orange { color: #fd7e14; }
+   .btn-outline-orange { color: #fd7e14; border-color: #fd7e14; }
+   .btn-outline-orange:hover { background-color: #fd7e14; color: white; }
+   .manual-border { border-top: 4px solid #fd7e14 !important; }
+
+   .text-teal { color: #20c997; }
+   .btn-outline-teal { color: #20c997; border-color: #20c997; }
+   .btn-outline-teal:hover { background-color: #20c997; color: white; }
+   .proyectos-border { border-top: 4px solid #20c997 !important; }
+   
+   .malla-border { border-top: 4px solid #0d6efd !important; }
+   .calendario-border { border-top: 4px solid #dc3545 !important; }
+
+   /* 4. Efectos Hover */
+   .hover-elevate { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+   .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+   
+   .hover-scale { transition: transform 0.2s; }
+   .hover-scale:hover { transform: scale(1.05); }
+
+   /* 5. Avatares */
    .avatar-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+   
+   /* 6. Utilidades */
    .bg-success-subtle { background-color: #d1e7dd; }
    .bg-warning-subtle { background-color: #fff3cd; }
    .bg-danger-subtle { background-color: #f8d7da; }
    .bg-gradient-success { background: linear-gradient(135deg, #1cc88a, #13855c); }
-   .shadow-hover:hover { transform: translateY(-3px); transition: all 0.2s; }
    .accordion-button:not(.collapsed) { background-color: #f8f9fa; color: #333; }
    .accordion-button:focus { box-shadow: none; border-color: rgba(0,0,0,.1); }
 </style>

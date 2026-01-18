@@ -5411,3 +5411,42 @@ def ver_documentos_institucionales(request):
         'institucion': institucion
     }
     return render(request, 'institucion/documentos_publicos.html', context)
+
+
+@role_required(['ADMINISTRADOR', 'COORD_ACADEMICO', 'COORD_CONVIVENCIA', 'PSICOLOGO'])
+def historial_global_observaciones(request):
+    """
+    Vista de Inteligencia: Historial Global de Observaciones.
+    Muestra estadísticas y una tabla detallada de TODOS los procesos disciplinarios,
+    académicos y psicológicos de la institución.
+    """
+    # 1. Obtener todas las observaciones ordenadas por fecha (más reciente primero)
+    observaciones = Observacion.objects.select_related('estudiante', 'creado_por').all().order_by('-fecha_creacion')
+
+    # 2. Filtrado Rápido (Opcional: Si envían búsqueda por GET)
+    query = request.GET.get('q')
+    if query:
+        observaciones = observaciones.filter(
+            Q(estudiante__first_name__icontains=query) |
+            Q(estudiante__last_name__icontains=query) |
+            Q(descripcion__icontains=query)
+        )
+
+    # 3. Calcular Estadísticas (KPIs) en tiempo real
+    # Ajusta los strings 'CONVIVENCIA', 'ACADEMICA', etc. según como los tengas en tu models.py
+    total_obs = observaciones.count()
+    count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
+    count_academica = observaciones.filter(tipo='ACADEMICO').count() # O 'ACADEMICA' revisa tu modelo
+    count_psicologia = observaciones.filter(tipo='PSICOLOGIA').count() # O 'PSICOLOGICA'
+
+    context = {
+        'observaciones': observaciones,
+        'kpi': {
+            'total': total_obs,
+            'convivencia': count_convivencia,
+            'academica': count_academica,
+            'psicologia': count_psicologia,
+        },
+        'query': query
+    }
+    return render(request, 'bienestar/historial_global_observaciones.html', context)

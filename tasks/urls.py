@@ -208,4 +208,5 @@ urlpatterns = [
     path('api/social/post/<int:post_id>/likes/', views.api_obtener_likes, name='api_post_likes'),
     path('ia/reporte/pdf/', views.download_ai_report_pdf, name='download_ai_report_pdf'),
     path('institucion/documentos/', views.ver_documentos_institucionales, name='documentos_institucionales'),
+    path('bienestar/historial-global/', views.historial_global_observaciones, name='historial_global_observaciones'),
 ]
