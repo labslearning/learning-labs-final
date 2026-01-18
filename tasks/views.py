@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db.models import Avg, Count, Q, Min, Max
 import json
-
+from .models import Observacion, Institucion # <--- Importante importar Observacion
 from django.core.serializers.json import DjangoJSONEncoder
 
 from functools import wraps
