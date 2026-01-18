@@ -4,137 +4,133 @@
     <meta charset="UTF-8">
     <title>Informe Pedagógico Institucional</title>
     <style>
-        /* === 1. CONFIGURACIÓN DE PÁGINA (A4 OFICIAL) === */
+        /* === CONFIGURACIÓN DE PÁGINA (A4 ISO 216) === */
         @page {
             size: A4;
-            margin-top: 4.5cm;     /* Margen superior amplio para encabezado */
-            margin-bottom: 2.5cm;  /* Margen inferior para pie de página */
-            margin-left: 2.5cm;    /* Margen izquierdo estándar */
-            margin-right: 2.5cm;   /* Margen derecho estándar */
+            margin-top: 4cm;      /* Espacio superior generoso */
+            margin-bottom: 2.5cm; /* Espacio inferior para pie */
+            margin-left: 2.5cm;   /* Margen izquierdo estándar */
+            margin-right: 2.5cm;  /* Margen derecho estándar */
 
-            /* Definimos las cajas flotantes */
+            /* Cajas flotantes para encabezado y pie */
             @top-center { content: element(header); }
             @bottom-center { content: element(footer); }
         }
 
-        /* === 2. TIPOGRAFÍA Y CUERPO === */
+        /* === TIPOGRAFÍA === */
         body {
-            font-family: 'Georgia', 'Times New Roman', serif; /* Elegancia académica */
+            font-family: 'Times New Roman', serif;
             color: #2c3e50;
             font-size: 11pt;
-            line-height: 1.6; /* Lectura cómoda */
+            line-height: 1.5;
             text-align: justify;
-            margin: 0; 
+            margin: 0;
             padding: 0;
         }
 
-        /* === 3. PALETA DE COLORES PREMIUM === */
+        /* === COLORES === */
         :root {
-            --primary: #002B5B; /* Azul Oxford Profundo */
-            --accent: #C5A059;  /* Dorado Antiguo */
-            --text-grey: #555;
-            --border: #e0e0e0;
-            --bg-table: #f9f9f9;
+            --primary: #002B5B; /* Azul Institucional */
+            --accent: #C5A059;  /* Dorado */
+            --border: #ddd;
         }
 
-        /* === 4. ENCABEZADO FIJO (Se repite en todas las páginas) === */
+        /* === ENCABEZADO FLOTANTE === */
         .header-container {
             position: running(header);
             width: 100%;
-            margin-top: 0; /* Sin margen negativo para respetar el borde */
-            border-bottom: 3px solid var(--primary); /* Línea sólida de autoridad */
-            padding-bottom: 15px;
-            margin-bottom: 0;
+            margin-top: 0; 
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 0px;
         }
         
-        .header-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
+        .header-table { width: 100%; border-collapse: collapse; }
         
         .logo-cell { 
             width: 20%; 
             vertical-align: middle; 
-            text-align: left;
-            padding-top: 10px;
+            text-align: center;
+            padding-top: 5px;
         }
         
         .logo-img { 
-            height: 90px; 
-            width: 90px; 
+            height: 85px; 
+            width: 85px; 
             object-fit: contain; 
             display: block;
+            margin: 0 auto;
         }
 
         .info-cell { 
             width: 80%; 
             text-align: right; 
             vertical-align: middle; 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            padding-top: 10px;
+            font-family: Helvetica, Arial, sans-serif;
+            padding-top: 5px;
         }
         
         .school-name {
-            font-size: 18pt;
+            font-size: 16pt;
             font-weight: 900;
             color: var(--primary);
             text-transform: uppercase;
             margin: 0;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         .school-sub {
-            font-size: 8.5pt;
+            font-size: 8pt;
             color: var(--accent);
             text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 6px;
-            letter-spacing: 2px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
         }
         
         .school-legal {
-            font-size: 7.5pt;
-            color: var(--text-grey);
-            line-height: 1.4;
+            font-size: 7pt;
+            color: #555;
+            line-height: 1.3;
         }
 
-        /* === 5. PIE DE PÁGINA === */
+        /* === PIE DE PÁGINA === */
         .footer-container {
             position: running(footer);
             width: 100%;
             border-top: 1px solid var(--accent);
-            padding-top: 10px;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 7.5pt;
-            color: #888;
+            padding-top: 8px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 7pt;
+            color: #777;
             text-align: center;
         }
 
-        /* === 6. MARCA DE AGUA (FONDO) === */
+        /* === MARCA DE AGUA === */
         .watermark {
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 65%;
-            transform: translate(-50%, -50%); /* Centrado geométrico */
-            opacity: 0.06; /* Muy sutil */
+            width: 60%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
             z-index: -1000;
             filter: grayscale(100%);
         }
 
-        /* === 7. TÍTULO DEL DOCUMENTO === */
+        /* === TÍTULO === */
         .doc-title-box {
             text-align: center;
-            margin-top: 25px;
-            margin-bottom: 35px;
-            padding: 12px;
-            background-color: var(--bg-table);
-            border: 1px solid var(--border);
-            border-radius: 2px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
         }
         .doc-title {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 15pt;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13pt;
             font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
@@ -142,61 +138,61 @@
             letter-spacing: 0.5px;
         }
 
-        /* === 8. TABLA DE METADATOS (Minimalista) === */
+        /* === TABLA DE METADATOS === */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 35px;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
+            margin-bottom: 30px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9pt;
         }
         .meta-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border); /* Solo líneas horizontales */
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
         .label {
-            font-weight: 700;
+            font-weight: bold;
             color: var(--primary);
             width: 20%;
             text-transform: uppercase;
-            font-size: 8.5pt;
+            font-size: 8pt;
         }
         .value { width: 30%; color: #333; }
         .full-val { width: 80%; font-style: italic; color: #555; }
 
-        /* === 9. CONTENIDO DEL REPORTE === */
+        /* === CONTENIDO === */
         .content-body {
             width: 100%;
             overflow: hidden;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
         }
         /* Estilos Markdown */
         .content-body h1 { 
-            font-size: 14pt; color: var(--primary); 
-            border-bottom: 2px solid var(--accent); 
-            padding-bottom: 5px; margin-top: 30px; 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 13pt; color: var(--primary); 
+            border-bottom: 1px solid var(--accent); 
+            padding-bottom: 3px; margin-top: 20px; 
+            font-family: Helvetica, Arial, sans-serif;
         }
         .content-body h2 { 
-            font-size: 12.5pt; color: #333; font-weight: 700; 
-            margin-top: 25px; text-transform: uppercase;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11pt; color: #333; font-weight: bold; 
+            margin-top: 15px; text-transform: uppercase;
+            font-family: Helvetica, Arial, sans-serif;
         }
         .content-body h3 { 
-            font-size: 11.5pt; font-weight: 700; color: #555; margin-top: 20px; 
+            font-size: 11pt; font-weight: bold; color: #555; margin-top: 12px; 
         }
-        .content-body ul { margin-left: 20px; padding-left: 10px; }
-        .content-body li { margin-bottom: 8px; }
-        .content-body p { margin-bottom: 15px; }
-        .content-body strong { color: var(--primary); font-weight: 700; }
+        .content-body ul { margin-left: 20px; padding-left: 5px; }
+        .content-body li { margin-bottom: 4px; }
+        .content-body p { margin-bottom: 10px; }
+        .content-body strong { color: var(--primary); font-weight: bold; }
 
-        /* === 10. FIRMAS === */
+        /* === FIRMAS === */
         .signatures-wrapper {
-            margin-top: 60px;
+            margin-top: 50px;
             page-break-inside: avoid;
             width: 100%;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
         }
         .sig-table { width: 100%; border-collapse: collapse; border: none; }
         .sig-cell {
@@ -206,23 +202,22 @@
         }
         .sig-line {
             border-top: 1px solid #333;
-            margin: 0 25px 8px 25px;
+            margin: 0 25px 5px 25px;
             height: 1px;
         }
         .sig-name {
-            font-weight: 700;
-            font-size: 9.5pt;
+            font-weight: bold;
+            font-size: 9pt;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             color: #000;
         }
         .sig-role {
             font-size: 8pt;
             color: #666;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-        .sig-space { height: 80px; }
+        .sig-space { height: 60px; }
 
     </style>
 </head>
@@ -256,7 +251,7 @@
         <table style="width: 100%; border: none;">
             <tr>
                 <td style="text-align: left; width: 33%; border: none;">Plataforma Learning Labs</td>
-                <td style="text-align: center; width: 33%; border: none; font-weight: bold; color: #555;">DOCUMENTO CONFIDENCIAL</td>
+                <td style="text-align: center; width: 33%; border: none; font-weight: bold; color: #555;">CONFIDENCIAL</td>
                 <td style="text-align: right; width: 33%; border: none;">Pág. <span style="content: counter(page)"></span> de <span style="content: counter(pages)"></span></td>
             </tr>
         </table>
@@ -314,7 +309,7 @@
                     <div class="sig-space"></div>
                     <div class="sig-line"></div>
                     <div class="sig-name">COORDINACIÓN / ACUDIENTE</div>
-                    <div class="sig-role">RECIBIDO A SATISFACCIÓN</div>
+                    <div class="sig-role">RECIBIDO / VISTO BUENO</div>
                     <div class="sig-role" style="font-weight: normal; margin-top: 3px;">FECHA: ____/____/______</div>
                 </td>
             </tr>
