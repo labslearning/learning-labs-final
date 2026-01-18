@@ -5416,25 +5416,27 @@ def ver_documentos_institucionales(request):
 def historial_global_observaciones(request):
     """
     Vista de Inteligencia: Historial Global de Observaciones.
+    Versión con Diagnóstico de Template integrado.
     """
-    # 1. CORRECCIÓN: Usamos 'autor' en vez de 'creado_por'
+    # --- 1. Lógica de Datos (Optimizada) ---
+    # Usamos 'autor' porque ya confirmamos que 'creado_por' daba error.
     observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
 
-    # 2. Filtrado Rápido (Buscador)
+    # --- 2. Filtro de Búsqueda Inteligente ---
     query = request.GET.get('q')
     if query:
         observaciones = observaciones.filter(
             Q(estudiante__first_name__icontains=query) |
             Q(estudiante__last_name__icontains=query) |
-            Q(estudiante__username__icontains=query) |
+            Q(estudiante__username__icontains=query) | # Busca también por documento
             Q(descripcion__icontains=query)
         )
 
-    # 3. Estadísticas
+    # --- 3. Cálculo de KPIs (Estadísticas) ---
     total_obs = observaciones.count()
-    count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
     
-    # Filtro robusto para lo académico y psicológico
+    # Conteos directos y seguros
+    count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
     count_academica = observaciones.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
     count_psicologia = observaciones.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
 
@@ -5449,4 +5451,31 @@ def historial_global_observaciones(request):
         'query': query
     }
     
-    return render(request, 'bienestar/historial_global_observaciones.html', context)
+    # --- 4. Renderizado con Diagnóstico de Error ---
+    template_name = 'bienestar/historial_global_observaciones.html'
+    
+    try:
+        # Intentamos cargar el template primero para verificar si existe
+        get_template(template_name)
+        return render(request, template_name, context)
+        
+    except TemplateDoesNotExist:
+        # Si falla, mostramos un mensaje útil en pantalla en vez de Error 500
+        import os
+        from django.conf import settings
+        
+        debug_msg = f"""
+        <div style='font-family: monospace; padding: 20px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'>
+            <h3>⚠️ ERROR CRÍTICO: NO SE ENCUENTRA EL ARCHIVO HTML</h3>
+            <p>Django buscó el archivo <strong>'{template_name}'</strong> y no lo encontró.</p>
+            <hr>
+            <p><strong>Verificación de Rutas en el Servidor:</strong></p>
+            <ul>
+        """
+        # Listamos dónde está buscando Django
+        for directory in settings.TEMPLATES[0]['DIRS']:
+            debug_msg += f"<li>Buscando en: {directory}</li>"
+            
+        debug_msg += "</ul><p><strong>Asegúrate de que la carpeta se llame 'bienestar' (todo minúscula) en el servidor.</strong></p></div>"
+        
+        return HttpResponse(debug_msg)
