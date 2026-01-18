@@ -755,6 +755,14 @@
                         
                         <a href="{% url 'lista_grupos' %}" class="nav-link"><i class="fas fa-layer-group"></i> <span>Grupos</span></a>
 
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'documentos_institucionales' %}active{% endif %}" 
+                               href="{% url 'documentos_institucionales' %}">
+                                <i class="fas fa-folder-open me-2"></i>
+                                <span>Documentos</span>
+                            </a>
+                        </li>
+
                         {% if user.perfil.rol == 'ADMINISTRADOR' or user.perfil.rol == 'PSICOLOGO' or user.perfil.rol == 'COORD_ACADEMICO' or user.perfil.rol == 'COORD_CONVIVENCIA' %}
                             <a href="{% url 'dashboard_bienestar' %}" class="nav-link">
                                 <i class="fas fa-chart-line"></i> <span>Bienestar</span>

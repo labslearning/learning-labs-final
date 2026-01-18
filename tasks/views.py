@@ -5327,3 +5327,20 @@ def download_ai_report_pdf(request):
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     
     return response
+
+
+# En tasks/views.py
+
+@login_required
+def ver_documentos_institucionales(request):
+    """
+    Vista pública para que CUALQUIER usuario autenticado (Estudiante, Acudiente, Docente)
+    pueda ver y descargar los documentos oficiales.
+    """
+    institucion = Institucion.objects.first()
+    
+    # Si no hay institución creada, pasamos None para manejarlo en el template
+    context = {
+        'institucion': institucion
+    }
+    return render(request, 'institucion/documentos_publicos.html', context)
