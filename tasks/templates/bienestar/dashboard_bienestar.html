@@ -5,49 +5,120 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="container py-5">
+<div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px;">
   
    <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
        <div class="col-lg-5 mb-3 mb-lg-0">
            <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
-               <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-3 d-flex align-items-center justify-content-center">
-                   <i class="fas fa-chart-pie fa-2x"></i>
+               <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-4 d-flex align-items-center justify-content-center">
+                   <i class="fas fa-chart-pie fa-3x"></i>
                </div>
                <div class="text-center text-lg-start">
-                   <h1 class="fw-bold mb-0 text-dark display-6">Gestión & Bienestar</h1>
-                   <p class="text-muted mb-0">
+                   <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Panel de Control</h6>
+                   <h1 class="fw-bolder text-dark mb-0 display-5">Gestión & Bienestar</h1>
+                   <p class="text-muted lead mb-0">
                        <span class="badge bg-soft-primary text-primary me-2">{{ user.perfil.get_rol_display }}</span>
-                       Panel de Control
+                       Centro de Operaciones Institucional
                    </p>
                </div>
            </div>
        </div>
        
        <div class="col-lg-7">
-           <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-2 align-items-center">
-                <a href="{% url 'reporte_consolidado' %}" class="btn btn-light border shadow-sm text-success fw-bold hover-scale" title="Descargar Sábana Excel">
+           <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-3 align-items-center">
+                <a href="{% url 'reporte_consolidado' %}" class="btn btn-white border shadow-sm text-success fw-bold hover-scale px-4 py-2" title="Descargar Sábana Excel">
                     <i class="fas fa-file-excel me-2"></i>Sábana
                 </a>
 
-                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-light border shadow-sm text-primary fw-bold hover-scale" title="Ver Historial de Procesos">
+                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border shadow-sm text-primary fw-bold hover-scale px-4 py-2" title="Ver Historial de Procesos">
                     <i class="fas fa-history me-2"></i>Historial
                 </a>
 
-                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-light border shadow-sm text-purple fw-bold hover-scale" title="Analizar PEI con IA">
-                    <i class="fas fa-robot me-2"></i>Auditoría
+                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-white border shadow-sm text-purple fw-bold hover-scale px-4 py-2" title="Analizar PEI con IA">
+                    <i class="fas fa-robot me-2"></i>Auditoría IA
                 </a>
                 
-                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold hover-scale">
+                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold hover-scale px-4 py-2">
                     <i class="fas fa-brain me-2"></i>IA Académica
                 </a>
 
-                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-sm hover-scale" title="Recargar Datos">
+                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-lg hover-scale px-3 py-2" title="Recargar Datos">
                     <i class="fas fa-sync-alt"></i>
                 </a>
            </div>
            
-           <div class="text-center text-lg-end mt-2">
-               <small class="text-muted fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">FECHA DE CORTE: <span class="text-dark">{% now "d M, Y" %}</span></small>
+           <div class="text-center text-lg-end mt-3">
+               <small class="text-muted fw-bold ls-1 text-uppercase">Última Actualización: <span class="text-dark">{% now "d M, Y - H:i" %}</span></small>
+           </div>
+       </div>
+   </div>
+
+   <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-5 animate__animated animate__fadeInUp">
+       <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+           <div>
+               <h4 class="fw-bold text-dark mb-1"><i class="fas fa-satellite-dish me-2 text-danger"></i>Radar Académico</h4>
+               <p class="text-muted small mb-0">Visión panorámica del rendimiento escolar actual.</p>
+           </div>
+           <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
+               <i class="fas fa-bell me-2"></i>Alertas Activas
+           </span>
+       </div>
+       <div class="card-body p-4">
+           <div class="row g-4">
+               <div class="col-lg-3">
+                   <div class="d-flex flex-column gap-3 h-100">
+                       <div class="card bg-light border-0 p-3 shadow-sm h-100 d-flex justify-content-center align-items-center text-center">
+                           <div>
+                               <h6 class="text-uppercase text-muted fw-bold x-small mb-2">Materias Perdidas (Total)</h6>
+                               <h2 class="display-4 fw-bold text-danger mb-0">{{ kpi.total_materias_perdidas|default:"0" }}</h2>
+                               <small class="text-danger"><i class="fas fa-arrow-down me-1"></i>Crítico</small>
+                           </div>
+                       </div>
+                       <div class="card bg-light border-0 p-3 shadow-sm h-100 d-flex justify-content-center align-items-center text-center">
+                           <div>
+                               <h6 class="text-uppercase text-muted fw-bold x-small mb-2">Promedio General</h6>
+                               <h2 class="display-4 fw-bold text-info mb-0">{{ kpi.prom_global_acad|default:"0.0" }}</h2>
+                               <div class="progress mt-2" style="height: 6px; width: 100px;">
+                                   <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio kpi.prom_global_acad 5 100 %}%"></div>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+
+               <div class="col-lg-5">
+                   <div class="position-relative h-100 d-flex flex-column justify-content-center">
+                       <h6 class="text-center text-secondary x-small fw-bold text-uppercase mb-3">Rendimiento por Áreas del Conocimiento</h6>
+                       <div style="height: 300px; width: 100%;">
+                           <canvas id="radarChart"></canvas>
+                       </div>
+                   </div>
+               </div>
+
+               <div class="col-lg-4">
+                   <h6 class="text-secondary x-small fw-bold text-uppercase mb-3">Estudiantes con Mayor Riesgo Académico</h6>
+                   <div class="list-group shadow-sm rounded-3">
+                       {% for riesgo in top_riesgo_academico|slice:":5" %}
+                       <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="list-group-item list-group-item-action d-flex align-items-center p-3 border-0 border-bottom">
+                           <div class="avatar-sm rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center me-3 fw-bold">
+                               {{ riesgo.estudiante.first_name|slice:":1" }}
+                           </div>
+                           <div class="flex-grow-1">
+                               <h6 class="mb-0 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
+                               <small class="text-muted">{{ riesgo.curso.nombre }}</small>
+                           </div>
+                           <div class="text-end">
+                               <span class="badge bg-danger rounded-pill">{{ riesgo.materias_perdidas }} Materias</span>
+                           </div>
+                       </a>
+                       {% empty %}
+                       <div class="text-center p-4 text-muted">
+                           <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                           <p class="mb-0">Sin alertas críticas por el momento.</p>
+                       </div>
+                       {% endfor %}
+                   </div>
+               </div>
            </div>
        </div>
    </div>
@@ -58,7 +129,7 @@
            <span class="badge bg-light text-muted ms-3 border">Archivos Rectores</span>
        </div>
 
-       <div class="col-md-6 col-lg-4 mb-4">
+       <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
@@ -88,7 +159,7 @@
            </div>
        </div>
 
-       <div class="col-md-6 col-lg-4 mb-4">
+       <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
@@ -118,7 +189,7 @@
            </div>
        </div>
 
-       <div class="col-md-6 col-lg-4 mb-4">
+       <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc proyectos-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
@@ -148,7 +219,7 @@
            </div>
        </div>
 
-       <div class="col-md-6 col-lg-4 mb-4">
+       <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
@@ -177,37 +248,6 @@
                </div>
            </div>
        </div>
-
-       <div class="col-md-6 col-lg-4 mb-4">
-           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border">
-               <div class="card-body">
-                   <div class="d-flex justify-content-between align-items-center mb-3">
-                       <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-calendar-alt me-2"></i>Calendario</h5>
-                       {% if institucion.archivo_calendario %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
-                   </div>
-                   <p class="text-muted small">Cronograma de actividades académicas.</p>
-                   
-                   <div class="d-grid gap-2">
-                       {% if institucion.archivo_calendario %}
-                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-eye me-1"></i> Ver PDF</a>
-                       {% endif %}
-                       
-                       {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-sm btn-light text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario">
-                               <i class="fas fa-upload me-1"></i> Actualizar
-                           </button>
-                           <div class="collapse mt-2" id="uploadCalendario">
-                               <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded border">{% csrf_token %}
-                                   <input type="file" name="calendario_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-success btn-sm w-100">Guardar</button>
-                               </form>
-                           </div>
-                       {% endif %}
-                   </div>
-               </div>
-           </div>
-       </div>
-
    </div>
 
    <div class="row g-4 mb-5 animate__animated animate__fadeIn">
@@ -587,7 +627,45 @@
 
 <script>
    document.addEventListener('DOMContentLoaded', function() {
-       // --- GRÁFICO COMPARATIVO POR CURSO (PEI) ---
+       
+       // --- 1. GRÁFICO DE RADAR ACADÉMICO (NUEVO) ---
+       const ctxRadar = document.getElementById('radarChart');
+       if (ctxRadar) {
+           // Datos simulados (Debes pasar estos desde Django en kpi.radar_data)
+           const radarData = {
+               labels: ['Matemáticas', 'Lenguaje', 'Ciencias', 'Sociales', 'Inglés', 'Tecnología'],
+               datasets: [{
+                   label: 'Promedio Institucional',
+                   data: [3.8, 4.2, 3.5, 4.0, 3.2, 4.5], // Reemplazar con datos reales
+                   fill: true,
+                   backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                   borderColor: 'rgb(54, 162, 235)',
+                   pointBackgroundColor: 'rgb(54, 162, 235)',
+                   pointBorderColor: '#fff',
+                   pointHoverBackgroundColor: '#fff',
+                   pointHoverBorderColor: 'rgb(54, 162, 235)'
+               }]
+           };
+
+           new Chart(ctxRadar, {
+               type: 'radar',
+               data: radarData,
+               options: {
+                   responsive: true,
+                   maintainAspectRatio: false,
+                   scales: {
+                       r: {
+                           angleLines: { display: false },
+                           suggestedMin: 0,
+                           suggestedMax: 5
+                       }
+                   },
+                   plugins: { legend: { display: false } }
+               }
+           });
+       }
+
+       // --- 2. GRÁFICO COMPARATIVO POR CURSO (PEI) ---
        const ctx = document.getElementById('peiChart');
        if (ctx) {
            const labels = JSON.parse('{{ chart_data.labels|safe }}');
@@ -629,7 +707,7 @@
            });
        }
 
-       // --- GRÁFICO DE ASISTENCIA ---
+       // --- 3. GRÁFICO DE ASISTENCIA ---
        const ctxAsistencia = document.getElementById('asistenciaChart');
        if (ctxAsistencia) {
            const dataAsistencia = JSON.parse('{{ stats_asistencia|safe }}');
