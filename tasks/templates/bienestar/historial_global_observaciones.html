@@ -50,7 +50,7 @@
                 <div class="card-body p-4 d-flex flex-column justify-content-between z-1 position-relative">
                     <div>
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                             <h6 class="text-uppercase text-muted fw-bold x-small">Total Reportes Activos</h6>
+                             <h6 class="text-uppercase text-muted fw-bold x-small">Total de Reportes Activos</h6>
                              <span class="icon-box-sm bg-light text-secondary rounded-circle"><i class="fas fa-users"></i></span>
                         </div>
                         <div class="d-flex align-items-baseline gap-2 mb-2">
@@ -59,7 +59,7 @@
                                 <i class="fas fa-arrow-up me-1"></i>Activo
                             </span>
                         </div>
-                        <p class="text-muted small opacity-75">Registros actualmente en seguimiento en este periodo.</p>
+                        <p class="text-muted small opacity-75">Registros actualmente en seguimiento este periodo.</p>
                     </div>
                     
                     <div class="mt-4 border-top pt-3">
@@ -76,7 +76,7 @@
                             </div>
                             <div class="col-4">
                                 <span class="d-block fw-bold text-dark fs-5">{{ kpi.psicologia }}</span>
-                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psico.</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psic.</span>
                                 <span class="badge bg-purple-subtle text-purple x-small mt-1 rounded-pill">Revisar</span>
                             </div>
                         </div>
@@ -125,8 +125,8 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold text-dark mb-0">Áreas de Foco</h5>
-                                <small class="text-muted">Intervención prioritaria requerida</small>
+                                <h5 class="fw-bold text-dark mb-0">Áreas Críticas</h5>
+                                <small class="text-muted">Intervención de alta prioridad</small>
                             </div>
                         </div>
                     </div>
@@ -141,13 +141,13 @@
                         </div>
                         <div class="d-flex align-items-center mt-1">
                             <i class="fas fa-info-circle text-muted x-small me-1"></i>
-                            <small class="text-muted x-small">Estudiantes reprobando 2+ materias clave.</small>
+                            <small class="text-muted x-small">Estudiantes fallando en 2+ materias clave.</small>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Conductual</span>
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Comportamiento</span>
                             <span class="x-small fw-bold text-warning">{{ kpi.convivencia }} Casos</span>
                         </div>
                         <div class="progress bg-light" style="height: 6px;">
@@ -173,7 +173,7 @@
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
                 </h5>
-                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención inmediata según datos recientes.</p>
+                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención académica inmediata según datos recientes.</p>
             </div>
             <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
                 <i class="fas fa-bell me-1"></i>Intervención Requerida
@@ -333,7 +333,7 @@
                                     <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Acciones</h6></li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
-                                            <i class="fas fa-folder-open text-primary me-2"></i>Ver Expediente
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Abrir Expediente
                                         </a>
                                     </li>
                                     {% if obs.tipo == 'ACADEMICO' %}
@@ -355,7 +355,7 @@
                                     <i class="fas fa-clipboard-check fa-5x"></i>
                                 </div>
                                 <h5 class="text-dark fw-bold">Todo en Orden</h5>
-                                <p class="text-muted small">No hay registros que coincidan con sus criterios de búsqueda.</p>
+                                <p class="text-muted small">No hay registros que coincidan con los criterios de búsqueda.</p>
                             </div>
                         </td>
                     </tr>
@@ -396,7 +396,7 @@
                 <div id="aiLoading" class="text-center py-5">
                     <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
                     <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Analizando Patrones...</h5>
-                    <p class="text-muted small" id="aiStatusText">Escaneando bitácora de observaciones...</p>
+                    <p class="text-muted small" id="aiStatusText">Escaneando bitácoras de observación...</p>
                     
                     <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; max-width: 300px;">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary" role="progressbar" style="width: 100%"></div>
@@ -459,7 +459,7 @@
                 data: {
                     labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                     datasets: [{
-                        label: 'Total de Casos',
+                        label: 'Casos Totales',
                         data: [12, 19, 15, 25, 22, {{ kpi.total }}],
                         borderColor: '#4361ee',
                         backgroundColor: (context) => {
@@ -502,6 +502,7 @@
         loading.classList.remove('d-none');
         results.classList.add('d-none');
 
+        // Captura de Puntos de Datos Reales
         const stats = {
             total: {{ kpi.total|default:0 }},
             conv: {{ kpi.convivencia|default:0 }},
@@ -509,12 +510,13 @@
             psico: {{ kpi.psicologia|default:0 }}
         };
 
+        // Pasos de Análisis Simulado
         const steps = [
-            "Accediendo a la base de datos estudiantil...",
-            "Escaneando 'Manual de Convivencia' (Capítulo: Acciones Disciplinarias)...",
-            "Analizando tendencias de desempeño académico...",
+            "Accediendo a la base de datos de estudiantes...",
+            "Escaneando el 'Manual de Convivencia' (Capítulo: Acciones Disciplinarias)...",
+            "Analizando tendencias de rendimiento académico...",
             "Cruzando datos con objetivos del PEI...",
-            "Generando plan de mejora estratégica..."
+            "Generando plan estratégico de mejora..."
         ];
 
         let stepIndex = 0;
@@ -531,6 +533,7 @@
 
     function generateAIReport(stats, container, loading, results) {
         
+        // Lógica Dinámica para el Reporte
         let focusArea = "";
         let specificAdvice = "";
 
@@ -539,21 +542,21 @@
             specificAdvice = "El sistema detecta un alto volumen de alertas académicas. **Recomendación del PEI:** Implementar talleres de 'Refuerzo Pedagógico' de inmediato. Considere programas de tutoría entre pares.";
         } else if (stats.conv > stats.acad) {
             focusArea = "⚠️ **Preocupación Primaria: Problemas de Comportamiento**";
-            specificAdvice = "Los informes de comportamiento tienen una tendencia al alza. **Acción del Manual de Convivencia:** Revisar protocolos para la resolución de conflictos. Programar una 'Jornada de Convivencia' para los grados afectados.";
+            specificAdvice = "Los reportes de comportamiento tienden al alza. **Acción del Manual de Convivencia:** Revisar protocolos para resolución de conflictos. Programar una 'Jornada de Convivencia' para los grados afectados.";
         } else {
             focusArea = "⚠️ **Preocupación Primaria: Equilibrio Psicosocial**";
-            specificAdvice = "Las remisiones psicológicas son significativas. Asegúrese de que el equipo de orientación tenga capacidad o active rutas de apoyo externas.";
+            specificAdvice = "Las remisiones a psicología son significativas. Asegúrese de que el equipo de orientación tenga capacidad o active rutas de apoyo externas.";
         }
 
         const report = `
 ### 🧠 Reporte Estratégico IA Stratos
 
-**Alcance del análisis:** ${stats.total} Casos Activos analizados contra Parámetros Institucionales.
+**Alcance del Análisis:** ${stats.total} Casos Activos analizados bajo Parámetros Institucionales.
 
 #### 1. Análisis de Situación
 ${focusArea}
 * **Casos Académicos:** ${stats.acad}
-* **Casos Comportamentales:** ${stats.conv}
+* **Casos de Comportamiento:** ${stats.conv}
 * **Casos Psicológicos:** ${stats.psico}
 
 #### 2. Plan de Acción Impulsado por IA
@@ -672,7 +675,7 @@ ${focusArea}
     .border-bottom-hover { border-bottom: 1px solid #f1f3f5; }
     .transform-rotate-12 { transform: rotate(12deg); }
     
-    /* Estilos para Markdown */
+    /* Estilos Markdown */
     .markdown-body h3 { color: #4361ee; margin-top: 0; }
     .markdown-body h4 { color: #212529; margin-top: 1.5rem; font-weight: 700; }
     .markdown-body ul { padding-left: 1.2rem; }
