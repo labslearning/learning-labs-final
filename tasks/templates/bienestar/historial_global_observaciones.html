@@ -1,681 +1,686 @@
 {% extends 'base.html' %}
-{% load dict_filters %}
 {% load static %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-<div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px; background-color: #f4f7fe;">
-  
-   <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
-       <div class="col-lg-6 mb-3 mb-lg-0">
-           <div class="d-flex align-items-center">
-               <div class="icon-box-xxl bg-gradient-primary text-white rounded-4 shadow-lg me-4 d-flex align-items-center justify-content-center">
-                   <i class="fas fa-brain fa-2x"></i>
-               </div>
-               <div>
-                   <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Ecosistema Digital Stratos</h6>
-                   <h1 class="fw-bolder text-dark mb-0 display-4">Gestión de Bienestar 360°</h1>
-                   <p class="text-muted lead mb-0">
-                       <span class="badge bg-primary px-3 py-2 rounded-pill me-2 shadow-sm">{{ user.perfil.get_rol_display }}</span>
-                       Centro de Inteligencia y Auditoría Institucional
-                   </p>
-               </div>
-           </div>
-       </div>
-       
-       <div class="col-lg-6 text-lg-end">
-           <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-3 align-items-center">
-                <button class="btn btn-ai-magic rounded-pill px-4 py-3 shadow-lg fw-bold text-white hover-lift" onclick="ejecutarAuditoriaDashboard()">
-                    <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
-                </button>
+<div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px;">
 
-                <div class="vr mx-2 opacity-25 d-none d-lg-block"></div>
-
-                <div class="btn-group shadow-sm rounded-pill overflow-hidden border bg-white">
-                    <a href="{% url 'reporte_consolidado' %}" class="btn btn-white text-success fw-bold px-3 py-2 border-0">
-                        <i class="fas fa-file-excel"></i> Sábana
-                    </a>
-                    <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white text-primary fw-bold px-3 py-2 border-0 border-start">
-                        <i class="fas fa-history"></i> Historial
-                    </a>
-                </div>
-                
-                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold px-4 py-2 hover-scale rounded-pill">
-                    <i class="fas fa-robot me-2"></i> IA Académica
-                </a>
-
-                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-lg hover-scale px-3 py-2 rounded-circle" title="Refrescar Instancia">
-                    <i class="fas fa-sync-alt"></i>
-                </a>
-           </div>
-       </div>
-   </div>
-
-   <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
-       
-       <div class="col-xl-8">
-           <div class="card border-0 shadow-lg rounded-5 h-100 bg-white overflow-hidden border-top border-5 border-info">
-               <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <div>
-                       <h4 class="fw-bold text-dark mb-0"><i class="fas fa-satellite-dish me-2 text-info"></i>Radar de Competencias Globales</h4>
-                       <p class="text-muted small mb-0">Comparativa de rendimiento por áreas fundamentales vs. estándares institucionales.</p>
-                   </div>
-                   <div class="status-badge bg-info-subtle text-info px-3 py-2 rounded-pill fw-bold small border border-info-subtle">
-                       <i class="fas fa-chart-line me-1"></i> Análisis Trimestral
-                   </div>
-               </div>
-               <div class="card-body p-4">
-                   <div class="row align-items-center">
-                       <div class="col-md-7">
-                           <div style="height: 400px; width: 100%;">
-                               <canvas id="radarChartTier100"></canvas>
-                           </div>
-                       </div>
-                       <div class="col-md-5 ps-md-5 border-start">
-                           <h6 class="fw-bold text-secondary text-uppercase mb-4 ls-1">Indicadores de Desempeño</h6>
-                           
-                           <div class="mb-4">
-                               <div class="d-flex justify-content-between align-items-center mb-1">
-                                   <span class="small fw-bold text-dark text-uppercase">Eficiencia Académica</span>
-                                   <span class="badge bg-primary rounded-pill">{{ kpi.prom_global_acad }} / 5.0</span>
-                               </div>
-                               <div class="progress rounded-pill" style="height: 12px;">
-                                   <div class="progress-bar bg-gradient-primary" style="width: {% widthratio kpi.prom_global_acad 5 100 %}%"></div>
-                               </div>
-                           </div>
-
-                           <div class="mb-4">
-                               <div class="d-flex justify-content-between align-items-center mb-1">
-                                   <span class="small fw-bold text-dark text-uppercase">Índice Convivencial</span>
-                                   <span class="badge bg-warning text-dark rounded-pill">{{ kpi.prom_global_conv }} / 5.0</span>
-                               </div>
-                               <div class="progress rounded-pill" style="height: 12px;">
-                                   <div class="progress-bar bg-warning" style="width: {% widthratio kpi.prom_global_conv 5 100 %}%"></div>
-                               </div>
-                           </div>
-
-                           <div class="card bg-info-subtle border-0 rounded-4 p-4 mt-4 shadow-sm border-start border-4 border-info">
-                               <div class="d-flex">
-                                   <i class="fas fa-lightbulb text-info fa-2x me-3"></i>
-                                   <div>
-                                       <h6 class="fw-bold text-info-emphasis mb-1">Sugerencia Estratégica</h6>
-                                       <p class="small mb-0 text-dark opacity-75">El área de Matemáticas presenta una desviación del 15% respecto a la meta. Se recomienda activar tutorías de pares en grados 10° y 11°.</p>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div class="col-xl-4">
-           <div class="card border-0 shadow-lg rounded-5 h-100 bg-white">
-               <div class="card-header bg-white border-0 pt-4 px-4">
-                   <h4 class="fw-bold text-dark mb-0"><i class="fas fa-user-shield me-2 text-danger"></i>Protocolos de Alerta</h4>
-                   <p class="text-muted small">Intervención prioritaria para estudiantes con riesgo multidimensional.</p>
-               </div>
-               <div class="card-body p-0">
-                   <div class="list-group list-group-flush scroll-pro" style="max-height: 500px; overflow-y: auto;">
-                       {% for riesgo in top_riesgo_academico|slice:":10" %}
-                       <div class="list-group-item border-0 border-bottom p-3 hover-bg-light transition-all">
-                           <div class="d-flex align-items-center">
-                               <div class="position-relative">
-                                   <img src="https://ui-avatars.com/api/?name={{ riesgo.estudiante.first_name }}+{{ riesgo.estudiante.last_name }}&background=random&color=fff" class="rounded-circle shadow-sm" width="45">
-                                   <span class="position-absolute bottom-0 end-0 p-1 bg-danger border border-white rounded-circle"></span>
-                               </div>
-                               <div class="ms-3 flex-grow-1">
-                                   <h6 class="mb-0 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
-                                   <small class="badge bg-light text-muted border rounded-pill px-2">{{ riesgo.curso.nombre }}</small>
-                               </div>
-                               <div class="text-end">
-                                   <span class="d-block fw-bold text-danger mb-1">{{ riesgo.materias_perdidas }} Materias</span>
-                                   <div class="btn-group">
-                                       <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ riesgo.estudiante.id }}" class="btn btn-xs btn-white text-purple border rounded-circle shadow-sm" title="Analítica IA Individual"><i class="fas fa-robot"></i></a>
-                                       <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="btn btn-xs btn-white text-primary border rounded-circle shadow-sm ms-1"><i class="fas fa-eye"></i></a>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                       {% empty %}
-                       <div class="text-center py-5">
-                           <i class="fas fa-check-double fa-4x text-success opacity-25 mb-3"></i>
-                           <p class="text-muted fw-bold">No hay alertas críticas en este momento.</p>
-                       </div>
-                       {% endfor %}
-                   </div>
-               </div>
-               <div class="card-footer bg-white border-0 text-center pb-4 pt-3">
-                   <button class="btn btn-sm btn-outline-danger rounded-pill px-5 fw-bold hover-lift">Notificar a Directores de Grupo</button>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white kpi-card-hover">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between mb-3">
-                       <div class="icon-box-md bg-soft-primary text-primary rounded-3"><i class="fas fa-users fa-lg"></i></div>
-                       <span class="text-success small fw-bold"><i class="fas fa-arrow-up"></i> 1.2%</span>
-                   </div>
-                   <h2 class="display-5 fw-bold text-dark mb-1">{{ kpi.total_alumnos }}</h2>
-                   <p class="text-muted mb-0 fw-medium">Población Activa</p>
-               </div>
-           </div>
-       </div>
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white kpi-card-hover border-bottom border-4 border-info">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between mb-3">
-                       <div class="icon-box-md bg-soft-info text-info rounded-3"><i class="fas fa-graduation-cap fa-lg"></i></div>
-                       <span class="badge bg-info-subtle text-info border border-info-subtle">Óptimo</span>
-                   </div>
-                   <h2 class="display-5 fw-bold text-dark mb-1">{{ kpi.prom_global_acad }}</h2>
-                   <p class="text-muted mb-0 fw-medium">Promedio Académico</p>
-               </div>
-           </div>
-       </div>
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white kpi-card-hover border-bottom border-4 border-warning">
-               <div class="card-body p-4 text-center">
-                   <p class="text-uppercase text-muted x-small fw-bold ls-1 mb-2">Clima Institucional</p>
-                   <h2 class="display-5 fw-bold text-dark mb-1">{{ kpi.prom_global_conv }}</h2>
-                   <small class="badge bg-warning-subtle text-warning">Meta: > 4.0</small>
-               </div>
-           </div>
-       </div>
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white kpi-card-hover border-bottom border-4 border-success">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between mb-3">
-                       <div class="icon-box-md bg-soft-success text-success rounded-3"><i class="fas fa-chalkboard fa-lg"></i></div>
-                       <span class="badge bg-success-subtle text-success">Controlado</span>
-                   </div>
-                   <h2 class="display-5 fw-bold text-dark mb-1">{{ kpi.total_cursos }}</h2>
-                   <p class="text-muted mb-0 fw-medium">Grupos en Seguimiento</p>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <div class="row mb-5 animate__animated animate__fadeInUp">
-       <div class="col-12 mb-4 d-flex align-items-center">
-           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-open me-2 text-primary"></i>Gobierno Escolar y Documentación Rectora</h4>
-           <span class="badge bg-light text-muted ms-3 border px-3">Vigencia 2026</span>
-       </div>
-
-       <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white hover-elevate pei-border">
-               <div class="card-body p-4 text-center">
-                   <div class="icon-box-lg bg-light text-purple rounded-circle mx-auto mb-3 shadow-sm d-flex align-items-center justify-content-center">
-                       <i class="fas fa-book-open fa-lg"></i>
-                   </div>
-                   <h5 class="fw-bold text-dark mb-2">PEI</h5>
-                   <p class="text-muted x-small mb-4">Proyecto Educativo Institucional: Horizonte pedagógico y metas de calidad.</p>
-                   <div class="d-grid">
-                        <a href="{{ institucion.archivo_pei.url|default:'#' }}" target="_blank" class="btn btn-outline-purple rounded-pill btn-sm fw-bold">Consultar Documento</a>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white hover-elevate manual-border">
-               <div class="card-body p-4 text-center">
-                   <div class="icon-box-lg bg-light text-orange rounded-circle mx-auto mb-3 shadow-sm d-flex align-items-center justify-content-center">
-                       <i class="fas fa-gavel fa-lg"></i>
-                   </div>
-                   <h5 class="fw-bold text-dark mb-2">Manual</h5>
-                   <p class="text-muted x-small mb-4">Normas de convivencia y rutas de atención integral al estudiante.</p>
-                   <div class="d-grid">
-                        <a href="{{ institucion.archivo_manual_convivencia.url|default:'#' }}" target="_blank" class="btn btn-outline-orange rounded-pill btn-sm fw-bold">Consultar Documento</a>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white hover-elevate malla-border">
-               <div class="card-body p-4 text-center">
-                   <div class="icon-box-lg bg-light text-primary rounded-circle mx-auto mb-3 shadow-sm d-flex align-items-center justify-content-center">
-                       <i class="fas fa-sitemap fa-lg"></i>
-                   </div>
-                   <h5 class="fw-bold text-dark mb-2">Malla</h5>
-                   <p class="text-muted x-small mb-4">Estructura curricular: Planes de estudio, áreas y competencias.</p>
-                   <div class="d-grid">
-                        <a href="{{ institucion.archivo_malla_curricular.url|default:'#' }}" target="_blank" class="btn btn-outline-primary rounded-pill btn-sm fw-bold">Consultar Documento</a>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card border-0 shadow-sm rounded-4 h-100 bg-white hover-elevate calendario-border">
-               <div class="card-body p-4 text-center">
-                   <div class="icon-box-lg bg-light text-danger rounded-circle mx-auto mb-3 shadow-sm d-flex align-items-center justify-content-center">
-                       <i class="fas fa-calendar-check fa-lg"></i>
-                   </div>
-                   <h5 class="fw-bold text-dark mb-2">Calendario</h5>
-                   <p class="text-muted x-small mb-4">Agenda anual: Jornadas académicas, entregas y eventos institucionales.</p>
-                   <div class="d-grid">
-                        <a href="{{ institucion.archivo_calendario.url|default:'#' }}" target="_blank" class="btn btn-outline-danger rounded-pill btn-sm fw-bold">Consultar Documento</a>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <div class="row mb-5 animate__animated animate__fadeInUp">
-       <div class="col-lg-8">
-           <div class="card border-0 shadow-lg rounded-5 h-100 bg-white overflow-hidden">
-               <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Eficiencia Académica vs Índice de Convivencia</h5>
-                   <span class="badge bg-light text-muted border rounded-pill">Comparativo por Grupo</span>
-               </div>
-                <div class="card-body p-4">
-                   <div style="height: 400px;">
-                       <canvas id="peiChartSupremo"></canvas>
-                   </div>
-               </div>
-           </div>
-       </div>
-       <div class="col-lg-4">
-            <div class="card border-0 shadow-lg rounded-5 h-100 bg-white overflow-hidden">
-               <div class="card-header bg-gradient-success border-0 pt-4 px-4 text-center">
-                   <h5 class="fw-bold text-white mb-0"><i class="fas fa-user-check me-2"></i>Monitoreo de Asistencia</h5>
-                   <p class="text-white-50 small mb-0">Situación en tiempo real (Corte: {% now "H:i" %})</p>
-               </div>
-               <div class="card-body p-4 d-flex flex-column justify-content-center">
-                   <div style="height: 250px; width: 100%; position: relative;">
-                       <canvas id="asistenciaChartSupremo"></canvas>
-                   </div>
-                   <div class="mt-4 border-top pt-3">
-                       <div class="d-flex justify-content-between mb-2">
-                           <span class="text-muted fw-bold small">Estado de Salud:</span>
-                           <span class="text-success fw-bold small">Estable</span>
-                       </div>
-                       <div class="list-group list-group-flush small">
-                           <div class="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent">
-                               <span class="text-muted">Presentes Hoy:</span> <span class="fw-bold">412</span>
-                           </div>
-                           <div class="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent">
-                               <span class="text-muted">Inasistencias:</span> <span class="fw-bold text-danger">15</span>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <div class="card border-0 shadow-lg rounded-5 overflow-hidden mb-5">
-        <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center border-bottom">
-            <h4 class="fw-bold text-dark mb-0"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>Directorio de Grupos Académicos</h4>
-            <div class="input-group w-25 shadow-sm rounded-pill overflow-hidden border">
-                <span class="input-group-text bg-white border-0 ps-3"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" class="form-control border-0" placeholder="Filtrar cursos..." id="filterCursos">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
+        <div class="d-flex align-items-center gap-4">
+            <div class="icon-box-xxl bg-gradient-primary text-white rounded-4 shadow-lg d-flex align-items-center justify-content-center">
+                <i class="fas fa-brain fa-2x"></i>
+            </div>
+            <div>
+                <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Intelligence Panel</h6>
+                <h1 class="fw-bolder text-dark mb-0">Student Tracking 360°</h1>
+                <p class="text-muted lead mb-0">Predictive analytics for Behavior, Academic Performance, and Psycho-Orientation.</p>
             </div>
         </div>
-        <div class="accordion accordion-flush" id="accordionCursosMaster">
-            {% for item in vista_cursos %}
-            <div class="accordion-item border-bottom">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed py-4 px-4 bg-white hover-bg-light shadow-none transition-all" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.curso.id }}">
-                        <div class="row w-100 align-items-center">
-                            <div class="col-md-3">
-                                <span class="badge bg-primary px-3 py-2 rounded-pill me-2 text-uppercase fw-bold shadow-sm">{{ item.curso.nombre }}</span>
-                                <span class="text-muted fw-bold small">{{ item.stats.alumnos }} Estudiantes</span>
-                            </div>
-                            <div class="col-md-3 text-center border-start">
-                                <div class="small text-muted x-small text-uppercase fw-bold mb-1 ls-1">Eficiencia Académica</div>
-                                <div class="fw-bold {% if item.stats.acad < 3.5 %}text-danger{% else %}text-info{% endif %} fs-5">{{ item.stats.acad }}</div>
-                            </div>
-                            <div class="col-md-3 text-center border-start">
-                                <div class="small text-muted x-small text-uppercase fw-bold mb-1 ls-1">Salud Convivencial</div>
-                                <div class="fw-bold text-warning fs-5">{{ item.stats.conv }}</div>
-                            </div>
-                            <div class="col-md-3 text-end d-none d-md-block border-start">
-                                <span class="badge {% if item.stats.acad < 3.2 %}bg-danger{% else %}bg-success{% endif %} rounded-pill px-3 py-2 shadow-sm">
-                                    {% if item.stats.acad < 3.2 %}Requiere Intervención{% else %}Bajo Control{% endif %}
-                                </span>
-                            </div>
+        
+        <div class="d-flex gap-3 align-items-center mt-3 mt-xl-0">
+            
+            <button type="button" class="btn btn-ai-magic rounded-pill px-4 shadow-lg hover-lift fw-bold transition-all text-white" onclick="iniciarAnalisisIA()">
+                <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consult Stratos AI
+            </button>
+
+            <div class="vr mx-2 opacity-25"></div>
+
+            <div class="text-end d-none d-lg-block border-end pe-3 me-2">
+                <small class="d-block text-muted text-uppercase fw-bold x-small">System Status</small>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                    <i class="fas fa-wifi me-1"></i>Online &bull; {% now "H:i" %}
+                </span>
+            </div>
+
+            <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white border shadow-sm rounded-pill px-4 hover-lift fw-medium transition-all">
+                <i class="fas fa-chart-pie me-2 text-secondary"></i>Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 rounded-pill px-4 shadow-lg hover-lift fw-medium transition-all">
+                <i class="fas fa-file-pdf me-2"></i>Official Report
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 kpi-card bg-white position-relative overflow-hidden">
+                <div class="card-body p-4 d-flex flex-column justify-content-between z-1 position-relative">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                             <h6 class="text-uppercase text-muted fw-bold x-small">Total Active Reports</h6>
+                             <span class="icon-box-sm bg-light text-secondary rounded-circle"><i class="fas fa-users"></i></span>
                         </div>
-                    </button>
-                </h2>
-                <div id="collapse{{ item.curso.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionCursosMaster">
-                    <div class="accordion-body bg-light-subtle p-4">
-                        <div class="table-responsive rounded-4 shadow-sm bg-white border overflow-hidden">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-muted x-small text-uppercase fw-bold">
-                                    <tr>
-                                        <th class="ps-4 py-3">Estudiante</th>
-                                        {% for p in periodos %}
-                                        <th class="text-center">Período {{ forloop.counter }}</th>
-                                        {% endfor %}
-                                        <th class="text-end pe-4">Acciones de Mejora</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for obj_est in item.estudiantes %}
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center me-3 fw-bold border">
-                                                    {{ obj_est.obj.first_name|slice:":1" }}
-                                                </div>
-                                                <div>
-                                                    <span class="fw-bold text-dark d-block">{{ obj_est.obj.get_full_name }}</span>
-                                                    <small class="text-muted">{{ obj_est.obj.username }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        {% for p in periodos %}
-                                        <td class="text-center">
-                                            {% with nota=obj_est.notas|get_item:p.id %}
-                                                {% if nota != "-" %}
-                                                <span class="badge {% if nota < 3.0 %}bg-danger-subtle text-danger{% elif nota >= 4.2 %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} rounded-pill px-3 py-2 border shadow-sm">
-                                                    {{ nota }}
-                                                </span>
-                                                {% else %}<span class="text-muted opacity-25">-</span>{% endif %}
-                                            {% endwith %}
-                                        </td>
-                                        {% endfor %}
-                                        <td class="text-end pe-4">
-                                            <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
-                                                <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ obj_est.obj.id }}" class="btn btn-sm btn-white text-purple" title="Analítica IA"><i class="fas fa-robot"></i></a>
-                                                <a href="{% url 'crear_observacion' obj_est.obj.id %}" class="btn btn-sm btn-white text-primary" title="Generar Anotación"><i class="fas fa-edit"></i></a>
-                                                <a href="{% url 'ver_observador' obj_est.obj.id %}" class="btn btn-sm btn-white text-dark" title="Abrir Expediente"><i class="fas fa-folder-open"></i></a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h2 class="display-3 fw-bolder text-dark mb-0">{{ kpi.total }}</h2>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                <i class="fas fa-arrow-up me-1"></i>Active
+                            </span>
+                        </div>
+                        <p class="text-muted small opacity-75">Records currently being tracked this period.</p>
+                    </div>
+                    
+                    <div class="mt-4 border-top pt-3">
+                        <div class="row g-2 text-center">
+                            <div class="col-4 border-end">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.convivencia }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Behav</span>
+                                <span class="badge bg-warning-subtle text-warning x-small mt-1 rounded-pill">Focus</span>
+                            </div>
+                            <div class="col-4 border-end">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.academica }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Acad</span>
+                                <span class="badge bg-info-subtle text-info x-small mt-1 rounded-pill">Stable</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.psicologia }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psych</span>
+                                <span class="badge bg-purple-subtle text-purple x-small mt-1 rounded-pill">Review</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="col-xl-6 col-md-12">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Case Analytics</h6>
+                        <small class="text-muted x-small">Distribution & Trends Overview</small>
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active">Month</button>
+                        <button type="button" class="btn btn-outline-secondary">Quarter</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center h-100">
+                         <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end pe-4">
+                             <div style="height: 160px; width: 100%;">
+                                <canvas id="chartDistribucion"></canvas>
+                            </div>
+                            <small class="text-muted x-small mt-2 text-center d-block">Current Distribution</small>
+                        </div>
+                        <div class="col-md-7 ps-md-4">
+                            <h6 class="fw-bold text-secondary x-small text-uppercase mb-3">6-Month Activity Trend</h6>
+                            <div style="height: 160px; width: 100%;">
+                                <canvas id="chartTendencia"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+             <div class="card border-0 shadow-sm h-100 bg-white border-top-danger position-relative overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                             <div class="icon-box bg-danger-subtle text-danger rounded-circle me-3 shadow-sm">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0">Focus Areas</h5>
+                                <small class="text-muted">High priority intervention required</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Academic Risk</span>
+                            <span class="x-small fw-bold text-danger">{{ kpi.academica }} Cases</span>
+                        </div>
+                        <div class="progress bg-light" style="height: 6px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 75%"></div>
+                        </div>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="fas fa-info-circle text-muted x-small me-1"></i>
+                            <small class="text-muted x-small">Students failing 2+ core subjects.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Behavioral</span>
+                            <span class="x-small fw-bold text-warning">{{ kpi.convivencia }} Cases</span>
+                        </div>
+                        <div class="progress bg-light" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 45%"></div>
+                        </div>
+                         <div class="d-flex align-items-center mt-1">
+                            <i class="fas fa-info-circle text-muted x-small me-1"></i>
+                            <small class="text-muted x-small">Recent disciplinary actions.</small>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold hover-scale shadow-sm">
+                        View Critical Reports <i class="fas fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="fas fa-bolt text-danger me-2"></i>Academic Risk Radar
+                </h5>
+                <p class="text-muted x-small mb-0">Students flagged for immediate academic intervention based on recent performance data.</p>
+            </div>
+            <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
+                <i class="fas fa-bell me-1"></i>Intervention Required
+            </span>
+        </div>
+        
+        <div class="row g-3">
+            {% for obs in observaciones %}
+                {% if obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
+                    {% if forloop.counter <= 4 %}
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-hover h-100 risk-card border-start-danger">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="position-relative">
+                                        <div class="avatar-md rounded-circle bg-white text-danger d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm border border-danger-subtle">
+                                            {{ obs.estudiante.first_name|slice:":1" }}
+                                        </div>
+                                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                            <span class="visually-hidden">Critical Alert</span>
+                                        </span>
+                                    </div>
+                                    <div class="ms-3 overflow-hidden">
+                                        <h6 class="fw-bold text-dark mb-0 text-truncate">{{ obs.estudiante.get_full_name }}</h6>
+                                        <div class="d-flex align-items-center gap-1 mt-0">
+                                            <span class="badge bg-danger-subtle text-danger x-small border border-danger-subtle">CRITICAL</span>
+                                            <span class="badge bg-light text-muted x-small border">Grade 9</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-light rounded-3 p-3 mb-3 border border-light-subtle">
+                                    <h6 class="text-secondary text-uppercase x-small fw-bold mb-1">Observation:</h6>
+                                    <p class="small text-dark mb-0 fst-italic text-truncate-3">"{{ obs.descripcion }}"</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="text-muted x-small fw-bold"><i class="far fa-clock me-1"></i>{{ obs.fecha_creacion|date:"d M" }}</span>
+                                    <a href="{% url 'ver_observador' obs.estudiante.id %}" class="btn btn-dark btn-sm rounded-pill fw-bold px-3 shadow-sm hover-scale">
+                                        Review Case
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
             {% endfor %}
         </div>
-   </div>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+        <div class="card-header bg-white border-bottom py-4 px-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-5">
+                    <h5 class="fw-bold text-dark mb-1">Master Case Log</h5>
+                    <p class="text-muted x-small mb-0">Unified database of all student interactions and reports.</p>
+                </div>
+                <div class="col-lg-7">
+                    <form method="GET" class="d-flex gap-2 justify-content-lg-end">
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-light w-100" style="max-width: 450px;">
+                            <span class="input-group-text bg-light border-0 ps-3 text-muted"><i class="fas fa-filter"></i></span>
+                            <input type="text" name="q" class="form-control bg-light border-0" placeholder="Search by student name, ID..." value="{{ query|default:'' }}">
+                            {% if query %}
+                                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-light border-0 text-muted px-3"><i class="fas fa-times"></i></a>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover custom-table">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 25%;">Student</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Category</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 30%;">Details</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 15%;">Authority</th>
+                        <th class="text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 10%;">Date</th>
+                        <th class="text-end pe-4 text-uppercase text-secondary x-small fw-bold ls-1 border-0" style="width: 5%;">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for obs in observaciones %}
+                    <tr class="align-middle group-hover border-bottom-hover transition-all">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative">
+                                    <div class="avatar-md rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold gradient-avatar" style="width: 42px; height: 42px;">
+                                        {{ obs.estudiante.first_name|slice:":1"|default:obs.estudiante.username|slice:":1" }}
+                                    </div>
+                                    <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
+                                </div>
+                                <div class="ms-3">
+                                    <div class="fw-bold text-dark">{{ obs.estudiante.get_full_name|default:obs.estudiante.username }}</div>
+                                    <div class="x-small text-muted d-flex align-items-center gap-1">
+                                        <i class="far fa-id-badge"></i> {{ obs.estudiante.username }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if obs.tipo == 'CONVIVENCIA' %}
+                                <div class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-bullhorn"></i> Behavior
+                                </div>
+                            {% elif obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
+                                <div class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-graduation-cap"></i> Academic
+                                </div>
+                            {% elif obs.tipo == 'PSICOLOGIA' or obs.tipo == 'PSICOLOGICA' %}
+                                <div class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-brain"></i> Psychology
+                                </div>
+                            {% else %}
+                                <div class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">{{ obs.tipo }}</div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column" style="max-width: 450px;">
+                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observation" }}</span>
+                                <p class="text-muted small mb-0 text-truncate-2" style="line-height: 1.4;">{{ obs.descripcion }}</p>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border" style="width: 28px; height: 28px;">
+                                    <i class="fas fa-user-edit x-small"></i>
+                                </div>
+                                <span class="small fw-semibold text-dark">{{ obs.autor.get_full_name|default:obs.autor.username|truncatechars:15 }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark small">{{ obs.fecha_creacion|date:"d M, Y" }}</span>
+                                <span class="text-muted x-small d-flex align-items-center gap-1">
+                                    <i class="far fa-clock"></i> {{ obs.fecha_creacion|date:"H:i A" }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle shadow-sm hover-scale border" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-h text-secondary"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 rounded-4 p-2 animate__animated animate__fadeIn">
+                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Actions</h6></li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Open File
+                                        </a>
+                                    </li>
+                                    {% if obs.tipo == 'ACADEMICO' %}
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="#">
+                                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>Notify Teacher
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-5">
+                                <div class="mb-3 text-light-gray opacity-25">
+                                    <i class="fas fa-clipboard-check fa-5x"></i>
+                                </div>
+                                <h5 class="text-dark fw-bold">All Clear</h5>
+                                <p class="text-muted small">No records match your search criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card-footer bg-white border-top py-3 px-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Showing <span class="fw-bold text-dark">{{ observaciones.count }}</span> records.</small>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="modal fade" id="modalIASupremo" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 rounded-5 shadow-2xl overflow-hidden">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
             <div class="modal-header border-0 p-4 bg-gradient-ai text-white position-relative">
                 <div class="position-relative z-1 d-flex align-items-center w-100">
-                    <div class="icon-box-md bg-white-20 rounded-4 me-3 animate__animated animate__pulse animate__infinite">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
                         <i class="fas fa-robot fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold">Auditoría Estratégica Stratos AI</h5>
-                        <p class="mb-0 small opacity-75">Motor de análisis predictivo basado en datos vivos.</p>
+                        <h5 class="modal-title fw-bold">Stratos AI: Educational Consultant</h5>
+                        <p class="mb-0 small opacity-75">Processing Real-Time Data against PEI & Manual de Convivencia</p>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto shadow-none" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="position-absolute top-0 end-0 h-100 w-100 opacity-25">
-                    <i class="fas fa-network-wired fa-10x position-absolute" style="top:-20px; right:-20px;"></i>
+                <div class="position-absolute top-0 end-0 h-100 w-100 overflow-hidden opacity-25">
+                    <i class="fas fa-network-wired fa-10x position-absolute" style="top: -20px; right: -20px;"></i>
                 </div>
             </div>
-            <div class="modal-body p-4 bg-light-subtle" style="min-height: 500px;">
+
+            <div class="modal-body p-4 bg-light-subtle" style="min-height: 400px;">
+                
                 <div id="aiLoading" class="text-center py-5">
-                    <div class="spinner-grow text-primary mb-4" style="width: 3rem; height: 3rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Cruzando KPIs con PEI y Manual de Convivencia...</h5>
-                    <p class="text-muted small" id="aiStatusText">Identificando patrones de bajo rendimiento y deserción...</p>
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Analyzing Patterns...</h5>
+                    <p class="text-muted small" id="aiStatusText">Scanning Observation Logs...</p>
+                    
+                    <div class="progress mt-4 mx-auto" style="height: 6px; width: 60%; max-width: 300px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary" role="progressbar" style="width: 100%"></div>
+                    </div>
                 </div>
+
                 <div id="aiResults" class="d-none animate__animated animate__fadeIn">
-                    <div id="aiTextContent" class="markdown-body bg-white p-4 rounded-5 border shadow-lg" style="max-height: 500px; overflow-y: auto;"></div>
+                    <div class="ai-content-wrapper bg-white p-4 rounded-3 border shadow-sm">
+                        <div id="aiTextContent" class="markdown-body"></div>
+                    </div>
+                    
                     <div class="mt-4 text-end">
-                        <button class="btn btn-outline-dark rounded-pill px-4 me-2 fw-bold" data-bs-dismiss="modal">Cerrar</button>
-                        <button class="btn btn-primary rounded-pill px-4 shadow-lg fw-bold" onclick="window.print()">
-                            <i class="fas fa-download me-2"></i> Generar Reporte de Intervención
+                        <button class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-primary rounded-pill px-4" onclick="window.print()">
+                            <i class="fas fa-download me-2"></i>Download Action Plan
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
 <script>
-   document.addEventListener('DOMContentLoaded', function() {
-       
-       // 1. RADAR CHART PROFESIONAL (ESTRATÉGICO)
-       const ctxRadar = document.getElementById('radarChartTier100');
-       if (ctxRadar) {
-           new Chart(ctxRadar, {
-               type: 'radar',
-               data: {
-                   labels: ['Matemáticas', 'Español', 'Ciencias Nat.', 'C. Sociales', 'Inglés', 'Ética y Paz'],
-                   datasets: [{
-                       label: 'Rendimiento Promedio Institucional',
-                       data: [3.8, 4.2, 3.1, 4.0, 3.4, 4.8],
-                       backgroundColor: 'rgba(67, 97, 238, 0.25)',
-                       borderColor: '#4361ee',
-                       borderWidth: 4,
-                       pointBackgroundColor: '#4361ee',
-                       pointBorderColor: '#fff',
-                       pointHoverRadius: 8,
-                       fill: true
-                   }, {
-                       label: 'Estándar PEI (Meta)',
-                       data: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0],
-                       backgroundColor: 'rgba(25, 135, 84, 0.05)',
-                       borderColor: 'rgba(25, 135, 84, 0.5)',
-                       borderWidth: 2,
-                       borderDash: [5, 5],
-                       pointRadius: 0
-                   }]
-               },
-               options: {
-                   responsive: true,
-                   maintainAspectRatio: false,
-                   scales: {
-                       r: { beginAtZero: true, max: 5, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { display: false } }
-                   },
-                   plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: 'bold' } } } }
-               }
-           });
-       }
+    document.addEventListener('DOMContentLoaded', function() {
+        const total = {{ kpi.total|default:0 }};
+        const conv = {{ kpi.convivencia|default:0 }};
+        const acad = {{ kpi.academica|default:0 }};
+        const psico = {{ kpi.psicologia|default:0 }};
 
-       // 2. GRÁFICO COMPARATIVO POR CURSO (BARRAS)
-       const ctxBar = document.getElementById('peiChartSupremo');
-       if (ctxBar) {
-           const labels = JSON.parse('{{ chart_data.labels|safe }}');
-           const dataAcad = JSON.parse('{{ chart_data.acad|safe }}');
-           const dataConv = JSON.parse('{{ chart_data.conv|safe }}');
+        // 1. Distribution Doughnut Chart
+        const ctxDistribucion = document.getElementById('chartDistribucion');
+        if (ctxDistribucion) {
+            new Chart(ctxDistribucion, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Behavior', 'Academic', 'Psychology'],
+                    datasets: [{
+                        data: [conv, acad, psico],
+                        backgroundColor: ['#ffc107', '#0dcaf0', '#6610f2'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
 
-           new Chart(ctxBar, {
-               type: 'bar',
-               data: {
-                   labels: labels,
-                   datasets: [
-                       {
-                           label: 'Promedio Académico',
-                           data: dataAcad,
-                           backgroundColor: '#4361ee', 
-                           borderRadius: 10,
-                           barThickness: 20
-                       },
-                       {
-                           label: 'Promedio Convivencia',
-                           data: dataConv,
-                           backgroundColor: '#ffc107', 
-                           borderRadius: 10,
-                           barThickness: 20
-                       }
-                   ]
-               },
-               options: {
-                   responsive: true,
-                   maintainAspectRatio: false,
-                   plugins: { legend: { position: 'top', align: 'end' } },
-                   scales: {
-                       y: { beginAtZero: true, max: 5, grid: { color: 'rgba(0,0,0,0.05)' } },
-                       x: { grid: { display: false } }
-                   }
-               }
-           });
-       }
+        // 2. Monthly Trend Line Chart (Simulated for visuals)
+        const ctxTendencia = document.getElementById('chartTendencia');
+        if (ctxTendencia) {
+            new Chart(ctxTendencia, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Total Cases',
+                        data: [12, 19, 15, 25, 22, {{ kpi.total }}],
+                        borderColor: '#4361ee',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                            gradient.addColorStop(0, 'rgba(67, 97, 238, 0.2)');
+                            gradient.addColorStop(1, 'rgba(67, 97, 238, 0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: true, grid: { display: true, color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
 
-       // 3. GRÁFICO DE ASISTENCIA (DONUT)
-       const ctxDonut = document.getElementById('asistenciaChartSupremo');
-       if (ctxDonut) {
-           const dataAsistencia = JSON.parse('{{ stats_asistencia|safe }}');
-           new Chart(ctxDonut, {
-               type: 'doughnut',
-               data: {
-                   labels: ['Presentes', 'Fallas', 'Excusas', 'Tardanzas'],
-                   datasets: [{
-                       data: dataAsistencia,
-                       backgroundColor: ['#198754', '#dc3545', '#0dcaf0', '#ffc107'],
-                       borderWidth: 0,
-                       hoverOffset: 20
-                   }]
-               },
-               options: {
-                   responsive: true,
-                   maintainAspectRatio: false,
-                   cutout: '80%',
-                   plugins: {
-                       legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } }
-                   }
-               }
-           });
-       }
-   });
+    // ----------------------------------------------------
+    // STRATOS AI LOGIC (FRONTEND SIMULATION)
+    // ----------------------------------------------------
+    function iniciarAnalisisIA() {
+        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
+        const loading = document.getElementById('aiLoading');
+        const results = document.getElementById('aiResults');
+        const statusText = document.getElementById('aiStatusText');
+        const contentDiv = document.getElementById('aiTextContent');
 
-   // LÓGICA IA STRATOS - AUDITORÍA DINÁMICA
-   function ejecutarAuditoriaDashboard() {
-       const modal = new bootstrap.Modal(document.getElementById('modalIASupremo'));
-       const loading = document.getElementById('aiLoading');
-       const results = document.getElementById('aiResults');
-       const statusText = document.getElementById('aiStatusText');
-       const contentDiv = document.getElementById('aiTextContent');
+        modal.show();
+        loading.classList.remove('d-none');
+        results.classList.add('d-none');
 
-       modal.show();
-       loading.classList.remove('d-none');
-       results.classList.add('d-none');
+        // Capture Real Data Points
+        const stats = {
+            total: {{ kpi.total|default:0 }},
+            conv: {{ kpi.convivencia|default:0 }},
+            acad: {{ kpi.academica|default:0 }},
+            psico: {{ kpi.psicologia|default:0 }}
+        };
 
-       const steps = [
-           "Extrayendo datos de rendimiento por áreas...",
-           "Cruzando promedios con objetivos del PEI (Art. 14)...",
-           "Escaneando reincidencias de convivencia (Manual Cap. 5)...",
-           "Identificando correlaciones entre asistencia y promedio...",
-           "Calculando planes de acción pedagógicos..."
-       ];
+        // Simulated Analysis Steps
+        const steps = [
+            "Accessing student database...",
+            "Scanning 'Manual de Convivencia' (Chapter: Disciplinary Actions)...",
+            "Analyzing academic performance trends...",
+            "Cross-referencing with PEI objectives...",
+            "Generating strategic improvement plan..."
+        ];
 
-       let currentStep = 0;
-       const stepInterval = setInterval(() => {
-           if (currentStep < steps.length) {
-               statusText.innerText = steps[currentStep];
-               currentStep++;
-           } else {
-               clearInterval(stepInterval);
-               const mockIA = `
-### 🧠 Informe de Auditoría Stratos AI
-**Diagnóstico Institucional de Bienestar y Excelencia**
+        let stepIndex = 0;
+        const interval = setInterval(() => {
+            if (stepIndex < steps.length) {
+                statusText.innerText = steps[stepIndex];
+                stepIndex++;
+            } else {
+                clearInterval(interval);
+                generateAIReport(stats, contentDiv, loading, results);
+            }
+        }, 1200);
+    }
 
-#### 🚨 Hallazgos de Alerta Máxima
-1. **Desbalance Curricular:** Se detecta que el área de **Ciencias Naturales** tiene una eficiencia del 62% respecto a la meta institucional (Promedio actual: 3.1 / Meta PEI: 4.0). Existe una tendencia a la baja en los grupos 901 y 902.
-2. **Correlación Crítica:** El 85% de los estudiantes detectados en el **Radar de Riesgo** (con más de 3 materias perdidas) coinciden con un índice de tardanzas superior a 4 registros por periodo.
+    function generateAIReport(stats, container, loading, results) {
+        // 
+        
+        // Dynamic Logic for the Report
+        let focusArea = "";
+        let specificAdvice = "";
 
-#### 🏛️ Verificación vs Documentación Oficial
-* **PEI:** La institución no está cumpliendo con el objetivo de *Nivelación Proactiva*.
-* **Manual de Convivencia:** Se recomienda aplicar el **Art. 45 (Estrategias de Apoyo Académico)** antes de finalizar el trimestre para los 10 estudiantes marcados en alerta roja.
+        if (stats.acad > stats.conv) {
+            focusArea = "⚠️ **Primary Concern: Academic Performance**";
+            specificAdvice = "The system detects a high volume of academic alerts. **PEI Recommendation:** Implement 'Refuerzo Pedagógico' workshops immediately. Consider peer-tutoring programs.";
+        } else if (stats.conv > stats.acad) {
+            focusArea = "⚠️ **Primary Concern: Behavioral Issues**";
+            specificAdvice = "Behavioral reports are trending up. **Manual de Convivencia Action:** Review protocols for conflict resolution. Schedule a 'Jornada de Convivencia' for affected grades.";
+        } else {
+            focusArea = "⚠️ **Primary Concern: Psycho-Social Balance**";
+            specificAdvice = "Psychology referrals are significant. Ensure the orientation team has capacity or activate external support routes.";
+        }
 
-#### 💡 Plan de Acción de IA
-* **Inmediato:** Convocar a mesa técnica de Ciencias para revisar la pertinencia de la evaluación.
-* **Focalizado:** Iniciar ruta de acompañamiento psicopedagógico para los estudiantes con riesgo multidimensional.
-* **Prevención:** Implementar talleres de habilidades socioemocionales para mitigar el impacto de las tardanzas en el rendimiento.
+        const report = `
+### 🧠 Stratos AI Strategic Report
 
----
-*Este análisis es generado dinámicamente mediante el motor Stratos Intelligence v2.0.*
-               `;
-               contentDiv.innerHTML = marked.parse(mockIA);
-               loading.classList.add('d-none');
-               results.classList.remove('d-none');
-           }
-       }, 1000);
-   }
+**Analysis Scope:** ${stats.total} Active Cases analyzed against Institutional Parameters.
+
+#### 1. Situation Analysis
+${focusArea}
+* **Academic Cases:** ${stats.acad}
+* **Behavioral Cases:** ${stats.conv}
+* **Psychology Cases:** ${stats.psico}
+
+#### 2. AI-Driven Action Plan
+* **Immediate Action:** ${specificAdvice}
+* **Long-term Strategy:** Update the 'Caracterización Estudiantil' to identify root causes.
+* **Alert:**  - Check 9th Grade specific trends.
+
+> **Note:** This analysis uses real-time data crossed with your institution's specific PEI guidelines.
+        `;
+
+        container.innerHTML = marked.parse(report);
+        
+        loading.classList.add('d-none');
+        results.classList.remove('d-none');
+    }
 </script>
 
 <style>
-   /* === EDTECH TIER 100,000 ULTIMATE STYLES === */
-   :root {
-       --purple-primary: #6610f2;
-       --blue-institutional: #4361ee;
-       --soft-gray: #f4f7fe;
-       --glass-bg: rgba(255, 255, 255, 0.9);
-   }
+    /* === EDTECH TIER 200 ULTIMATE PRO STYLES === */
+    :root {
+        --purple-primary: #6610f2;
+        --purple-soft: rgba(102, 16, 242, 0.1);
+        --blue-primary: #4361ee;
+        --dark-overlay: rgba(33, 37, 41, 0.03);
+    }
 
-   body { background-color: var(--soft-gray); font-family: 'Inter', sans-serif; letter-spacing: -0.01em; }
-   .ls-2 { letter-spacing: 2px; }
-   .ls-1 { letter-spacing: 1px; }
-   .x-small { font-size: 0.7rem; }
-   
-   .icon-box-xxl { width: 85px; height: 85px; border-radius: 24px; }
-   .icon-box-lg { width: 60px; height: 60px; }
-   .icon-box-md { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
-   
-   .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
-   .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-   .btn-ai-magic { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-   .btn-ai-magic:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .ls-1 { letter-spacing: 0.05em; }
+    .ls-2 { letter-spacing: 0.1em; }
+    .x-small { font-size: 0.75rem; }
+    .bg-white-10 { background-color: rgba(255, 255, 255, 0.1); }
 
-   /* Card y Hover Effects */
-   .hover-elevate { transition: all 0.3s ease; }
-   .hover-elevate:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; }
-   .kpi-card-hover { transition: transform 0.2s ease; cursor: pointer; }
-   .kpi-card-hover:hover { transform: scale(1.03); }
+    .bg-gradient-dark { background: linear-gradient(135deg, #212529 0%, #343a40 100%); }
+    .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
+    
+    /* SPECIAL AI GRADIENT */
+    .bg-gradient-ai { 
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%); 
+    }
+    .btn-ai-magic {
+        background: linear-gradient(90deg, #6366f1, #d946ef);
+        border: none;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    .btn-ai-magic::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, #d946ef, #6366f1);
+        z-index: -1;
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+    .btn-ai-magic:hover::before { opacity: 1; }
 
-   /* Glassmorphism Design */
-   .doc-card-glass {
-       background: var(--glass-bg);
-       backdrop-filter: blur(15px);
-       border: 1px solid rgba(255,255,255,0.5) !important;
-   }
+    .bg-purple-subtle { background-color: var(--purple-soft) !important; }
+    .text-purple { color: var(--purple-primary) !important; }
+    .bg-warning-subtle { background-color: rgba(255, 193, 7, 0.12) !important; }
+    .bg-info-subtle { background-color: rgba(13, 202, 240, 0.12) !important; }
+    .bg-danger-subtle { background-color: rgba(220, 53, 69, 0.12) !important; }
+    
+    .gradient-avatar { background: linear-gradient(135deg, #4361ee, #7209b7); }
 
-   /* Especialización de Bordes Institucionales */
-   .pei-border { border-top: 6px solid var(--purple-primary) !important; }
-   .manual-border { border-top: 6px solid #fd7e14 !important; }
-   .proyectos-border { border-top: 6px solid #20c997 !important; }
-   .malla-border { border-top: 6px solid var(--blue-institutional) !important; }
-   .calendario-border { border-top: 6px solid #dc3545 !important; }
+    .icon-box-xxl { width: 80px; height: 80px; font-size: 1.8rem; }
+    .icon-box-xl { width: 64px; height: 64px; font-size: 1.5rem; }
+    .icon-box {
+        width: 48px; height: 48px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+    }
+    .icon-box-sm { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
 
-   /* Radial Progress Custom */
-   .radial-progress-container {
-       width: 90px; height: 90px; border-radius: 50%;
-       border: 8px solid #eef2ff; border-top-color: var(--blue-institutional);
-       display: flex; align-items: center; justify-content: center;
-       box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-   }
+    .risk-card {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border-left: 4px solid #dc3545 !important;
+        background: #fff;
+    }
+    .border-start-danger { border-left: 4px solid #dc3545 !important; }
+    .border-top-danger { border-top: 4px solid #dc3545 !important; }
 
-   .avatar-md { width: 45px; height: 45px; font-size: 1.1rem; }
-   .avatar-sm { width: 35px; height: 35px; }
-   .avatar-xs { width: 32px; height: 32px; }
+    .hover-lift:hover, .risk-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    .hover-scale:hover {
+        transform: scale(1.02);
+    }
 
-   .bg-soft-primary { background-color: rgba(67, 97, 238, 0.1); }
-   .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
-   .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+    .custom-table thead th {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-weight: 700;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .text-truncate-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-   .markdown-body { line-height: 1.8; color: #444; }
-   .markdown-body h3 { color: var(--blue-institutional); font-weight: 800; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-   .markdown-body h4 { color: #212529; font-weight: 700; margin-top: 2rem; display: flex; align-items: center; }
-   .markdown-body h4::before { content: ''; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; margin-right: 10px; }
-   .markdown-body blockquote { border-left: 5px solid var(--blue-institutional); padding: 15px; background: #f8f9fa; border-radius: 0 10px 10px 0; font-style: italic; }
+    .dropdown-menu {
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: var(--blue-primary);
+        padding-left: 1.5rem;
+    }
+    .bg-purple-subtle-hover:hover {
+        background-color: rgba(102, 16, 242, 0.15) !important;
+        color: var(--purple-primary) !important;
+    }
 
-   .scroll-pro::-webkit-scrollbar { width: 6px; }
-   .scroll-pro::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 10px; }
-   .scroll-pro::-webkit-scrollbar-track { background: transparent; }
-
-   .accordion-button:not(.collapsed) { background-color: #fdfdfd; box-shadow: none; color: inherit; }
-   .transition-all { transition: all 0.3s ease; }
+    .transition-all { transition: all 0.2s ease; }
+    .group-hover:hover { background-color: #fcfcfc; }
+    .border-bottom-hover { border-bottom: 1px solid #f1f3f5; }
+    .transform-rotate-12 { transform: rotate(12deg); }
+    
+    /* Markdown Styles */
+    .markdown-body h3 { color: #4361ee; margin-top: 0; }
+    .markdown-body h4 { color: #212529; margin-top: 1.5rem; font-weight: 700; }
+    .markdown-body ul { padding-left: 1.2rem; }
+    .markdown-body li { margin-bottom: 0.5rem; }
+    .markdown-body blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #555; background: #f8f9fa; padding: 10px; border-radius: 4px; }
 </style>
 {% endblock %}
