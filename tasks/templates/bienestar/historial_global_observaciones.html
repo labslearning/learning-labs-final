@@ -59,7 +59,7 @@
                                 <i class="fas fa-arrow-up me-1"></i>Activo
                             </span>
                         </div>
-                        <p class="text-muted small opacity-75">Registros actualmente en seguimiento este periodo.</p>
+                        <p class="text-muted small opacity-75">Registros actualmente en seguimiento en este periodo.</p>
                     </div>
                     
                     <div class="mt-4 border-top pt-3">
@@ -125,8 +125,8 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold text-dark mb-0">Áreas Críticas</h5>
-                                <small class="text-muted">Intervención de alta prioridad</small>
+                                <h5 class="fw-bold text-dark mb-0">Áreas de Foco</h5>
+                                <small class="text-muted">Intervención prioritaria requerida</small>
                             </div>
                         </div>
                     </div>
@@ -141,7 +141,7 @@
                         </div>
                         <div class="d-flex align-items-center mt-1">
                             <i class="fas fa-info-circle text-muted x-small me-1"></i>
-                            <small class="text-muted x-small">Estudiantes fallando en 2+ materias clave.</small>
+                            <small class="text-muted x-small">Estudiantes fallando 2+ materias clave.</small>
                         </div>
                     </div>
 
@@ -173,7 +173,7 @@
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
                 </h5>
-                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención académica inmediata según datos recientes.</p>
+                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención inmediata según datos de desempeño recientes.</p>
             </div>
             <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
                 <i class="fas fa-bell me-1"></i>Intervención Requerida
@@ -229,8 +229,8 @@
         <div class="card-header bg-white border-bottom py-4 px-4">
             <div class="row align-items-center g-3">
                 <div class="col-lg-5">
-                    <h5 class="fw-bold text-dark mb-1">Registro Maestro de Casos</h5>
-                    <p class="text-muted x-small mb-0">Base de datos unificada de interacciones y reportes estudiantiles.</p>
+                    <h5 class="fw-bold text-dark mb-1">Bitácora Maestra de Casos</h5>
+                    <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones y reportes estudiantiles.</p>
                 </div>
                 <div class="col-lg-7">
                     <form method="GET" class="d-flex gap-2 justify-content-lg-end">
@@ -333,7 +333,7 @@
                                     <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Acciones</h6></li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
-                                            <i class="fas fa-folder-open text-primary me-2"></i>Abrir Expediente
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Ver Expediente
                                         </a>
                                     </li>
                                     {% if obs.tipo == 'ACADEMICO' %}
@@ -344,18 +344,6 @@
                                     </li>
                                     {% endif %}
                                 </ul>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div class="py-5">
-                                <div class="mb-3 text-light-gray opacity-25">
-                                    <i class="fas fa-clipboard-check fa-5x"></i>
-                                </div>
-                                <h5 class="text-dark fw-bold">Todo en Orden</h5>
-                                <p class="text-muted small">No hay registros que coincidan con los criterios de búsqueda.</p>
                             </div>
                         </td>
                     </tr>
@@ -451,7 +439,7 @@
             });
         }
 
-        // 2. Gráfico de Línea de Tendencia Mensual
+        // 2. Gráfico de Línea de Tendencia Mensual (Simulado para visuales)
         const ctxTendencia = document.getElementById('chartTendencia');
         if (ctxTendencia) {
             new Chart(ctxTendencia, {
@@ -502,7 +490,7 @@
         loading.classList.remove('d-none');
         results.classList.add('d-none');
 
-        // Captura de Puntos de Datos Reales
+        // Captura de puntos de datos reales
         const stats = {
             total: {{ kpi.total|default:0 }},
             conv: {{ kpi.convivencia|default:0 }},
@@ -510,13 +498,13 @@
             psico: {{ kpi.psicologia|default:0 }}
         };
 
-        // Pasos de Análisis Simulado
+        // Pasos de análisis simulados
         const steps = [
             "Accediendo a la base de datos de estudiantes...",
             "Escaneando el 'Manual de Convivencia' (Capítulo: Acciones Disciplinarias)...",
-            "Analizando tendencias de rendimiento académico...",
+            "Analizando tendencias de desempeño académico...",
             "Cruzando datos con objetivos del PEI...",
-            "Generando plan estratégico de mejora..."
+            "Generando plan de mejora estratégico..."
         ];
 
         let stepIndex = 0;
@@ -533,7 +521,7 @@
 
     function generateAIReport(stats, container, loading, results) {
         
-        // Lógica Dinámica para el Reporte
+        // Lógica dinámica para el reporte
         let focusArea = "";
         let specificAdvice = "";
 
@@ -542,29 +530,29 @@
             specificAdvice = "El sistema detecta un alto volumen de alertas académicas. **Recomendación del PEI:** Implementar talleres de 'Refuerzo Pedagógico' de inmediato. Considere programas de tutoría entre pares.";
         } else if (stats.conv > stats.acad) {
             focusArea = "⚠️ **Preocupación Primaria: Problemas de Comportamiento**";
-            specificAdvice = "Los reportes de comportamiento tienden al alza. **Acción del Manual de Convivencia:** Revisar protocolos para resolución de conflictos. Programar una 'Jornada de Convivencia' para los grados afectados.";
+            specificAdvice = "Los informes de comportamiento tienden al alza. **Acción del Manual de Convivencia:** Revisar protocolos para la resolución de conflictos. Programar una 'Jornada de Convivencia' para los grados afectados.";
         } else {
             focusArea = "⚠️ **Preocupación Primaria: Equilibrio Psicosocial**";
-            specificAdvice = "Las remisiones a psicología son significativas. Asegúrese de que el equipo de orientación tenga capacidad o active rutas de apoyo externas.";
+            specificAdvice = "Las remisiones psicológicas son significativas. Asegúrese de que el equipo de orientación tenga capacidad o active rutas de apoyo externas.";
         }
 
         const report = `
 ### 🧠 Reporte Estratégico IA Stratos
 
-**Alcance del Análisis:** ${stats.total} Casos Activos analizados bajo Parámetros Institucionales.
+**Alcance del análisis:** ${stats.total} Casos Activos analizados contra Parámetros Institucionales.
 
 #### 1. Análisis de Situación
 ${focusArea}
 * **Casos Académicos:** ${stats.acad}
-* **Casos de Comportamiento:** ${stats.conv}
+* **Casos Comportamentales:** ${stats.conv}
 * **Casos Psicológicos:** ${stats.psico}
 
 #### 2. Plan de Acción Impulsado por IA
 * **Acción Inmediata:** ${specificAdvice}
-* **Estrategia a Largo Plazo:** Actualizar la 'Caracterización Estudiantil' para identificar las causas raíz.
+* **Estrategia a Largo Plazo:** Actualizar la 'Caracterización Estudiantil' para identificar causas raíz.
 * **Alerta:** Verifique las tendencias específicas del grado 9°.
 
-> **Nota:** Este análisis utiliza datos en tiempo real cruzados con las pautas específicas del PEI de su institución.
+> **Nota:** Este análisis utiliza datos en tiempo real cruzados con las directrices específicas del PEI de su institución.
         `;
 
         container.innerHTML = marked.parse(report);
@@ -675,7 +663,7 @@ ${focusArea}
     .border-bottom-hover { border-bottom: 1px solid #f1f3f5; }
     .transform-rotate-12 { transform: rotate(12deg); }
     
-    /* Estilos Markdown */
+    /* Estilos para el cuerpo de Markdown */
     .markdown-body h3 { color: #4361ee; margin-top: 0; }
     .markdown-body h4 { color: #212529; margin-top: 1.5rem; font-weight: 700; }
     .markdown-body ul { padding-left: 1.2rem; }
