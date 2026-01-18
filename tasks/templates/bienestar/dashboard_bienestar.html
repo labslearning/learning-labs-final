@@ -27,6 +27,15 @@
                 <a href="{% url 'reporte_consolidado' %}" class="btn btn-success shadow-sm fw-bold animate__animated animate__pulse">
                     <i class="fas fa-table me-2"></i>Sábana de Notas
                 </a>
+
+                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-purple shadow-sm fw-bold">
+                    <i class="fas fa-robot me-2"></i>Auditoría IA (PEI)
+                </a>
+                
+                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-sm text-dark fw-bold">
+                    <i class="fas fa-brain me-2"></i>IA Académica
+                </a>
+
                 <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-sm" title="Recargar">
                     <i class="fas fa-sync-alt me-1"></i> Actualizar
                 </a>
@@ -40,7 +49,7 @@
 
    <div class="row mb-5 animate__animated animate__fadeIn">
        <div class="col-12 mb-3">
-           <h4 class="fw-bold text-dark border-bottom pb-2"><i class="fas fa-folder-open me-2 text-secondary"></i>Documentación Institucional</h4>
+           <h4 class="fw-bold text-dark border-bottom pb-2"><i class="fas fa-folder-open me-2 text-secondary"></i>Centro de Documentación</h4>
        </div>
 
        <div class="col-md-4 mb-4">
@@ -48,23 +57,15 @@
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-purple"><i class="fas fa-book-reader me-2"></i>PEI</h5>
-                       {% if institucion.archivo_pei %}
-                           <span class="badge bg-success-subtle text-success">Activo</span>
-                       {% else %}
-                           <span class="badge bg-light text-muted">Vacío</span>
-                       {% endif %}
+                       {% if institucion.archivo_pei %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
                    <p class="text-muted small">Proyecto Educativo Institucional. Documento rector.</p>
-                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_pei %}
-                           <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-purple btn-sm"><i class="fas fa-eye me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-purple btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
                        {% endif %}
-                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI">
-                               <i class="fas fa-upload me-1"></i> Cargar
-                           </button>
+                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI"><i class="fas fa-upload me-1"></i> Cargar</button>
                            <div class="collapse mt-2" id="uploadPEI">
                                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
                                    <input type="file" name="pei_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
@@ -82,23 +83,15 @@
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-orange"><i class="fas fa-hands-helping me-2"></i>Manual</h5>
-                       {% if institucion.archivo_manual_convivencia %}
-                           <span class="badge bg-success-subtle text-success">Activo</span>
-                       {% else %}
-                           <span class="badge bg-light text-muted">Vacío</span>
-                       {% endif %}
+                       {% if institucion.archivo_manual_convivencia %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Normas de convivencia, derechos y deberes.</p>
-                   
+                   <p class="text-muted small">Normas, derechos y deberes de la comunidad.</p>
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_manual_convivencia %}
-                           <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-orange btn-sm text-white"><i class="fas fa-eye me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-orange btn-sm text-white"><i class="fas fa-download me-1"></i> Ver Documento</a>
                        {% endif %}
-                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_CONVIVENCIA' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadManual">
-                               <i class="fas fa-upload me-1"></i> Cargar
-                           </button>
+                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadManual"><i class="fas fa-upload me-1"></i> Cargar</button>
                            <div class="collapse mt-2" id="uploadManual">
                                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
                                    <input type="file" name="manual_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
@@ -116,23 +109,15 @@
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-teal"><i class="fas fa-project-diagram me-2"></i>Proyectos</h5>
-                       {% if institucion.archivo_proyectos %}
-                           <span class="badge bg-success-subtle text-success">Activo</span>
-                       {% else %}
-                           <span class="badge bg-light text-muted">Vacío</span>
-                       {% endif %}
+                       {% if institucion.archivo_proyectos %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
                    <p class="text-muted small">Proyectos transversales y planes de aula.</p>
-                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_proyectos %}
-                           <a href="{{ institucion.archivo_proyectos.url }}" target="_blank" class="btn btn-teal btn-sm text-white"><i class="fas fa-eye me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_proyectos.url }}" target="_blank" class="btn btn-teal btn-sm text-white"><i class="fas fa-download me-1"></i> Ver Documento</a>
                        {% endif %}
-                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadProyectos">
-                               <i class="fas fa-upload me-1"></i> Cargar
-                           </button>
+                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadProyectos"><i class="fas fa-upload me-1"></i> Cargar</button>
                            <div class="collapse mt-2" id="uploadProyectos">
                                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
                                    <input type="file" name="proyectos_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
@@ -149,24 +134,16 @@
            <div class="card h-100 border-0 shadow-sm doc-card" style="border-top: 4px solid #0d6efd !important;">
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
-                       <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-sitemap me-2"></i>Malla Curricular</h5>
-                       {% if institucion.archivo_malla_curricular %}
-                           <span class="badge bg-success-subtle text-success">Activo</span>
-                       {% else %}
-                           <span class="badge bg-light text-muted">Vacío</span>
-                       {% endif %}
+                       <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-sitemap me-2"></i>Malla</h5>
+                       {% if institucion.archivo_malla_curricular %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
-                   <p class="text-muted small">Estructura de áreas, asignaturas y contenidos.</p>
-                   
+                   <p class="text-muted small">Estructura curricular y planes de estudio.</p>
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_malla_curricular %}
-                           <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-eye me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
                        {% endif %}
-                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadMalla">
-                               <i class="fas fa-upload me-1"></i> Cargar
-                           </button>
+                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadMalla"><i class="fas fa-upload me-1"></i> Cargar</button>
                            <div class="collapse mt-2" id="uploadMalla">
                                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
                                    <input type="file" name="malla_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
@@ -184,23 +161,15 @@
                <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
                        <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-calendar-alt me-2"></i>Calendario</h5>
-                       {% if institucion.archivo_calendario %}
-                           <span class="badge bg-success-subtle text-success">Activo</span>
-                       {% else %}
-                           <span class="badge bg-light text-muted">Vacío</span>
-                       {% endif %}
+                       {% if institucion.archivo_calendario %}<span class="badge bg-success-subtle text-success">Activo</span>{% else %}<span class="badge bg-light text-muted">Vacío</span>{% endif %}
                    </div>
                    <p class="text-muted small">Cronograma de actividades académicas.</p>
-                   
                    <div class="d-grid gap-2">
                        {% if institucion.archivo_calendario %}
-                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-danger btn-sm"><i class="fas fa-eye me-1"></i> Ver Documento</a>
+                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-danger btn-sm"><i class="fas fa-download me-1"></i> Ver Documento</a>
                        {% endif %}
-                       
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario">
-                               <i class="fas fa-upload me-1"></i> Cargar
-                           </button>
+                           <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario"><i class="fas fa-upload me-1"></i> Cargar</button>
                            <div class="collapse mt-2" id="uploadCalendario">
                                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
                                    <input type="file" name="calendario_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
