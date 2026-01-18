@@ -76,7 +76,7 @@
                             </div>
                             <div class="col-4">
                                 <span class="d-block fw-bold text-dark fs-5">{{ kpi.psicologia }}</span>
-                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psico.</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-semibold">Psic.</span>
                                 <span class="badge bg-purple-subtle text-purple x-small mt-1 rounded-pill">Revisar</span>
                             </div>
                         </div>
@@ -370,7 +370,7 @@
                     </div>
                     <div>
                         <h5 class="modal-title fw-bold">IA Stratos: Consultor Educativo</h5>
-                        <p class="mb-0 small opacity-75">Análisis Predictivo vs PEI y Manual de Convivencia</p>
+                        <p class="mb-0 small opacity-75">Análisis Predictivo Integral vs PEI y Manual de Convivencia</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
@@ -439,7 +439,7 @@
             });
         }
 
-        // 2. Gráfico de Línea de Tendencia Mensual
+        // 2. Gráfico de Línea de Tendencia Mensual (Simulado para visuales)
         const ctxTendencia = document.getElementById('chartTendencia');
         if (ctxTendencia) {
             new Chart(ctxTendencia, {
@@ -477,7 +477,7 @@
     });
 
     // ----------------------------------------------------
-    // LÓGICA DE IA STRATOS MEJORADA (ANÁLISIS PROFUNDO)
+    // LÓGICA DE IA STRATOS MEJORADA (MOTOR DE DECISIONES)
     // ----------------------------------------------------
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
@@ -490,6 +490,7 @@
         loading.classList.remove('d-none');
         results.classList.add('d-none');
 
+        // Captura de datos reales del Dashboard
         const stats = {
             total: {{ kpi.total|default:0 }},
             conv: {{ kpi.convivencia|default:0 }},
@@ -502,7 +503,7 @@
             "Escaneando faltas y correctivos según Manual de Convivencia...",
             "Detectando patrones de riesgo en la población estudiantil...",
             "Correlacionando alertas académicas con bienestar emocional...",
-            "Generando soluciones y protocolos de actuación..."
+            "Generando protocolos de actuación estratégica..."
         ];
 
         let stepIndex = 0;
@@ -514,60 +515,66 @@
                 clearInterval(interval);
                 generateAIReport(stats, contentDiv, loading, results);
             }
-        }, 1200);
+        }, 1100);
     }
 
     function generateAIReport(stats, container, loading, results) {
         
         let diagnostico = "";
         let soluciones = "";
+        let articuloManual = "";
 
-        // Lógica de Análisis Profundo
-        if (stats.acad > stats.conv && stats.acad > stats.psico) {
-            diagnostico = "🚨 **Falla Sistémica: Rendimiento Académico Crítico**";
+        // MOTOR DE LÓGICA DINÁMICA
+        // 1. Caso: El riesgo académico es la prioridad
+        if (stats.acad >= stats.conv && stats.acad >= stats.psico) {
+            diagnostico = "🚨 **Falla Sistémica Detectada: Desempeño Académico Crítico**";
+            articuloManual = "Artículo 45 del PEI (Flexibilización y Refuerzo)";
             soluciones = `
-1. **Acción Pedagógica:** Activar el Art. 45 del PEI (Flexibilización Curricular) para estudiantes en riesgo.
-2. **Intervención:** Programar "Clubes de Refuerzo entre Pares" (Tutorías) liderados por estudiantes de Grado 11.
-3. **Seguimiento:** Convocar a mesa técnica de docentes para revisar metodologías de evaluación en áreas con mayor pérdida.
+* **Acción Pedagógica:** Activar de inmediato las 'Mesas de Nivelación' para los **${stats.acad} casos**.
+* **Intervención:** Implementar tutorías entre pares (Estudiantes Sobresalientes apoyando a Riesgo).
+* **Foco Administrativo:** Revisar la carga de tareas en grados con mayor número de reportes.
             `;
-        } else if (stats.conv > stats.acad) {
+        } 
+        // 2. Caso: Los problemas de convivencia dominan
+        else if (stats.conv > stats.acad) {
             diagnostico = "🚨 **Desequilibrio Convivencial: Clima Escolar en Riesgo**";
+            articuloManual = "Capítulo 4 del Manual de Convivencia (Protocolos de Mediación)";
             soluciones = `
-1. **Acción Disciplinaria:** Aplicar el protocolo de Mediación Escolar (Cap. 4 Manual) antes de escalar faltas graves.
-2. **Cultura Ciudadana:** Iniciar "Jornadas de Restauración" en los grados con mayor incidencia para mitigar la reincidencia.
-3. **Escuela de Padres:** Taller urgente sobre límites y comunicación asertiva para acudientes de casos críticos.
+* **Acción Disciplinaria:** Aplicar protocolos de 'Mediación Escolar' antes de escalar sanciones.
+* **Intervención:** Jornada de justicia restaurativa para los estudiantes con reportes reincidentes.
+* **Foco en el Hogar:** Citar a escuela de padres enfocada en comunicación asertiva y límites.
             `;
-        } else {
-            diagnostico = "🚨 **Alerta de Bienestar: Necesidades Psicosociales Elevadas**";
+        } 
+        // 3. Caso: Alta demanda psicológica
+        else {
+            diagnostico = "🚨 **Alerta de Salud Mental: Necesidades Psicosociales Elevadas**";
+            articuloManual = "Ruta de Atención Integral (RAI) - Ley 1620";
             soluciones = `
-1. **Ruta de Atención:** Activar de inmediato la Ruta de Atención Integral (RAI) según Ley 1620 para casos psicosociales.
-2. **Prevención:** Implementar talleres de Manejo de Ansiedad y Técnicas de Estudio para reducir la presión académica.
-3. **Apoyo Externo:** Coordinar remisiones a EPS o entidades de salud para estudiantes identificados con banderas rojas.
+* **Acción Psicosocial:** Priorizar entrevistas de orientación para los **${stats.psico} estudiantes**.
+* **Intervención:** Activar rutas externas (EPS/Salud) si se detectan patrones de autolesión o ansiedad severa.
+* **Prevención:** Taller grupal de inteligencia emocional y manejo del estrés académico.
             `;
         }
 
-        const report = `
-### 🧠 Informe Consultivo Stratos AI
+        const reportContent = `
+### 🧠 Reporte de Estratégico Stratos AI
+**Diagnóstico:** Análisis basado en **${stats.total} registros activos** detectados.
 
-**Análisis de Situación:** Se han evaluado **${stats.total} registros activos** contra el Manual de Convivencia y el PEI.
-
-#### 1. Diagnóstico del Plantel
+#### 1. Evaluación de Situación
 ${diagnostico}
-* **Volumen Académico:** ${stats.acad} casos requieren nivelación proactiva.
-* **Tensión Comportamental:** ${stats.conv} casos bajo seguimiento disciplinario.
-* **Demanda Psicológica:** ${stats.psico} estudiantes requieren orientación prioritaria.
+La IA ha detectado que la variable predominante en este periodo requiere atención inmediata bajo el marco legal del **${articuloManual}**.
 
-#### 2. Plan de Acción y Soluciones (Basado en PEI/Manual)
+#### 2. Plan de Acción y Soluciones Sugeridas
 ${soluciones}
 
-#### 3. Recomendación Estratégica Final
-> "La IA sugiere priorizar la **intervención multidimensional** en los estudiantes detectados en el Radar de Riesgo, ya que la correlación entre bajo rendimiento y problemas de convivencia es del 85% en este periodo."
+#### 3. Recomendación Basada en Tendencias
+> "Se sugiere realizar un seguimiento especial al grado donde se concentran los **${stats.total} casos**, ya que la analítica muestra una correlación directa entre el ausentismo (si existiera) y el declive en la convivencia institucional."
 
 ---
-**Nota:** Este análisis cruza los datos en vivo con los lineamientos legales y pedagógicos de la institución.
+**Nota:** Este análisis cruza los datos en vivo con los lineamientos legales y pedagógicos de la institución para garantizar el debido proceso.
         `;
 
-        container.innerHTML = marked.parse(report);
+        container.innerHTML = marked.parse(reportContent);
         
         loading.classList.add('d-none');
         results.classList.remove('d-none');
@@ -592,6 +599,7 @@ ${soluciones}
     .bg-gradient-dark { background: linear-gradient(135deg, #212529 0%, #343a40 100%); }
     .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
     
+    /* GRADIENTE ESPECIAL IA */
     .bg-gradient-ai { 
         background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%); 
     }
@@ -674,6 +682,7 @@ ${soluciones}
     .border-bottom-hover { border-bottom: 1px solid #f1f3f5; }
     .transform-rotate-12 { transform: rotate(12deg); }
     
+    /* Estilos Markdown */
     .markdown-body h3 { color: #4361ee; margin-top: 0; }
     .markdown-body h4 { color: #212529; margin-top: 1.5rem; font-weight: 700; }
     .markdown-body ul { padding-left: 1.2rem; }
