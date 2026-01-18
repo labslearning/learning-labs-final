@@ -3,6 +3,11 @@ from django.db.models import Avg, Count, Q, Min, Max
 import json
 from .models import Observacion, Institucion # <--- Importante importar Observacion
 from django.core.serializers.json import DjangoJSONEncoder
+# --- AGREGA ESTO AL PRINCIPIO DE tasks/views.py ---
+from django.template.loader import get_template  # <--- FALTABA ESTO
+from django.template import TemplateDoesNotExist # <--- FALTABA ESTO
+from django.conf import settings                 # <--- FALTABA ESTO
+import os
 
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
