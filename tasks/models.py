@@ -1315,3 +1315,23 @@ class AIDocumento(models.Model):
         if not self.titulo:
             self.titulo = f"{self.get_tipo_display()} - {timezone.now().strftime('%d/%m/%Y')}"
         super().save(*args, **kwargs)
+
+
+#desde aqui agrego la funcion de archivar el observardor 
+# En tasks/models.py
+
+class ObservadorArchivado(models.Model):
+    estudiante_nombre = models.CharField(max_length=200)
+    estudiante_username = models.CharField(max_length=150)
+    fecha_archivado = models.DateTimeField(auto_now_add=True)
+    # Usuario que realizó la eliminación (El admin)
+    eliminado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    # El archivo PDF final
+    archivo_pdf = models.FileField(upload_to='archivos/observadores_retirados/')
+
+    class Meta:
+        verbose_name = "Observador Archivado (Retirado)"
+        verbose_name_plural = "Observadores Archivados"
+
+    def __str__(self):
+        return f"Observador: {self.estudiante_nombre} - {self.fecha_archivado.strftime('%Y-%m-%d')}"
