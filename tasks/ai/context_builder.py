@@ -1,13 +1,16 @@
 # tasks/ai/context_builder.py
 
-from django.db.models import Avg, Count, Q
-from django.contrib.auth.models import User
+# Solo importamos Avg porque se usa en _get_rendimiento_como_docente
+from django.db.models import Avg
 from tasks.models import (
     Nota, Observacion, PEIResumen, 
-    Matricula, Asistencia, Periodo, Materia, Institucion
+    Matricula, Asistencia, Materia
 )
+
+# 👇 EL CEREBRO: Conectamos con el servicio que tiene la "verdad" del Dashboard
+from tasks.services.institutional import InteligenciaInstitucionalService
+
 from .constants import (
-    ROL_ESTUDIANTE, 
     ACCION_MEJORAS_ESTUDIANTE, 
     ACCION_CHAT_SOCRATICO,
     ACCION_MEJORAS_DOCENTE, 
@@ -15,15 +18,15 @@ from .constants import (
     ACCION_MEJORA_STAFF_ACADEMICO,
     ACCION_ANALISIS_CONVIVENCIA,
     ACCION_CUMPLIMIENTO_PEI,
-    ACCION_ANALISIS_GLOBAL_BIENESTAR, # Importada correctamente
-    ACCION_RIESGO_ACADEMICO           # Importada correctamente
+    ACCION_ANALISIS_GLOBAL_BIENESTAR, 
+    ACCION_RIESGO_ACADEMICO           
 )
 
 class ContextBuilder:
     """
-    EL DIGESTOR DE DATOS INSTITUCIONAL.
-    Extrae la estructura de Materias, Notas, Convivencia y PEI.
-    Capacidad multirrol: Individual (Estudiante/Docente) y Global (Colegio).
+    EL ORQUESTADOR DE CONTEXTO (Versión Enterprise).
+    Ensambla la narrativa para la IA usando datos del Service Layer (Global)
+    y consultas directas optimizadas (Individual).
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -37,17 +40,16 @@ class ContextBuilder:
             perfil_solicitante = usuario.perfil
             rol_solicitante = str(perfil_solicitante.rol)
         except AttributeError:
-            rol_solicitante = "ADMINISTRADOR" # Fallback seguro
+            rol_solicitante = "ADMINISTRADOR" 
 
         # =========================================================
-        # 2. DEFINICIÓN DE ACCIONES GLOBALES (EL FIX CRÍTICO)
+        # 2. DEFINICIÓN DE ACCIONES GLOBALES
         # =========================================================
-        # Aquí definimos qué acciones activan el modo "Rector/Colegio"
         ACCIONES_GLOBALES = [
             ACCION_CUMPLIMIENTO_PEI,
             ACCION_MEJORA_STAFF_ACADEMICO,
             ACCION_ANALISIS_CONVIVENCIA,
-            ACCION_ANALISIS_GLOBAL_BIENESTAR, # 🔥 AHORA SÍ ESTÁ INCLUIDA
+            ACCION_ANALISIS_GLOBAL_BIENESTAR,
             ACCION_RIESGO_ACADEMICO
         ]
 
@@ -55,21 +57,30 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
+            # 🔥 ARQUITECTURA LIMPIA:
+            # Delegamos el cálculo pesado al Servicio Institucional.
+            # Esto asegura que la IA vea EXACTAMENTE lo mismo que el Dashboard.
+            datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
+
             return {
                 "scope": "GLOBAL_INSTITUCIONAL",
-                "tipo_analisis": "INSTITUCIONAL_GLOBAL", # Etiqueta clave para PromptFactory
+                "tipo_analisis": "RADIOGRAFIA_INSTITUCIONAL_360",
                 "solicitante": {
                     "username": str(usuario.username),
                     "rol": rol_solicitante
                 },
                 "pei_referencia": self._get_datos_pei(),
-                "data_colegio_completo": self._get_contexto_institucional_global()
+                
+                # 👇 MARCO LEGAL: Reglas del Manual de Convivencia
+                "marco_legal_convivencia": self._get_reglas_manual(),
+                
+                # 👇 DATA: La verdad única del sistema
+                "data_colegio_completo": datos_radiografia
             }
 
         # =========================================================
         # 4. CONTEXTO INDIVIDUAL (ESTUDIANTE / DOCENTE)
         # =========================================================
-        # Si llega aquí, es porque NO es una acción global
         
         contexto = {
             "scope": "INDIVIDUAL",
@@ -81,6 +92,7 @@ class ContextBuilder:
                 "identificador": str(target_user.username)
             },
             "pei_referencia": self._get_datos_pei(),
+            "normativa_aplicable": self._get_reglas_manual(), 
         }
 
         # --- DETECCIÓN DEL ROL DEL SUJETO ---
@@ -91,7 +103,7 @@ class ContextBuilder:
             contexto["dimension_pedagogica"] = self._get_rendimiento_como_docente(target_user)
             contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas."
 
-            # ALERTAS DE ESTUDIANTES EN RIESGO
+            # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta optimizada)
             materias_profe = Materia.objects.filter(asignaciones__docente=target_user)
             notas_riesgo = Nota.objects.filter(
                 materia__in=materias_profe,
@@ -118,7 +130,9 @@ class ContextBuilder:
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
-            if action_type == ACCION_MEJORAS_DOCENTE:
+            if action_type == ACCION_MEJORAS_ESTUDIANTE:
+                pass
+            elif action_type == ACCION_MEJORAS_DOCENTE:
                 contexto["enfoque_pedagogico"] = "Sugerir estrategias de aula basadas en estos datos para el docente."
             elif action_type == ACCION_APOYO_ACUDIENTE:
                 contexto["enfoque_familiar"] = "Traducir estos datos en acciones concretas para los padres en casa."
@@ -128,76 +142,30 @@ class ContextBuilder:
         return contexto
 
     # =========================================================
-    # MÉTODOS DE SOPORTE (GLOBALES / INSTITUCIONALES)
+    # MÉTODOS DE SOPORTE (MANUAL DE CONVIVENCIA)
     # =========================================================
 
-    def _get_contexto_institucional_global(self):
+    def _get_reglas_manual(self):
         """
-        Extrae la 'Radiografía' completa del colegio.
-        Esta función alimenta los reportes de Rectoría y Coordinación.
+        Retorna las reglas clave del Manual de Convivencia para contexto IA.
         """
-        institucion = Institucion.objects.first()
-        nombre_colegio = institucion.nombre if institucion else "Institución Educativa"
-
-        # 1. ACADÉMICO GLOBAL
-        # Materias con mayor índice de reprobación
-        stats_materias = Nota.objects.filter(materia__curso__activo=True).values('materia__nombre').annotate(
-            promedio=Avg('valor'),
-            volumen=Count('id'),
-            reprobados=Count('id', filter=Q(valor__lt=3.0)) # Cuántos pierden
-        ).order_by('promedio')
-
-        promedio_global = Nota.objects.filter(materia__curso__activo=True).aggregate(Avg('valor'))['valor__avg'] or 0.0
-        total_reprobaciones = Nota.objects.filter(valor__lt=3.0, materia__curso__activo=True).count()
-
-        # 2. CONVIVENCIA
-        total_observaciones = Observacion.objects.count()
-        resumen_conducta = Observacion.objects.values('tipo').annotate(
-            total=Count('id')
-        ).order_by('-total')
-
-        # 3. ASISTENCIA (KPIs Críticos)
-        total_fallas = Asistencia.objects.filter(estado='FALLA').count()
-        
-        # Top ausentismo (Quiénes faltan más)
-        top_ausentismo = list(Asistencia.objects.filter(estado='FALLA')
-            .values('estudiante__first_name', 'estudiante__last_name', 'curso__nombre')
-            .annotate(conteo=Count('id'))
-            .order_by('-conteo')[:5])
-
         return {
-            "institucion": {
-                "nombre": nombre_colegio,
-                "tiene_pei": bool(institucion.archivo_pei if institucion else False)
+            "enfoque_disciplinario": "Formativo y Restaurativo (No Punitivo).",
+            "clasificacion_faltas": {
+                "inasistencias_graves": "Acumular más de 3 fallas activa protocolo de riesgo de deserción.",
+                "bajo_rendimiento": "Reprobar 3 o más materias requiere firma de compromiso académico y citación a acudientes.",
+                "convivencia_critica": "Nota de convivencia < 3.5 se considera Alerta Naranja."
             },
-            "estadisticas_academicas": {
-                "promedio_global_colegio": round(float(promedio_global), 2),
-                "total_reprobaciones_activas": total_reprobaciones,
-                "detalle_materias": [
-                    {
-                        "materia": str(s["materia__nombre"]),
-                        "promedio": round(float(s["promedio"]), 2),
-                        "cantidad_reprobados": int(s["reprobados"])
-                    }
-                    for s in stats_materias
-                ]
-            },
-            "estado_convivencia_global": {
-                "total_incidentes": total_observaciones,
-                "distribucion_faltas": [
-                    {"tipo": str(a["tipo"]), "conteo": int(a["total"])} for a in resumen_conducta
-                ]
-            },
-            "alertas_asistencia": {
-                "total_inasistencias": total_fallas,
-                "casos_criticos_top_5": top_ausentismo
-            }
+            "protocolos_clave": [
+                "Ruta de Atención Integral para casos de bullying.",
+                "Debido Proceso: Todo estudiante debe ser escuchado antes de una sanción."
+            ]
         }
 
     # =========================================================
-    # MÉTODOS DE SOPORTE (INDIVIDUALES)
+    # MÉTODOS DE SOPORTE INDIVIDUALES
     # =========================================================
-
+    
     def _get_rendimiento_integral(self, usuario):
         notas = Nota.objects.filter(estudiante=usuario).select_related('materia', 'periodo')
         if not notas.exists():
