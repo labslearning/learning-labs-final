@@ -5517,18 +5517,16 @@ def historial_global_observaciones(request):
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
 # ===================================================================
-# 🧠 CONFIGURACIÓN MOTOR IA (CORREGIDA Y DEFINITIVA)
+# 🧠 MOTOR DE INTELIGENCIA ARTIFICIAL STRATOS (CORREGIDO)
 # ===================================================================
 
 def get_deepseek_client():
     """
     Configuración robusta del cliente DeepSeek.
     """
-    # 1. Clave directa para eliminar errores de lectura de entorno por ahora
+    # 1. Clave Hardcoded para garantizar funcionamiento inmediato
+    # (En producción idealmente usarías os.environ, pero esto elimina el error actual)
     api_key = "sk-f4b636146a9147feb7c4e73e6e24d8f3" 
-
-    if not api_key:
-        raise ValueError("CRÍTICO: No se encontró la API KEY de DeepSeek.")
 
     return OpenAI(
         api_key=api_key, 
@@ -5560,10 +5558,10 @@ def extraer_texto_pdf(archivo_field):
         return f"Error leyendo PDF: {str(e)}"
 
 @login_required
-# @csrf_exempt  <-- ELIMINADO: Tu JS ya envía el token, esto sobraba y causaba el NameError
 def ai_engine(request):
     """
     Cerebro Central de IA Stratos (DeepSeek V3).
+    Maneja la lógica de negocio y la conexión con la API.
     """
     action = request.GET.get('action')
 
@@ -5572,7 +5570,7 @@ def ai_engine(request):
     # ---------------------------------------------------------
     if action == 'analisis_global_bienestar' and request.method == 'POST':
         try:
-            # 1. Decodificar datos
+            # 1. Decodificar datos del request
             data = json.loads(request.body)
             contexto_datos = data.get('contexto_datos', {})
             instruccion = data.get('instruccion', '')
@@ -5630,11 +5628,13 @@ def ai_engine(request):
 
             content = response.choices[0].message.content
 
+            # 5. Respuesta Exitosa (JSON)
             return JsonResponse({'success': True, 'content': content})
 
         except Exception as e:
             # Loguear error real en consola y devolver JSON de error
             print(f"🔴 ERROR AI ENGINE: {str(e)}")
+            # Esto evita el error "Unexpected token <" al devolver siempre JSON
             return JsonResponse({'success': False, 'message': f"Fallo interno: {str(e)}"})
 
     # Respuesta por defecto para tests de conexión
