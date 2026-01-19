@@ -72,10 +72,13 @@ class ContextBuilder:
                 },
                 
                 # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA ISO 21001 (NIVEL EXPERTO)
+                # OPTIMIZACIÓN: Instrucciones claras para evitar cortes por longitud.
                 "PROTOCOLO_DE_AUDITORIA_ISO_21001": {
-                    "ROL_IA": "Auditor Líder de Calidad Educativa y Cumplimiento Normativo (Lead Auditor).",
+                    "ROL_IA": "Auditor Líder de Calidad Educativa y Cumplimiento Normativo (Lead Auditor ISO 21001).",
                     "OBJETIVO_GENERAL": "Evaluar la conformidad del servicio educativo frente al PEI y Manual de Convivencia.",
                     
+                    "ESTRATEGIA_DE_GENERACION": "Generar un informe denso y conciso. Priorizar tablas y listas sobre párrafos largos para ahorrar espacio.",
+
                     "PRINCIPIOS_DE_AUDITORIA": [
                         "Integridad: Presentar hallazgos basados estrictamente en la evidencia suministrada.",
                         "Enfoque basado en evidencia: Cruzar cada dato numérico con el numeral legal correspondiente.",
@@ -86,7 +89,7 @@ class ContextBuilder:
                         "1. CALCULAR PORCENTAJES: Para cada dimensión (Académica, Convivencial), estimar un % de cumplimiento normativo.",
                         "2. CLASIFICAR HALLAZGOS: Usar etiquetas ISO: 'Conformidad', 'No Conformidad Menor' (Puntual), 'No Conformidad Mayor' (Sistémica).",
                         "3. CITAR NORMATIVA: Es OBLIGATORIO citar el Numeral exacto (ej: 'Numeral 7.1') o el Componente del PEI en cada análisis.",
-                        "4. ACCIONES CORRECTIVAS: Proponer acciones inmediatas para corregir No Conformidades (ej: Activar Ruta Numeral 6.2).",
+                        "4. ACCIONES CORRECTIVAS (PHVA): Proponer acciones inmediatas para corregir No Conformidades (ej: Activar Ruta Numeral 6.2).",
                         "5. ACCIONES DE MEJORA: Proponer estrategias a largo plazo basadas en el Modelo Pedagógico Socio-Constructivista."
                     ],
 
