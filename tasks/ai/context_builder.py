@@ -186,24 +186,52 @@ class ContextBuilder:
             }
         }
 
-    def _get_datos_pei(self):
-        """
-        Extrae la esencia del PEI para alinear la cultura institucional.
-        """
-        pei = PEIResumen.objects.filter(activo=True).first()
-        
-        datos_base = {
-            "IDENTIDAD": {
-                "MISION": "Formar líderes integrales con pensamiento crítico y responsabilidad social.",
-                "VISION": "Ser referente en innovación educativa y formación humanista.",
-                "VALORES": ["Excelencia", "Respeto", "Innovación", "Solidaridad"]
-            },
-            "MODELO_PEDAGOGICO": {
-                "ENFOQUE": "Constructivismo Social y Aprendizaje Significativo.",
-                "METODOLOGIA": "Aprendizaje Basado en Proyectos (ABP) y Evaluación Formativa."
-            }
-        }
+    # =========================================================
+    # 🏫 MÉTODOS DE SOPORTE: PEI ESTRUCTURADO (REAL - NUEVA ESPERANZA)
+    # =========================================================
 
+    def _get_pei_estructurado(self):
+        """
+        Retorna los pilares EXACTOS del PEI 'Colegio Virtual Nueva Esperanza'.
+        Obliga a la IA a citar la Misión, Visión 2032 y Modelo Pedagógico real.
+        """
+        return {
+            "IDENTIDAD_INSTITUCIONAL": {
+                "NOMBRE": "Colegio Virtual Nueva Esperanza",
+                "MODELO_ATENCION": "Aprendizaje remoto, sincrónico y asincrónico (Plataforma LMS).",
+                "ALCANCE": "Nacional (Calendario A)."
+            },
+            "COMPONENTE_TELEOLOGICO": {
+                "MISION": "Brindar educación de calidad mediante ambientes virtuales innovadores que promuevan autonomía, pensamiento crítico, alfabetización digital y competencias ciudadanas.",
+                "VISION_2032": "Ser reconocidos como el mejor colegio virtual de Colombia, referente en personalización, inclusión digital y uso avanzado de IA educativa.",
+                "PRINCIPIOS_Y_VALORES": ["Respeto y ciudadanía digital", "Ética de la información", "Pensamiento crítico", "Autonomía", "Responsabilidad tecnológica"]
+            },
+            "MODELO_PEDAGOGICO_VIRTUAL": {
+                "INSPIRACION": "Constructivismo y Conectivismo.",
+                "METODOLOGIAS_ACTIVAS": [
+                    "Aprendizaje Basado en Proyectos (ABP) en entornos virtuales",
+                    "Flipped Classroom (Aula invertida)",
+                    "Microlearning y Gamificación",
+                    "Integración de IA para retroalimentación"
+                ],
+                "ROL_DOCENTE": "Mediador digital, tutor virtual y diseñador de experiencias."
+            },
+            "PLAN_DE_ESTUDIOS_VIRTUAL": {
+                "ENFOQUE": "Módulos digitales interactivos, sesiones en vivo y actividades asincrónicas.",
+                "AREAS_CLAVE": ["Tecnología e Informática (Alta intensidad)", "Ciencias", "Humanidades", "Emprendimiento Digital"],
+                "HERRAMIENTAS": "Analíticas de aprendizaje, laboratorios virtuales y rutas personalizadas."
+            },
+            "INCLUSION_Y_DIVERSIDAD": {
+                "ESTRATEGIA": "Adaptaciones curriculares digitales, lectores de pantalla y tutoría personal en línea.",
+                "ENFOQUE": "Educación diferencial en línea para estudiantes con diversas necesidades."
+            },
+            "PROYECTOS_TRANSVERSALES": [
+                "Ciudadanía y Democracia Digital",
+                "Bienestar Emocional Online",
+                "Emprendimiento Digital",
+                "STEAM"
+            ]
+        }
         # Si hay datos extraídos del PDF en la base de datos, los usamos
         if pei and pei.contenido_estructurado:
             data = pei.contenido_estructurado
