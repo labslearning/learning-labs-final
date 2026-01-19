@@ -27,7 +27,7 @@ class ContextBuilder:
     """
     EL ORQUESTADOR DE CONTEXTO (Versión Definitiva con Marco Legal).
     Ensambla la narrativa para la IA usando datos del Service Layer (Global)
-    y estructura el Manual de Convivencia y PEI como "Ley" para la IA.
+    y estructura el Manual de Convivencia como "Ley" para la IA.
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -70,16 +70,17 @@ class ContextBuilder:
                 },
                 
                 # 🔥 PASO 2: INSTRUCCIONES OBLIGATORIAS PARA LA IA
+                # Esto obliga a la IA a leer el bloque "MARCO_LEGAL" antes de opinar.
                 "DIRECTRICES_DE_AUDITORIA": {
                     "MANDATO_1": "Toda recomendación debe basarse en el 'MARCO_LEGAL_VIGENTE' suministrado.",
-                    "MANDATO_2": "Citar explícitamente los Numerales del Manual o Componentes del PEI al proponer acciones.",
-                    "EJEMPLO": "No digas 'mejorar nota', di 'Aplicar Numeral 7.1: Plan de Mejoramiento Integral'.",
+                    "MANDATO_2": "Citar explícitamente los Artículos del Manual o valores del PEI al proponer acciones.",
+                    "EJEMPLO": "No digas 'mejorar nota', di 'Aplicar Artículo 25: Compromiso Académico'.",
                 },
 
-                # 🔥 PASO 3: EL MANUAL Y PEI ESTRUCTURADOS (VERSIÓN REAL)
+                # 🔥 PASO 3: EL MANUAL Y PEI ESTRUCTURADOS
                 "MARCO_LEGAL_VIGENTE": {
-                    "PEI_INSTITUCIONAL": self._get_pei_estructurado(),      # <--- NUEVO MÉTODO
-                    "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas() # <--- NUEVO MÉTODO
+                    "PEI_INSTITUCIONAL": self._get_datos_pei(),
+                    "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas() # <--- AQUÍ ESTÁ LA MAGIA
                 },
                 
                 # 🔥 PASO 4: DATOS REALES
@@ -99,12 +100,8 @@ class ContextBuilder:
                 "curso_actual": str(self._get_grado_actual(target_user)),
                 "identificador": str(target_user.username)
             },
-            # Inyectamos las reglas también aquí para análisis individual
-            "MARCO_LEGAL_APLICABLE": {
-                "PEI": self._get_pei_estructurado(),
-                "MANUAL": self._get_reglas_manual_estructuradas()
-            },
-            "PEI_REFERENCIA": self._get_datos_pei(), # Mantenemos compatibilidad
+            "MARCO_LEGAL_APLICABLE": self._get_reglas_manual_estructuradas(), # También para individual
+            "PEI_REFERENCIA": self._get_datos_pei(),
         }
 
         # --- DETECCIÓN DEL ROL DEL SUJETO ---
@@ -113,7 +110,7 @@ class ContextBuilder:
         # A. ROL DOCENTE
         if rol_target == 'DOCENTE':
             contexto["dimension_pedagogica"] = self._get_rendimiento_como_docente(target_user)
-            contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas basadas en el PEI Socio-Constructivista."
+            contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas basadas en el PEI."
 
             # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta Optimizada)
             materias_profe = Materia.objects.filter(asignaciones__docente=target_user)
@@ -154,6 +151,10 @@ class ContextBuilder:
         return contexto
 
     # =========================================================
+    # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL Y PEI)
+    # =========================================================
+
+    # =========================================================
     # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL REAL)
     # =========================================================
 
@@ -185,55 +186,38 @@ class ContextBuilder:
             }
         }
 
-    # =========================================================
-    # 🏫 MÉTODOS DE SOPORTE: PEI ESTRUCTURADO (MODO "LEY")
-    # =========================================================
-
-    def _get_pei_estructurado(self):
+    def _get_datos_pei(self):
         """
-        Retorna los pilares del PEI del 'Colegio Virtual Nueva Esperanza'.
-        Obliga a la IA a citar el Modelo Pedagógico y los Valores exactos.
+        Extrae la esencia del PEI para alinear la cultura institucional.
         """
-        return {
-            "COMPONENTE_TELEOLOGICO": {
-                "MISION": "Formar ciudadanos digitales íntegros, autónomos y críticos, capaces de transformar su entorno mediante el uso ético de la tecnología.",
-                "VISION": "Ser líderes nacionales en educación virtual de alta calidad, reconocidos por un modelo pedagógico innovador y humanista.",
-                "VALORES_INSTITUCIONALES": ["Ética Digital", "Autonomía", "Responsabilidad", "Inclusión", "Pensamiento Crítico"]
+        pei = PEIResumen.objects.filter(activo=True).first()
+        
+        datos_base = {
+            "IDENTIDAD": {
+                "MISION": "Formar líderes integrales con pensamiento crítico y responsabilidad social.",
+                "VISION": "Ser referente en innovación educativa y formación humanista.",
+                "VALORES": ["Excelencia", "Respeto", "Innovación", "Solidaridad"]
             },
-            "COMPONENTE_PEDAGOGICO": {
-                "MODELO": "Socio-Constructivista mediado por TIC.",
-                "ENFOQUE_DIDACTICO": "Aprendizaje Basado en Proyectos (ABP) y Flipped Classroom (Aula Invertida).",
-                "PERFIL_ESTUDIANTE": "El estudiante es el protagonista activo de su aprendizaje, gestor de su tiempo y constructor de conocimiento colaborativo."
-            },
-            "COMPONENTE_EVALUACION": {
-                "CONCEPTO": "Evaluación Formativa, Procesual e Integral (no solo sumativa).",
-                "ESCALA_VALORACION": {
-                    "SUPERIOR": "4.6 - 5.0 (Liderazgo y excelencia)",
-                    "ALTO": "4.0 - 4.5 (Cumplimiento destacado)",
-                    "BASICO": "3.0 - 3.9 (Cumplimiento mínimo)",
-                    "BAJO": "1.0 - 2.9 (No alcanza logros, requiere Plan de Mejoramiento)"
-                }
-            },
-            "COMPONENTE_COMUNITARIO": {
-                "RELACION_FAMILIA": "La familia es corresponsable del proceso formativo, especialmente en el acompañamiento de la rutina virtual.",
-                "PREVENCION": "Énfasis en prevención de ciberacoso y salud mental digital."
+            "MODELO_PEDAGOGICO": {
+                "ENFOQUE": "Constructivismo Social y Aprendizaje Significativo.",
+                "METODOLOGIA": "Aprendizaje Basado en Proyectos (ABP) y Evaluación Formativa."
             }
         }
 
+        # Si hay datos extraídos del PDF en la base de datos, los usamos
+        if pei and pei.contenido_estructurado:
+            data = pei.contenido_estructurado
+            datos_base["IDENTIDAD"]["MISION"] = str(data.get("identidad", {}).get("mision", datos_base["IDENTIDAD"]["MISION"]))
+            datos_base["MODELO_PEDAGOGICO"]["ENFOQUE"] = str(data.get("modelo_pedagogico", {}).get("enfoque", datos_base["MODELO_PEDAGOGICO"]["ENFOQUE"]))
+            val = data.get("identidad", {}).get("valores", [])
+            if val: datos_base["IDENTIDAD"]["VALORES"] = [str(v) for v in val]
+
+        return datos_base
+
     # =========================================================
-    # 📊 MÉTODOS DE SOPORTE: CONSULTAS INDIVIDUALES (LEGADO)
+    # 📊 MÉTODOS DE SOPORTE: CONSULTAS INDIVIDUALES
     # =========================================================
     
-    def _get_datos_pei(self):
-        """Método de soporte para compatibilidad con lógica individual existente"""
-        # Se mantiene para no romper dependencias, pero devuelve el estructurado
-        pei_struct = self._get_pei_estructurado()
-        return {
-            "mision": pei_struct["COMPONENTE_TELEOLOGICO"]["MISION"],
-            "modelo_pedagogico": pei_struct["COMPONENTE_PEDAGOGICO"]["MODELO"],
-            "valores_institucionales": pei_struct["COMPONENTE_TELEOLOGICO"]["VALORES_INSTITUCIONALES"]
-        }
-
     def _get_rendimiento_integral(self, usuario):
         notas = Nota.objects.filter(estudiante=usuario).select_related('materia', 'periodo')
         if not notas.exists(): return {}
@@ -258,7 +242,7 @@ class ContextBuilder:
     def _get_resumen_asistencia(self, usuario):
         fallas = Asistencia.objects.filter(estudiante=usuario, estado='FALLA').count()
         tardes = Asistencia.objects.filter(estudiante=usuario, estado='TARDE').count()
-        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} # Ajustado a 3 según Numeral 6.2
+        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} # Ajustado a 3 según Artículo 25
 
     def _get_rendimiento_como_docente(self, docente):
         materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
