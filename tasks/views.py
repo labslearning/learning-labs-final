@@ -5517,15 +5517,21 @@ def historial_global_observaciones(request):
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
 # === CONFIGURACIÓN DE DEEPSEEK ===
-# Inicializamos el cliente apuntando a la URL de DeepSeek
+# === CONFIGURACIÓN DE DEEPSEEK ===
 def get_deepseek_client():
-    api_key = getattr(settings, 'sk-f4b636146a9147feb7c4e73e6e24d8f3', None)
-    if not api_key:
-        # Fallback por si olvidaste ponerlo en settings, intenta buscar variable de entorno
-        api_key = os.environ.get('sk-f4b636146a9147feb7c4e73e6e24d8f3')
+    # 1. Intentamos leer la variable correcta desde settings.py
+    api_key = getattr(settings, 'DEEPSEEK_API_KEY', None)
     
+    # 2. Si no está en settings, intentamos leerla directo del entorno (Railway)
     if not api_key:
-        raise ValueError("No se encontró la DEEPSEEK_API_KEY en settings.py")
+        api_key = os.environ.get('DEEPSEEK_API_KEY')
+    
+    # 3. Fallback de emergencia (Hardcoded) - SOLO SI LO ANTERIOR FALLA
+    if not api_key:
+        api_key = "sk-f4b636146a9147feb7c4e73e6e24d8f3" # <--- Tu clave real aquí por seguridad
+
+    if not api_key:
+        raise ValueError("No se encontró la API KEY de DeepSeek. Configura DEEPSEEK_API_KEY en Railway.")
 
     return OpenAI(
         api_key=api_key, 
