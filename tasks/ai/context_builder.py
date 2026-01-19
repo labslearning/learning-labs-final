@@ -1,14 +1,14 @@
 # tasks/ai/context_builder.py
 
-# Importamos Avg porque se usa en la lógica de rendimiento docente (individual)
+# Importamos Avg para cálculos de rendimiento
 from django.db.models import Avg
-# Importamos los modelos necesarios para las consultas
+# Importamos modelos necesarios
 from tasks.models import (
     Nota, Observacion, PEIResumen, 
     Matricula, Asistencia, Materia, Institucion
 )
 
-# 👇 CONECTAMOS EL CEREBRO DE DATOS (Garantiza integridad de la información según ISO 21001:7.5)
+# 👇 CONECTAMOS EL CEREBRO DE DATOS (Servicio de Inteligencia Institucional)
 # Asegúrate de que tasks/services/__init__.py exista y exporte InteligenciaInstitucionalService
 from tasks.services.institutional import InteligenciaInstitucionalService
 
@@ -26,10 +26,8 @@ from .constants import (
 
 class ContextBuilder:
     """
-    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001 - Avanzada).
-    Ensambla la narrativa para la IA usando datos del Service Layer (Global)
-    y estructura el Manual de Convivencia y PEI como "Criterios de Auditoría".
-    Diseñado para generar informes de alta precisión normativa.
+    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001 - Optimizado).
+    Estructura la información para máxima densidad y cumplimiento normativo.
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -60,7 +58,7 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
-            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales y Verificados)
+            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales)
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
@@ -71,42 +69,39 @@ class ContextBuilder:
                     "rol": rol_solicitante
                 },
                 
-                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA ISO 21001 (NIVEL EXPERTO)
-                # OPTIMIZACIÓN: Instrucciones claras para evitar cortes por longitud.
+                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA (OPTIMIZADO PARA EVITAR CORTES)
                 "PROTOCOLO_DE_AUDITORIA_ISO_21001": {
-                    "ROL_IA": "Auditor Líder de Calidad Educativa y Cumplimiento Normativo (Lead Auditor ISO 21001).",
-                    "OBJETIVO_GENERAL": "Evaluar la conformidad del servicio educativo frente al PEI y Manual de Convivencia.",
+                    "ROL_IA": "Auditor Líder ISO 21001.",
+                    "OBJETIVO": "Dictamen de conformidad normativa (PEI/Manual) vs Realidad.",
                     
-                    "ESTRATEGIA_DE_GENERACION": "Generar un informe denso y conciso. Priorizar tablas y listas sobre párrafos largos para ahorrar espacio.",
-
-                    "PRINCIPIOS_DE_AUDITORIA": [
-                        "Integridad: Presentar hallazgos basados estrictamente en la evidencia suministrada.",
-                        "Enfoque basado en evidencia: Cruzar cada dato numérico con el numeral legal correspondiente.",
-                        "Enfoque basado en riesgos: Priorizar situaciones que amenacen la permanencia escolar o la integridad."
+                    # 👇 ESTA SECCIÓN AYUDA A EVITAR CORTES DE RESPUESTA
+                    "ESTRATEGIA_DE_RESPUESTA": [
+                        "1. DENSIDAD ALTA: Usar lenguaje técnico y directo. Evitar introducciones o saludos largos.",
+                        "2. FORMATO: Priorizar listas (bullets) y tablas Markdown para ahorrar tokens.",
+                        "3. INTEGRIDAD: Si el espacio es limitado, priorizar las 'ACCIONES CORRECTIVAS' sobre el análisis descriptivo.",
+                        "4. EVIDENCIA: Cada afirmación debe citar el Numeral Legal (Manual) o Componente (PEI)."
                     ],
 
-                    "REQUISITOS_DEL_INFORME": [
-                        "1. CALCULAR PORCENTAJES: Para cada dimensión (Académica, Convivencial), estimar un % de cumplimiento normativo.",
-                        "2. CLASIFICAR HALLAZGOS: Usar etiquetas ISO: 'Conformidad', 'No Conformidad Menor' (Puntual), 'No Conformidad Mayor' (Sistémica).",
-                        "3. CITAR NORMATIVA: Es OBLIGATORIO citar el Numeral exacto (ej: 'Numeral 7.1') o el Componente del PEI en cada análisis.",
-                        "4. ACCIONES CORRECTIVAS (PHVA): Proponer acciones inmediatas para corregir No Conformidades (ej: Activar Ruta Numeral 6.2).",
-                        "5. ACCIONES DE MEJORA: Proponer estrategias a largo plazo basadas en el Modelo Pedagógico Socio-Constructivista."
+                    "REQUISITOS_ISO_21001": [
+                        "Clasificar hallazgos: 'No Conformidad Mayor' (Riesgo Crítico) o 'Oportunidad de Mejora'.",
+                        "Calcular '% de Alineación Normativa' estimado.",
+                        "Enfoque basado en riesgos (Deserción/Repitencia)."
                     ],
 
-                    "MATRIZ_DE_DECISION": {
-                        "RIESGO_CRITICO": "Si hay 3+ materias perdidas o 3+ fallas -> Activar Protocolos de Permanencia (Numeral 7.1 / 6.2).",
-                        "ALERTA_TEMPRANA": "Si hay 1-2 materias perdidas -> Activar Plan de Mejoramiento (Numeral 7.1).",
-                        "CONVIVENCIA": "Nota < 3.5 -> Requiere remisión a Orientación (Numeral 6.1)."
+                    "MATRIZ_DE_DECISION_LEGAL": {
+                        "CASO_CRITICO": "3+ materias perdidas o 3+ fallas = Activar Rutas de Permanencia (Numerales 7.1 y 6.2).",
+                        "CASO_ALERTA": "1-2 materias perdidas = Plan de Mejoramiento (Numeral 7.1).",
+                        "CONVIVENCIA": "Nota < 3.5 = Remisión a Orientación (Numeral 6.1)."
                     }
                 },
 
-                # 🔥 PASO 3: CRITERIOS DE AUDITORÍA (MANUAL Y PEI ESTRUCTURADOS)
+                # 🔥 PASO 3: CRITERIOS DE AUDITORÍA (MANUAL Y PEI)
                 "CRITERIOS_DE_AUDITORIA_VIGENTES": {
                     "PEI_INSTITUCIONAL": self._get_pei_estructurado(),
                     "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas()
                 },
                 
-                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS DEL SISTEMA)
+                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS)
                 "EVIDENCIA_OBJETIVA_DATOS": datos_radiografia
             }
 
@@ -123,7 +118,6 @@ class ContextBuilder:
                 "curso_actual": str(self._get_grado_actual(target_user)),
                 "identificador": str(target_user.username)
             },
-            # Inyectamos las reglas también aquí para análisis individual
             "MARCO_LEGAL_APLICABLE": {
                 "PEI": self._get_pei_estructurado(),
                 "MANUAL": self._get_reglas_manual_estructuradas()
@@ -137,7 +131,7 @@ class ContextBuilder:
         # A. ROL DOCENTE
         if rol_target == 'DOCENTE':
             contexto["dimension_pedagogica"] = self._get_rendimiento_como_docente(target_user)
-            contexto["enfoque_pedagogico"] = "Analizar la eficacia de la enseñanza según el Modelo Socio-Constructivista."
+            contexto["enfoque_pedagogico"] = "Analizar eficacia docente según Modelo Socio-Constructivista."
 
             # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta Optimizada)
             materias_profe = Materia.objects.filter(asignaciones__docente=target_user)
