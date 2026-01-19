@@ -3987,7 +3987,7 @@ def dashboard_bienestar(request):
             # Notas de convivencia para la tabla
             notas_conv_periodo = {}
             for p in periodos_del_curso:
-                n_obj = Nota.objects.filter(estudiante=estudiante, periodo=p, materia__nombre__icontains="Convivencia").aggregate(def=Avg('valor'))['def']
+                n_obj = Nota.objects.filter(...).aggregate(promedio=Avg('valor'))['promedio']
                 notas_conv_periodo[p.id] = round(n_obj, 1) if n_obj is not None else "-"
             
             lista_estudiantes_curso.append({
