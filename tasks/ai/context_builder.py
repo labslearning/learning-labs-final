@@ -1,14 +1,14 @@
 # tasks/ai/context_builder.py
 
-# Solo importamos Avg porque se usa en _get_rendimiento_como_docente
+# Importamos Avg porque se usa en la lógica de rendimiento docente (individual)
 from django.db.models import Avg
+# Importamos los modelos necesarios
 from tasks.models import (
     Nota, Observacion, PEIResumen, 
-    Matricula, Asistencia, Materia
+    Matricula, Asistencia, Materia, Institucion
 )
 
-# 👇 EL CEREBRO: Conectamos con el servicio que tiene la "verdad" del Dashboard
-# (Las líneas que "faltan" aquí, ahora viven dentro de este Servicio)
+# 👇 CONECTAMOS EL CEREBRO DE DATOS (Arregla lo de Luciana y cuentas reales)
 from tasks.services.institutional import InteligenciaInstitucionalService
 
 from .constants import (
@@ -25,9 +25,9 @@ from .constants import (
 
 class ContextBuilder:
     """
-    EL ORQUESTADOR DE CONTEXTO (Versión Enterprise).
+    EL ORQUESTADOR DE CONTEXTO (Versión Definitiva con Marco Legal).
     Ensambla la narrativa para la IA usando datos del Service Layer (Global)
-    y consultas directas optimizadas (Individual).
+    y estructura el Manual de Convivencia como "Ley" para la IA.
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -58,9 +58,7 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
-            # 🔥 ARQUITECTURA LIMPIA:
-            # Aquí es donde ahorramos líneas. En lugar de recalcular todo aquí (y hacerlo mal),
-            # le pedimos los datos perfectos al Servicio Institucional.
+            # 🔥 PASO 1: Obtener la verdad matemática (arregla promedios)
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
@@ -70,19 +68,28 @@ class ContextBuilder:
                     "username": str(usuario.username),
                     "rol": rol_solicitante
                 },
-                "pei_referencia": self._get_datos_pei(),
                 
-                # 👇 MARCO LEGAL: Reglas del Manual de Convivencia
-                "marco_legal_convivencia": self._get_reglas_manual(),
+                # 🔥 PASO 2: INSTRUCCIONES OBLIGATORIAS PARA LA IA
+                # Esto obliga a la IA a leer el bloque "MARCO_LEGAL" antes de opinar.
+                "DIRECTRICES_DE_AUDITORIA": {
+                    "MANDATO_1": "Toda recomendación debe basarse en el 'MARCO_LEGAL_VIGENTE' suministrado.",
+                    "MANDATO_2": "Citar explícitamente los Artículos del Manual o valores del PEI al proponer acciones.",
+                    "EJEMPLO": "No digas 'mejorar nota', di 'Aplicar Artículo 25: Compromiso Académico'.",
+                },
+
+                # 🔥 PASO 3: EL MANUAL Y PEI ESTRUCTURADOS
+                "MARCO_LEGAL_VIGENTE": {
+                    "PEI_INSTITUCIONAL": self._get_datos_pei(),
+                    "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas() # <--- AQUÍ ESTÁ LA MAGIA
+                },
                 
-                # 👇 DATA: La verdad única del sistema
-                "data_colegio_completo": datos_radiografia
+                # 🔥 PASO 4: DATOS REALES
+                "EVIDENCIA_ESTADISTICA": datos_radiografia
             }
 
         # =========================================================
         # 4. CONTEXTO INDIVIDUAL (ESTUDIANTE / DOCENTE)
         # =========================================================
-        # Esta parte NO se ha tocado, mantiene toda tu lógica original.
         
         contexto = {
             "scope": "INDIVIDUAL",
@@ -93,19 +100,19 @@ class ContextBuilder:
                 "curso_actual": str(self._get_grado_actual(target_user)),
                 "identificador": str(target_user.username)
             },
-            "pei_referencia": self._get_datos_pei(),
-            "normativa_aplicable": self._get_reglas_manual(), 
+            "MARCO_LEGAL_APLICABLE": self._get_reglas_manual_estructuradas(), # También para individual
+            "PEI_REFERENCIA": self._get_datos_pei(),
         }
 
         # --- DETECCIÓN DEL ROL DEL SUJETO ---
         rol_target = str(target_user.perfil.rol) if hasattr(target_user, 'perfil') else ""
 
-        # ROL DOCENTE
+        # A. ROL DOCENTE
         if rol_target == 'DOCENTE':
             contexto["dimension_pedagogica"] = self._get_rendimiento_como_docente(target_user)
-            contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas."
+            contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas basadas en el PEI."
 
-            # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta optimizada)
+            # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta Optimizada)
             materias_profe = Materia.objects.filter(asignaciones__docente=target_user)
             notas_riesgo = Nota.objects.filter(
                 materia__in=materias_profe,
@@ -120,64 +127,100 @@ class ContextBuilder:
                         f"- Estudiante: {nombre_est} | "
                         f"Curso: {n.materia.curso.nombre} | "
                         f"Materia: {n.materia.nombre} | "
-                        f"Nota: {float(n.valor)}"
+                        f"Nota Actual: {float(n.valor)}"
                     )
                 contexto["alertas_estudiantes_riesgo"] = lista_alertas
             else:
                 contexto["alertas_estudiantes_riesgo"] = []
 
-        # ROL ESTUDIANTE (O Admin analizando estudiante específico)
+        # B. ROL ESTUDIANTE (O Admin analizando estudiante)
         else:
             contexto["dimension_academica"] = self._get_rendimiento_integral(target_user)
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
             if action_type == ACCION_MEJORAS_DOCENTE:
-                contexto["enfoque_pedagogico"] = "Sugerir estrategias de aula basadas en estos datos para el docente."
+                contexto["objetivo"] = "Sugerir estrategias de aula para este estudiante."
             elif action_type == ACCION_APOYO_ACUDIENTE:
-                contexto["enfoque_familiar"] = "Traducir estos datos en acciones concretas para los padres en casa."
+                contexto["objetivo"] = "Traducir estos datos en pautas de crianza y apoyo en casa."
             elif action_type == ACCION_CHAT_SOCRATICO:
-                contexto["enfoque_estudiante"] = "Modo Socrático: Guiar con preguntas sobre estos datos."
+                contexto["objetivo"] = "Guiar al estudiante mediante mayéutica para que reconozca sus fallas."
             elif action_type == ACCION_MEJORAS_ESTUDIANTE:
-                pass
+                pass 
 
         return contexto
 
     # =========================================================
-    # MÉTODOS DE SOPORTE (MANUAL DE CONVIVENCIA)
+    # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL Y PEI)
     # =========================================================
 
-    def _get_reglas_manual(self):
+    def _get_reglas_manual_estructuradas(self):
         """
-        Retorna las reglas clave del Manual de Convivencia para contexto IA.
+        Retorna las reglas en formato de ARTÍCULOS LEGALES.
+        Esto obliga a la IA a citar 'Artículo X' en lugar de dar consejos genéricos.
         """
         return {
-            "enfoque_disciplinario": "Formativo y Restaurativo (No Punitivo).",
-            "clasificacion_faltas": {
-                "inasistencias_graves": "Acumular más de 3 fallas activa protocolo de riesgo de deserción.",
-                "bajo_rendimiento": "Reprobar 3 o más materias requiere firma de compromiso académico y citación a acudientes.",
-                "convivencia_critica": "Nota de convivencia < 3.5 se considera Alerta Naranja."
+            "TITULO_I_PRINCIPIOS": {
+                "ARTICULO_1_ENFOQUE": "El enfoque disciplinario es Formativo, Restaurativo y Pedagógico, nunca punitivo."
             },
-            "protocolos_clave": [
-                "Ruta de Atención Integral para casos de bullying.",
-                "Debido Proceso: Todo estudiante debe ser escuchado antes de una sanción."
-            ]
+            "TITULO_II_RENDIMIENTO_ACADEMICO": {
+                "ARTICULO_12_ALERTA_TEMPRANA": "La pérdida de 1 o 2 asignaturas activa planes de mejoramiento inmediato.",
+                "ARTICULO_13_COMPROMISO_ACADEMICO": "La reprobación de 3 o más asignaturas (promedio < 3.0) exige la firma de Compromiso Académico con acudientes.",
+                "ARTICULO_14_PERDIDA_CUPO": "El incumplimiento reiterado del Compromiso Académico puede llevar a la no renovación de matrícula."
+            },
+            "TITULO_III_CONVIVENCIA_Y_ASISTENCIA": {
+                "ARTICULO_25_ASISTENCIA": "La acumulación de 3 fallas injustificadas se considera Falta Grave y activa ruta de permanencia.",
+                "ARTICULO_26_DESERCION": "Más de 5 fallas sin soporte configuran riesgo de deserción escolar.",
+                "ARTICULO_30_VALORACION_CONVIVENCIA": "Una nota de convivencia inferior a 3.5 se considera desempeño BAJO y requiere remisión a Psicoorientación."
+            },
+            "TITULO_IV_RUTAS_DE_ATENCION": {
+                "ARTICULO_45_DEBIDO_PROCESO": "Todo estudiante tiene derecho a ser escuchado y presentar descargos antes de cualquier anotación.",
+                "ARTICULO_46_BULLYING": "Cualquier reporte de acoso activa inmediatamente el Comité de Convivencia Escolar."
+            }
         }
 
+    def _get_datos_pei(self):
+        """
+        Extrae la esencia del PEI para alinear la cultura institucional.
+        """
+        pei = PEIResumen.objects.filter(activo=True).first()
+        
+        datos_base = {
+            "IDENTIDAD": {
+                "MISION": "Formar líderes integrales con pensamiento crítico y responsabilidad social.",
+                "VISION": "Ser referente en innovación educativa y formación humanista.",
+                "VALORES": ["Excelencia", "Respeto", "Innovación", "Solidaridad"]
+            },
+            "MODELO_PEDAGOGICO": {
+                "ENFOQUE": "Constructivismo Social y Aprendizaje Significativo.",
+                "METODOLOGIA": "Aprendizaje Basado en Proyectos (ABP) y Evaluación Formativa."
+            }
+        }
+
+        # Si hay datos extraídos del PDF en la base de datos, los usamos
+        if pei and pei.contenido_estructurado:
+            data = pei.contenido_estructurado
+            datos_base["IDENTIDAD"]["MISION"] = str(data.get("identidad", {}).get("mision", datos_base["IDENTIDAD"]["MISION"]))
+            datos_base["MODELO_PEDAGOGICO"]["ENFOQUE"] = str(data.get("modelo_pedagogico", {}).get("enfoque", datos_base["MODELO_PEDAGOGICO"]["ENFOQUE"]))
+            val = data.get("identidad", {}).get("valores", [])
+            if val: datos_base["IDENTIDAD"]["VALORES"] = [str(v) for v in val]
+
+        return datos_base
+
     # =========================================================
-    # MÉTODOS DE SOPORTE INDIVIDUALES (Lógica Original Preservada)
+    # 📊 MÉTODOS DE SOPORTE: CONSULTAS INDIVIDUALES
     # =========================================================
     
     def _get_rendimiento_integral(self, usuario):
         notas = Nota.objects.filter(estudiante=usuario).select_related('materia', 'periodo')
-        if not notas.exists():
-            return {}
+        if not notas.exists(): return {}
         reporte = {}
         for nota in notas:
             m_nombre = str(nota.materia.nombre)
             p_nombre = str(nota.periodo.nombre)
             if m_nombre not in reporte: reporte[m_nombre] = {}
             if p_nombre not in reporte[m_nombre]:
+                # Calculamos promedio real del periodo para esa materia
                 notas_periodo = [float(n.valor) for n in notas if n.materia_id == nota.materia_id and n.periodo_id == nota.periodo_id]
                 promedio = sum(notas_periodo) / len(notas_periodo) if notas_periodo else 0
                 reporte[m_nombre][p_nombre] = {"promedio": round(promedio, 2), "logros": []}
@@ -192,7 +235,7 @@ class ContextBuilder:
     def _get_resumen_asistencia(self, usuario):
         fallas = Asistencia.objects.filter(estudiante=usuario, estado='FALLA').count()
         tardes = Asistencia.objects.filter(estudiante=usuario, estado='TARDE').count()
-        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 5 else "BAJO"}
+        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} # Ajustado a 3 según Artículo 25
 
     def _get_rendimiento_como_docente(self, docente):
         materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
@@ -210,21 +253,6 @@ class ContextBuilder:
                 "estudiantes_reprobando": reprobados
             })
         return reporte
-
-    def _get_datos_pei(self):
-        pei = PEIResumen.objects.filter(activo=True).first()
-        if pei and pei.contenido_estructurado:
-            data = pei.contenido_estructurado
-            return {
-                "mision": str(data.get("identidad", {}).get("mision", "N/A")),
-                "modelo_pedagogico": str(data.get("modelo_pedagogico", {}).get("enfoque", "Constructivista")),
-                "valores_institucionales": [str(v) for v in data.get("identidad", {}).get("valores", [])]
-            }
-        return {
-            "mision": "Formar líderes integrales con pensamiento crítico y responsabilidad social.",
-            "modelo_pedagogico": "Constructivismo Social y Aprendizaje Significativo.",
-            "valores_institucionales": ["Excelencia", "Respeto", "Innovación", "Solidaridad"]
-        }
 
     def _get_grado_actual(self, usuario):
         matricula = Matricula.objects.filter(estudiante=usuario, activo=True).select_related('curso').first()
