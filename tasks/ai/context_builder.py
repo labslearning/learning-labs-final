@@ -2,13 +2,14 @@
 
 # Importamos Avg porque se usa en la lógica de rendimiento docente (individual)
 from django.db.models import Avg
-# Importamos los modelos necesarios
+# Importamos los modelos necesarios para las consultas
 from tasks.models import (
     Nota, Observacion, PEIResumen, 
     Matricula, Asistencia, Materia, Institucion
 )
 
 # 👇 CONECTAMOS EL CEREBRO DE DATOS (Garantiza integridad de la información según ISO 21001:7.5)
+# Asegúrate de que tasks/services/__init__.py exista y exporte InteligenciaInstitucionalService
 from tasks.services.institutional import InteligenciaInstitucionalService
 
 from .constants import (
@@ -25,9 +26,10 @@ from .constants import (
 
 class ContextBuilder:
     """
-    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001).
+    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001 - Avanzada).
     Ensambla la narrativa para la IA usando datos del Service Layer (Global)
     y estructura el Manual de Convivencia y PEI como "Criterios de Auditoría".
+    Diseñado para generar informes de alta precisión normativa.
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -58,7 +60,7 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
-            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales)
+            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales y Verificados)
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
@@ -69,27 +71,39 @@ class ContextBuilder:
                     "rol": rol_solicitante
                 },
                 
-                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA ISO 21001
+                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA ISO 21001 (NIVEL EXPERTO)
                 "PROTOCOLO_DE_AUDITORIA_ISO_21001": {
-                    "ROL_IA": "Auditor Líder de Calidad Educativa.",
-                    "OBJETIVO": "Verificar la conformidad de los procesos educativos con el PEI y el Manual de Convivencia.",
-                    "INSTRUCCIONES_MANDATORIAS": [
-                        "1. Clasificar hallazgos como: 'Conformidad', 'No Conformidad Menor' (incumplimiento puntual) o 'No Conformidad Mayor' (riesgo sistémico).",
-                        "2. Calcular el 'Índice de Alineación Normativa' (0-100%) para cada dimensión analizada.",
-                        "3. Citar explícitamente el Numeral del Manual o Componente del PEI como 'Criterio de Auditoría'.",
-                        "4. Proponer 'Acciones Correctivas' (inmediatas) y 'Acciones de Mejora' (preventivas/estratégicas).",
-                        "5. Evaluar si se está cumpliendo la promesa de valor (Misión/Visión) hacia los estudiantes (beneficiarios)."
+                    "ROL_IA": "Auditor Líder de Calidad Educativa y Cumplimiento Normativo (Lead Auditor).",
+                    "OBJETIVO_GENERAL": "Evaluar la conformidad del servicio educativo frente al PEI y Manual de Convivencia.",
+                    
+                    "PRINCIPIOS_DE_AUDITORIA": [
+                        "Integridad: Presentar hallazgos basados estrictamente en la evidencia suministrada.",
+                        "Enfoque basado en evidencia: Cruzar cada dato numérico con el numeral legal correspondiente.",
+                        "Enfoque basado en riesgos: Priorizar situaciones que amenacen la permanencia escolar o la integridad."
                     ],
-                    "MATRIZ_DE_RIESGO": "Cruzar datos de repitencia/deserción con los numerales de 'Faltas Graves' y 'Pérdida de Cupo'."
+
+                    "REQUISITOS_DEL_INFORME": [
+                        "1. CALCULAR PORCENTAJES: Para cada dimensión (Académica, Convivencial), estimar un % de cumplimiento normativo.",
+                        "2. CLASIFICAR HALLAZGOS: Usar etiquetas ISO: 'Conformidad', 'No Conformidad Menor' (Puntual), 'No Conformidad Mayor' (Sistémica).",
+                        "3. CITAR NORMATIVA: Es OBLIGATORIO citar el Numeral exacto (ej: 'Numeral 7.1') o el Componente del PEI en cada análisis.",
+                        "4. ACCIONES CORRECTIVAS: Proponer acciones inmediatas para corregir No Conformidades (ej: Activar Ruta Numeral 6.2).",
+                        "5. ACCIONES DE MEJORA: Proponer estrategias a largo plazo basadas en el Modelo Pedagógico Socio-Constructivista."
+                    ],
+
+                    "MATRIZ_DE_DECISION": {
+                        "RIESGO_CRITICO": "Si hay 3+ materias perdidas o 3+ fallas -> Activar Protocolos de Permanencia (Numeral 7.1 / 6.2).",
+                        "ALERTA_TEMPRANA": "Si hay 1-2 materias perdidas -> Activar Plan de Mejoramiento (Numeral 7.1).",
+                        "CONVIVENCIA": "Nota < 3.5 -> Requiere remisión a Orientación (Numeral 6.1)."
+                    }
                 },
 
                 # 🔥 PASO 3: CRITERIOS DE AUDITORÍA (MANUAL Y PEI ESTRUCTURADOS)
-                "CRITERIOS_DE_AUDITORIA": {
+                "CRITERIOS_DE_AUDITORIA_VIGENTES": {
                     "PEI_INSTITUCIONAL": self._get_pei_estructurado(),
                     "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas()
                 },
                 
-                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS)
+                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS DEL SISTEMA)
                 "EVIDENCIA_OBJETIVA_DATOS": datos_radiografia
             }
 
@@ -106,7 +120,7 @@ class ContextBuilder:
                 "curso_actual": str(self._get_grado_actual(target_user)),
                 "identificador": str(target_user.username)
             },
-            # Inyectamos las reglas también aquí
+            # Inyectamos las reglas también aquí para análisis individual
             "MARCO_LEGAL_APLICABLE": {
                 "PEI": self._get_pei_estructurado(),
                 "MANUAL": self._get_reglas_manual_estructuradas()
@@ -167,6 +181,7 @@ class ContextBuilder:
     def _get_reglas_manual_estructuradas(self):
         """
         Retorna las reglas EXACTAS del Manual de Convivencia 'Colegio Virtual Nueva Esperanza'.
+        Esta es la "Norma de Referencia" para la auditoría.
         """
         return {
             "IDENTIDAD_INSTITUCIONAL": {
@@ -198,6 +213,7 @@ class ContextBuilder:
     def _get_pei_estructurado(self):
         """
         Retorna los pilares del PEI del 'Colegio Virtual Nueva Esperanza'.
+        Estructura basada en ISO 21001: Misión, Visión y Objetivos.
         """
         # Estructura BASE fija (esto siempre funcionará)
         datos_pei = {
@@ -274,6 +290,7 @@ class ContextBuilder:
             p_nombre = str(nota.periodo.nombre)
             if m_nombre not in reporte: reporte[m_nombre] = {}
             if p_nombre not in reporte[m_nombre]:
+                # Calculamos promedio real del periodo para esa materia
                 notas_periodo = [float(n.valor) for n in notas if n.materia_id == nota.materia_id and n.periodo_id == nota.periodo_id]
                 promedio = sum(notas_periodo) / len(notas_periodo) if notas_periodo else 0
                 reporte[m_nombre][p_nombre] = {"promedio": round(promedio, 2), "logros": []}
