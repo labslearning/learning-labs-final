@@ -16,9 +16,9 @@ class InteligenciaInstitucionalService:
         institucion = Institucion.objects.first()
         nombre_colegio = institucion.nombre if institucion else "Institución Educativa"
         
+        # Promedio global calculado solo sobre cursos activos
         promedio_global = Nota.objects.filter(materia__curso__activo=True).aggregate(Avg('valor'))['valor__avg'] or 0.0
 
-        # Claves limpias (sin emojis) para el backend
         return {
             "institucion_info": {
                 "nombre": nombre_colegio,
@@ -32,33 +32,47 @@ class InteligenciaInstitucionalService:
 
     @staticmethod
     def _calcular_riesgo_academico():
-        """Estudiantes con Nota < 3.0 en múltiples materias."""
+        """
+        Estudiantes con Nota < 3.0 en múltiples materias.
+        CORRECCIÓN: Cuenta materias únicas (distinct) y filtra por periodo activo.
+        """
         reprobados_qs = Nota.objects.filter(
             valor__lt=3.0, 
-            materia__curso__activo=True
+            materia__curso__activo=True,
+            periodo__activo=True  # 🔥 Solo notas del periodo actual
         ).values(
-            'estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre'
+            'estudiante__id', 
+            'estudiante__first_name', 
+            'estudiante__last_name', 
+            'materia__curso__nombre'
         ).annotate(
-            materias_perdidas=Count('id')
+            # 🔥 CORRECCIÓN MATEMÁTICA: Cuenta materias distintas, no cantidad de notas
+            materias_perdidas=Count('materia', distinct=True) 
         ).filter(materias_perdidas__gte=1).order_by('-materias_perdidas')[:15]
 
         lista_riesgo = []
         for rep in reprobados_qs:
-            # Subconsulta necesaria (N+1 controlado por el limit [:15])
+            # Subconsulta para obtener nombres de materias (también filtrada y distinct)
             materias_names = Nota.objects.filter(
                 estudiante_id=rep['estudiante__id'], 
-                valor__lt=3.0
-            ).values_list('materia__nombre', flat=True)
+                valor__lt=3.0,
+                periodo__activo=True
+            ).values_list('materia__nombre', flat=True).distinct()
             
+            cantidad = rep['materias_perdidas']
+            # Pre-cálculo para ayudar a la IA con el Manual
+            gravedad = "CRITICO_FIRMA_COMPROMISO" if cantidad >= 3 else "ALERTA_ACADEMICA"
+
             lista_riesgo.append({
                 "estudiante": f"{rep['estudiante__first_name']} {rep['estudiante__last_name']}",
                 "curso": rep['materia__curso__nombre'],
-                "cantidad_materias_perdidas": rep['materias_perdidas'],
+                "cantidad_materias_perdidas": cantidad,
+                "nivel_riesgo_manual": gravedad, # 👈 Pista para la IA
                 "asignaturas_criticas": list(materias_names)
             })
         
         return {
-            "descripcion": "Estudiantes con mayor número de asignaturas reprobadas actualmente.",
+            "descripcion": "Estudiantes con mayor número de asignaturas reprobadas actualmente (Periodo Activo).",
             "casos_criticos": lista_riesgo
         }
 
@@ -66,7 +80,8 @@ class InteligenciaInstitucionalService:
     def _calcular_alertas_convivencia():
         """Estudiantes con Nota Convivencia < 3.5."""
         baja_convivencia_qs = Convivencia.objects.filter(
-            valor__lt=3.5, periodo__activo=True
+            valor__lt=3.5, 
+            periodo__activo=True
         ).select_related('estudiante', 'curso').order_by('valor')[:10]
 
         return {
@@ -99,7 +114,11 @@ class InteligenciaInstitucionalService:
     @staticmethod
     def _calcular_top_ausentismo():
         """Top estudiantes con más fallas."""
-        top_ausentismo = list(Asistencia.objects.filter(estado='FALLA')
+        # Filtramos por curso activo para no contar fallas de años anteriores
+        top_ausentismo = list(Asistencia.objects.filter(
+                estado='FALLA',
+                curso__activo=True 
+            )
             .values('estudiante__first_name', 'estudiante__last_name', 'curso__nombre')
             .annotate(conteo=Count('id'))
             .order_by('-conteo')[:5])

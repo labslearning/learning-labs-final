@@ -8,6 +8,7 @@ from tasks.models import (
 )
 
 # 👇 EL CEREBRO: Conectamos con el servicio que tiene la "verdad" del Dashboard
+# (Las líneas que "faltan" aquí, ahora viven dentro de este Servicio)
 from tasks.services.institutional import InteligenciaInstitucionalService
 
 from .constants import (
@@ -58,8 +59,8 @@ class ContextBuilder:
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
             # 🔥 ARQUITECTURA LIMPIA:
-            # Delegamos el cálculo pesado al Servicio Institucional.
-            # Esto asegura que la IA vea EXACTAMENTE lo mismo que el Dashboard.
+            # Aquí es donde ahorramos líneas. En lugar de recalcular todo aquí (y hacerlo mal),
+            # le pedimos los datos perfectos al Servicio Institucional.
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
@@ -81,6 +82,7 @@ class ContextBuilder:
         # =========================================================
         # 4. CONTEXTO INDIVIDUAL (ESTUDIANTE / DOCENTE)
         # =========================================================
+        # Esta parte NO se ha tocado, mantiene toda tu lógica original.
         
         contexto = {
             "scope": "INDIVIDUAL",
@@ -130,14 +132,14 @@ class ContextBuilder:
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
-            if action_type == ACCION_MEJORAS_ESTUDIANTE:
-                pass
-            elif action_type == ACCION_MEJORAS_DOCENTE:
+            if action_type == ACCION_MEJORAS_DOCENTE:
                 contexto["enfoque_pedagogico"] = "Sugerir estrategias de aula basadas en estos datos para el docente."
             elif action_type == ACCION_APOYO_ACUDIENTE:
                 contexto["enfoque_familiar"] = "Traducir estos datos en acciones concretas para los padres en casa."
             elif action_type == ACCION_CHAT_SOCRATICO:
                 contexto["enfoque_estudiante"] = "Modo Socrático: Guiar con preguntas sobre estos datos."
+            elif action_type == ACCION_MEJORAS_ESTUDIANTE:
+                pass
 
         return contexto
 
@@ -163,7 +165,7 @@ class ContextBuilder:
         }
 
     # =========================================================
-    # MÉTODOS DE SOPORTE INDIVIDUALES
+    # MÉTODOS DE SOPORTE INDIVIDUALES (Lógica Original Preservada)
     # =========================================================
     
     def _get_rendimiento_integral(self, usuario):
