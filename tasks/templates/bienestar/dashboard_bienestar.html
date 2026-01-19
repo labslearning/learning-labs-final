@@ -930,7 +930,8 @@
                 total_alumnos: "{{ kpi.total_alumnos }}",
                 promedio_academico: "{{ kpi.prom_global_acad }}",
                 indice_convivencia: "{{ kpi.prom_global_conv }}",
-                materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}"
+                materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}",
+                total_cursos_activos: "{{ kpi.total_cursos }}"
             },
             
             // LISTA DE ESTUDIANTES EN RIESGO (Notas Reales)
@@ -965,6 +966,18 @@
                     curso: "{{ alerta.curso__nombre|escapejs }}"
                 },
                 {% endfor %}
+            ],
+
+            // RENDIMIENTO POR CURSOS
+            rendimiento_cursos: [
+                {% for item in vista_cursos %}
+                {
+                    nombre_curso: "{{ item.curso.nombre|escapejs }}",
+                    promedio_grupo: "{{ item.stats.acad }}",
+                    indice_clima: "{{ item.stats.conv }}",
+                    cantidad_alumnos: "{{ item.stats.alumnos }}"
+                },
+                {% endfor %}
             ]
         };
 
@@ -972,7 +985,7 @@
         const steps = [
             "Leyendo Archivo Maestro PEI...",
             "Analizando Manual de Convivencia...",
-            "Procesando " + datosContexto.estudiantes_riesgo_academico.length + " estudiantes en riesgo académico...",
+            "Procesando " + datosContexto.estudiantes_riesgo_academico.length + " alertas de riesgo académico...",
             "Cruzando datos de convivencia con normativa...",
             "Generando informe rectoral..."
         ];
@@ -991,11 +1004,13 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "X-Requested-With": "XMLHttpRequest"
                 },
+                // INSTRUCCIÓN CLARA A LA IA
                 body: JSON.stringify({
                     contexto_datos: datosContexto,
-                    instruccion: "Realiza un diagnóstico institucional completo. Cruza los datos numéricos de los estudiantes en riesgo con los documentos normativos (PEI/Manual). Ignora que soy el administrador, habla sobre el estado del colegio."
+                    instruccion: "ERES EL RECTOR VIRTUAL. Analiza el JSON adjunto que contiene el estado REAL de la institución (KPIs, lista de reprobados, alertas de convivencia). Cruza estos datos con el PEI y el Manual de Convivencia. IGNORA los datos del usuario 'admin' o 'Alejandro Miller' y céntrate en los problemas globales detectados en la data."
                 })
             });
 
@@ -1031,15 +1046,15 @@
 </script>
 
 <style>
-   /* === CORE DESIGN SYSTEM STRATOS === */
-   :root {
-       --purple-primary: #6610f2;
-       --blue-institutional: #4361ee;
-       --soft-gray: #f4f7fe;
-       --text-dark: #1a1c23;
-   }
-
-   body { background-color: var(--soft-gray); font-family: 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+    /* Tu CSS existente se mantiene aquí */
+    :root { --purple-primary: #6610f2; --blue-institutional: #4361ee; --soft-gray: #f4f7fe; --text-dark: #1a1c23; }
+    body { background-color: var(--soft-gray); font-family: 'Inter', sans-serif; }
+    .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+    .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; }
+    .markdown-body ul { padding-left: 20px; }
+    .markdown-body blockquote { border-left: 5px solid #a855f7; padding-left: 15px; background: #f8fafc; color: #555; }
+    
+    /* === CORE DESIGN SYSTEM STRATOS === */
    .fw-black { font-weight: 900; }
    .ls-2 { letter-spacing: 2px; }
    .ls-1 { letter-spacing: 1px; }
@@ -1091,9 +1106,6 @@
 
    .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
    .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
-
-   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-top: 30px; font-weight: 800; }
-   .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
 
    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
