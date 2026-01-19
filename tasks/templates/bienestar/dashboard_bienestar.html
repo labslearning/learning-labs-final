@@ -1000,7 +1000,8 @@
                method: "POST",
                headers: {
                    "Content-Type": "application/json",
-                   "X-CSRFToken": "{{ csrf_token }}"
+                   "X-CSRFToken": "{{ csrf_token }}",
+                   "X-Requested-With": "XMLHttpRequest" // SEÑAL IMPORTANTE PARA EL BACKEND
                },
                body: JSON.stringify({
                    contexto_datos: datosContexto,
@@ -1008,13 +1009,20 @@
                })
            });
 
-           if (!response.ok) throw new Error("Error en la respuesta del servidor Stratos");
-
-           const data = await response.json();
-           
+           // LEEMOS LA RESPUESTA COMO TEXTO PRIMERO PARA DEBUG (EVITA EL ERROR '<')
+           const rawText = await response.text(); 
            clearInterval(stepInterval);
+
+           let data;
+           try {
+                data = JSON.parse(rawText);
+           } catch (e) {
+                // SI FALLA EL PARSEO, ES HTML (ERROR DEL SERVIDOR)
+                console.error("Respuesta del servidor no es JSON:", rawText);
+                throw new Error("El servidor devolvió un error (HTML). Revisa la consola.");
+           }
            
-           if (data.success) {
+           if (response.ok && data.success) {
                // Renderizamos la respuesta Markdown de la IA
                contentDiv.innerHTML = marked.parse(data.content);
                loading.classList.add('d-none');
@@ -1031,8 +1039,7 @@
            statusText.innerText = "Error de conexión con el Cerebro Digital.";
            contentDiv.innerHTML = `<div class="alert alert-warning">
                <h4><i class="fas fa-exclamation-triangle"></i> Conexión Interrumpida</h4>
-               <p>No se pudo contactar con el motor de IA. Por favor verifica tu conexión o intenta nuevamente.</p>
-               <small class="text-muted">${error.message}</small>
+               <p>No se pudo contactar con el motor de IA. ${error.message}</p>
            </div>`;
            loading.classList.add('d-none');
            results.classList.remove('d-none');
