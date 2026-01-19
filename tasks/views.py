@@ -5517,15 +5517,14 @@ def historial_global_observaciones(request):
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
 # ===================================================================
-# 🧠 MOTOR DE INTELIGENCIA ARTIFICIAL STRATOS (CORREGIDO)
+# 🧠 MOTOR DE INTELIGENCIA ARTIFICIAL STRATOS (VERSIÓN FINAL)
 # ===================================================================
 
 def get_deepseek_client():
     """
     Configuración robusta del cliente DeepSeek.
     """
-    # 1. Clave Hardcoded para garantizar funcionamiento inmediato
-    # (En producción idealmente usarías os.environ, pero esto elimina el error actual)
+    # Clave configurada directamente para garantizar conexión inmediata
     api_key = "sk-f4b636146a9147feb7c4e73e6e24d8f3" 
 
     return OpenAI(
@@ -5547,7 +5546,7 @@ def extraer_texto_pdf(archivo_field):
 
         reader = PdfReader(path)
         texto = ""
-        # Leemos hasta 15 páginas para equilibrar contexto y velocidad
+        # Limitamos páginas para optimizar velocidad
         for i, page in enumerate(reader.pages):
             if i >= 15: break 
             extract = page.extract_text()
@@ -5593,7 +5592,7 @@ def ai_engine(request):
             
             FORMATO DE RESPUESTA (Markdown):
             ### 📊 Diagnóstico Estratégico
-            [Análisis crudo de los datos numéricos]
+            [Análisis crudo de los datos numéricos. Sé directo.]
             
             ### ⚖️ Auditoría Normativa (Cruce PEI/Manual)
             [Cita textual de artículos del manual que apliquen a los problemas detectados]
@@ -5622,7 +5621,7 @@ def ai_engine(request):
                     {"role": "user", "content": user_message}
                 ],
                 temperature=0.6,
-                max_tokens=2000,
+                max_tokens=2500,
                 stream=False
             )
 
@@ -5637,5 +5636,7 @@ def ai_engine(request):
             # Esto evita el error "Unexpected token <" al devolver siempre JSON
             return JsonResponse({'success': False, 'message': f"Fallo interno: {str(e)}"})
 
-    # Respuesta por defecto para tests de conexión
+    # ---------------------------------------------------------
+    # CASO 2: VISTA POR DEFECTO / DEBUG
+    # ---------------------------------------------------------
     return JsonResponse({'message': 'Stratos AI Engine Online.'})
