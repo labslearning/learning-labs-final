@@ -5550,21 +5550,14 @@ def extraer_texto_pdf(archivo_field):
     except Exception as e:
         return f"[Error PDF: {str(e)}]"
 
-# ===================================================================
-# 🧠 CEREBRO DE INTELIGENCIA ARTIFICIAL (STRATOS V3.2 FINAL)
-# ===================================================================
-
 @csrf_exempt
 @login_required
 def ai_engine(request):
     """
-    Controlador Maestro de IA.
-    Maneja:
-    1. Análisis Institucional Global (Dashboard).
-    2. Consultas Individuales / Chat Socrático (Perfiles).
+    Cerebro Central IA Stratos (Modo Auditor de Datos Masivos).
     """
     action = request.GET.get('action')
-    
+
     # ---------------------------------------------------------
     # MODO 1: AUDITORÍA INSTITUCIONAL GLOBAL (DASHBOARD)
     # ---------------------------------------------------------
@@ -5575,10 +5568,10 @@ def ai_engine(request):
             contexto_datos = data.get('contexto_datos', {})
             instruccion = data.get('instruccion', '')
 
-            # 2. Leer Documentos Base (Ligero)
+            # 2. Leer Documentos Base (Solo si existen)
             institucion = Institucion.objects.first()
-            texto_pei = "PEI NO DISPONIBLE."
-            texto_manual = "MANUAL NO DISPONIBLE."
+            texto_pei = "Documento PEI no cargado en el sistema."
+            texto_manual = "Manual de Convivencia no cargado."
 
             if institucion:
                 if institucion.archivo_pei:
@@ -5586,46 +5579,44 @@ def ai_engine(request):
                 if institucion.archivo_manual_convivencia:
                     texto_manual = extraer_texto_pdf(institucion.archivo_manual_convivencia)
 
-            # 3. PROMPT DE ALTA INGENIERÍA (MODIFICADO PARA IGNORAR AL ADMIN)
+            # 3. PROMPT "BLINDADO" (SOLO DATOS, NO PERSONAS)
             system_prompt = """
-            ERES 'STRATOS AI', UN AUDITOR EXTERNO DE CALIDAD EDUCATIVA.
+            ACTÚA COMO: 'STRATOS AI', UN SISTEMA AUTOMATIZADO DE ANÁLISIS DE DATOS EDUCATIVOS.
             
-            TU OBJETIVO:
-            Realizar un diagnóstico del ESTADO DEL COLEGIO basándote ÚNICAMENTE en los datos estadísticos JSON suministrados y su cruce con la normativa (PEI/Manual).
+            TU ENTRADA DE DATOS:
+            Recibirás un objeto JSON llamado 'DATA_COLEGIO'. Este objeto contiene estadísticas reales y listas de estudiantes.
             
-            🚨 SYSTEM OVERRIDE / REGLAS DE ORO:
-            1. NO ESTÁS ANALIZANDO AL USUARIO QUE ENVÍA ESTO. Ignora si el solicitante es "Admin", "Rector" o "Alejandro". Tu sujeto de análisis son los DATOS DEL COLEGIO.
-            2. El JSON contiene arrays llamados 'riesgos_criticos_detectados' y 'alertas_convivencia'. ESA ES LA REALIDAD ACADÉMICA. Úsalos.
-            3. Si el JSON dice "total_materias_perdidas: 20", entonces HAY problemas académicos. No digas "no hay datos".
-            4. Cruza las faltas de convivencia reportadas en el JSON con los artículos del Manual.
+            🚨 REGLAS DE ANÁLISIS (OBLIGATORIAS):
+            1. NO ERES UN ASISTENTE PERSONAL. No saludes a ningún usuario. No analices al "solicitante".
+            2. TU ÚNICA FUENTE DE VERDAD son los arrays del JSON: 'riesgos_criticos_detectados', 'alertas_convivencia' y 'alertas_asistencia'.
+            3. SI EL JSON TIENE DATOS EN ESAS LISTAS, ES PORQUE HAY PROBLEMAS REALES. Debes reportarlos con nombres y apellidos.
+            4. Cruza las faltas detectadas con los textos normativos (Manual de Convivencia) que se te adjuntan.
             
-            ESTRUCTURA DE RESPUESTA (Markdown Profesional):
-            # 🏫 Informe de Estado Institucional
+            FORMATO DE SALIDA (MARKDOWN):
+            # 🏫 Diagnóstico Institucional Basado en Datos
             
-            ### 📊 1. Diagnóstico Académico (Basado en Data Real)
-            [Analiza las cifras del JSON: Total alumnos, promedio global, materias perdidas. Menciona nombres de estudiantes en riesgo si aparecen en la lista]
+            ### 🚨 1. Hallazgos Académicos Críticos
+            [Lee el array 'riesgos_criticos_detectados'. Si no está vacío, lista los estudiantes, sus cursos y cuántas materias pierden. Sé explícito.]
             
-            ### ⚖️ 2. Auditoría de Convivencia
-            [Analiza las alertas de convivencia del JSON. Cita el Manual para las faltas más comunes]
+            ### ⚖️ 2. Auditoría de Convivencia y Asistencia
+            [Lee 'alertas_convivencia' y 'alertas_asistencia'. Reporta los casos con nombres. Cita el artículo del Manual que se estaría infringiendo.]
             
-            ### 🚩 3. Focos de Intervención
-            [Lista los casos más críticos encontrados en 'riesgos_criticos_detectados' y 'alertas_asistencia']
+            ### 📊 3. Análisis de Tendencias
+            [Basado en los KPIs globales, ¿el colegio está mejorando o empeorando?]
             
-            ### 🚀 4. Plan de Acción Directivo
-            [3 Estrategias concretas para mejorar los indicadores reportados]
+            ### 🚀 4. Plan de Acción Inmediato
+            [3 Órdenes directivas para corregir los hallazgos anteriores]
             """
 
             user_message = f"""
-            EJECUTA EL DIAGNÓSTICO INSTITUCIONAL CON ESTA DATA EN TIEMPO REAL:
-
-            >>> INDICADORES Y ALERTAS DEL COLEGIO (JSON):
+            >>> DATA_COLEGIO (ESTADÍSTICAS REALES EN TIEMPO REAL):
             {json.dumps(contexto_datos, indent=2, ensure_ascii=False)}
 
-            >>> MARCO NORMATIVO (RESUMEN):
-            [PEI]: {texto_pei[:8000]}...
-            [MANUAL]: {texto_manual[:8000]}...
+            >>> DOCUMENTOS NORMATIVOS DE REFERENCIA:
+            [RESUMEN PEI]: {texto_pei[:8000]}
+            [RESUMEN MANUAL]: {texto_manual[:8000]}
             """
-            
+
             # 4. Inferencia
             client = get_deepseek_client()
             response = client.chat.completions.create(
@@ -5634,49 +5625,18 @@ def ai_engine(request):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.7,
-                max_tokens=3000
+                temperature=0.5, # Temperatura baja para ser más analítico y menos creativo
+                max_tokens=2500
             )
 
             content = response.choices[0].message.content
             return JsonResponse({'success': True, 'content': content})
 
         except Exception as e:
-            # Logger para ver el error real en la consola de Railway
-            print(f"🔴 ERROR IA GLOBAL: {str(e)}")
-            return JsonResponse({'success': False, 'message': f"Fallo en análisis global: {str(e)}"})
+            print(f"ERROR IA: {e}")
+            return JsonResponse({'success': False, 'message': f"Fallo interno del motor: {str(e)}"})
 
-    # ---------------------------------------------------------
-    # MODO 2: CHAT SOCRÁTICO O CONSULTA INDIVIDUAL (LEGACY)
-    # ---------------------------------------------------------
-    # Este bloque asegura que las consultas individuales (desde el perfil del estudiante) sigan funcionando
-    else:
-        try:
-            target_id = request.GET.get('target_id')
-            user_query = request.GET.get('user_query')
-            
-            # Definir quién es el objetivo (Target)
-            target_user = request.user
-            if target_id:
-                # Si me pasan un ID, analizo a ese estudiante
-                target_user = get_object_or_404(User, id=target_id)
-            
-            # Usamos el orquestador antiguo para casos individuales
-            resultado = ai_orchestrator.process_request(
-                user=request.user,
-                action_type=action or 'MEJORAS_ESTUDIANTE', # Default
-                user_query=user_query,
-                target_user=target_user
-            )
-
-            # Respuesta JSON para AJAX
-            return JsonResponse(resultado)
-
-        except Exception as e:
-            print(f"🔴 ERROR IA INDIVIDUAL: {str(e)}")
-            return JsonResponse({'success': False, 'message': f"Fallo en consulta individual: {str(e)}"})
-
-    # Fallback final
+    # Fallback
     return JsonResponse({'message': 'Stratos AI Engine Online.'})
 
 # Vistas públicas
