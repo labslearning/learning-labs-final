@@ -26,11 +26,14 @@ from .constants import (
 
 class ContextBuilder:
     """
-    EL ORQUESTADOR DE CONTEXTO (Versión Consultoría Premium ISO 21001).
-    Estructura la información para máxima densidad visual (Tablas) y cumplimiento normativo.
+    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001 - Optimizado).
+    Estructura la información para máxima densidad y cumplimiento normativo.
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
+        """
+        Punto de entrada universal para generar contexto IA.
+        """
         target_user = kwargs.get('target_user', usuario)
 
         # 1. VALIDACIÓN DEL USUARIO SOLICITANTE
@@ -55,7 +58,7 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
-            # 🔥 PASO 1: Datos Reales
+            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales)
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
@@ -66,21 +69,17 @@ class ContextBuilder:
                     "rol": rol_solicitante
                 },
                 
-                # 🔥 PASO 2: PROTOCOLO PREMIUM (TABLAS Y ANÁLISIS PROFUNDO)
+                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA (OPTIMIZADO PARA EVITAR CORTES)
                 "PROTOCOLO_DE_AUDITORIA_ISO_21001": {
-                    "ROL_IA": "Consultor Senior en Calidad Educativa y Auditor ISO 21001.",
-                    "OBJETIVO": "Generar Dictamen Técnico de Conformidad Normativa (PEI/Manual) vs Realidad.",
+                    "ROL_IA": "Auditor Líder ISO 21001.",
+                    "OBJETIVO": "Dictamen de conformidad normativa (PEI/Manual) vs Realidad.",
                     
-                    "ESTRUCTURA_VISUAL_REQUERIDA": [
-                        "1. TABLA DE HALLAZGOS CRÍTICOS: Columnas [Estudiante | Hallazgo | Nivel Riesgo | Numeral Afectado].",
-                        "2. TABLA DE INDICADORES: Columnas [Indicador | Valor Actual | Meta PEI | Estado].",
-                        "3. MATRIZ DE ACCIÓN: Columnas [Acción Correctiva | Responsable Sugerido | Plazo | Numeral Base]."
-                    ],
-
+                    # 👇 ESTA SECCIÓN AYUDA A EVITAR CORTES DE RESPUESTA
                     "ESTRATEGIA_DE_RESPUESTA": [
-                        "Usar lenguaje técnico de auditoría (No Conformidad, Evidencia Objetiva, Trazabilidad).",
-                        "Priorizar el uso de TABLAS MARKDOWN para condensar información.",
-                        "Ser implacable con el cumplimiento: Si hay 3 materias perdidas, es 'CRÍTICO' según Numeral 7.1."
+                        "1. DENSIDAD ALTA: Usar lenguaje técnico y directo. Evitar introducciones o saludos largos.",
+                        "2. FORMATO: Priorizar listas (bullets) y tablas Markdown para ahorrar tokens.",
+                        "3. INTEGRIDAD: Si el espacio es limitado, priorizar las 'ACCIONES CORRECTIVAS' sobre el análisis descriptivo.",
+                        "4. EVIDENCIA: Cada afirmación debe citar el Numeral Legal (Manual) o Componente (PEI)."
                     ],
 
                     "REQUISITOS_ISO_21001": [
@@ -102,7 +101,7 @@ class ContextBuilder:
                     "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas()
                 },
                 
-                # 🔥 PASO 4: EVIDENCIA OBJETIVA
+                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS)
                 "EVIDENCIA_OBJETIVA_DATOS": datos_radiografia
             }
 
@@ -173,7 +172,7 @@ class ContextBuilder:
         return contexto
 
     # =========================================================
-    # 📜 MÉTODOS DE SOPORTE: MANUAL DE CONVIVENCIA (REAL)
+    # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL REAL)
     # =========================================================
 
     def _get_reglas_manual_estructuradas(self):
