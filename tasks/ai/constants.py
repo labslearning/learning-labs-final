@@ -24,25 +24,28 @@ ROLES_IA_PERMITIDOS = [
 ]
 
 # ------------------------------------------------------------------------------
-# 2. ACCIONES (INTENTS) DE LA IA - FASE 11 GLOBAL
+# 2. ACCIONES (INTENTS) DE LA IA
 # ------------------------------------------------------------------------------
-# Perfil Estudiante: Mejora personalizada y Tutoría reflexiva
+
+# --- A. Perfil Estudiante ---
 ACCION_MEJORAS_ESTUDIANTE = 'mejoras_estudiante'
 ACCION_CHAT_SOCRATICO = 'chat_socratico'
 
-# Perfil Docente: Optimización de aula y cumplimiento curricular
+# --- B. Perfil Docente ---
 ACCION_MEJORAS_DOCENTE = 'mejoras_docente'
 ACCION_ORIENTACION_CURSO = 'orientacion_curso'
 
-# Perfil Acudiente: Puente entre colegio y casa
+# --- C. Perfil Acudiente ---
 ACCION_APOYO_ACUDIENTE = 'apoyo_acudiente'
 
-# Perfil Staff (Coordinación/Orientación): Análisis de tendencias y convivencia
+# --- D. Perfil Staff / Institucional (Globales) ---
 ACCION_MEJORA_STAFF_ACADEMICO = 'staff_academico'
 ACCION_ANALISIS_CONVIVENCIA = 'analisis_convivencia'
-
-# Perfil Administrador: Auditoría estratégica
 ACCION_CUMPLIMIENTO_PEI = 'cumplimiento_pei'
+
+# 🔥 ESTAS ERAN LAS QUE FALTABAN Y CAUSABAN EL ERROR:
+ACCION_ANALISIS_GLOBAL_BIENESTAR = 'analisis_global_bienestar'
+ACCION_RIESGO_ACADEMICO = 'riesgo_academico_global'
 
 ACCIONES_IA_PERMITIDAS = [
     ACCION_MEJORAS_ESTUDIANTE,
@@ -53,6 +56,8 @@ ACCIONES_IA_PERMITIDAS = [
     ACCION_MEJORA_STAFF_ACADEMICO,
     ACCION_ANALISIS_CONVIVENCIA,
     ACCION_CUMPLIMIENTO_PEI,
+    ACCION_ANALISIS_GLOBAL_BIENESTAR, # <--- Agregada
+    ACCION_RIESGO_ACADEMICO           # <--- Agregada
 ]
 
 # ------------------------------------------------------------------------------
@@ -66,6 +71,8 @@ OPCIONES_ACCIONES_IA = (
     (ACCION_MEJORA_STAFF_ACADEMICO, 'Reporte de Mejora Académica Global'),
     (ACCION_ANALISIS_CONVIVENCIA, 'Reporte de Mejora Convivencial'),
     (ACCION_CUMPLIMIENTO_PEI, 'Auditoría de Cumplimiento PEI'),
+    (ACCION_ANALISIS_GLOBAL_BIENESTAR, 'Radiografía Institucional de Bienestar'), # <--- Opción nueva
+    (ACCION_RIESGO_ACADEMICO, 'Mapa de Riesgo Académico'),
 )
 
 # ------------------------------------------------------------------------------
@@ -88,7 +95,7 @@ DOCUMENTOS_IA_PERMITIDOS = [
 ]
 
 # ------------------------------------------------------------------------------
-# 5. CONFIGURACIÓN TÉCNICA (DeepSeek)
+# 5. CONFIGURACIÓN TÉCNICA
 # ------------------------------------------------------------------------------
-MODEL_NAME = 'deepseek-chat'
+MODEL_NAME = 'deepseek-chat' # O 'gpt-4o' según uses
 MAX_TOKENS_PER_REQUEST = 4000

@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from openai import OpenAI    # pip install openai
 from pypdf import PdfReader #pdf
 
+
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -23,8 +24,17 @@ from django.utils.html import mark_safe
 #Hasta aqui
 
 from .ai.orchestrator import ai_orchestrator
-from .ai.constants import ACCION_MEJORAS_ESTUDIANTE
-
+#from .ai.constants import ACCION_MEJORAS_ESTUDIANTE
+from tasks.ai.constants import (
+    ACCION_CHAT_SOCRATICO,
+    ACCION_ANALISIS_CONVIVENCIA,
+    ACCION_CUMPLIMIENTO_PEI,
+    ACCION_MEJORAS_DOCENTE,
+    ACCION_MEJORAS_ESTUDIANTE,      # <--- Fíjate que aquí ya la incluimos
+    ACCION_APOYO_ACUDIENTE,
+    ACCION_ANALISIS_GLOBAL_BIENESTAR, 
+    ACCION_MEJORA_STAFF_ACADEMICO   # Agrego esta por seguridad si la usas
+)
 
 # 1. IMPORTACIONES AÑADIDAS
 from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
@@ -5186,117 +5196,137 @@ def cargar_periodos_por_curso(request):
 # tasks/views.py
 
 
-
 @login_required
 def ai_analysis_engine(request):
     """
     MOTOR CENTRAL DE ANÁLISIS (FASE 12 - CON MEMORIA).
-    Soluciona: Captura del historial de chat para mantener el contexto.
+    Vista robusta, segura y preparada para escalar.
     """
-    import json
-    import logging
-    from django.http import JsonResponse
-    from django.shortcuts import render, get_object_or_404
-    from django.core.serializers.json import DjangoJSONEncoder
-    
-    # --- IMPORTACIONES SEGURAS ---
-    from django.contrib.auth.models import User  
-    from tasks.models import Acudiente           
-    
-    from .ai.orchestrator import ai_orchestrator
-    from .ai.constants import ACCION_MEJORAS_ESTUDIANTE, ACCION_MEJORAS_DOCENTE, ACCION_CHAT_SOCRATICO
 
-    logger = logging.getLogger(__name__)
-
-    # --- 1. DETECCIÓN DE ENTORNO (AJAX vs NAVEGADOR) ---
-    accept_header = request.headers.get('Accept', '')
-    
+    # --------------------------------------------------
+    # 1. DETECCIÓN DE CONTEXTO (AJAX / JSON / HTML)
+    # --------------------------------------------------
+    accept_header = request.headers.get("Accept", "")
     is_ajax = (
-        request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
-        request.GET.get('format') == 'json' or 
-        'application/json' in accept_header
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.GET.get("format") == "json"
+        or "application/json" in accept_header.lower()
     )
 
-    # Configuración de parámetros iniciales
-    if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'DOCENTE':
-        default_action = ACCION_MEJORAS_DOCENTE 
+    # --------------------------------------------------
+    # 2. CONFIGURACIÓN INICIAL DE ACCIÓN
+    # --------------------------------------------------
+    perfil = getattr(request.user, "perfil", None)
+
+    if perfil and perfil.rol == "DOCENTE":
+        default_action = ACCION_MEJORAS_DOCENTE
     else:
         default_action = ACCION_MEJORAS_ESTUDIANTE
 
-    action_type = request.GET.get('action', default_action)
-    target_id = request.GET.get('target_id')
-    user_query = request.GET.get('user_query') 
+    action_type = request.GET.get("action", default_action)
+    target_id = request.GET.get("target_id")
+    user_query = request.GET.get("user_query")
 
-    # === [NUEVO] CAPTURA DE MEMORIA ===
-    # El JS nos envía el historial como un string JSON. Debemos convertirlo a lista.
-    raw_history = request.GET.get('history')
+    # --------------------------------------------------
+    # 3. CAPTURA Y VALIDACIÓN DE MEMORIA (HISTORIAL)
+    # --------------------------------------------------
     historial_msgs = []
-    
+    raw_history = request.GET.get("history")
+
     if raw_history:
         try:
-            historial_msgs = json.loads(raw_history)
-        except Exception as e:
-            logger.warning(f"Error parseando historial: {e}")
-            historial_msgs = [] # Si falla, seguimos sin memoria pero sin crashear
+            parsed = json.loads(raw_history)
 
-    # --- 2. RUTEADO DE INTERFAZ ---
+            # Validación estructural mínima
+            if isinstance(parsed, list):
+                historial_msgs = [
+                    msg for msg in parsed
+                    if isinstance(msg, dict)
+                    and "role" in msg
+                    and "content" in msg
+                ]
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[AI] Historial inválido (JSON): {e}")
+        except Exception as e:
+            logger.warning(f"[AI] Error procesando historial: {e}")
+
+    # --------------------------------------------------
+    # 4. RUTEADO DE INTERFAZ (CHAT HTML)
+    # --------------------------------------------------
     if action_type == ACCION_CHAT_SOCRATICO and not is_ajax:
-        return render(request, 'tasks/ai_chat.html', {
-            'target_user': request.user
+        return render(request, "tasks/ai_chat.html", {
+            "target_user": request.user
         })
 
-    # Inicializamos target_user
-    target_user = request.user 
+    # --------------------------------------------------
+    # 5. RESOLUCIÓN DEL TARGET_USER
+    # --------------------------------------------------
+    target_user = request.user
 
     try:
-        # --- 3. SELECCIÓN DE TARGET ---
-        if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'ACUDIENTE':
+        if perfil and perfil.rol == "ACUDIENTE":
             if target_id:
                 target_user = get_object_or_404(User, id=target_id)
             else:
-                relacion = Acudiente.objects.filter(acudiente=request.user).first()
-                if relacion and relacion.estudiante:
-                    target_user = relacion.estudiante
-                else:
-                    raise ValueError("No se encontró estudiante para este acudiente.")
+                relacion = (
+                    Acudiente.objects
+                    .filter(acudiente=request.user)
+                    .select_related("estudiante")
+                    .first()
+                )
+                if not relacion or not relacion.estudiante:
+                    raise ValueError("No se encontró estudiante asociado al acudiente.")
+                target_user = relacion.estudiante
+
         elif target_id:
             target_user = get_object_or_404(User, id=target_id)
-        elif request.user.perfil.rol == 'DOCENTE':
+
+        elif perfil and perfil.rol == "DOCENTE":
             target_user = request.user
 
-        # --- 4. PROCESAMIENTO CON ORQUESTADOR ---
-        # AQUI ES DONDE PASAMOS EL HISTORIAL AL CEREBRO
+        # --------------------------------------------------
+        # 6. EJECUCIÓN DEL MOTOR DE IA (ORQUESTADOR)
+        # --------------------------------------------------
         resultado = ai_orchestrator.process_request(
             user=request.user,
             action_type=action_type,
             user_query=user_query,
             target_user=target_user,
-            historial=historial_msgs  # <--- ¡CONEXIÓN DE MEMORIA!
+            historial=historial_msgs
         )
 
-    except Exception as e:
-        logger.error(f"CRASH AI: {str(e)}", exc_info=True)
+    except ValueError as e:
+        logger.warning(f"[AI] Error de negocio: {e}")
         resultado = {
             "success": False,
-            "content": f"Error del sistema: {str(e)}",
-            "source": "INTERNAL_VIEW_ERROR"
+            "content": str(e),
+            "source": "BUSINESS_LOGIC_ERROR"
         }
 
-    # --- 5. RESPUESTA INTELIGENTE ---
+    except Exception as e:
+        logger.error("[AI] CRASH CRÍTICO", exc_info=True)
+        resultado = {
+            "success": False,
+            "content": "Error interno del sistema. Intenta nuevamente.",
+            "source": "INTERNAL_SYSTEM_ERROR"
+        }
+
+    # --------------------------------------------------
+    # 7. RESPUESTA FINAL (JSON / HTML)
+    # --------------------------------------------------
     if is_ajax:
-        return JsonResponse(resultado)
-    
-    return render(request, 'tasks/ai_report.html', {
-        'ai_json_response': json.dumps(resultado, default=str, cls=DjangoJSONEncoder),
-        'titulo_analisis': str(action_type).replace('_', ' ').title(),
-        'target_user': target_user
+        return JsonResponse(resultado, safe=False)
+
+    return render(request, "tasks/ai_report.html", {
+        "ai_json_response": json.dumps(
+            resultado,
+            default=str,
+            cls=DjangoJSONEncoder
+        ),
+        "titulo_analisis": str(action_type).replace("_", " ").title(),
+        "target_user": target_user
     })
-
-
-
-
-
-
 
 
 
@@ -5517,263 +5547,3 @@ def historial_global_observaciones(request):
 
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
-# Configuración básica
-CAPACIDAD_POR_DEFECTO = getattr(settings, 'CAPACIDAD_CURSOS_DEFAULT', 40)
-DEFAULT_TEMP_PASSWORD = getattr(settings, 'DEFAULT_TEMP_PASSWORD', '123456')
-STAFF_ROLES = ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO', 'ADMINISTRADOR']
-
-# ===================================================================
-# 🧠 CEREBRO DE INTELIGENCIA ARTIFICIAL (STRATOS V3.1 OPTIMIZED)
-# ===================================================================
-
-def get_deepseek_client():
-    """Configuración directa con TIMEOUT AUMENTADO."""
-    api_key = "sk-f4b636146a9147feb7c4e73e6e24d8f3" 
-    # timeout=90.0 es vital para que Python no cierre la conexión antes que Railway
-    return OpenAI(api_key=api_key, base_url="https://api.deepseek.com", timeout=90.0)
-
-def extraer_texto_pdf(archivo_field):
-    """Extrae texto de documentos institucionales de forma eficiente."""
-    try:
-        if not archivo_field: return "Documento no cargado."
-        if not os.path.exists(archivo_field.path): return "Archivo no encontrado."
-        
-        reader = PdfReader(archivo_field.path)
-        texto = ""
-        # OPTIMIZACIÓN: Leemos solo las primeras 15 páginas para no saturar la memoria RAM
-        # y evitar que el proceso muera por tiempo.
-        for i, page in enumerate(reader.pages):
-            if i >= 15: break 
-            extract = page.extract_text()
-            if extract: texto += extract + "\n"
-        return texto
-    except Exception as e:
-        return f"[Error PDF: {str(e)}]"
-
-@csrf_exempt
-@login_required
-def ai_engine(request):
-    """
-    Cerebro Central IA Stratos (Modo Auditor de Datos Masivos).
-    """
-    action = request.GET.get('action')
-
-    # ---------------------------------------------------------
-    # MODO 1: AUDITORÍA INSTITUCIONAL GLOBAL (DASHBOARD)
-    # ---------------------------------------------------------
-    if action == 'analisis_global_bienestar' and request.method == 'POST':
-        try:
-            # 1. Leer Payload
-            data = json.loads(request.body)
-            contexto_datos = data.get('contexto_datos', {})
-            instruccion = data.get('instruccion', '')
-
-            # 2. Leer Documentos Base (Solo si existen)
-            institucion = Institucion.objects.first()
-            texto_pei = "Documento PEI no cargado en el sistema."
-            texto_manual = "Manual de Convivencia no cargado."
-
-            if institucion:
-                if institucion.archivo_pei:
-                    texto_pei = extraer_texto_pdf(institucion.archivo_pei)
-                if institucion.archivo_manual_convivencia:
-                    texto_manual = extraer_texto_pdf(institucion.archivo_manual_convivencia)
-
-            # 3. PROMPT "BLINDADO" (SOLO DATOS, NO PERSONAS)
-            system_prompt = """
-            ACTÚA COMO: 'STRATOS AI', UN SISTEMA AUTOMATIZADO DE ANÁLISIS DE DATOS EDUCATIVOS.
-            
-            TU ENTRADA DE DATOS:
-            Recibirás un objeto JSON llamado 'DATA_COLEGIO'. Este objeto contiene estadísticas reales y listas de estudiantes.
-            
-            🚨 REGLAS DE ANÁLISIS (OBLIGATORIAS):
-            1. NO ERES UN ASISTENTE PERSONAL. No saludes a ningún usuario. No analices al "solicitante".
-            2. TU ÚNICA FUENTE DE VERDAD son los arrays del JSON: 'riesgos_criticos_detectados', 'alertas_convivencia' y 'alertas_asistencia'.
-            3. SI EL JSON TIENE DATOS EN ESAS LISTAS, ES PORQUE HAY PROBLEMAS REALES. Debes reportarlos con nombres y apellidos.
-            4. Cruza las faltas detectadas con los textos normativos (Manual de Convivencia) que se te adjuntan.
-            
-            FORMATO DE SALIDA (MARKDOWN):
-            # 🏫 Diagnóstico Institucional Basado en Datos
-            
-            ### 🚨 1. Hallazgos Académicos Críticos
-            [Lee el array 'riesgos_criticos_detectados'. Si no está vacío, lista los estudiantes, sus cursos y cuántas materias pierden. Sé explícito.]
-            
-            ### ⚖️ 2. Auditoría de Convivencia y Asistencia
-            [Lee 'alertas_convivencia' y 'alertas_asistencia'. Reporta los casos con nombres. Cita el artículo del Manual que se estaría infringiendo.]
-            
-            ### 📊 3. Análisis de Tendencias
-            [Basado en los KPIs globales, ¿el colegio está mejorando o empeorando?]
-            
-            ### 🚀 4. Plan de Acción Inmediato
-            [3 Órdenes directivas para corregir los hallazgos anteriores]
-            """
-
-            user_message = f"""
-            >>> DATA_COLEGIO (ESTADÍSTICAS REALES EN TIEMPO REAL):
-            {json.dumps(contexto_datos, indent=2, ensure_ascii=False)}
-
-            >>> DOCUMENTOS NORMATIVOS DE REFERENCIA:
-            [RESUMEN PEI]: {texto_pei[:8000]}
-            [RESUMEN MANUAL]: {texto_manual[:8000]}
-            """
-
-            # 4. Inferencia
-            client = get_deepseek_client()
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                temperature=0.5, # Temperatura baja para ser más analítico y menos creativo
-                max_tokens=2500
-            )
-
-            content = response.choices[0].message.content
-            return JsonResponse({'success': True, 'content': content})
-
-        except Exception as e:
-            print(f"ERROR IA: {e}")
-            return JsonResponse({'success': False, 'message': f"Fallo interno del motor: {str(e)}"})
-
-    # Fallback
-    return JsonResponse({'message': 'Stratos AI Engine Online.'})
-
-# Vistas públicas
-def home(request):
-    return render(request, "home.html")
-
-def signup(request):
-    if request.method == 'GET':
-        return render(request, "signup.html", {'form': UserCreationForm()})
-    form = UserCreationForm(request.POST)
-    if form.is_valid():
-        try:
-            with transaction.atomic():
-                user = form.save()
-                Perfil.objects.create(user=user, rol='ESTUDIANTE')
-                login(request, user)
-                messages.success(request, '¡Cuenta creada exitosamente!')
-                return redirect('dashboard_estudiante')
-        except IntegrityError:
-            messages.error(request, 'El nombre de usuario ya existe.')
-            return render(request, 'signup.html', {'form': form})
-    messages.error(request, 'Hubo un error con tu registro. Verifica los campos.')
-    return render(request, 'signup.html', {'form': form})
-
-def signout(request):
-    logout(request)
-    messages.success(request, 'Sesión cerrada correctamente')
-    return redirect('home')
-
-@csrf_protect
-def signin(request):
-    if request.method == 'GET':
-        return render(request, "signin.html", {'form': AuthenticationForm(request)})
-    form = AuthenticationForm(request, data=request.POST)
-    if not form.is_valid():
-        messages.error(request, 'Usuario o contraseña incorrectos.')
-        return render(request, 'signin.html', {'form': form})
-    user = form.get_user()
-    if user:
-        login(request, user)
-        if hasattr(user, 'perfil') and getattr(user.perfil, 'requiere_cambio_clave', False):
-            return redirect('cambiar_clave')
-        rol = user.perfil.rol
-        if rol == 'ADMINISTRADOR': return redirect('admin_dashboard')
-        elif rol in ['PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']: return redirect('dashboard_bienestar')
-        elif rol == 'ESTUDIANTE': return redirect('dashboard_estudiante')
-        elif rol == 'ACUDIENTE': return redirect('dashboard_acudiente')
-        elif rol == 'DOCENTE': return redirect('dashboard_docente')
-    return redirect('home')
-
-@role_required(STAFF_ROLES)
-def dashboard_bienestar(request):
-    # Lógica de datos completa para alimentar el Dashboard y la IA
-    matriculas_activas = Matricula.objects.filter(activo=True).select_related('estudiante', 'curso')
-    riesgo_academico_total = []
-    total_materias_perdidas_institucional = 0
-
-    for mat in matriculas_activas:
-        est = mat.estudiante
-        notas_reprobadas = Nota.objects.filter(estudiante=est, numero_nota=5, valor__lt=3.0).exclude(materia__nombre__icontains="Convivencia").select_related('materia')
-        conteo_perdidas = notas_reprobadas.count()
-        if conteo_perdidas > 0:
-            total_materias_perdidas_institucional += conteo_perdidas
-            materias_nombres = [n.materia.nombre for n in notas_reprobadas]
-            riesgo_academico_total.append({
-                'estudiante': est,
-                'curso': mat.curso,
-                'materias_perdidas': conteo_perdidas,
-                'materias_nombres': materias_nombres
-            })
-    
-    riesgo_academico_total.sort(key=lambda x: -x['materias_perdidas'])
-
-    # KPIs Básicos
-    cursos_activos = Curso.objects.filter(activo=True)
-    all_notas = Nota.objects.filter(numero_nota=5).exclude(materia__nombre__icontains="Convivencia")
-    prom_global_acad = round(all_notas.aggregate(Avg('valor'))['valor__avg'] or 0, 2)
-    
-    conv_notas = Nota.objects.filter(numero_nota=5, materia__nombre__icontains="Convivencia")
-    prom_global_conv = round(conv_notas.aggregate(Avg('valor'))['valor__avg'] or 0, 2)
-
-    top_fallas = Asistencia.objects.filter(estado='FALLA').values('estudiante__first_name', 'estudiante__last_name', 'curso__nombre', 'estudiante__id').annotate(total=Count('id')).order_by('-total')[:5]
-    alertas_conv = Nota.objects.filter(materia__nombre__icontains="Convivencia", valor__lt=3.5).values('estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre', 'estudiante__id').annotate(nota_promedio=Avg('valor'))[:5]
-
-    vista_cursos = []
-    for curso in cursos_activos:
-         prom_c = Nota.objects.filter(estudiante__matriculas__curso=curso, numero_nota=5).exclude(materia__nombre__icontains="Convivencia").aggregate(Avg('valor'))['valor__avg'] or 0
-         vista_cursos.append({
-             'curso': curso,
-             'stats': {'acad': round(prom_c, 2), 'conv': 0, 'alumnos': Matricula.objects.filter(curso=curso, activo=True).count()}
-         })
-
-    institucion = Institucion.objects.first()
-
-    context = {
-        'institucion': institucion,
-        'top_riesgo_academico': riesgo_academico_total[:10],
-        'kpi': {
-            'total_alumnos': matriculas_activas.count(),
-            'prom_global_acad': prom_global_acad,
-            'prom_global_conv': prom_global_conv,
-            'total_cursos': cursos_activos.count(),
-            'total_materias_perdidas': total_materias_perdidas_institucional
-        },
-        'top_fallas': top_fallas,
-        'alertas_convivencia': alertas_conv,
-        'vista_cursos': vista_cursos,
-        'chart_data': {'labels': '[]', 'acad': '[]', 'conv': '[]'},
-        'stats_asistencia': '[0,0,0,0]'
-    }
-    return render(request, 'bienestar/dashboard_bienestar.html', context)
-
-# ... (Incluye aquí el resto de funciones como reporte_consolidado, historiales, etc. tal cual las tenías) ...
-@role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
-def reporte_consolidado(request):
-    institucion = Institucion.objects.first()
-    return render(request, 'admin/reporte_consolidado.html', {'institucion': institucion})
-
-@role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
-def historial_global_observaciones(request):
-    observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
-    return render(request, 'bienestar/historial_global_observaciones.html', {'observaciones': observaciones})
-
-@role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
-def dashboard_academico(request):
-    return render(request, 'admin/dashboard_academico.html')
-
-@login_required
-def ver_observador(request, estudiante_id):
-    estudiante = get_object_or_404(User, id=estudiante_id)
-    return render(request, 'bienestar/ver_observador.html', {'estudiante': estudiante})
-    
-@login_required
-def historial_asistencia(request):
-    return render(request, 'bienestar/historial_asistencia.html')
-
-@login_required
-def cambiar_clave(request):
-    form = PasswordChangeFirstLoginForm(user=request.user)
-    return render(request, 'account/cambiar_clave.html', {'form': form})
