@@ -5550,17 +5550,23 @@ def extraer_texto_pdf(archivo_field):
     except Exception as e:
         return f"[Error PDF: {str(e)}]"
 
+# ===================================================================
+# 🧠 CEREBRO DE INTELIGENCIA ARTIFICIAL (STRATOS V3.2 FINAL)
+# ===================================================================
+
 @csrf_exempt
 @login_required
 def ai_engine(request):
     """
     Controlador Maestro de IA.
-    Maneja el análisis institucional y evita Timeouts.
+    Maneja:
+    1. Análisis Institucional Global (Dashboard).
+    2. Consultas Individuales / Chat Socrático (Perfiles).
     """
     action = request.GET.get('action')
     
     # ---------------------------------------------------------
-    # MODO 1: AUDITORÍA INSTITUCIONAL (GLOBAL)
+    # MODO 1: AUDITORÍA INSTITUCIONAL GLOBAL (DASHBOARD)
     # ---------------------------------------------------------
     if action == 'analisis_global_bienestar' and request.method == 'POST':
         try:
@@ -5580,40 +5586,47 @@ def ai_engine(request):
                 if institucion.archivo_manual_convivencia:
                     texto_manual = extraer_texto_pdf(institucion.archivo_manual_convivencia)
 
-            # 3. PROMPT DE ALTA INGENIERÍA
+            # 3. PROMPT DE ALTA INGENIERÍA (MODIFICADO PARA IGNORAR AL ADMIN)
             system_prompt = """
-            ERES 'STRATOS AI', RECTOR VIRTUAL Y AUDITOR DE CALIDAD.
+            ERES 'STRATOS AI', UN AUDITOR EXTERNO DE CALIDAD EDUCATIVA.
             
             TU OBJETIVO:
-            Diagnosticar el estado de "LA INSTITUCIÓN" cruzando los DATOS JSON con la NORMATIVA (PEI/Manual).
+            Realizar un diagnóstico del ESTADO DEL COLEGIO basándote ÚNICAMENTE en los datos estadísticos JSON suministrados y su cruce con la normativa (PEI/Manual).
             
-            🚨 REGLAS DE PROCESAMIENTO:
-            1. IGNORA al usuario "admin". Analiza los datos globales del JSON.
-            2. Revisa 'riesgos_criticos_detectados': son estudiantes reales reprobando.
-            3. Si 'total_materias_perdidas' > 0, es una alerta crítica.
-            4. Cruza las faltas de convivencia con el Manual.
+            🚨 SYSTEM OVERRIDE / REGLAS DE ORO:
+            1. NO ESTÁS ANALIZANDO AL USUARIO QUE ENVÍA ESTO. Ignora si el solicitante es "Admin", "Rector" o "Alejandro". Tu sujeto de análisis son los DATOS DEL COLEGIO.
+            2. El JSON contiene arrays llamados 'riesgos_criticos_detectados' y 'alertas_convivencia'. ESA ES LA REALIDAD ACADÉMICA. Úsalos.
+            3. Si el JSON dice "total_materias_perdidas: 20", entonces HAY problemas académicos. No digas "no hay datos".
+            4. Cruza las faltas de convivencia reportadas en el JSON con los artículos del Manual.
             
-            ESTRUCTURA DE RESPUESTA (Markdown):
-            # 🏫 Informe Rectoral de Estado
-            ### 📊 1. Diagnóstico Académico
-            [Analiza las cifras. ¿Quiénes pierden? ¿Qué materias?]
+            ESTRUCTURA DE RESPUESTA (Markdown Profesional):
+            # 🏫 Informe de Estado Institucional
+            
+            ### 📊 1. Diagnóstico Académico (Basado en Data Real)
+            [Analiza las cifras del JSON: Total alumnos, promedio global, materias perdidas. Menciona nombres de estudiantes en riesgo si aparecen en la lista]
+            
             ### ⚖️ 2. Auditoría de Convivencia
-            [Analiza alertas y cita el Manual]
-            ### 🚀 3. Plan de Acción
-            [3 Estrategias directivas concretas]
+            [Analiza las alertas de convivencia del JSON. Cita el Manual para las faltas más comunes]
+            
+            ### 🚩 3. Focos de Intervención
+            [Lista los casos más críticos encontrados en 'riesgos_criticos_detectados' y 'alertas_asistencia']
+            
+            ### 🚀 4. Plan de Acción Directivo
+            [3 Estrategias concretas para mejorar los indicadores reportados]
             """
 
             user_message = f"""
-            DATA EN TIEMPO REAL:
+            EJECUTA EL DIAGNÓSTICO INSTITUCIONAL CON ESTA DATA EN TIEMPO REAL:
+
+            >>> INDICADORES Y ALERTAS DEL COLEGIO (JSON):
             {json.dumps(contexto_datos, indent=2, ensure_ascii=False)}
 
-            NORMATIVA (RESUMEN):
-            [PEI]: {texto_pei[:5000]}... 
-            [MANUAL]: {texto_manual[:5000]}...
+            >>> MARCO NORMATIVO (RESUMEN):
+            [PEI]: {texto_pei[:8000]}...
+            [MANUAL]: {texto_manual[:8000]}...
             """
-            # Nota: Recortamos texto a 5000 chars para acelerar el procesamiento de la IA
-
-            # 4. Inferencia (Con manejo de Timeout)
+            
+            # 4. Inferencia
             client = get_deepseek_client()
             response = client.chat.completions.create(
                 model="deepseek-chat",
@@ -5622,24 +5635,49 @@ def ai_engine(request):
                     {"role": "user", "content": user_message}
                 ],
                 temperature=0.7,
-                max_tokens=2000 # Reducido para velocidad
+                max_tokens=3000
             )
 
             content = response.choices[0].message.content
             return JsonResponse({'success': True, 'content': content})
 
         except Exception as e:
-            logger.error(f"ERROR IA: {e}")
-            return JsonResponse({'success': False, 'message': f"Error de procesamiento: {str(e)}"})
+            # Logger para ver el error real en la consola de Railway
+            print(f"🔴 ERROR IA GLOBAL: {str(e)}")
+            return JsonResponse({'success': False, 'message': f"Fallo en análisis global: {str(e)}"})
 
     # ---------------------------------------------------------
-    # CASO 2: COMPATIBILIDAD (Para evitar errores de URL)
+    # MODO 2: CHAT SOCRÁTICO O CONSULTA INDIVIDUAL (LEGACY)
     # ---------------------------------------------------------
+    # Este bloque asegura que las consultas individuales (desde el perfil del estudiante) sigan funcionando
+    else:
+        try:
+            target_id = request.GET.get('target_id')
+            user_query = request.GET.get('user_query')
+            
+            # Definir quién es el objetivo (Target)
+            target_user = request.user
+            if target_id:
+                # Si me pasan un ID, analizo a ese estudiante
+                target_user = get_object_or_404(User, id=target_id)
+            
+            # Usamos el orquestador antiguo para casos individuales
+            resultado = ai_orchestrator.process_request(
+                user=request.user,
+                action_type=action or 'MEJORAS_ESTUDIANTE', # Default
+                user_query=user_query,
+                target_user=target_user
+            )
+
+            # Respuesta JSON para AJAX
+            return JsonResponse(resultado)
+
+        except Exception as e:
+            print(f"🔴 ERROR IA INDIVIDUAL: {str(e)}")
+            return JsonResponse({'success': False, 'message': f"Fallo en consulta individual: {str(e)}"})
+
+    # Fallback final
     return JsonResponse({'message': 'Stratos AI Engine Online.'})
-
-# --- RESTO DE VISTAS (NO BORRAR) ---
-# ... Copia aquí abajo el resto de tus vistas (home, dashboards, etc) que tenías antes ...
-# Para facilitar, incluiré las vistas esenciales que se usan en los dashboards
 
 # Vistas públicas
 def home(request):
