@@ -154,28 +154,35 @@ class ContextBuilder:
     # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL Y PEI)
     # =========================================================
 
+    # =========================================================
+    # 📜 MÉTODOS DE SOPORTE: MARCO LEGAL (MANUAL REAL)
+    # =========================================================
+
     def _get_reglas_manual_estructuradas(self):
         """
-        Retorna las reglas en formato de ARTÍCULOS LEGALES.
-        Esto obliga a la IA a citar 'Artículo X' en lugar de dar consejos genéricos.
+        Retorna las reglas EXACTAS del Manual de Convivencia 'Colegio Virtual Nueva Esperanza'.
+        Esto obliga a la IA a citar los numerales correctos (6.1, 7.1, etc.).
         """
         return {
-            "TITULO_I_PRINCIPIOS": {
-                "ARTICULO_1_ENFOQUE": "El enfoque disciplinario es Formativo, Restaurativo y Pedagógico, nunca punitivo."
+            "IDENTIDAD_INSTITUCIONAL": {
+                "NOMBRE": "Colegio Virtual Nueva Esperanza",
+                "MODALIDAD": "100% Virtual",
+                "PRINCIPIOS_Y_VALORES": "Respeto, responsabilidad, ética digital, autonomía, inclusión, pensamiento crítico."
             },
-            "TITULO_II_RENDIMIENTO_ACADEMICO": {
-                "ARTICULO_12_ALERTA_TEMPRANA": "La pérdida de 1 o 2 asignaturas activa planes de mejoramiento inmediato.",
-                "ARTICULO_13_COMPROMISO_ACADEMICO": "La reprobación de 3 o más asignaturas (promedio < 3.0) exige la firma de Compromiso Académico con acudientes.",
-                "ARTICULO_14_PERDIDA_CUPO": "El incumplimiento reiterado del Compromiso Académico puede llevar a la no renovación de matrícula."
+            "REGIMEN_ASISTENCIA_PUNTUALIDAD": {
+                "NUMERAL_6_1_LLEGADAS_TARDE": "Más de 3 veces: Llamado de atención pedagógico. 4ta vez: Citación a acudiente y compromiso. Persistencia: Reporte a Comité.",
+                "NUMERAL_6_2_INASISTENCIAS": "Más de 3 injustificadas: Registro automático, comunicación con acudiente y plan de recuperación obligatorio. Reincidencia: Falta Grave."
             },
-            "TITULO_III_CONVIVENCIA_Y_ASISTENCIA": {
-                "ARTICULO_25_ASISTENCIA": "La acumulación de 3 fallas injustificadas se considera Falta Grave y activa ruta de permanencia.",
-                "ARTICULO_26_DESERCION": "Más de 5 fallas sin soporte configuran riesgo de deserción escolar.",
-                "ARTICULO_30_VALORACION_CONVIVENCIA": "Una nota de convivencia inferior a 3.5 se considera desempeño BAJO y requiere remisión a Psicoorientación."
+            "REGIMEN_ACADEMICO": {
+                "NUMERAL_7_1_PERDIDA_MATERIAS": "Pérdida de más de 3 materias: Activación inmediata de Plan de Mejoramiento Integral (PMI), tutorías obligatorias y citación formal a padres. Evalúa Consejo Académico.",
+                "CONSECUENCIA_GRAVE": "La pérdida reiterada de áreas podrá implicar no promoción del grado."
             },
-            "TITULO_IV_RUTAS_DE_ATENCION": {
-                "ARTICULO_45_DEBIDO_PROCESO": "Todo estudiante tiene derecho a ser escuchado y presentar descargos antes de cualquier anotación.",
-                "ARTICULO_46_BULLYING": "Cualquier reporte de acoso activa inmediatamente el Comité de Convivencia Escolar."
+            "FALTAS_DISCIPLINARIAS": {
+                "NUMERAL_8_CLASIFICACION": "Leves, Graves y Gravísimas. Incluye fraude, plagio, ciberacoso y uso indebido de IA.",
+                "NUMERAL_12_USO_IA": "Permitida como apoyo. Uso para fraude o suplantación es FALTA GRAVE."
+            },
+            "DEBIDO_PROCESO": {
+                "NUMERAL_10_GARANTIAS": "Defensa, contradicción, proporcionalidad, presunción de inocencia."
             }
         }
 
