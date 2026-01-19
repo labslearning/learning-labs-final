@@ -907,127 +907,146 @@
        }
    });
 
-   // MOTOR DE AUDITORÍA IA STRATOS - VERSIÓN FINAL (CONTEXTO FULL)
-    async function iniciarAnalisisIA() {
-        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
-        const loading = document.getElementById('aiLoading');
-        const results = document.getElementById('aiResults');
-        const statusText = document.getElementById('aiStatusText');
-        const contentDiv = document.getElementById('aiTextContent');
+   // MOTOR DE AUDITORÍA IA STRATOS - VERSIÓN PROD 3.0 (CONTEXTO COMPLETO)
+   async function iniciarAnalisisIA() {
+       const modal = new bootstrap.Modal(document.getElementById('modalIA'));
+       const loading = document.getElementById('aiLoading');
+       const results = document.getElementById('aiResults');
+       const statusText = document.getElementById('aiStatusText');
+       const contentDiv = document.getElementById('aiTextContent');
 
-        modal.show();
-        loading.classList.remove('d-none');
-        results.classList.add('d-none');
+       modal.show();
+       loading.classList.remove('d-none');
+       results.classList.add('d-none');
 
-        // 1. RECOLECCIÓN DE DATOS DE TODA LA INSTITUCIÓN
-        // Aquí construimos el JSON con los datos que Django ya renderizó en el template.
-        
-        const datosContexto = {
-            tipo_reporte: "INSTITUCIONAL_GLOBAL",
-            solicitante: "{{ user.get_full_name }} (Rol: {{ user.perfil.rol }})",
-            
-            indicadores_globales: {
+       // 1. RECOLECCIÓN DE DATOS DEL ECOSISTEMA (Contexto en caliente)
+       
+       const datosContexto = {
+            // A. INDICADORES GLOBALES DE LA INSTITUCIÓN
+            kpi_global: {
                 total_alumnos: "{{ kpi.total_alumnos }}",
-                promedio_academico: "{{ kpi.prom_global_acad }}",
-                indice_convivencia: "{{ kpi.prom_global_conv }}",
-                materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}"
+                promedio_academico_global: "{{ kpi.prom_global_acad }}",
+                indice_convivencia_global: "{{ kpi.prom_global_conv }}",
+                total_materias_reprobadas_colegio: "{{ kpi.total_materias_perdidas }}",
+                total_cursos_activos: "{{ kpi.total_cursos }}"
             },
             
-            // LISTA DE ESTUDIANTES EN RIESGO (Notas Reales)
-            estudiantes_riesgo_academico: [
+            // B. ESTUDIANTES EN RIESGO ACADÉMICO (CRÍTICO)
+            // Se envía la lista completa renderizada por Django
+            riesgos_criticos_detectados: [
                 {% for riesgo in top_riesgo_academico %}
                 {
-                    nombre: "{{ riesgo.estudiante.get_full_name|escapejs }}",
+                    estudiante: "{{ riesgo.estudiante.get_full_name|escapejs }}",
                     curso: "{{ riesgo.curso.nombre|escapejs }}",
-                    materias_perdidas: {{ riesgo.materias_perdidas }},
-                    asignaturas: [{% for mat in riesgo.materias_nombres %}"{{ mat|escapejs }}",{% endfor %}]
+                    cantidad_materias_perdidas: {{ riesgo.materias_perdidas }},
+                    materias: [
+                        {% for mat in riesgo.materias_nombres %}"{{ mat|escapejs }}",{% endfor %}
+                    ]
                 },
                 {% endfor %}
             ],
 
-            // LISTA DE ALERTAS DE CONVIVENCIA
+            // C. ALERTAS DE CONVIVENCIA (BAJO RENDIMIENTO SOCIAL)
             alertas_convivencia: [
                 {% for alerta in alertas_convivencia %}
                 {
-                    nombre: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
-                    curso: "{{ alerta.materia__curso__nombre|escapejs }}",
-                    nota: "{{ alerta.nota_promedio|floatformat:2 }}"
+                    estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                    nota_convivencia: "{{ alerta.nota_promedio|floatformat:2 }}",
+                    curso: "{{ alerta.materia__curso__nombre|escapejs }}"
                 },
                 {% endfor %}
             ],
-            
-            // LISTA DE ALERTAS DE ASISTENCIA
+
+            // D. ALERTAS DE ASISTENCIA (AUSENTISMO)
             alertas_asistencia: [
                 {% for alerta in top_fallas %}
                 {
-                    nombre: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
-                    fallas: {{ alerta.total }},
+                    estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                    total_fallas: {{ alerta.total }},
                     curso: "{{ alerta.curso__nombre|escapejs }}"
                 },
                 {% endfor %}
-            ]
-        };
+            ],
 
-        // 2. UX: Mensajes de estado para el usuario
-        const steps = [
-            "Leyendo Archivo Maestro PEI...",
-            "Analizando Manual de Convivencia...",
-            "Procesando " + datosContexto.estudiantes_riesgo_academico.length + " estudiantes en riesgo académico...",
-            "Cruzando datos de convivencia con normativa...",
-            "Generando informe rectoral..."
-        ];
-
-        let stepIndex = 0;
-        const stepInterval = setInterval(() => {
-            if (stepIndex < steps.length) {
-                statusText.innerText = steps[stepIndex];
-                stepIndex++;
-            }
-        }, 1200);
-
-        try {
-            // 3. ENVÍO AL BACKEND
-            const response = await fetch("{% url 'ai_engine' %}?action=analisis_global_bienestar", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
+            // E. RENDIMIENTO POR CURSOS (COMPARATIVA GRUPAL)
+            rendimiento_cursos: [
+                {% for item in vista_cursos %}
+                {
+                    nombre_curso: "{{ item.curso.nombre|escapejs }}",
+                    promedio_grupo: "{{ item.stats.acad }}",
+                    indice_clima: "{{ item.stats.conv }}",
+                    cantidad_alumnos: "{{ item.stats.alumnos }}"
                 },
-                body: JSON.stringify({
-                    contexto_datos: datosContexto,
-                    instruccion: "Realiza un diagnóstico institucional completo. Cruza los datos numéricos de los estudiantes en riesgo con los documentos normativos (PEI/Manual). Ignora que soy el administrador, habla sobre el estado del colegio."
-                })
-            });
+                {% endfor %}
+            ]
+       };
 
-            // Diagnóstico de error HTML
-            const rawText = await response.text();
-            clearInterval(stepInterval);
+       // 2. SECUENCIA DE ESTADOS (UX)
+       const steps = [
+           "Analizando KPIs Globales del Colegio...",
+           "Escaneando " + datosContexto.riesgos_criticos_detectados.length + " alertas de riesgo académico...",
+           "Cruzando datos con el Manual de Convivencia...",
+           "Evaluando consistencia con el Proyecto Educativo Institucional (PEI)...",
+           "Generando diagnóstico rectoral..."
+       ];
 
-            let data;
-            try {
-                 data = JSON.parse(rawText);
-            } catch (e) {
-                 console.error("Respuesta no JSON:", rawText);
-                 throw new Error("El servidor devolvió un error HTML. Revisa consola.");
-            }
+       let stepIndex = 0;
+       const stepInterval = setInterval(() => {
+           if (stepIndex < steps.length) {
+               statusText.innerText = steps[stepIndex];
+               stepIndex++;
+           }
+       }, 1500);
 
-            if (data.success) {
-                contentDiv.innerHTML = marked.parse(data.content);
-                loading.classList.add('d-none');
-                results.classList.remove('d-none');
-            } else {
-                contentDiv.innerHTML = `<div class="alert alert-danger">Error IA: ${data.message}</div>`;
-                loading.classList.add('d-none');
-                results.classList.remove('d-none');
-            }
+       try {
+           // 3. LLAMADA REAL AL MOTOR DE IA (AJAX SEGURO)
+           const response = await fetch("{% url 'ai_engine' %}?action=analisis_global_bienestar", {
+               method: "POST",
+               headers: {
+                   "Content-Type": "application/json",
+                   "X-CSRFToken": "{{ csrf_token }}",
+                   "X-Requested-With": "XMLHttpRequest" 
+               },
+               // AQUÍ ENVIAMOS TODO EL CONTEXTO INSTITUCIONAL
+               body: JSON.stringify({
+                   contexto_datos: datosContexto,
+                   instruccion: "Actúa como el Rector y Auditor de Calidad del colegio. Analiza los datos JSON proporcionados (que incluyen notas, asistencia y convivencia de TODOS los estudiantes) y compáralos con los documentos institucionales (PEI y Manual). Ignora que el usuario solicitante es un administrador; enfócate en el estado de la institución. Genera un informe directivo que identifique los puntos críticos de fracaso escolar, problemas de clima de aula y proponga un plan de mejora institucional basado en evidencia."
+               })
+           });
 
-        } catch (error) {
-            clearInterval(stepInterval);
-            contentDiv.innerHTML = `<div class="alert alert-warning">Error de conexión: ${error.message}</div>`;
-            loading.classList.add('d-none');
-            results.classList.remove('d-none');
-        }
-    }
+           const rawText = await response.text(); 
+           clearInterval(stepInterval);
+
+           let data;
+           try {
+                data = JSON.parse(rawText);
+           } catch (e) {
+                console.error("Respuesta del servidor no es JSON:", rawText);
+                throw new Error("El servidor devolvió un error (HTML). Revisa la consola.");
+           }
+           
+           if (response.ok && data.success) {
+               contentDiv.innerHTML = marked.parse(data.content);
+               loading.classList.add('d-none');
+               results.classList.remove('d-none');
+           } else {
+               contentDiv.innerHTML = `<div class="alert alert-danger">Error IA: ${data.message || 'No se pudo generar el reporte.'}</div>`;
+               loading.classList.add('d-none');
+               results.classList.remove('d-none');
+           }
+
+       } catch (error) {
+           clearInterval(stepInterval);
+           console.error("Fallo IA:", error);
+           statusText.innerText = "Error de conexión con el Cerebro Digital.";
+           contentDiv.innerHTML = `<div class="alert alert-warning">
+               <h4><i class="fas fa-exclamation-triangle"></i> Conexión Interrumpida</h4>
+               <p>No se pudo contactar con el motor de IA. ${error.message}</p>
+           </div>`;
+           loading.classList.add('d-none');
+           results.classList.remove('d-none');
+       }
+   }
 </script>
 
 <style>
