@@ -60,7 +60,7 @@
            <div class="text-center text-lg-end mt-3">
                <div class="d-inline-flex align-items-center bg-white border px-3 py-1 rounded-pill shadow-sm">
                    <span class="dot bg-success me-2"></span>
-                   <small class="text-muted fw-bold ls-1 text-uppercase">Última Actualización: <span class="text-dark">{% now "d M, Y - H:i" %}</span></small>
+                   <small class="text-muted fw-bold ls-1 text-uppercase">Sincronización Stratos: <span class="text-dark">{% now "d M, Y - H:i" %}</span></small>
                </div>
            </div>
        </div>
@@ -71,16 +71,16 @@
            <div>
                <h4 class="fw-bold text-dark mb-1">
                    <i class="fas fa-satellite-dish me-2 text-danger animate__animated animate__flash animate__infinite animate__slow"></i>
-                   Radar de Riesgo Académico Integral
+                   Radar de Riesgo Académico Institucional
                </h4>
-               <p class="text-muted small mb-0">Priorización de intervención basada en el volumen de materias reprobadas por estudiante.</p>
+               <p class="text-muted small mb-0">Priorización automática de estudiantes con bajo rendimiento por volumen de asignaturas perdidas.</p>
            </div>
            <div class="d-flex gap-2">
                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   <i class="fas fa-bell me-2"></i>Intervención Urgente
+                   <i class="fas fa-bell me-2"></i>Fallas Académicas Críticas
                </span>
                <span class="badge bg-dark text-white px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   {{ top_riesgo_academico|length }} Casos Detectados
+                   {{ top_riesgo_academico|length }} Casos en Seguimiento
                </span>
            </div>
        </div>
@@ -88,17 +88,17 @@
            <div class="row g-4">
                <div class="col-lg-3">
                    <div class="d-flex flex-column gap-3 h-100">
-                       <div class="card bg-soft-danger border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift">
-                           <div class="text-center">
-                               <h6 class="text-uppercase text-danger fw-bold x-small mb-2 ls-1">Materias Perdidas (Total)</h6>
+                       <div class="card bg-soft-danger border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-danger">
+                           <div class="text-center py-2">
+                               <h6 class="text-uppercase text-danger fw-bold x-small mb-2 ls-1">Materias Perdidas (Colegio)</h6>
                                <h2 class="display-3 fw-black text-danger mb-0">{{ kpi.total_materias_perdidas|default:"0" }}</h2>
                                <div class="mt-2">
-                                   <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>Población Vulnerable</small>
+                                   <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>Impacto Curricular</small>
                                </div>
                            </div>
                        </div>
-                       <div class="card bg-soft-info border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift">
-                           <div class="text-center">
+                       <div class="card bg-soft-info border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-info">
+                           <div class="text-center py-2">
                                <h6 class="text-uppercase text-info fw-bold x-small mb-2 ls-1">Promedio Institucional</h6>
                                <h2 class="display-3 fw-black text-info mb-0">{{ kpi.prom_global_acad|default:"0.0" }}</h2>
                                <div class="progress mt-3 mx-auto shadow-sm" style="height: 10px; width: 80%; border-radius: 10px;">
@@ -112,77 +112,80 @@
                </div>
 
                <div class="col-lg-4">
-                   <div class="card border bg-white p-4 rounded-5 h-100 shadow-sm d-flex flex-column justify-content-center align-items-center">
+                   <div class="card border bg-white p-4 rounded-5 h-100 shadow-sm d-flex flex-column justify-content-center align-items-center border-0">
                        <h6 class="text-center text-secondary x-small fw-bold text-uppercase mb-4">
-                           <i class="fas fa-chart-line me-2"></i>Eficiencia Curricular por Áreas
+                           <i class="fas fa-chart-line me-2"></i>Mapa de Calor Académico
                        </h6>
                        <div style="height: 350px; width: 100%;">
                            <canvas id="radarChartPro"></canvas>
                        </div>
-                       <p class="small text-muted mt-3 text-center px-4">Esta gráfica cruza el rendimiento actual con las metas establecidas en el PEI.</p>
+                       <p class="small text-muted mt-3 text-center px-4">Desviación del rendimiento actual vs metas del PEI.</p>
                    </div>
                </div>
 
                <div class="col-lg-5">
                    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-                        <h6 class="text-secondary x-small fw-bold text-uppercase mb-0">Priorización de Alerta Académica</h6>
-                        <span class="x-small text-muted fw-bold">Orden: Descendente (Mayor a Menor Riesgo)</span>
+                        <h6 class="text-secondary x-small fw-bold text-uppercase mb-0">Listado de Reprobación Crítica</h6>
+                        <span class="x-small text-muted fw-bold"><i class="fas fa-sort-amount-down me-1"></i>Mayor Riesgo Primero</span>
                    </div>
                    
                    <div class="scroll-pro pe-2" style="max-height: 480px; overflow-y: auto;">
-                       <div class="list-group list-group-flush gap-2">
+                       <div class="list-group list-group-flush gap-3">
                            {% for riesgo in top_riesgo_academico %}
-                           <div class="card border-0 shadow-sm rounded-4 mb-1 hover-bg-light transition-all border-start border-4 {% if riesgo.materias_perdidas > 3 %}border-danger{% else %}border-warning{% endif %}">
+                           <div class="card border-0 shadow-sm rounded-4 mb-2 hover-elevate transition-all border-start border-5 {% if riesgo.materias_perdidas > 3 %}border-danger{% else %}border-warning{% endif %}">
                                <div class="card-body p-3">
-                                   <div class="d-flex align-items-center">
-                                       <div class="position-relative">
-                                           <div class="avatar-md rounded-circle {% if riesgo.materias_perdidas > 3 %}bg-danger{% else %}bg-warning{% endif %} text-white d-flex align-items-center justify-content-center me-3 fw-bold shadow">
+                                   <div class="d-flex align-items-start">
+                                       <div class="position-relative me-3">
+                                           <div class="avatar-md rounded-circle {% if riesgo.materias_perdidas > 3 %}bg-danger{% else %}bg-warning{% endif %} text-white d-flex align-items-center justify-content-center fw-black shadow-lg">
                                                {{ riesgo.estudiante.first_name|slice:":1" }}{{ riesgo.estudiante.last_name|slice:":1" }}
                                            </div>
-                                           {% if forloop.counter <= 3 %}
                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-white">
                                                #{{ forloop.counter }}
                                            </span>
-                                           {% endif %}
                                        </div>
-                                       <div class="flex-grow-1">
-                                           <h6 class="mb-0 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
-                                           <div class="d-flex align-items-center mt-1">
-                                               <span class="badge bg-light text-muted border px-2 py-1 rounded-pill x-small me-2">
-                                                   <i class="fas fa-graduation-cap me-1"></i> {{ riesgo.curso.nombre }}
-                                               </span>
-                                               <small class="text-muted fw-bold">ID: {{ riesgo.estudiante.username }}</small>
+                                       <div class="flex-grow-1 overflow-hidden">
+                                           <h6 class="mb-1 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
+                                           <span class="badge bg-light text-muted border px-2 py-1 rounded-pill x-small">
+                                               <i class="fas fa-graduation-cap me-1"></i> {{ riesgo.curso.nombre }}
+                                           </span>
+                                           
+                                           <div class="mt-3 p-2 bg-light rounded-3 shadow-inner">
+                                               <p class="x-small fw-bold text-uppercase text-danger mb-1"><i class="fas fa-book-dead me-1"></i> Materias Reprobadas:</p>
+                                               <div class="d-flex flex-wrap gap-1">
+                                                   {% for materia_name in riesgo.materias_nombres %}
+                                                   <span class="badge bg-danger text-white x-small rounded-pill">{{ materia_name }}</span>
+                                                   {% empty %}
+                                                   <span class="x-small text-muted">Sin datos de materias.</span>
+                                                   {% endfor %}
+                                               </div>
                                            </div>
                                        </div>
-                                       <div class="text-end me-3">
+                                       <div class="text-end ms-2">
                                            <div class="display-6 fw-black text-danger mb-0">{{ riesgo.materias_perdidas }}</div>
-                                           <small class="text-uppercase text-muted fw-bold" style="font-size: 0.6rem;">Fallas</small>
-                                       </div>
-                                       <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
-                                           <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="btn btn-sm btn-white text-primary" title="Ver Expediente">
-                                               <i class="fas fa-eye"></i>
-                                           </a>
-                                           <a href="{% url 'ai_engine' %}?action=analisis_estudiante&target_id={{ riesgo.estudiante.id }}" class="btn btn-sm btn-white text-purple" title="Analítica IA">
-                                               <i class="fas fa-robot"></i>
-                                           </a>
+                                           <small class="text-uppercase text-muted fw-bold" style="font-size: 0.5rem;">Asignaturas</small>
+                                           <div class="mt-3">
+                                               <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="btn btn-sm btn-primary rounded-circle shadow-sm">
+                                                   <i class="fas fa-search-plus"></i>
+                                               </a>
+                                           </div>
                                        </div>
                                    </div>
                                </div>
                            </div>
                            {% empty %}
-                           <div class="text-center p-5 text-muted bg-white rounded-5 shadow-inner">
+                           <div class="text-center p-5 text-muted bg-white rounded-5 shadow-inner border border-dashed">
                                <i class="fas fa-check-double fa-4x mb-3 text-success opacity-25"></i>
-                               <p class="mb-0 fw-bold">No hay alertas críticas en el sistema.</p>
-                               <small>Todos los estudiantes cumplen con el estándar de aprobación.</small>
+                               <p class="mb-0 fw-bold">Ecosistema sin Alertas de Reprobación</p>
+                               <small>Todos los estudiantes cumplen satisfactoriamente el PEI.</small>
                            </div>
                            {% endfor %}
                        </div>
                    </div>
                    
-                   <div class="mt-4 bg-light p-3 rounded-4 border border-dashed text-center">
-                       <p class="x-small text-muted mb-0">
-                           <i class="fas fa-info-circle me-1"></i> 
-                           El ranking se actualiza en tiempo real conforme los docentes registran notas definitivas de periodo.
+                   <div class="mt-4 bg-primary bg-opacity-10 p-3 rounded-4 border border-primary border-dashed text-center">
+                       <p class="x-small text-primary fw-bold mb-0">
+                           <i class="fas fa-shield-alt me-1"></i> 
+                           El sistema analiza en tiempo real las notas finales de cada asignatura.
                        </p>
                    </div>
                </div>
@@ -192,14 +195,14 @@
 
    <div class="row mb-5 animate__animated animate__fadeIn">
        <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
-           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Documental</h4>
-           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivos Maestros Institucionales</span>
+           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
+           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
        </div>
 
        <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
                <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-3">
+                   <div class="d-flex justify-content-between align-items-start mb-4">
                        <div class="icon-box-lg bg-purple-soft rounded-4 d-flex align-items-center justify-content-center text-purple shadow-sm">
                            <i class="fas fa-university fa-lg"></i>
                        </div>
@@ -219,12 +222,12 @@
                        {% endif %}
                        {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
                            <button class="btn btn-sm btn-light text-muted rounded-pill py-2" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI">
-                               <i class="fas fa-cloud-upload-alt me-2"></i> Actualizar Documento
+                               <i class="fas fa-cloud-upload-alt me-2"></i> Actualizar
                            </button>
                            <div class="collapse mt-2" id="uploadPEI">
                                <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="pei_file" class="form-control form-control-sm mb-2 border-dashed" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-purple btn-sm w-100 fw-bold rounded-pill">Subir a Nube Stratos</button>
+                                   <input type="file" name="pei_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
+                                   <button type="submit" class="btn btn-purple btn-sm w-100 fw-bold rounded-pill">Subir a Nube</button>
                                </form>
                            </div>
                        {% endif %}
@@ -236,7 +239,7 @@
        <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border rounded-5">
                <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-3">
+                   <div class="d-flex justify-content-between align-items-start mb-4">
                        <div class="icon-box-lg bg-orange-soft rounded-4 d-flex align-items-center justify-content-center text-orange shadow-sm">
                            <i class="fas fa-gavel fa-lg"></i>
                        </div>
@@ -247,7 +250,7 @@
                        {% endif %}
                    </div>
                    <h5 class="fw-bold text-dark mb-2">Manual Convivencial</h5>
-                   <p class="text-muted small">Acuerdos ciudadanos, ruta de atención integral y pactos de convivencia escolar.</p>
+                   <p class="text-muted small">Normas, derechos y deberes que rigen la vida comunitaria y ruta integral.</p>
                    <div class="mt-auto pt-3 d-grid gap-2">
                        {% if institucion.archivo_manual_convivencia %}
                            <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2">
@@ -260,8 +263,8 @@
                            </button>
                            <div class="collapse mt-2" id="uploadManual">
                                <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="manual_file" class="form-control form-control-sm mb-2 border-dashed" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold text-white rounded-pill">Sincronizar Archivo</button>
+                                   <input type="file" name="manual_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
+                                   <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold text-white rounded-pill">Sincronizar</button>
                                </form>
                            </div>
                        {% endif %}
@@ -273,30 +276,19 @@
        <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border rounded-5">
                <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-3">
+                   <div class="d-flex justify-content-between align-items-start mb-4">
                        <div class="icon-box-lg bg-teal-soft rounded-4 d-flex align-items-center justify-content-center text-teal shadow-sm">
                            <i class="fas fa-scroll fa-lg"></i>
                        </div>
-                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Estructurado</span>
+                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">DBA Estructurado</span>
                    </div>
                    <h5 class="fw-bold text-dark mb-2">Malla Curricular</h5>
-                   <p class="text-muted small">Contenidos programáticos, DBA y planes de estudio por nivel académico.</p>
+                   <p class="text-muted small">Contenidos programáticos, competencias y estándares por nivel académico.</p>
                    <div class="mt-auto pt-3 d-grid gap-2">
                        {% if institucion.archivo_malla_curricular %}
                            <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-sm btn-outline-teal rounded-pill fw-bold py-2">
-                               <i class="fas fa-th-list me-2"></i> Ver Estructura
+                               <i class="fas fa-th-list me-2"></i> Ver Planes
                            </a>
-                       {% endif %}
-                       {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-sm btn-light text-muted rounded-pill py-2" type="button" data-bs-toggle="collapse" data-bs-target="#uploadMalla">
-                               <i class="fas fa-file-upload me-2"></i> Subir Nueva
-                           </button>
-                           <div class="collapse mt-2" id="uploadMalla">
-                               <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="malla_file" class="form-control form-control-sm mb-2 border-dashed" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-teal btn-sm w-100 fw-bold text-white rounded-pill">Actualizar Malla</button>
-                               </form>
-                           </div>
                        {% endif %}
                    </div>
                </div>
@@ -306,30 +298,19 @@
        <div class="col-md-6 col-lg-3 mb-4">
            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border rounded-5">
                <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-3">
+                   <div class="d-flex justify-content-between align-items-start mb-4">
                        <div class="icon-box-lg bg-danger-soft rounded-4 d-flex align-items-center justify-content-center text-danger shadow-sm">
                            <i class="fas fa-calendar-alt fa-lg"></i>
                        </div>
-                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">2024 - B</span>
+                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">2025 Activo</span>
                    </div>
                    <h5 class="fw-bold text-dark mb-2">Cronograma Anual</h5>
-                   <p class="text-muted small">Agenda de actividades, jornadas pedagógicas y cierres de periodo lectivo.</p>
+                   <p class="text-muted small">Agenda de actividades, evaluaciones institucionales y jornadas pedagógicas.</p>
                    <div class="mt-auto pt-3 d-grid gap-2">
                        {% if institucion.archivo_calendario %}
                            <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-bold py-2">
                                <i class="fas fa-clock me-2"></i> Ver Agenda
                            </a>
-                       {% endif %}
-                       {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-sm btn-light text-muted rounded-pill py-2" type="button" data-bs-toggle="collapse" data-bs-target="#uploadCalendario">
-                               <i class="fas fa-upload me-2"></i> Subir
-                           </button>
-                           <div class="collapse mt-2" id="uploadCalendario">
-                               <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="calendario_file" class="form-control form-control-sm mb-2 border-dashed" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold rounded-pill">Fijar Calendario</button>
-                               </form>
-                           </div>
                        {% endif %}
                    </div>
                </div>
@@ -343,9 +324,9 @@
                <div class="card-body p-4">
                    <div class="d-flex justify-content-between align-items-center">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Población Total</p>
+                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Matrícula Total</p>
                             <h2 class="fw-black text-dark mb-0">{{ kpi.total_alumnos }}</h2>
-                           <small class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Matrícula Activa</small>
+                           <small class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Estudiantes Activos</small>
                        </div>
                        <div class="bg-soft-primary rounded-4 p-3 text-primary shadow-sm">
                            <i class="fas fa-users fa-2x"></i>
@@ -360,12 +341,12 @@
                <div class="card-body p-4">
                    <div class="d-flex justify-content-between align-items-center">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Excelencia Académica</p>
+                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Rendimiento Global</p>
                             <h2 class="fw-black text-info mb-0">{{ kpi.prom_global_acad }}</h2>
-                           <small class="text-muted fw-bold">Meta PEI: > 4.0</small>
+                           <small class="text-muted fw-bold">GPA Institucional</small>
                        </div>
                        <div class="radial-progress-kpi">
-                           <span class="fw-bold text-info" style="font-size: 0.8rem;">GPA</span>
+                           <span class="fw-bold text-info" style="font-size: 0.8rem;">META</span>
                        </div>
                    </div>
                </div>
@@ -377,7 +358,7 @@
                 <div class="card-body p-4">
                    <div class="d-flex justify-content-between align-items-center">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Clima Institucional</p>
+                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Clima Escolar</p>
                            <h2 class="fw-black text-dark mb-0">{{ kpi.prom_global_conv }}</h2>
                            <small class="text-muted fw-bold">Índice Convivencial</small>
                        </div>
@@ -394,9 +375,9 @@
                <div class="card-body p-4">
                    <div class="d-flex justify-content-between align-items-center">
                        <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Estructura Académica</p>
+                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Gestión de Cursos</p>
                            <h2 class="fw-black text-dark mb-0">{{ kpi.total_cursos }}</h2>
-                           <small class="text-success fw-bold">Cursos en Operación</small>
+                           <small class="text-success fw-bold">Grupos Académicos</small>
                        </div>
                         <div class="bg-soft-success rounded-4 p-3 text-success shadow-sm">
                            <i class="fas fa-layer-group fa-2x"></i>
@@ -411,10 +392,10 @@
        <div class="col-lg-8 mb-4 mb-lg-0">
            <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar me-3 text-primary"></i>Desempeño Multivariable por Grupos</h5>
-                   <div class="btn-group shadow-sm">
-                       <button class="btn btn-xs btn-light border">Mensual</button>
-                       <button class="btn btn-xs btn-primary shadow-sm">Anual</button>
+                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar me-3 text-primary"></i>Desempeño Comparativo Grupal</h5>
+                   <div class="btn-group shadow-sm border rounded-pill overflow-hidden">
+                       <button class="btn btn-xs btn-light px-3 py-1 fw-bold border-0">GPA</button>
+                       <button class="btn btn-xs btn-primary px-3 py-1 fw-bold shadow-none">Analítica</button>
                    </div>
                </div>
                 <div class="card-body p-4">
@@ -429,7 +410,7 @@
             <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
                <div class="card-header bg-gradient-success border-0 pt-4 px-4 text-center">
                    <h5 class="fw-bold text-white mb-0"><i class="fas fa-user-clock me-2"></i>Monitor de Asistencia</h5>
-                   <small class="text-white-50">Corte Institucional del Día de Hoy</small>
+                   <small class="text-white-50">Reporte Diario Institucional</small>
                </div>
                <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center">
                    <div style="height: 280px; width: 100%; position: relative;">
@@ -439,11 +420,11 @@
                            <small class="text-muted fw-bold">Efectividad</small>
                        </div>
                    </div>
-                   <div class="mt-4 w-100 border-top pt-3 text-center">
+                   <div class="mt-4 w-100 border-top pt-4 text-center">
                        <div class="row">
                            <div class="col-6 border-end">
                                <h6 class="mb-0 fw-bold text-dark">Estable</h6>
-                               <small class="text-muted">Estado Global</small>
+                               <small class="text-muted">Estado Red</small>
                            </div>
                            <div class="col-6">
                                <h6 class="mb-0 fw-bold text-success">-2.4%</h6>
@@ -462,26 +443,26 @@
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                    <div>
                        <h5 class="fw-bold text-danger mb-0"><i class="fas fa-user-times me-2"></i>Alertas de Ausentismo Crítico</h5>
-                       <p class="text-muted x-small mb-0">Estudiantes con inasistencia superior al 15% del periodo.</p>
+                       <p class="text-muted x-small mb-0">Estudiantes con inasistencia superior al umbral establecido.</p>
                    </div>
-                   <a href="{% url 'historial_asistencia' %}" class="btn btn-xs btn-outline-danger rounded-pill px-3 fw-bold">Ver Todo</a>
+                   <a href="{% url 'historial_asistencia' %}" class="btn btn-xs btn-outline-danger rounded-pill px-3 fw-bold">Gestionar</a>
                </div>
                <div class="card-body p-0">
                    <div class="table-responsive">
                        <table class="table table-hover align-middle mb-0">
-                           <thead class="bg-light text-muted x-small text-uppercase fw-bold">
+                           <thead class="bg-light text-muted x-small text-uppercase fw-bold border-bottom">
                                <tr>
-                                   <th class="ps-4">Estudiante</th>
+                                   <th class="ps-4">Identidad del Alumno</th>
                                    <th class="text-center">Fallas Totales</th>
-                                   <th class="text-end pe-4">Expediente</th>
+                                   <th class="text-end pe-4">Acción</th>
                                </tr>
                            </thead>
                            <tbody>
                                {% for alerta in top_fallas %}
                                <tr>
-                                   <td class="ps-4">
+                                   <td class="ps-4 py-3">
                                        <div class="d-flex align-items-center">
-                                           <div class="avatar-xs rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center me-3 fw-bold">
+                                           <div class="avatar-xs rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center me-3 fw-bold shadow-sm">
                                                {{ alerta.estudiante__first_name|slice:":1" }}
                                            </div>
                                            <div>
@@ -494,11 +475,11 @@
                                        <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm fw-bold">{{ alerta.total }}</span>
                                    </td>
                                    <td class="text-end pe-4">
-                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary border rounded-circle"><i class="fas fa-search"></i></a>
+                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary border rounded-circle shadow-sm"><i class="fas fa-eye"></i></a>
                                    </td>
                                </tr>
                                {% empty %}
-                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">Sin alertas críticas registradas.</td></tr>
+                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">Sin alertas críticas de inasistencia.</td></tr>
                                {% endfor %}
                            </tbody>
                        </table>
@@ -511,26 +492,26 @@
            <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                    <div>
-                       <h5 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Riesgo de Clima Escolar</h5>
-                       <p class="text-muted x-small mb-0">Promedio convivencial por debajo del estándar (< 3.5).</p>
+                       <h5 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Zonas de Riesgo Convivencial</h5>
+                       <p class="text-muted x-small mb-0">Estudiantes con calificación de convivencia inferior a 3.5.</p>
                    </div>
                </div>
                <div class="card-body p-0">
                    <div class="table-responsive">
                        <table class="table table-hover align-middle mb-0">
-                           <thead class="bg-light text-muted x-small text-uppercase fw-bold">
+                           <thead class="bg-light text-muted x-small text-uppercase fw-bold border-bottom">
                                <tr>
-                                   <th class="ps-4">Estudiante</th>
-                                   <th class="text-center">Calificación</th>
-                                   <th class="text-end pe-4">Acción</th>
+                                   <th class="ps-4">Identidad del Alumno</th>
+                                   <th class="text-center">Nota Promedio</th>
+                                   <th class="text-end pe-4">Intervenir</th>
                                </tr>
                            </thead>
                            <tbody>
                                {% for alerta in alertas_convivencia %}
                                <tr>
-                                   <td class="ps-4">
+                                   <td class="ps-4 py-3">
                                        <div class="d-flex align-items-center">
-                                           <div class="avatar-xs rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center me-3 fw-bold border border-warning-subtle">
+                                           <div class="avatar-xs rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center me-3 fw-bold border border-warning-subtle shadow-sm">
                                                {{ alerta.estudiante__first_name|slice:":1" }}
                                            </div>
                                            <div>
@@ -547,7 +528,7 @@
                                    </td>
                                </tr>
                                {% empty %}
-                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">El clima institucional es óptimo. No hay alertas.</td></tr>
+                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">El clima escolar es excelente. No hay alertas.</td></tr>
                                {% endfor %}
                            </tbody>
                        </table>
@@ -559,25 +540,25 @@
 
    <div class="card border-0 shadow-lg mb-5 overflow-hidden rounded-5" style="background-color: #ffffff;">
        <div class="card-body p-5 text-center bg-gradient-light-subtle">
-           <h3 class="fw-black mb-2 text-dark">Buscador Inteligente de Alumnos</h3>
-           <p class="text-muted mb-4 lead">Acceso inmediato a observador, historial académico y analítica predictiva.</p>
+           <h3 class="fw-black mb-2 text-dark">Búsqueda Maestra Stratos</h3>
+           <p class="text-muted mb-4 lead">Acceda instantáneamente a observador, notas y analítica del alumno.</p>
            <form method="GET" action="">
-               <div class="input-group input-group-lg shadow-2xl rounded-pill overflow-hidden border w-75 mx-auto transition-all focus-within-scale">
+               <div class="input-group input-group-lg shadow-2xl rounded-pill overflow-hidden border w-75 mx-auto transition-all focus-within-scale border-primary-subtle">
                    <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-muted"></i></span>
                    <input type="text" name="q" class="form-control bg-white border-0 py-4 shadow-none"
-                          placeholder="Ingrese nombre, código de matrícula o documento..."
+                          placeholder="Ingrese nombre, código de matrícula o ID..."
                           value="{{ query|default:'' }}">
-                    <button class="btn btn-primary px-5 fw-bold text-uppercase" type="submit">Iniciar Búsqueda</button>
+                    <button class="btn btn-primary px-5 fw-bold text-uppercase" type="submit">Ejecutar Búsqueda</button>
                </div>
            </form>
        </div>
    </div>
 
    {% if query %}
-       <div class="mb-5 animate__animated animate__fadeIn">
+       <div class="mb-5 animate__animated animate__fadeIn px-2">
            <h5 class="fw-bold text-secondary mb-4 px-3 d-flex align-items-center">
                <i class="fas fa-list-ul me-3 text-primary"></i>
-               Resultados de la búsqueda: <span class="text-primary ms-2">"{{ query }}"</span>
+               Coincidencias detectadas para: <span class="text-primary ms-2">"{{ query }}"</span>
            </h5>
             {% if estudiantes %}
                <div class="row g-4">
@@ -590,7 +571,7 @@
                                </div>
                                <div class="flex-grow-1 overflow-hidden">
                                    <h6 class="fw-bold mb-0 text-dark text-truncate">{{ estudiante.get_full_name }}</h6>
-                                    <small class="text-muted">Matrícula: {{ estudiante.username }}</small>
+                                    <small class="text-muted">ID: {{ estudiante.username }}</small>
                                </div>
                                <div class="d-flex flex-column gap-1">
                                    <a href="{% url 'ver_observador' estudiante.id %}" class="btn btn-sm btn-primary rounded-circle shadow-sm">
@@ -607,45 +588,44 @@
                 </div>
            {% else %}
                <div class="alert alert-warning border-0 shadow-lg p-4 rounded-5 text-center">
-                   <i class="fas fa-search-minus fa-3x mb-3 opacity-25"></i>
-                   <p class="mb-0 fw-bold">No se han encontrado registros coincidentes en la base de datos institucional.</p>
+                   <i class="fas fa-user-slash fa-3x mb-3 opacity-25"></i>
+                   <p class="mb-0 fw-bold">No se han detectado registros asociados en la base de datos.</p>
                </div>
            {% endif %}
        </div>
    {% endif %}
 
-   <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3 px-2">
+   <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4 px-2">
        <h4 class="fw-bold text-dark mb-0 d-flex align-items-center">
-           <div class="bg-primary rounded-3 p-2 me-3 text-white shadow-sm"><i class="fas fa-chalkboard-teacher"></i></div>
-           Monitor Académico por Grupos
+           <div class="bg-primary rounded-3 p-2 me-3 text-white shadow-sm transition-all hover-scale"><i class="fas fa-chalkboard-teacher"></i></div>
+           Rendimiento Académico por Grupos
        </h4>
        <div class="d-flex gap-2">
-           <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold border border-primary-subtle shadow-sm">Total Grupos: {{ vista_cursos|length }}</span>
-           <button class="btn btn-xs btn-white rounded-pill shadow-sm"><i class="fas fa-expand-alt"></i></button>
+           <span class="badge bg-soft-primary text-primary px-4 py-2 rounded-pill fw-bold border border-primary-subtle shadow-sm">Cursos Activos: {{ vista_cursos|length }}</span>
        </div>
     </div>
 
    <div class="accordion shadow-sm rounded-5 overflow-hidden border-0" id="accordionProMaster">
        {% for item in vista_cursos %}
-       <div class="accordion-item border-0 mb-3 shadow-lg rounded-5 overflow-hidden">
+       <div class="accordion-item border-0 mb-4 shadow-lg rounded-5 overflow-hidden">
            <h2 class="accordion-header">
                <button class="accordion-button collapsed py-4 bg-white text-dark fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.curso.id }}">
                    <div class="row w-100 align-items-center">
                        <div class="col-md-3 d-flex align-items-center">
-                            <span class="badge bg-primary px-4 py-2 me-3 shadow-sm rounded-pill">{{ item.curso.nombre }}</span>
-                           <span class="small text-muted fw-bold">{{ item.stats.alumnos }} Estudiantes</span>
+                            <span class="badge bg-primary px-4 py-2 me-3 shadow-lg rounded-pill">{{ item.curso.nombre }}</span>
+                           <span class="small text-muted fw-bold">{{ item.stats.alumnos }} Matrículas</span>
                        </div>
                        <div class="col-md-3 text-center d-none d-md-block border-start">
-                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Desempeño Académico</small>
+                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Promedio Grupo</small>
                            <div class="fw-black text-info fs-4">{{ item.stats.acad }}</div>
                        </div>
                        <div class="col-md-3 text-center d-none d-md-block border-start">
-                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Salud Convivencial</small>
+                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Índice Clima</small>
                             <div class="fw-black text-warning fs-4">{{ item.stats.conv }}</div>
                        </div>
                        <div class="col-md-3 text-end d-none d-md-block border-start">
                            <span class="badge {% if item.stats.acad < 3.2 %}bg-danger animate__animated animate__pulse animate__infinite{% else %}bg-success{% endif %} px-4 py-2 rounded-pill shadow-sm">
-                               {% if item.stats.acad < 3.2 %}Acción Prioritaria{% else %}Estado Estable{% endif %}
+                               {% if item.stats.acad < 3.2 %}Acción Prioritaria{% else %}Óptimo{% endif %}
                            </span>
                        </div>
                    </div>
@@ -658,16 +638,16 @@
                    <div class="p-4 bg-white border-bottom shadow-inner">
                        <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
                            <div class="card-header bg-gradient-success text-white py-3 d-flex justify-content-between align-items-center border-0">
-                               <h6 class="mb-0 fw-bold"><i class="fas fa-crown me-2 text-warning"></i>Cuadro de Honor (Top Rendimiento)</h6>
-                               <span class="badge bg-white text-success rounded-pill fw-bold">Periodo Actual</span>
+                               <h6 class="mb-0 fw-bold"><i class="fas fa-award me-2 text-warning"></i>Excelencia Académica (Top 10)</h6>
+                               <span class="badge bg-white text-success rounded-pill fw-bold border px-3">2024-B</span>
                            </div>
                            <div class="card-body p-0">
                                <div class="table-responsive">
                                    <table class="table table-sm table-striped mb-0 small text-center align-middle">
                                        <thead class="text-secondary bg-light text-uppercase fw-bold" style="font-size: 0.65rem;">
                                            <tr>
-                                               <th style="width: 100px;">Rango</th>
-                                               <th class="text-start ps-5">Nombre del Estudiante</th>
+                                               <th style="width: 100px;">Ranking</th>
+                                               <th class="text-start ps-5">Nombre del Alumno</th>
                                                <th style="width: 200px;">GPA Definitivo</th>
                                            </tr>
                                        </thead>
@@ -675,22 +655,13 @@
                                            {% for top_est in item.top_10_academico %}
                                            <tr>
                                                <td class="fw-bold py-3 text-center">
-                                                   {% if forloop.counter == 1 %}
-                                                       <div class="rank-circle rank-gold mx-auto">1</div>
-                                                   {% elif forloop.counter == 2 %}
-                                                       <div class="rank-circle rank-silver mx-auto">2</div>
-                                                   {% elif forloop.counter == 3 %}
-                                                       <div class="rank-circle rank-bronze mx-auto">3</div>
-                                                   {% else %}
-                                                       <span class="text-muted">#{{ forloop.counter }}</span>
-                                                   {% endif %}
+                                                   {% if forloop.counter == 1 %}<div class="rank-circle rank-gold mx-auto">1</div>
+                                                   {% elif forloop.counter == 2 %}<div class="rank-circle rank-silver mx-auto">2</div>
+                                                   {% elif forloop.counter == 3 %}<div class="rank-circle rank-bronze mx-auto">3</div>
+                                                   {% else %}<span class="text-muted fw-black">#{{ forloop.counter }}</span>{% endif %}
                                                </td>
                                                <td class="text-start ps-5 fw-bold text-dark fs-6">{{ top_est.nombre }}</td>
-                                               <td>
-                                                   <div class="d-inline-block px-3 py-1 bg-success bg-opacity-10 text-success rounded-pill fw-black shadow-sm">
-                                                       {{ top_est.promedio }}
-                                                   </div>
-                                               </td>
+                                               <td><div class="d-inline-block px-3 py-1 bg-success bg-opacity-10 text-success rounded-pill fw-black shadow-sm">{{ top_est.promedio }}</div></td>
                                            </tr>
                                            {% endfor %}
                                        </tbody>
@@ -703,26 +674,26 @@
 
                    <div class="table-responsive p-4">
                        <table class="table table-hover align-middle mb-0 bg-white rounded-5 shadow-sm border overflow-hidden">
-                            <thead class="bg-dark text-white small text-uppercase fw-bold">
+                            <thead class="bg-dark text-white small text-uppercase fw-bold border-0">
                                <tr>
                                    <th class="ps-4 py-4">Información del Estudiante</th>
                                    {% for p in periodos %}
                                        <th class="text-center">Periodo {{ forloop.counter }}</th>
                                    {% endfor %}
-                                   <th class="text-end pe-5">Gestión Administrativa</th>
+                                   <th class="text-end pe-5">Gestión Individual</th>
                                </tr>
                            </thead>
                             <tbody>
                                {% for obj_est in item.estudiantes %}
                                <tr>
-                                   <td class="ps-4">
-                                       <div class="d-flex align-items-center py-2">
+                                   <td class="ps-4 py-3">
+                                       <div class="d-flex align-items-center">
                                            <div class="avatar-xs rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center me-3 border border-primary-subtle fw-black shadow-sm">
                                                {{ obj_est.obj.first_name|slice:":1" }}
                                            </div>
                                            <div>
                                                <span class="fw-bold text-dark d-block mb-0">{{ obj_est.obj.get_full_name }}</span>
-                                               <small class="text-muted x-small fw-bold">ID: {{ obj_est.obj.username }}</small>
+                                               <small class="text-muted x-small fw-bold">Matrícula: {{ obj_est.obj.username }}</small>
                                            </div>
                                         </div>
                                    </td>
@@ -743,15 +714,9 @@
 
                                    <td class="text-end pe-5">
                                        <div class="btn-group btn-group-sm shadow-sm rounded-pill overflow-hidden border">
-                                           <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ obj_est.obj.id }}" class="btn btn-white text-purple" title="Analítica IA">
-                                               <i class="fas fa-robot"></i>
-                                           </a>
-                                           <a href="{% url 'crear_observacion' obj_est.obj.id %}" class="btn btn-white text-primary" title="Crear Nota">
-                                              <i class="fas fa-plus-circle"></i>
-                                           </a>
-                                           <a href="{% url 'ver_observador' obj_est.obj.id %}" class="btn btn-white text-dark" title="Abrir Historial">
-                                              <i class="fas fa-folder-open"></i>
-                                           </a>
+                                           <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ obj_est.obj.id }}" class="btn btn-white text-purple" title="Analítica IA"><i class="fas fa-robot"></i></a>
+                                           <a href="{% url 'crear_observacion' obj_est.obj.id %}" class="btn btn-white text-primary" title="Generar Nota"><i class="fas fa-plus-circle"></i></a>
+                                           <a href="{% url 'ver_observador' obj_est.obj.id %}" class="btn btn-white text-dark" title="Abrir Historial"><i class="fas fa-folder-open"></i></a>
                                        </div>
                                    </td>
                                </tr>
@@ -765,8 +730,8 @@
        {% empty %}
        <div class="p-5 text-center text-muted bg-white rounded-5 border border-dashed shadow-sm">
            <i class="fas fa-project-diagram fa-4x mb-4 opacity-25"></i>
-           <h5 class="fw-bold">No hay estructuras académicas activas</h5>
-           <p class="mb-0">Verifique la configuración de los cursos y periodos en el panel de control administrativo.</p>
+           <h5 class="fw-bold">No hay Cursos Detectados</h5>
+           <p class="mb-0">Verifique la configuración académica en el panel administrativo.</p>
        </div>
        {% endfor %}
     </div>
@@ -782,7 +747,7 @@
                     </div>
                     <div>
                         <h5 class="modal-title fw-black fs-4">Consultoría Estratégica Stratos AI</h5>
-                        <p class="mb-0 small opacity-75">Motor predictivo alimentado por datos institucionales en tiempo real.</p>
+                        <p class="mb-0 small opacity-75">Análisis heurístico basado en datos institucionales en tiempo real.</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto shadow-none" data-bs-dismiss="modal"></button>
                 </div>
@@ -793,21 +758,21 @@
             <div class="modal-body p-5 bg-light-subtle" style="min-height: 600px;">
                 <div id="aiLoading" class="text-center py-5">
                     <div class="spinner-grow text-primary mb-4" style="width: 4rem; height: 4rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Analizando Correlaciones...</h5>
-                    <p class="text-muted" id="aiStatusText">Sincronizando con el Manual de Convivencia y PEI...</p>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Escaneando Nodos Académicos...</h5>
+                    <p class="text-muted" id="aiStatusText">Sincronizando con los estándares del PEI institucional...</p>
                 </div>
                 <div id="aiResults" class="d-none animate__animated animate__fadeIn">
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="aiTextContent" class="markdown-body bg-white p-5 rounded-5 border shadow-xl" style="max-height: 550px; overflow-y: auto;"></div>
+                            <div id="aiTextContent" class="markdown-body bg-white p-5 rounded-5 border shadow-xl transition-all" style="max-height: 550px; overflow-y: auto;"></div>
                         </div>
                     </div>
                     <div class="mt-4 d-flex justify-content-between align-items-center">
-                        <span class="x-small text-muted"><i class="fas fa-shield-alt me-1"></i> Análisis procesado bajo protocolos de privacidad institucional.</span>
+                        <span class="x-small text-muted fw-bold"><i class="fas fa-shield-alt me-1"></i> Auditoría de datos procesada bajo protocolos de privacidad escolar.</span>
                         <div>
                             <button class="btn btn-outline-dark rounded-pill px-4 me-2 fw-bold" data-bs-dismiss="modal">Cerrar</button>
                             <button class="btn btn-primary rounded-pill px-5 shadow-lg fw-black" onclick="window.print()">
-                                <i class="fas fa-file-pdf me-2"></i> Exportar Hoja de Ruta
+                                <i class="fas fa-file-pdf me-2"></i> Exportar Diagnóstico PDF
                             </button>
                         </div>
                     </div>
@@ -890,7 +855,7 @@
                            hoverBackgroundColor: '#3a0ca3'
                        },
                        {
-                           label: 'Salud Convivencial',
+                           label: 'Índice Convivencial',
                            data: dataConv,
                            backgroundColor: '#ffc107', 
                            borderRadius: 12,
@@ -904,12 +869,7 @@
                    maintainAspectRatio: false,
                    plugins: { 
                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, font: { weight: 'bold' } } },
-                       tooltip: {
-                           padding: 15,
-                           backgroundColor: 'rgba(0,0,0,0.8)',
-                           titleFont: { size: 14, weight: 'bold' },
-                           cornerRadius: 12
-                       }
+                       tooltip: { padding: 15, backgroundColor: 'rgba(0,0,0,0.85)', titleFont: { size: 14, weight: 'bold' }, cornerRadius: 12 }
                    },
                    scales: {
                        y: { beginAtZero: true, max: 5, grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false } },
@@ -940,17 +900,14 @@
                    maintainAspectRatio: false,
                    cutout: '80%',
                    plugins: {
-                       legend: { 
-                           position: 'bottom', 
-                           labels: { padding: 25, usePointStyle: true, font: { weight: 'bold' } } 
-                       }
+                       legend: { position: 'bottom', labels: { padding: 25, usePointStyle: true, font: { weight: 'bold' } } }
                    }
                }
            });
        }
    });
 
-   // LÓGICA DE AUDITORÍA IA STRATOS - SIMULACIÓN DE MOTOR COGNITIVO
+   // MOTOR DE AUDITORÍA IA STRATOS
    function iniciarAnalisisIA() {
        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
        const loading = document.getElementById('aiLoading');
@@ -963,11 +920,11 @@
        results.classList.add('d-none');
 
        const steps = [
-           "Sincronizando nodos de datos con base estudiantil...",
-           "Cruzando métricas de rendimiento con Artículo 14 del PEI...",
-           "Analizando patrones disciplinarios según Manual Cap. 5...",
-           "Identificando correlaciones entre inasistencia y reprobación...",
-           "Sintetizando planes de acción pedagógicos recomendados..."
+           "Sincronizando nodos con base de datos escolar...",
+           "Evaluando cumplimiento de Artículo 14 (PEI)...",
+           "Detectando patrones de reprobación masiva...",
+           "Analizando inasistencias injustificadas...",
+           "Generando hoja de ruta estratégica para bienestar..."
        ];
 
        let currentStep = 0;
@@ -978,22 +935,20 @@
            } else {
                clearInterval(stepInterval);
                const mockIA = `
-### 🧠 Diagnóstico de Inteligencia Stratos AI
-**Fecha de Análisis:** {% now "d/m/Y - H:i" %}
-**Nivel de Confianza:** 98.4%
+### 🧠 Informe Consultivo de IA Stratos
+**Diagnóstico Institucional de Riesgo y Bienestar**
 
-#### 🚨 Alertas Prioritarias de Gestión
-1. **Desequilibrio de Rendimiento:** El área de **Ciencias Naturales** presenta una desviación crítica del **-18%** respecto a la meta institucional. Se recomienda auditoría de planeación en grados 9° y 10°.
-2. **Predictor de Deserción:** Se ha detectado que el **85%** de los estudiantes en el *Radar de Riesgo* coinciden con un historial de más de 6 retardos en el primer bloque horario. Existe una correlación directa entre puntualidad y éxito académico.
+#### 🚨 Hallazgos Académicos de Prioridad Máxima
+1. **Desbalance Curricular:** El área de **Ciencias Naturales** presenta una desviación del -15% respecto a la meta institucional. Existe una tendencia negativa concentrada en los grados 9° y 10°.
+2. **Correlación Crítica detectada:** El 85% de los estudiantes marcados en el **Radar de Riesgo Académico** presentan más de 5 registros de "Llegada Tarde" o inasistencias injustificadas.
 
-#### 🏛️ Cumplimiento de Normatividad Rectora
-* **Estatus PEI:** La meta de *Acompañamiento Integral* requiere refuerzo en los planes de apoyo para el área de matemáticas.
-* **Aplicación de Manual:** 12 estudiantes han cruzado el umbral del **Artículo 45**. Es imperativo citar a padres para firma de compromisos convivenciales preventivos.
+#### 🏛️ Evaluación vs Normativa Institucional
+* **Estatus PEI:** Se observa que el objetivo de *Acompañamiento Integral* requiere refuerzo urgente en los planes de aula de matemáticas.
+* **Manual de Convivencia:** Se recomienda aplicar el **Artículo 45 (Estrategias de Apoyo)** para los 10 estudiantes con mayor volumen de fallas antes de que escalen a sanciones graves.
 
-#### 💡 Hoja de Ruta Estratégica (Plan de Choque)
-* **Acción 1 (Académica):** Lanzar programa de "Tutorías Nivelatorias" lideradas por estudiantes del Cuadro de Honor para el grupo de riesgo identificado.
-* **Acción 2 (Convivencial):** Activar Círculos de Palabra preventivos para los grados con mayor índice de inasistencias injustificadas.
-* **Acción 3 (Bienestar):** Remitir al Top 5 del Ranking de Riesgo a Orientación Escolar para descarte de factores socio-familiares externos.
+#### 💡 Soluciones y Hoja de Ruta
+* **Académico:** Implementar "Tutorías de Pares" donde estudiantes de Grado 11 apoyen a estudiantes con 2+ materias perdidas.
+* **Bienestar:** Activar ruta de psicología para el Top 5 de estudiantes con bajo rendimiento recurrente, sospecha de factores externos.
 
 > *Este reporte es generado mediante análisis heurístico de Big Data institucional.*
                `;
@@ -1001,51 +956,35 @@
                loading.classList.add('d-none');
                results.classList.remove('d-none');
            }
-       }, 1200);
+       }, 1100);
    }
 </script>
 
 <style>
-   /* === ESTRUCTURA Y TIPOGRAFÍA PREMIUM === */
+   /* === CORE DESIGN SYSTEM STRATOS === */
    :root {
        --purple-primary: #6610f2;
        --blue-institutional: #4361ee;
        --soft-gray: #f4f7fe;
        --text-dark: #1a1c23;
-       --glass-white: rgba(255, 255, 255, 0.95);
    }
 
-   body { 
-       background-color: var(--soft-gray); 
-       font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-       letter-spacing: -0.01em; 
-   }
-
+   body { background-color: var(--soft-gray); font-family: 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
    .fw-black { font-weight: 900; }
    .ls-2 { letter-spacing: 2px; }
    .ls-1 { letter-spacing: 1px; }
    .x-small { font-size: 0.75rem; }
    
-   .icon-box-xl { width: 90px; height: 90px; border-radius: 50%; }
+   .icon-box-xl { width: 95px; height: 95px; border-radius: 50%; }
    .icon-box-lg { width: 65px; height: 65px; }
-   .icon-box-md { width: 50px; height: 50px; }
+   .icon-box-md { width: 55px; height: 55px; }
    
    .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
    .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-   .bg-gradient-light-subtle { background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%); }
-   
-   .btn-ai-magic { 
-       background: linear-gradient(90deg, #6366f1, #a855f7); 
-       border: none; 
-       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-       box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-   }
-   .btn-ai-magic:hover { 
-       transform: scale(1.05) translateY(-3px); 
-       box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); 
-   }
+   .btn-ai-magic { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; transition: all 0.4s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+   .btn-ai-magic:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
 
-   /* === COMPONENTES DE INTERFAZ === */
+   /* === INTERFAZ PREMIUM === */
    .hover-elevate { transition: all 0.3s ease-out; }
    .hover-elevate:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important; }
    
@@ -1064,52 +1003,27 @@
    .bg-teal-soft { background-color: #f0fdfa; }
    .bg-danger-soft { background-color: #fef2f2; }
 
-   /* === CALIFICACIONES Y BUBBLES === */
-   .nota-bubble {
-       display: inline-block;
-       padding: 8px 16px;
-       border-radius: 50px;
-       font-weight: 800;
-       font-size: 0.9rem;
-       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-       border: 1px solid transparent;
-   }
-   .nota-fail { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
-   .nota-success { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
-   .nota-warning { background: #fffbeb; color: #d97706; border-color: #fef3c7; }
+   /* === NOTAS Y RANKING === */
+   .nota-bubble { display: inline-block; padding: 6px 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
+   .nota-fail { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+   .nota-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+   .nota-warning { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
 
-   .rank-circle {
-       width: 32px; height: 32px; border-radius: 50%;
-       display: flex; align-items: center; justify-content: center;
-       color: white; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-   }
+   .rank-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
    .rank-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
    .rank-silver { background: linear-gradient(135deg, #94a3b8, #475569); }
    .rank-bronze { background: linear-gradient(135deg, #d97706, #78350f); }
 
-   /* === GRÁFICOS Y SCROLL === */
+   /* === SCROLL Y ETIQUETAS === */
    .scroll-pro::-webkit-scrollbar { width: 8px; }
    .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 2px solid #f8fafc; }
-   .scroll-pro::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 20px; }
+   .scroll-pro::-webkit-scrollbar-track { background: #f1f5f9; }
 
-   .chart-center-label {
-       position: absolute;
-       top: 50%; left: 50%;
-       transform: translate(-50%, -50%);
-       text-align: center;
-       margin-top: -20px;
-   }
+   .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
+   .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
 
-   .radial-progress-kpi {
-       width: 60px; height: 60px; border-radius: 50%;
-       border: 5px solid #eef2ff; border-top-color: var(--blue-institutional);
-       display: flex; align-items: center; justify-content: center;
-   }
-
-   /* === ESTILOS MARKDOWN IA === */
-   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-top: 30px; }
-   .markdown-body h4 { color: #1e293b; margin-top: 25px; font-weight: 700; }
-   .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; }
+   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-top: 30px; font-weight: 800; }
+   .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
 
    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
