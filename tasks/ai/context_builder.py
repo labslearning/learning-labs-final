@@ -8,8 +8,7 @@ from tasks.models import (
     Matricula, Asistencia, Materia, Institucion
 )
 
-# 👇 CONECTAMOS EL CEREBRO DE DATOS (Arregla lo de Luciana y cuentas reales)
-# Asegúrate de que tasks/services/__init__.py exista y exporte InteligenciaInstitucionalService
+# 👇 CONECTAMOS EL CEREBRO DE DATOS (Garantiza integridad de la información según ISO 21001:7.5)
 from tasks.services.institutional import InteligenciaInstitucionalService
 
 from .constants import (
@@ -26,9 +25,9 @@ from .constants import (
 
 class ContextBuilder:
     """
-    EL ORQUESTADOR DE CONTEXTO (Versión Definitiva con Marco Legal).
+    EL ORQUESTADOR DE CONTEXTO (Versión Auditoría ISO 21001).
     Ensambla la narrativa para la IA usando datos del Service Layer (Global)
-    y estructura el Manual de Convivencia y PEI como "Ley" para la IA.
+    y estructura el Manual de Convivencia y PEI como "Criterios de Auditoría".
     """
 
     def get_context(self, usuario, action_type=None, **kwargs):
@@ -59,32 +58,39 @@ class ContextBuilder:
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
         if action_type in ACCIONES_GLOBALES:
-            # 🔥 PASO 1: Obtener la verdad matemática (arregla promedios)
+            # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales)
             datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
 
             return {
                 "scope": "GLOBAL_INSTITUCIONAL",
-                "tipo_analisis": "RADIOGRAFIA_INSTITUCIONAL_360",
+                "tipo_analisis": "AUDITORIA_CALIDAD_EDUCATIVA_ISO_21001",
                 "solicitante": {
                     "username": str(usuario.username),
                     "rol": rol_solicitante
                 },
                 
-                # 🔥 PASO 2: INSTRUCCIONES OBLIGATORIAS PARA LA IA
-                "DIRECTRICES_DE_AUDITORIA": {
-                    "MANDATO_1": "Toda recomendación debe basarse en el 'MARCO_LEGAL_VIGENTE' suministrado.",
-                    "MANDATO_2": "Citar explícitamente los Numerales del Manual o Componentes del PEI al proponer acciones.",
-                    "EJEMPLO": "No digas 'mejorar nota', di 'Aplicar Numeral 7.1: Plan de Mejoramiento Integral'.",
+                # 🔥 PASO 2: PROTOCOLO DE AUDITORÍA ISO 21001
+                "PROTOCOLO_DE_AUDITORIA_ISO_21001": {
+                    "ROL_IA": "Auditor Líder de Calidad Educativa.",
+                    "OBJETIVO": "Verificar la conformidad de los procesos educativos con el PEI y el Manual de Convivencia.",
+                    "INSTRUCCIONES_MANDATORIAS": [
+                        "1. Clasificar hallazgos como: 'Conformidad', 'No Conformidad Menor' (incumplimiento puntual) o 'No Conformidad Mayor' (riesgo sistémico).",
+                        "2. Calcular el 'Índice de Alineación Normativa' (0-100%) para cada dimensión analizada.",
+                        "3. Citar explícitamente el Numeral del Manual o Componente del PEI como 'Criterio de Auditoría'.",
+                        "4. Proponer 'Acciones Correctivas' (inmediatas) y 'Acciones de Mejora' (preventivas/estratégicas).",
+                        "5. Evaluar si se está cumpliendo la promesa de valor (Misión/Visión) hacia los estudiantes (beneficiarios)."
+                    ],
+                    "MATRIZ_DE_RIESGO": "Cruzar datos de repitencia/deserción con los numerales de 'Faltas Graves' y 'Pérdida de Cupo'."
                 },
 
-                # 🔥 PASO 3: EL MANUAL Y PEI ESTRUCTURADOS (VERSIÓN REAL)
-                "MARCO_LEGAL_VIGENTE": {
-                    "PEI_INSTITUCIONAL": self._get_pei_estructurado(),      
+                # 🔥 PASO 3: CRITERIOS DE AUDITORÍA (MANUAL Y PEI ESTRUCTURADOS)
+                "CRITERIOS_DE_AUDITORIA": {
+                    "PEI_INSTITUCIONAL": self._get_pei_estructurado(),
                     "MANUAL_DE_CONVIVENCIA": self._get_reglas_manual_estructuradas()
                 },
                 
-                # 🔥 PASO 4: DATOS REALES
-                "EVIDENCIA_ESTADISTICA": datos_radiografia
+                # 🔥 PASO 4: EVIDENCIA OBJETIVA (DATOS)
+                "EVIDENCIA_OBJETIVA_DATOS": datos_radiografia
             }
 
         # =========================================================
@@ -100,12 +106,12 @@ class ContextBuilder:
                 "curso_actual": str(self._get_grado_actual(target_user)),
                 "identificador": str(target_user.username)
             },
-            # Inyectamos las reglas también aquí para análisis individual
+            # Inyectamos las reglas también aquí
             "MARCO_LEGAL_APLICABLE": {
                 "PEI": self._get_pei_estructurado(),
                 "MANUAL": self._get_reglas_manual_estructuradas()
             },
-            "PEI_REFERENCIA": self._get_datos_pei(), # Mantenemos compatibilidad
+            "PEI_REFERENCIA": self._get_datos_pei(), 
         }
 
         # --- DETECCIÓN DEL ROL DEL SUJETO ---
@@ -114,7 +120,7 @@ class ContextBuilder:
         # A. ROL DOCENTE
         if rol_target == 'DOCENTE':
             contexto["dimension_pedagogica"] = self._get_rendimiento_como_docente(target_user)
-            contexto["enfoque_pedagogico"] = "Analizar promedios de cursos y sugerir estrategias didácticas basadas en el PEI Socio-Constructivista."
+            contexto["enfoque_pedagogico"] = "Analizar la eficacia de la enseñanza según el Modelo Socio-Constructivista."
 
             # ALERTAS DE ESTUDIANTES EN RIESGO (Consulta Optimizada)
             materias_profe = Materia.objects.filter(asignaciones__docente=target_user)
@@ -144,11 +150,11 @@ class ContextBuilder:
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
             if action_type == ACCION_MEJORAS_DOCENTE:
-                contexto["objetivo"] = "Sugerir estrategias de aula para este estudiante."
+                contexto["objetivo"] = "Sugerir estrategias de aula personalizadas."
             elif action_type == ACCION_APOYO_ACUDIENTE:
-                contexto["objetivo"] = "Traducir estos datos en pautas de crianza y apoyo en casa."
+                contexto["objetivo"] = "Traducir hallazgos en pautas de acompañamiento familiar."
             elif action_type == ACCION_CHAT_SOCRATICO:
-                contexto["objetivo"] = "Guiar al estudiante mediante mayéutica para que reconozca sus fallas."
+                contexto["objetivo"] = "Facilitar la autorreflexión del estudiante."
             elif action_type == ACCION_MEJORAS_ESTUDIANTE:
                 pass 
 
@@ -282,7 +288,7 @@ class ContextBuilder:
     def _get_resumen_asistencia(self, usuario):
         fallas = Asistencia.objects.filter(estudiante=usuario, estado='FALLA').count()
         tardes = Asistencia.objects.filter(estudiante=usuario, estado='TARDE').count()
-        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} 
+        return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} # Ajustado a 3 según Numeral 6.2
 
     def _get_rendimiento_como_docente(self, docente):
         materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
