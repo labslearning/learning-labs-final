@@ -758,8 +758,8 @@
             <div class="modal-body p-5 bg-light-subtle" style="min-height: 600px;">
                 <div id="aiLoading" class="text-center py-5">
                     <div class="spinner-grow text-primary mb-4" style="width: 4rem; height: 4rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Escaneando Nodos Académicos...</h5>
-                    <p class="text-muted" id="aiStatusText">Sincronizando con los estándares del PEI institucional...</p>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Escaneando Ecosistema Digital...</h5>
+                    <p class="text-muted" id="aiStatusText">Conectando con motor de Inteligencia Artificial...</p>
                 </div>
                 <div id="aiResults" class="d-none animate__animated animate__fadeIn">
                     <div class="row">
@@ -768,7 +768,7 @@
                         </div>
                     </div>
                     <div class="mt-4 d-flex justify-content-between align-items-center">
-                        <span class="x-small text-muted fw-bold"><i class="fas fa-shield-alt me-1"></i> Auditoría de datos procesada bajo protocolos de privacidad escolar.</span>
+                        <span class="x-small text-muted fw-bold"><i class="fas fa-shield-alt me-1"></i> Análisis basado en PEI y Manual de Convivencia vigente.</span>
                         <div>
                             <button class="btn btn-outline-dark rounded-pill px-4 me-2 fw-bold" data-bs-dismiss="modal">Cerrar</button>
                             <button class="btn btn-primary rounded-pill px-5 shadow-lg fw-black" onclick="window.print()">
@@ -907,8 +907,8 @@
        }
    });
 
-   // MOTOR DE AUDITORÍA IA STRATOS
-   function iniciarAnalisisIA() {
+   // MOTOR DE AUDITORÍA IA STRATOS - VERSIÓN PROD 2.0 (LÓGICA REAL)
+   async function iniciarAnalisisIA() {
        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
        const loading = document.getElementById('aiLoading');
        const results = document.getElementById('aiResults');
@@ -919,44 +919,124 @@
        loading.classList.remove('d-none');
        results.classList.add('d-none');
 
+       // 1. RECOLECCIÓN DE DATOS DEL ECOSISTEMA (Contexto en caliente)
+       // Extraemos toda la data que Django ya renderizó para enviarla a la IA
+       
+       const datosContexto = {
+            kpi_global: {
+                total_alumnos: "{{ kpi.total_alumnos }}",
+                promedio_academico_global: "{{ kpi.prom_global_acad }}",
+                indice_convivencia_global: "{{ kpi.prom_global_conv }}",
+                total_materias_reprobadas_colegio: "{{ kpi.total_materias_perdidas }}",
+                total_cursos_activos: "{{ kpi.total_cursos }}"
+            },
+            
+            riesgos_criticos_detectados: [
+                {% for riesgo in top_riesgo_academico %}
+                {
+                    estudiante: "{{ riesgo.estudiante.get_full_name|escapejs }}",
+                    curso: "{{ riesgo.curso.nombre|escapejs }}",
+                    cantidad_materias_perdidas: {{ riesgo.materias_perdidas }},
+                    materias: [
+                        {% for mat in riesgo.materias_nombres %}"{{ mat|escapejs }}",{% endfor %}
+                    ]
+                },
+                {% endfor %}
+            ],
+
+            alertas_convivencia: [
+                {% for alerta in alertas_convivencia %}
+                {
+                    estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                    nota_convivencia: "{{ alerta.nota_promedio|floatformat:2 }}",
+                    curso: "{{ alerta.materia__curso__nombre|escapejs }}"
+                },
+                {% endfor %}
+            ],
+
+            alertas_asistencia: [
+                {% for alerta in top_fallas %}
+                {
+                    estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                    total_fallas: {{ alerta.total }},
+                    curso: "{{ alerta.curso__nombre|escapejs }}"
+                },
+                {% endfor %}
+            ],
+
+            // Resumen de Cursos (Solo estadísticas clave para no saturar el prompt)
+            rendimiento_cursos: [
+                {% for item in vista_cursos %}
+                {
+                    nombre_curso: "{{ item.curso.nombre|escapejs }}",
+                    promedio_grupo: "{{ item.stats.acad }}",
+                    indice_clima: "{{ item.stats.conv }}"
+                },
+                {% endfor %}
+            ]
+       };
+
+       // 2. SECUENCIA DE ESTADOS (UX)
        const steps = [
-           "Sincronizando nodos con base de datos escolar...",
-           "Evaluando cumplimiento de Artículo 14 (PEI)...",
-           "Detectando patrones de reprobación masiva...",
-           "Analizando inasistencias injustificadas...",
-           "Generando hoja de ruta estratégica para bienestar..."
+           "Leyendo Archivo Maestro PEI...",
+           "Analizando Manual de Convivencia vigente...",
+           "Procesando " + datosContexto.riesgos_criticos_detectados.length + " alertas académicas críticas...",
+           "Evaluando patrones de comportamiento y clima escolar...",
+           "Generando estrategias pedagógicas personalizadas..."
        ];
 
-       let currentStep = 0;
+       let stepIndex = 0;
        const stepInterval = setInterval(() => {
-           if (currentStep < steps.length) {
-               statusText.innerText = steps[currentStep];
-               currentStep++;
+           if (stepIndex < steps.length) {
+               statusText.innerText = steps[stepIndex];
+               stepIndex++;
+           }
+       }, 1500);
+
+       try {
+           // 3. LLAMADA REAL AL MOTOR DE IA (AJAX)
+           // Enviamos el contexto JSON completo para que la IA lo cruce con los documentos en servidor
+           const response = await fetch("{% url 'ai_engine' %}?action=analisis_global_bienestar", {
+               method: "POST",
+               headers: {
+                   "Content-Type": "application/json",
+                   "X-CSRFToken": "{{ csrf_token }}"
+               },
+               body: JSON.stringify({
+                   contexto_datos: datosContexto,
+                   instruccion: "Analiza estos datos JSON reales frente al contenido de los archivos PDF del PEI y Manual de Convivencia cargados en el sistema. Genera un diagnóstico profundo, conclusiones y plan de mejora basado en evidencia."
+               })
+           });
+
+           if (!response.ok) throw new Error("Error en la respuesta del servidor Stratos");
+
+           const data = await response.json();
+           
+           clearInterval(stepInterval);
+           
+           if (data.success) {
+               // Renderizamos la respuesta Markdown de la IA
+               contentDiv.innerHTML = marked.parse(data.content);
+               loading.classList.add('d-none');
+               results.classList.remove('d-none');
            } else {
-               clearInterval(stepInterval);
-               const mockIA = `
-### 🧠 Informe Consultivo de IA Stratos
-**Diagnóstico Institucional de Riesgo y Bienestar**
-
-#### 🚨 Hallazgos Académicos de Prioridad Máxima
-1. **Desbalance Curricular:** El área de **Ciencias Naturales** presenta una desviación del -15% respecto a la meta institucional. Existe una tendencia negativa concentrada en los grados 9° y 10°.
-2. **Correlación Crítica detectada:** El 85% de los estudiantes marcados en el **Radar de Riesgo Académico** presentan más de 5 registros de "Llegada Tarde" o inasistencias injustificadas.
-
-#### 🏛️ Evaluación vs Normativa Institucional
-* **Estatus PEI:** Se observa que el objetivo de *Acompañamiento Integral* requiere refuerzo urgente en los planes de aula de matemáticas.
-* **Manual de Convivencia:** Se recomienda aplicar el **Artículo 45 (Estrategias de Apoyo)** para los 10 estudiantes con mayor volumen de fallas antes de que escalen a sanciones graves.
-
-#### 💡 Soluciones y Hoja de Ruta
-* **Académico:** Implementar "Tutorías de Pares" donde estudiantes de Grado 11 apoyen a estudiantes con 2+ materias perdidas.
-* **Bienestar:** Activar ruta de psicología para el Top 5 de estudiantes con bajo rendimiento recurrente, sospecha de factores externos.
-
-> *Este reporte es generado mediante análisis heurístico de Big Data institucional.*
-               `;
-               contentDiv.innerHTML = marked.parse(mockIA);
+               contentDiv.innerHTML = `<div class="alert alert-danger">Error IA: ${data.message || 'No se pudo generar el reporte.'}</div>`;
                loading.classList.add('d-none');
                results.classList.remove('d-none');
            }
-       }, 1100);
+
+       } catch (error) {
+           clearInterval(stepInterval);
+           console.error("Fallo IA:", error);
+           statusText.innerText = "Error de conexión con el Cerebro Digital.";
+           contentDiv.innerHTML = `<div class="alert alert-warning">
+               <h4><i class="fas fa-exclamation-triangle"></i> Conexión Interrumpida</h4>
+               <p>No se pudo contactar con el motor de IA. Por favor verifica tu conexión o intenta nuevamente.</p>
+               <small class="text-muted">${error.message}</small>
+           </div>`;
+           loading.classList.add('d-none');
+           results.classList.remove('d-none');
+       }
    }
 </script>
 

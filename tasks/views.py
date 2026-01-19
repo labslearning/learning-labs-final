@@ -9,6 +9,9 @@ from django.template import TemplateDoesNotExist # <--- FALTABA ESTO
 from django.conf import settings                 # <--- FALTABA ESTO
 import os
 
+#agregando los cambios de deepseek
+from openai import OpenAI    # pip install openai
+
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -5509,3 +5512,164 @@ def historial_global_observaciones(request):
         debug_msg += "</ul><p><strong>Asegúrate de que la carpeta se llame 'bienestar' (todo minúscula) en el servidor.</strong></p></div>"
         
         return HttpResponse(debug_msg)
+
+
+#Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
+
+# === CONFIGURACIÓN DE DEEPSEEK ===
+# Inicializamos el cliente apuntando a la URL de DeepSeek
+def get_deepseek_client():
+    api_key = getattr(settings, 'sk-f4b636146a9147feb7c4e73e6e24d8f3', None)
+    if not api_key:
+        # Fallback por si olvidaste ponerlo en settings, intenta buscar variable de entorno
+        api_key = os.environ.get('sk-f4b636146a9147feb7c4e73e6e24d8f3')
+    
+    if not api_key:
+        raise ValueError("No se encontró la DEEPSEEK_API_KEY en settings.py")
+
+    return OpenAI(
+        api_key=api_key, 
+        base_url="https://api.deepseek.com"
+    )
+
+def extraer_texto_pdf(archivo_field):
+    """
+    Función auxiliar quirúrgica para extraer texto de los PDFs.
+    Maneja errores si el archivo no existe o está corrupto.
+    """
+    try:
+        if not archivo_field:
+            return "No hay documento cargado en este campo."
+        
+        # Obtenemos la ruta absoluta del archivo
+        path = archivo_field.path
+        
+        if not os.path.exists(path):
+            return "El archivo físico no se encuentra en el servidor."
+
+        reader = PdfReader(path)
+        texto = ""
+        
+        # Leemos las primeras 20 páginas para dar buen contexto a DeepSeek sin saturar
+        # DeepSeek tiene un contexto grande (64k), así que podemos ser generosos.
+        paginas_a_leer = reader.pages[:25] 
+        for page in paginas_a_leer: 
+            extract = page.extract_text()
+            if extract:
+                texto += extract + "\n"
+                
+        return texto
+    except Exception as e:
+        return f"Error leyendo el PDF ({str(e)}). Verifica que sea un PDF válido."
+
+@login_required
+@csrf_exempt
+def ai_engine(request):
+    """
+    Cerebro Central de IA Stratos (Powered by DeepSeek).
+    Recibe los datos del Frontend, lee los PDFs del Backend y genera consultoría.
+    """
+    
+    # Capturamos la acción solicitada por el JS
+    action = request.GET.get('action')
+
+    # ---------------------------------------------------------
+    # CASO 1: ANÁLISIS GLOBAL DE BIENESTAR (DASHBOARD)
+    # ---------------------------------------------------------
+    if action == 'analisis_global_bienestar' and request.method == 'POST':
+        try:
+            # 1. Decodificar el Payload JSON del Frontend
+            data = json.loads(request.body)
+            contexto_datos = data.get('contexto_datos', {})
+            instruccion = data.get('instruccion', '')
+
+            # 2. Obtener los documentos institucionales (Base de Conocimiento)
+            institucion = Institucion.objects.first()
+            texto_pei = "DOCUMENTO PEI NO DISPONIBLE O NO CARGADO."
+            texto_manual = "MANUAL DE CONVIVENCIA NO DISPONIBLE O NO CARGADO."
+
+            if institucion:
+                # Extraemos el texto real de los archivos subidos
+                if institucion.archivo_pei:
+                    texto_pei = extraer_texto_pdf(institucion.archivo_pei)
+                
+                if institucion.archivo_manual_convivencia:
+                    texto_manual = extraer_texto_pdf(institucion.archivo_manual_convivencia)
+
+            # 3. Construcción del Prompt de Alta Ingeniería para DeepSeek
+            # DeepSeek funciona mejor con roles claros (System/User)
+            
+            system_prompt = """
+            ERES 'STRATOS AI', UN CONSULTOR EDUCATIVO DE ÉLITE Y AUDITOR DE CALIDAD ESCOLAR.
+            TU OBJETIVO ES ANALIZAR DATOS MÉTRICOS ESCOLARES Y CRUZARLOS CON LA NORMATIVA INSTITUCIONAL.
+            
+            TUS RESPUESTAS DEBEN SER:
+            1. CRÍTICAS: No solo describas, diagnostica el problema raíz.
+            2. BASADAS EN EVIDENCIA: Cita los datos numéricos provistos.
+            3. NORMATIVAS: Si mencionas una falta, intenta correlacionarla con el texto del Manual de Convivencia o el PEI provisto.
+            4. FORMATO: Usa Markdown limpio, con títulos, listas y negritas.
+            """
+
+            user_message = f"""
+            REALIZA EL SIGUIENTE ANÁLISIS INSTITUCIONAL:
+            "{instruccion}"
+
+            === FUENTE DE VERDAD 1: PROYECTO EDUCATIVO INSTITUCIONAL (PEI - EXTRACTO) ===
+            {texto_pei[:15000]} 
+            ...(Fin extracto PEI)
+
+            === FUENTE DE VERDAD 2: MANUAL DE CONVIVENCIA (NORMATIVA - EXTRACTO) ===
+            {texto_manual[:15000]}
+            ...(Fin extracto Manual)
+
+            === DATOS EN TIEMPO REAL DEL DASHBOARD (FORMATO JSON) ===
+            {json.dumps(contexto_datos, indent=2, ensure_ascii=False)}
+
+            INSTRUCCIONES ADICIONALES:
+            - Identifica si el rendimiento académico ({contexto_datos.get('kpi_global', {}).get('promedio_academico_global')}) cumple con la visión del PEI.
+            - Analiza los casos críticos de: {json.dumps(contexto_datos.get('riesgos_criticos_detectados', []), ensure_ascii=False)}.
+            - Propón 3 estrategias pedagógicas concretas basadas en los hallazgos.
+            """
+
+            # 4. Invocación al Motor DeepSeek
+            client = get_deepseek_client()
+            
+            response = client.chat.completions.create(
+                model="deepseek-chat", # Usamos DeepSeek V3 (Chat)
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.7, # Creatividad balanceada para análisis
+                max_tokens=2500,  # Permitimos una respuesta extensa y detallada
+                stream=False
+            )
+
+            # 5. Procesamiento de la Respuesta
+            ai_content = response.choices[0].message.content
+
+            # 6. Retorno Exitoso al Frontend
+            return JsonResponse({
+                'success': True,
+                'content': ai_content
+            })
+
+        except ValueError as ve:
+            # Error de configuración (ej: falta API Key)
+            return JsonResponse({
+                'success': False, 
+                'message': f"Error de Configuración: {str(ve)}"
+            })
+            
+        except Exception as e:
+            # Errores generales (PDF corrupto, API caída, JSON malformado)
+            print(f"🔴 ERROR CRÍTICO EN AI_ENGINE (DEEPSEEK): {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'message': f"Fallo en el análisis inteligente: {str(e)}"
+            })
+
+    # ---------------------------------------------------------
+    # CASO 2: VISTA POR DEFECTO / DEBUG
+    # ---------------------------------------------------------
+    return JsonResponse({'message': 'Stratos AI Engine (DeepSeek Core) is Online and Ready.'})
