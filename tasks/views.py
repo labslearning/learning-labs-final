@@ -11,6 +11,7 @@ import os
 from django.views.decorators.csrf import csrf_exempt
 #agregando los cambios de deepseek
 from openai import OpenAI    # pip install openai
+from pypdf import PdfReader #pdf
 
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
@@ -5516,65 +5517,48 @@ def historial_global_observaciones(request):
 
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
-# ===================================================================
-# 🧠 MOTOR DE INTELIGENCIA ARTIFICIAL STRATOS (VERSIÓN FINAL)
-# ===================================================================
-
 def get_deepseek_client():
-    """
-    Configuración robusta del cliente DeepSeek.
-    """
-    # Clave configurada directamente para garantizar conexión inmediata
+    """Configuración directa para evitar errores de entorno."""
     api_key = "sk-f4b636146a9147feb7c4e73e6e24d8f3" 
-
-    return OpenAI(
-        api_key=api_key, 
-        base_url="https://api.deepseek.com"
-    )
+    return OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
 def extraer_texto_pdf(archivo_field):
-    """
-    Extrae texto de un campo de archivo PDF de forma segura.
-    """
+    """Extrae texto de documentos institucionales."""
     try:
-        if not archivo_field:
-            return "No hay documento cargado."
+        if not archivo_field: return "Documento no cargado."
+        if not os.path.exists(archivo_field.path): return "Archivo no encontrado."
         
-        path = archivo_field.path
-        if not os.path.exists(path):
-            return "El archivo no se encuentra en la ruta especificada del servidor."
-
-        reader = PdfReader(path)
+        reader = PdfReader(archivo_field.path)
         texto = ""
-        # Limitamos páginas para optimizar velocidad
+        # Leemos hasta 50 páginas para tener contexto normativo completo
         for i, page in enumerate(reader.pages):
-            if i >= 15: break 
+            if i >= 50: break 
             extract = page.extract_text()
-            if extract:
-                texto += extract + "\n"
+            if extract: texto += extract + "\n"
         return texto
     except Exception as e:
-        return f"Error leyendo PDF: {str(e)}"
+        return f"[Error PDF: {str(e)}]"
 
+@csrf_exempt
 @login_required
 def ai_engine(request):
     """
-    Cerebro Central de IA Stratos (DeepSeek V3).
-    Maneja la lógica de negocio y la conexión con la API.
+    Cerebro Central IA.
+    Modo 'analisis_global_bienestar': Analiza JSON completo de la institución.
     """
     action = request.GET.get('action')
 
     # ---------------------------------------------------------
-    # CASO 1: ANÁLISIS GLOBAL DE BIENESTAR (DASHBOARD)
+    # MODO 1: AUDITORÍA INSTITUCIONAL (EL QUE NECESITAS)
     # ---------------------------------------------------------
     if action == 'analisis_global_bienestar' and request.method == 'POST':
         try:
-            # 1. Decodificar datos del request
+            # 1. Leer Payload
             data = json.loads(request.body)
             contexto_datos = data.get('contexto_datos', {})
             instruccion = data.get('instruccion', '')
 
-            # 2. Leer Documentos (Base de Conocimiento)
+            # 2. Leer Documentos Base
             institucion = Institucion.objects.first()
             texto_pei = "PEI NO DISPONIBLE."
             texto_manual = "MANUAL NO DISPONIBLE."
@@ -5585,34 +5569,47 @@ def ai_engine(request):
                 if institucion.archivo_manual_convivencia:
                     texto_manual = extraer_texto_pdf(institucion.archivo_manual_convivencia)
 
-            # 3. Prompt de Ingeniería para DeepSeek
+            # 3. PROMPT DE ALTA INGENIERÍA (MODO RECTOR)
             system_prompt = """
-            ERES 'STRATOS AI', UN AUDITOR EDUCATIVO EXPERTO.
-            TU MISIÓN: Cruzar los datos estadísticos recibidos (JSON) con la normativa institucional (PDFs).
+            ERES 'STRATOS AI', EL RECTOR VIRTUAL Y AUDITOR DE CALIDAD DE ESTA INSTITUCIÓN.
             
-            FORMATO DE RESPUESTA (Markdown):
-            ### 📊 Diagnóstico Estratégico
-            [Análisis crudo de los datos numéricos. Sé directo.]
+            TU MISIÓN:
+            Analizar el estado de "LA INSTITUCIÓN" basándote EXCLUSIVAMENTE en los datos estadísticos (JSON) y documentos normativos (PEI/Manual) suministrados.
             
-            ### ⚖️ Auditoría Normativa (Cruce PEI/Manual)
-            [Cita textual de artículos del manual que apliquen a los problemas detectados]
+            🚨 REGLAS DE ORO (LEER CUIDADOSAMENTE):
+            1. NO ANALICES al usuario que envía la petición ("admin"). Tu paciente es EL COLEGIO entero.
+            2. Si el JSON contiene listas de 'estudiantes_riesgo_academico' o 'alertas_convivencia', ÚSALAS. Son casos reales.
+            3. Si el JSON dice "total_materias_perdidas: 0", felicita la gestión. Si es > 0, alarma crítica.
+            4. CRUZA los problemas detectados (ej: agresión, bajo rendimiento) con los artículos específicos del Manual de Convivencia o el PEI.
             
-            ### 💡 Plan de Acción
-            [3 estrategias concretas para docentes y psicólogos]
+            ESTRUCTURA DE RESPUESTA (Markdown Profesional):
+            # 🏫 Estado de la Nación: Reporte Rectoral
+            
+            ### 📊 1. Semáforo Académico
+            [Analiza las cifras globales. ¿Cuántos pierden el año? ¿Qué materias son el "colador"?]
+            
+            ### ⚖️ 2. Clima Escolar y Normativa
+            [Analiza las alertas de convivencia. Cita el Manual para proponer correctivos a las faltas más comunes]
+            
+            ### 🚩 3. Focos de Intervención (Top Riesgo)
+            [Menciona (anonimizando si quieres) los casos más graves reportados en el JSON]
+            
+            ### 🚀 4. Directriz Estratégica
+            [3 Órdenes claras para coordinadores y docentes]
             """
 
             user_message = f"""
-            INSTRUCCIÓN: {instruccion}
+            EJECUTA EL DIAGNÓSTICO INSTITUCIONAL CON ESTA DATA EN TIEMPO REAL:
 
-            --- CONTEXTO NORMATIVO ---
-            RESUMEN PEI: {texto_pei[:8000]}...
-            RESUMEN MANUAL: {texto_manual[:8000]}...
-
-            --- DATOS EN TIEMPO REAL ---
+            >>> INDICADORES Y ALERTAS (JSON):
             {json.dumps(contexto_datos, indent=2, ensure_ascii=False)}
+
+            >>> MARCO NORMATIVO (RESUMEN):
+            [PEI]: {texto_pei[:12000]}...
+            [MANUAL]: {texto_manual[:12000]}...
             """
 
-            # 4. Ejecución del Modelo
+            # 4. Inferencia
             client = get_deepseek_client()
             response = client.chat.completions.create(
                 model="deepseek-chat",
@@ -5620,23 +5617,16 @@ def ai_engine(request):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.6,
-                max_tokens=2500,
-                stream=False
+                temperature=0.7,
+                max_tokens=3000
             )
 
             content = response.choices[0].message.content
-
-            # 5. Respuesta Exitosa (JSON)
             return JsonResponse({'success': True, 'content': content})
 
         except Exception as e:
-            # Loguear error real en consola y devolver JSON de error
-            print(f"🔴 ERROR AI ENGINE: {str(e)}")
-            # Esto evita el error "Unexpected token <" al devolver siempre JSON
-            return JsonResponse({'success': False, 'message': f"Fallo interno: {str(e)}"})
+            print(f"ERROR IA: {e}")
+            return JsonResponse({'success': False, 'message': f"Fallo en motor de inferencia: {str(e)}"})
 
-    # ---------------------------------------------------------
-    # CASO 2: VISTA POR DEFECTO / DEBUG
-    # ---------------------------------------------------------
+    # Respuesta default
     return JsonResponse({'message': 'Stratos AI Engine Online.'})
