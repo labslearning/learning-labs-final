@@ -8,7 +8,7 @@ from django.template.loader import get_template  # <--- FALTABA ESTO
 from django.template import TemplateDoesNotExist # <--- FALTABA ESTO
 from django.conf import settings                 # <--- FALTABA ESTO
 import os
-
+from django.views.decorators.csrf import csrf_exempt
 #agregando los cambios de deepseek
 from openai import OpenAI    # pip install openai
 
