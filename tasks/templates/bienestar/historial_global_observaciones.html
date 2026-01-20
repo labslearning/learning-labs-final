@@ -162,16 +162,16 @@
         }
     }
 
-    /* 🔥 SOLUCIÓN CRÍTICA PDF: OCULTAR SIN USAR DISPLAY:NONE O VISIBILITY:HIDDEN */
+    /* 🔥 CORRECCIÓN PDF: No usar visibility:hidden, sino sacarlo de la pantalla */
     #plantillaPDFContainer {
-        position: fixed; 
+        position: fixed;
         top: 0;
-        left: -10000px; /* Sacado de la pantalla pero renderizado */
+        left: -10000px; /* Sacado de la pantalla */
         width: 210mm;
         min-height: 297mm;
         z-index: -1000;
         background: white;
-        visibility: visible; /* CRUCIAL para html2canvas */
+        visibility: visible;
     }
 
     .pdf-page {
@@ -991,7 +991,10 @@
             body: formData
         })
         .then(response => {
-            if (response.ok) {
+            return response.json().then(data => ({ status: response.status, body: data }));
+        })
+        .then(({ status, body }) => {
+            if (status === 200 && body.success) {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalSeguimiento'));
                 if (modal) modal.hide();
 
@@ -1000,8 +1003,8 @@
                 // Recargar página para actualizar historial
                 setTimeout(() => location.reload(), 800);
             } else {
-                console.error("Error servidor:", response.statusText);
-                alert("⚠️ El PDF se generó, pero hubo un error al guardar. Verifica la consola.");
+                console.error("Error servidor:", body.error);
+                alert("⚠️ El PDF se generó, pero hubo un error al guardar: " + (body.error || "Error desconocido"));
             }
         })
         .catch(err => {
