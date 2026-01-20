@@ -7,104 +7,217 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-<div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px; min-height: 100vh;">
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --success-gradient: linear-gradient(135deg, #0f9d58 0%, #20c997 100%);
+        --danger-gradient: linear-gradient(135deg, #e63946 0%, #d00000 100%);
+        --warning-gradient: linear-gradient(135deg, #f8961e 0%, #f9c74f 100%);
+        --info-gradient: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+        --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+        --radius-xl: 1.5rem;
+        --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+        background-color: #f0f2f5;
+        font-family: var(--font-main);
+        background-image: radial-gradient(circle at 10% 20%, rgba(67, 97, 238, 0.03) 0%, transparent 40%),
+                          radial-gradient(circle at 90% 80%, rgba(32, 201, 151, 0.03) 0%, transparent 40%);
+        background-attachment: fixed;
+    }
+
+    /* TARJETAS PREMIUM */
+    .card-premium {
+        background: var(--glass-bg);
+        border: var(--glass-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-soft);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow: hidden;
+    }
+    
+    .card-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    /* BOTONES FLOTANTES */
+    .btn-float {
+        border-radius: 50px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-float:hover {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* ICON BOXES */
+    .icon-box-xl {
+        width: 90px; height: 90px;
+        border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+    }
+    .icon-box-lg { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 16px; }
+    .icon-box-md { width: 50px; height: 50px; }
+
+    /* CHARTS */
+    .chart-container-responsive {
+        min-height: 350px;
+    }
+    @media (max-width: 768px) {
+        .chart-container-responsive {
+            min-height: 400px;
+        }
+        .display-5 { font-size: 2rem; }
+    }
+
+    /* TEXTOS Y BADGES */
+    .fw-black { font-weight: 900; }
+    .ls-1 { letter-spacing: 1px; }
+    .x-small { font-size: 0.75rem; }
+    
+    .badge-pill-soft {
+        padding: 0.5em 1em;
+        border-radius: 50rem;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* SCROLLBAR */
+    .scroll-pro::-webkit-scrollbar { width: 6px; }
+    .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .scroll-pro::-webkit-scrollbar-track { background: transparent; }
+
+    /* AI MAGIC BUTTON */
+    .btn-ai-magic {
+        background: linear-gradient(90deg, #6366f1, #8b5cf6, #d946ef);
+        background-size: 200% 200%;
+        animation: gradientMove 3s ease infinite;
+        border: none;
+        box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+    }
+    @keyframes gradientMove { 0% {background-position: 0% 50%} 50% {background-position: 100% 50%} 100% {background-position: 0% 50%} }
+
+    /* UTILIDADES DE COLOR */
+    .bg-purple-soft { background-color: #f3e8ff; color: #7e22ce; }
+    .bg-orange-soft { background-color: #fff7ed; color: #c2410c; }
+    .bg-teal-soft { background-color: #f0fdfa; color: #0f766e; }
+    .bg-danger-soft { background-color: #fef2f2; color: #b91c1c; }
+    
+    .text-purple { color: #7e22ce; }
+    .text-orange { color: #c2410c; }
+    .text-teal { color: #0f766e; }
+</style>
+
+<div class="container-fluid py-5" style="max-width: 1800px; min-height: 100vh;">
   
    <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
-       <div class="col-lg-5 mb-3 mb-lg-0">
+       <div class="col-xl-5 col-lg-6 mb-4 mb-lg-0">
            <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
-               <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-4 d-flex align-items-center justify-content-center transition-all hover-scale">
+               <div class="icon-box-xl bg-gradient-primary text-white me-4 hover-lift">
                    <i class="fas fa-chart-pie fa-3x"></i>
                </div>
                <div class="text-center text-lg-start">
-                   <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Ecosistema Digital Stratos</h6>
-                   <h1 class="fw-bolder text-dark mb-0 display-5">Gestión & Bienestar</h1>
-                   <p class="text-muted lead mb-0">
-                       <span class="badge bg-soft-primary text-primary me-2 px-3 py-2 rounded-pill shadow-sm border">
+                   <h6 class="text-uppercase text-primary fw-bold ls-2 mb-1">Ecosistema Digital Stratos</h6>
+                   <h1 class="fw-black text-dark mb-0 display-5">Gestión & Bienestar</h1>
+                   <p class="text-muted lead mb-0 mt-1">
+                       <span class="badge bg-soft-primary text-primary border border-primary-subtle rounded-pill px-3">
                            <i class="fas fa-user-shield me-1"></i> {{ user.perfil.get_rol_display }}
                        </span>
-                       Centro de Control Institucional
+                       <span class="ms-2 small align-middle">Centro de Control</span>
                    </p>
                </div>
            </div>
        </div>
        
-       <div class="col-lg-7">
+       <div class="col-xl-7 col-lg-6">
            <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-3 align-items-center">
-                <button class="btn btn-ai-magic rounded-pill px-4 py-2 shadow-lg fw-bold text-white hover-lift" onclick="iniciarAnalisisIA()">
-                    <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
+                <button class="btn btn-ai-magic btn-float rounded-pill px-4 py-3 fw-bold text-white" onclick="iniciarAnalisisIA()">
+                    <i class="fas fa-sparkles me-2"></i> Consultar IA Stratos
                 </button>
 
-                <div class="vr mx-2 opacity-25 d-none d-lg-block"></div>
+                <div class="vr mx-2 opacity-25 d-none d-xl-block" style="height: 40px;"></div>
 
-                <a href="{% url 'reporte_consolidado' %}" class="btn btn-white border shadow-sm text-success fw-bold hover-scale px-4 py-2" title="Descargar Sábana Excel">
-                    <i class="fas fa-file-excel me-2"></i>Sábana
+                <a href="{% url 'reporte_consolidado' %}" class="btn btn-white btn-float shadow-sm text-success" title="Sábana Excel">
+                    <i class="fas fa-file-excel fa-lg"></i>
                 </a>
 
-                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border shadow-sm text-primary fw-bold hover-scale px-4 py-2" title="Ver Historial de Procesos">
-                    <i class="fas fa-history me-2"></i>Historial
+                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white btn-float shadow-sm text-primary" title="Historial">
+                    <i class="fas fa-history fa-lg"></i>
                 </a>
 
-                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-white border shadow-sm text-purple fw-bold hover-scale px-4 py-2" title="Analizar PEI con IA">
-                    <i class="fas fa-robot me-2"></i>Auditoría IA
+                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-white btn-float shadow-sm text-purple" title="Auditoría IA">
+                    <i class="fas fa-robot fa-lg"></i>
                 </a>
                 
-                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold hover-scale px-4 py-2">
+                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning btn-float shadow-lg text-dark px-4">
                     <i class="fas fa-brain me-2"></i>IA Académica
                 </a>
 
-                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-lg hover-scale px-3 py-2" title="Recargar Datos">
+                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary btn-float shadow-lg px-3" title="Recargar">
                     <i class="fas fa-sync-alt"></i>
                 </a>
            </div>
            
            <div class="text-center text-lg-end mt-3">
-               <div class="d-inline-flex align-items-center bg-white border px-3 py-1 rounded-pill shadow-sm">
-                   <span class="dot bg-success me-2"></span>
-                   <small class="text-muted fw-bold ls-1 text-uppercase">Sincronización Stratos: <span class="text-dark">{% now "d M, Y - H:i" %}</span></small>
+               <div class="d-inline-flex align-items-center bg-white border border-light px-3 py-1 rounded-pill shadow-sm">
+                   <div class="spinner-grow spinner-grow-sm text-success me-2" role="status"></div>
+                   <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">En Línea: <span class="text-dark">{% now "d M - H:i" %}</span></small>
                </div>
            </div>
        </div>
    </div>
 
-   <div class="card border-0 shadow-lg rounded-5 overflow-hidden mb-5 animate__animated animate__fadeInUp">
-       <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-           <div>
-               <h4 class="fw-bold text-dark mb-1">
-                   <i class="fas fa-satellite-dish me-2 text-danger animate__animated animate__flash animate__infinite animate__slow"></i>
-                   Radar de Riesgo Académico Institucional
+   <div class="card card-premium mb-5 animate__animated animate__fadeInUp">
+       <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex flex-wrap justify-content-between align-items-center">
+           <div class="mb-3 mb-md-0">
+               <h4 class="fw-black text-dark mb-1 d-flex align-items-center">
+                   <i class="fas fa-satellite-dish me-3 text-danger"></i>
+                   Radar de Riesgo Académico
                </h4>
-               <p class="text-muted small mb-0">Priorización automática de estudiantes con bajo rendimiento por volumen de asignaturas perdidas.</p>
+               <p class="text-muted small mb-0 ms-1">Detección automática de anomalías en el rendimiento estudiantil.</p>
            </div>
            <div class="d-flex gap-2">
-               <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   <i class="fas fa-bell me-2"></i>Fallas Académicas Críticas
+               <span class="badge-pill-soft bg-danger-subtle text-danger border border-danger-subtle">
+                   <i class="fas fa-bell me-1"></i> Crítico
                </span>
-               <span class="badge bg-dark text-white px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   {{ top_riesgo_academico|length }} Casos en Seguimiento
+               <span class="badge-pill-soft bg-dark text-white">
+                   {{ top_riesgo_academico|length }} Casos Activos
                </span>
            </div>
        </div>
        <div class="card-body p-4">
-           <div class="row g-4">
+           <div class="row g-4 align-items-stretch">
                <div class="col-lg-3">
                    <div class="d-flex flex-column gap-3 h-100">
-                       <div class="card bg-soft-danger border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-danger">
-                           <div class="text-center py-2">
-                               <h6 class="text-uppercase text-danger fw-bold x-small mb-2 ls-1">Materias Perdidas (Colegio)</h6>
+                       <div class="card bg-danger-subtle border-0 p-4 rounded-4 flex-grow-1 position-relative overflow-hidden">
+                           <div class="position-absolute top-0 end-0 opacity-10 p-3"><i class="fas fa-exclamation-triangle fa-5x text-danger"></i></div>
+                           <div class="position-relative z-1">
+                               <h6 class="text-uppercase text-danger fw-bold x-small ls-1">Materias Perdidas</h6>
                                <h2 class="display-3 fw-black text-danger mb-0">{{ kpi.total_materias_perdidas|default:"0" }}</h2>
-                               <div class="mt-2">
-                                   <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>Impacto Curricular</small>
-                               </div>
+                               <small class="text-danger fw-bold opacity-75">Total Institucional</small>
                            </div>
                        </div>
-                       <div class="card bg-soft-info border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-info">
-                           <div class="text-center py-2">
-                               <h6 class="text-uppercase text-info fw-bold x-small mb-2 ls-1">Promedio Institucional</h6>
+                       <div class="card bg-info-subtle border-0 p-4 rounded-4 flex-grow-1 position-relative overflow-hidden">
+                           <div class="position-absolute top-0 end-0 opacity-10 p-3"><i class="fas fa-chart-line fa-5x text-info"></i></div>
+                           <div class="position-relative z-1">
+                               <h6 class="text-uppercase text-info fw-bold x-small ls-1">Promedio Global</h6>
                                <h2 class="display-3 fw-black text-info mb-0">{{ kpi.prom_global_acad|default:"0.0" }}</h2>
-                               <div class="progress mt-3 mx-auto shadow-sm" style="height: 10px; width: 80%; border-radius: 10px;">
-                                   <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" 
-                                        role="progressbar" 
-                                        style="width: {% widthratio kpi.prom_global_acad 5 100 %}%"></div>
+                               <div class="progress mt-2 bg-white bg-opacity-50" style="height: 6px;">
+                                   <div class="progress-bar bg-info" style="width: {% widthratio kpi.prom_global_acad 5 100 %}%"></div>
                                </div>
                            </div>
                        </div>
@@ -112,81 +225,64 @@
                </div>
 
                <div class="col-lg-4">
-                   <div class="card border bg-white p-4 rounded-5 h-100 shadow-sm d-flex flex-column justify-content-center align-items-center border-0">
-                       <h6 class="text-center text-secondary x-small fw-bold text-uppercase mb-4">
-                           <i class="fas fa-chart-line me-2"></i>Mapa de Calor Académico
+                   <div class="card border-0 bg-white p-2 rounded-4 h-100 shadow-none d-flex flex-column align-items-center">
+                       <h6 class="text-secondary fw-bold text-uppercase mb-3 mt-2" style="font-size: 0.8rem;">
+                           <i class="fas fa-crosshairs me-2 text-primary"></i>Mapa de Calor por Áreas
                        </h6>
-                       <div class="chart-container-responsive" style="width: 100%;">
+                       <div class="chart-container-responsive w-100">
                            <canvas id="radarChartPro"></canvas>
                        </div>
-                       <p class="small text-muted mt-3 text-center px-4">Desviación del rendimiento actual vs metas del PEI.</p>
                    </div>
                </div>
 
                <div class="col-lg-5">
                    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-                        <h6 class="text-secondary x-small fw-bold text-uppercase mb-0">Listado de Reprobación Crítica</h6>
-                        <span class="x-small text-muted fw-bold"><i class="fas fa-sort-amount-down me-1"></i>Mayor Riesgo Primero</span>
+                        <h6 class="text-secondary fw-bold text-uppercase mb-0" style="font-size: 0.8rem;">Top Reprobación Crítica</h6>
+                        <span class="badge bg-light text-muted border">Prioridad Alta</span>
                    </div>
                    
-                   <div class="scroll-pro pe-2" style="max-height: 480px; overflow-y: auto;">
-                       <div class="list-group list-group-flush gap-3">
+                   <div class="scroll-pro pe-2" style="max-height: 400px; overflow-y: auto;">
+                       <div class="d-flex flex-column gap-3">
                            {% for riesgo in top_riesgo_academico %}
-                           <div class="card border-0 shadow-sm rounded-4 mb-2 hover-elevate transition-all border-start border-5 {% if riesgo.materias_perdidas > 3 %}border-danger{% else %}border-warning{% endif %}">
+                           <div class="card border-0 shadow-sm rounded-4 transition-all hover-translate-x" style="border-left: 5px solid {% if riesgo.materias_perdidas > 3 %}#dc3545{% else %}#ffc107{% endif %};">
                                <div class="card-body p-3">
-                                   <div class="d-flex align-items-start">
-                                       <div class="position-relative me-3">
-                                           <div class="avatar-md rounded-circle {% if riesgo.materias_perdidas > 3 %}bg-danger{% else %}bg-warning{% endif %} text-white d-flex align-items-center justify-content-center fw-black shadow-lg">
-                                               {{ riesgo.estudiante.first_name|slice:":1" }}{{ riesgo.estudiante.last_name|slice:":1" }}
+                                   <div class="d-flex align-items-center">
+                                       <div class="me-3 position-relative">
+                                           <div class="avatar-sm rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                               {{ riesgo.estudiante.first_name|slice:":1" }}
                                            </div>
-                                           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-white">
-                                               #{{ forloop.counter }}
-                                           </span>
+                                           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.6rem;">{{ forloop.counter }}</span>
                                        </div>
-                                       <div class="flex-grow-1 overflow-hidden">
+                                       <div class="flex-grow-1 lh-1">
                                            <h6 class="mb-1 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
-                                           <span class="badge bg-light text-muted border px-2 py-1 rounded-pill x-small">
-                                               <i class="fas fa-graduation-cap me-1"></i> {{ riesgo.curso.nombre }}
-                                           </span>
-                                           
-                                           <div class="mt-3 p-2 bg-light rounded-3 shadow-inner">
-                                               <p class="x-small fw-bold text-uppercase text-danger mb-1"><i class="fas fa-book-dead me-1"></i> Materias Reprobadas:</p>
-                                               <div class="d-flex flex-wrap gap-1">
-                                                   {% for materia_name in riesgo.materias_nombres %}
-                                                   <span class="badge bg-danger text-white x-small rounded-pill">{{ materia_name }}</span>
-                                                   {% empty %}
-                                                   <span class="x-small text-muted">Sin datos de materias.</span>
-                                                   {% endfor %}
-                                               </div>
-                                           </div>
+                                           <small class="text-muted">{{ riesgo.curso.nombre }}</small>
                                        </div>
-                                       <div class="text-end ms-2">
-                                           <div class="display-6 fw-black text-danger mb-0">{{ riesgo.materias_perdidas }}</div>
-                                           <small class="text-uppercase text-muted fw-bold" style="font-size: 0.5rem;">Asignaturas</small>
-                                           <div class="mt-3">
-                                               <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="btn btn-sm btn-primary rounded-circle shadow-sm">
-                                                   <i class="fas fa-search-plus"></i>
-                                               </a>
+                                       <div class="text-end">
+                                           <div class="badge bg-danger-subtle text-danger fs-6 fw-black mb-1">{{ riesgo.materias_perdidas }}</div>
+                                           <div class="d-block">
+                                               <a href="{% url 'ver_observador' riesgo.estudiante.id %}" class="btn btn-xs btn-light rounded-circle"><i class="fas fa-arrow-right"></i></a>
                                            </div>
                                        </div>
                                    </div>
+                                   {% if riesgo.materias_nombres %}
+                                   <div class="mt-2 pt-2 border-top border-light d-flex flex-wrap gap-1">
+                                        {% for materia_name in riesgo.materias_nombres|slice:":3" %}
+                                        <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">{{ materia_name }}</span>
+                                        {% endfor %}
+                                        {% if riesgo.materias_nombres|length > 3 %}
+                                        <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">+{{ riesgo.materias_nombres|length|add:"-3" }}</span>
+                                        {% endif %}
+                                   </div>
+                                   {% endif %}
                                </div>
                            </div>
                            {% empty %}
-                           <div class="text-center p-5 text-muted bg-white rounded-5 shadow-inner border border-dashed">
-                               <i class="fas fa-check-double fa-4x mb-3 text-success opacity-25"></i>
-                               <p class="mb-0 fw-bold">Ecosistema sin Alertas de Reprobación</p>
-                               <small>Todos los estudiantes cumplen satisfactoriamente el PEI.</small>
+                           <div class="text-center p-5">
+                               <i class="fas fa-check-circle fa-3x text-success mb-3 opacity-50"></i>
+                               <p class="fw-bold text-muted">Sin alertas activas</p>
                            </div>
                            {% endfor %}
                        </div>
-                   </div>
-                   
-                   <div class="mt-4 bg-primary bg-opacity-10 p-3 rounded-4 border border-primary border-dashed text-center">
-                       <p class="x-small text-primary fw-bold mb-0">
-                           <i class="fas fa-shield-alt me-1"></i> 
-                           El sistema analiza en tiempo real las notas finales de cada asignatura.
-                       </p>
                    </div>
                </div>
            </div>
@@ -194,212 +290,172 @@
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeIn">
-       <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
-           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
-           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
+       <div class="col-12 mb-4">
+           <h5 class="fw-bold text-dark border-start border-5 border-primary ps-3">Gestión Documental Institucional</h5>
        </div>
 
        <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
-               <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-4">
-                       <div class="icon-box-lg bg-purple-soft rounded-4 d-flex align-items-center justify-content-center text-purple shadow-sm">
-                           <i class="fas fa-university fa-lg"></i>
-                       </div>
-                       {% if institucion.archivo_pei %}
-                           <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Vigente</span>
-                       {% else %}
-                           <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3">Pendiente</span>
-                       {% endif %}
+           <div class="card card-premium h-100 position-relative">
+               <div class="card-body p-4 text-center">
+                   <div class="icon-box-xl bg-purple-soft mx-auto mb-3 rounded-circle">
+                       <i class="fas fa-university fa-2x"></i>
                    </div>
-                   <h5 class="fw-bold text-dark mb-2">Proyecto Educativo (PEI)</h5>
-                   <p class="text-muted small">Marco pedagógico y horizonte institucional que rige el modelo de aprendizaje.</p>
-                   <div class="mt-auto pt-3 d-grid gap-2">
-                       {% if institucion.archivo_pei %}
-                           <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-sm btn-outline-purple rounded-pill fw-bold py-2 shadow-sm">
-                               <i class="fas fa-external-link-alt me-2"></i> Consultar PDF
-                           </a>
-                       {% endif %}
-                       {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
-                           <button class="btn btn-sm btn-light text-muted rounded-pill py-2" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPEI">
-                               <i class="fas fa-cloud-upload-alt me-2"></i> Actualizar
-                           </button>
-                           <div class="collapse mt-2" id="uploadPEI">
-                               <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="pei_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-purple btn-sm w-100 fw-bold rounded-pill">Subir a Nube</button>
-                               </form>
-                           </div>
-                       {% endif %}
+                   <h5 class="fw-bold mb-1">Proyecto Educativo (PEI)</h5>
+                   <p class="text-muted small mb-4">Carta de navegación pedagógica.</p>
+                   
+                   {% if institucion.archivo_pei %}
+                       <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-outline-purple rounded-pill w-100 fw-bold">Ver Documento</a>
+                   {% else %}
+                       <button class="btn btn-light rounded-pill w-100 text-muted" disabled>No cargado</button>
+                   {% endif %}
+
+                   {% if user.perfil.rol in 'ADMINISTRADOR,COORD_ACADEMICO' %}
+                   <button class="btn btn-link btn-sm text-muted mt-2 text-decoration-none" data-bs-toggle="collapse" data-bs-target="#uploadPEI">
+                       <i class="fas fa-cloud-upload-alt"></i> Actualizar
+                   </button>
+                   <div class="collapse mt-2" id="uploadPEI">
+                       <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded-3 border">{% csrf_token %}
+                           <input type="file" name="pei_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
+                           <button type="submit" class="btn btn-purple btn-xs w-100 rounded-pill">Subir</button>
+                       </form>
                    </div>
+                   {% endif %}
                </div>
            </div>
        </div>
 
        <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border rounded-5">
-               <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-4">
-                       <div class="icon-box-lg bg-orange-soft rounded-4 d-flex align-items-center justify-content-center text-orange shadow-sm">
-                           <i class="fas fa-gavel fa-lg"></i>
-                       </div>
-                       {% if institucion.archivo_manual_convivencia %}
-                           <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Activo</span>
-                       {% else %}
-                           <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3">Requerido</span>
-                       {% endif %}
+           <div class="card card-premium h-100">
+               <div class="card-body p-4 text-center">
+                   <div class="icon-box-xl bg-orange-soft mx-auto mb-3 rounded-circle">
+                       <i class="fas fa-gavel fa-2x"></i>
                    </div>
-                   <h5 class="fw-bold text-dark mb-2">Manual Convivencial</h5>
-                   <p class="text-muted small">Normas, derechos y deberes que rigen la vida comunitaria y ruta integral.</p>
-                   <div class="mt-auto pt-3 d-grid gap-2">
-                       {% if institucion.archivo_manual_convivencia %}
-                           <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2">
-                               <i class="fas fa-eye me-2"></i> Ver Normativa
-                           </a>
-                       {% endif %}
-                       {% if user.perfil.rol in 'ADMINISTRADOR,COORD_CONVIVENCIA' %}
-                           <button class="btn btn-sm btn-light text-muted rounded-pill py-2" type="button" data-bs-toggle="collapse" data-bs-target="#uploadManual">
-                               <i class="fas fa-upload me-2"></i> Actualizar
-                           </button>
-                           <div class="collapse mt-2" id="uploadManual">
-                               <form method="POST" enctype="multipart/form-data" class="p-3 bg-white rounded-4 border shadow-sm">{% csrf_token %}
-                                   <input type="file" name="manual_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
-                                   <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold text-white rounded-pill">Sincronizar</button>
-                               </form>
-                           </div>
-                       {% endif %}
+                   <h5 class="fw-bold mb-1">Manual de Convivencia</h5>
+                   <p class="text-muted small mb-4">Normativa y acuerdos escolares.</p>
+
+                   {% if institucion.archivo_manual_convivencia %}
+                       <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-outline-orange rounded-pill w-100 fw-bold">Ver Documento</a>
+                   {% else %}
+                       <button class="btn btn-light rounded-pill w-100 text-muted" disabled>No cargado</button>
+                   {% endif %}
+
+                   {% if user.perfil.rol in 'ADMINISTRADOR,COORD_CONVIVENCIA' %}
+                   <button class="btn btn-link btn-sm text-muted mt-2 text-decoration-none" data-bs-toggle="collapse" data-bs-target="#uploadManual">
+                       <i class="fas fa-cloud-upload-alt"></i> Actualizar
+                   </button>
+                   <div class="collapse mt-2" id="uploadManual">
+                       <form method="POST" enctype="multipart/form-data" class="p-2 bg-light rounded-3 border">{% csrf_token %}
+                           <input type="file" name="manual_file" class="form-control form-control-sm mb-2" accept=".pdf" required>
+                           <button type="submit" class="btn btn-warning text-white btn-xs w-100 rounded-pill">Subir</button>
+                       </form>
                    </div>
+                   {% endif %}
                </div>
            </div>
        </div>
 
        <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border rounded-5">
-               <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-4">
-                       <div class="icon-box-lg bg-teal-soft rounded-4 d-flex align-items-center justify-content-center text-teal shadow-sm">
-                           <i class="fas fa-scroll fa-lg"></i>
-                       </div>
-                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">DBA Estructurado</span>
+           <div class="card card-premium h-100">
+               <div class="card-body p-4 text-center">
+                   <div class="icon-box-xl bg-teal-soft mx-auto mb-3 rounded-circle">
+                       <i class="fas fa-scroll fa-2x"></i>
                    </div>
-                   <h5 class="fw-bold text-dark mb-2">Malla Curricular</h5>
-                   <p class="text-muted small">Contenidos programáticos, competencias y estándares por nivel académico.</p>
-                   <div class="mt-auto pt-3 d-grid gap-2">
-                       {% if institucion.archivo_malla_curricular %}
-                           <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-sm btn-outline-teal rounded-pill fw-bold py-2">
-                               <i class="fas fa-th-list me-2"></i> Ver Planes
-                           </a>
-                       {% endif %}
-                   </div>
+                   <h5 class="fw-bold mb-1">Malla Curricular</h5>
+                   <p class="text-muted small mb-4">Plan de estudios y competencias.</p>
+                   {% if institucion.archivo_malla_curricular %}
+                       <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-outline-teal rounded-pill w-100 fw-bold">Ver Documento</a>
+                   {% else %}
+                       <button class="btn btn-light rounded-pill w-100 text-muted" disabled>No disponible</button>
+                   {% endif %}
                </div>
            </div>
        </div>
 
        <div class="col-md-6 col-lg-3 mb-4">
-           <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border rounded-5">
-               <div class="card-body p-4 d-flex flex-column">
-                   <div class="d-flex justify-content-between align-items-start mb-4">
-                       <div class="icon-box-lg bg-danger-soft rounded-4 d-flex align-items-center justify-content-center text-danger shadow-sm">
-                           <i class="fas fa-calendar-alt fa-lg"></i>
-                       </div>
-                       <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">2025 Activo</span>
+           <div class="card card-premium h-100">
+               <div class="card-body p-4 text-center">
+                   <div class="icon-box-xl bg-danger-soft mx-auto mb-3 rounded-circle">
+                       <i class="fas fa-calendar-alt fa-2x"></i>
                    </div>
-                   <h5 class="fw-bold text-dark mb-2">Cronograma Anual</h5>
-                   <p class="text-muted small">Agenda de actividades, evaluaciones institucionales y jornadas pedagógicas.</p>
-                   <div class="mt-auto pt-3 d-grid gap-2">
-                       {% if institucion.archivo_calendario %}
-                           <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-bold py-2">
-                               <i class="fas fa-clock me-2"></i> Ver Agenda
-                           </a>
-                       {% endif %}
-                   </div>
+                   <h5 class="fw-bold mb-1">Cronograma 2025</h5>
+                   <p class="text-muted small mb-4">Agenda y fechas institucionales.</p>
+                   {% if institucion.archivo_calendario %}
+                       <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-outline-danger rounded-pill w-100 fw-bold">Ver Documento</a>
+                   {% else %}
+                       <button class="btn btn-light rounded-pill w-100 text-muted" disabled>No disponible</button>
+                   {% endif %}
                </div>
            </div>
        </div>
    </div>
 
    <div class="row g-4 mb-5 animate__animated animate__fadeIn">
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-lg h-100 bg-white overflow-hidden hover-elevate border-start border-5 border-primary rounded-4">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between align-items-center">
-                       <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Matrícula Total</p>
-                            <h2 class="fw-black text-dark mb-0">{{ kpi.total_alumnos }}</h2>
-                           <small class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Estudiantes Activos</small>
-                       </div>
-                       <div class="bg-soft-primary rounded-4 p-3 text-primary shadow-sm">
-                           <i class="fas fa-users fa-2x"></i>
-                       </div>
+       <div class="col-lg-3 col-md-6">
+           <div class="card card-premium h-100 bg-white">
+               <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                   <div>
+                       <p class="text-uppercase text-muted x-small fw-bold mb-1">Población Activa</p>
+                       <h2 class="fw-black text-dark mb-0">{{ kpi.total_alumnos }}</h2>
+                   </div>
+                   <div class="icon-box-md bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center">
+                       <i class="fas fa-users fa-lg"></i>
                    </div>
                </div>
            </div>
        </div>
-
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-lg h-100 bg-white overflow-hidden hover-elevate border-start border-5 border-info rounded-4">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between align-items-center">
-                       <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Rendimiento Global</p>
-                            <h2 class="fw-black text-info mb-0">{{ kpi.prom_global_acad }}</h2>
-                           <small class="text-muted fw-bold">GPA Institucional</small>
-                       </div>
-                       <div class="radial-progress-kpi">
-                           <span class="fw-bold text-info" style="font-size: 0.8rem;">META</span>
-                       </div>
+       <div class="col-lg-3 col-md-6">
+           <div class="card card-premium h-100 bg-white">
+               <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                   <div>
+                       <p class="text-uppercase text-muted x-small fw-bold mb-1">Rendimiento GPA</p>
+                       <h2 class="fw-black text-info mb-0">{{ kpi.prom_global_acad }}</h2>
+                   </div>
+                   <div class="icon-box-md bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center">
+                       <i class="fas fa-graduation-cap fa-lg"></i>
                    </div>
                </div>
            </div>
        </div>
-
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-lg h-100 bg-white overflow-hidden hover-elevate border-start border-5 border-warning rounded-4">
-                <div class="card-body p-4">
-                   <div class="d-flex justify-content-between align-items-center">
-                       <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Clima Escolar</p>
-                           <h2 class="fw-black text-dark mb-0">{{ kpi.prom_global_conv }}</h2>
-                           <small class="text-muted fw-bold">Índice Convivencial</small>
-                       </div>
-                       <div class="bg-soft-warning rounded-4 p-3 text-warning shadow-sm">
-                           <i class="fas fa-smile-beam fa-2x"></i>
-                        </div>
+       <div class="col-lg-3 col-md-6">
+           <div class="card card-premium h-100 bg-white">
+               <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                   <div>
+                       <p class="text-uppercase text-muted x-small fw-bold mb-1">Clima Escolar</p>
+                       <h2 class="fw-black text-warning mb-0">{{ kpi.prom_global_conv }}</h2>
+                   </div>
+                   <div class="icon-box-md bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center">
+                       <i class="fas fa-smile fa-lg"></i>
                    </div>
                </div>
            </div>
        </div>
-
-       <div class="col-md-6 col-lg-3">
-           <div class="card border-0 shadow-lg h-100 bg-white overflow-hidden hover-elevate border-start border-5 border-success rounded-4">
-               <div class="card-body p-4">
-                   <div class="d-flex justify-content-between align-items-center">
-                       <div>
-                           <p class="text-uppercase fw-bold text-muted x-small ls-1 mb-1">Gestión de Cursos</p>
-                           <h2 class="fw-black text-dark mb-0">{{ kpi.total_cursos }}</h2>
-                           <small class="text-success fw-bold">Grupos Académicos</small>
-                       </div>
-                        <div class="bg-soft-success rounded-4 p-3 text-success shadow-sm">
-                           <i class="fas fa-layer-group fa-2x"></i>
-                       </div>
+       <div class="col-lg-3 col-md-6">
+           <div class="card card-premium h-100 bg-white">
+               <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                   <div>
+                       <p class="text-uppercase text-muted x-small fw-bold mb-1">Cursos Activos</p>
+                       <h2 class="fw-black text-success mb-0">{{ kpi.total_cursos }}</h2>
+                   </div>
+                   <div class="icon-box-md bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center">
+                       <i class="fas fa-chalkboard fa-lg"></i>
                    </div>
                </div>
            </div>
-        </div>
+       </div>
    </div>
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
        <div class="col-lg-8 mb-4 mb-lg-0">
-           <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
-               <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar me-3 text-primary"></i>Desempeño Comparativo Grupal</h5>
-                   <div class="btn-group shadow-sm border rounded-pill overflow-hidden">
-                       <button class="btn btn-xs btn-light px-3 py-1 fw-bold border-0">GPA</button>
-                       <button class="btn btn-xs btn-primary px-3 py-1 fw-bold shadow-none">Analítica</button>
+           <div class="card card-premium h-100">
+               <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Comparativa Grupal</h5>
+                   <div class="btn-group btn-group-sm">
+                       <button class="btn btn-outline-light text-dark border fw-bold active">General</button>
+                       <button class="btn btn-outline-light text-dark border fw-bold">Detalle</button>
                    </div>
                </div>
                 <div class="card-body p-4">
-                   <div style="height: 400px; width: 100%;">
+                   <div style="height: 380px; width: 100%;">
                        <canvas id="peiChartSupremo"></canvas>
                    </div>
                </div>
@@ -407,29 +463,40 @@
        </div>
        
        <div class="col-lg-4">
-            <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
-               <div class="card-header border-0 pt-4 px-4 text-center shadow-sm" style="background: linear-gradient(135deg, #157347 0%, #20c997 100%);">
-                   <h5 class="fw-bold text-white mb-0"><i class="fas fa-user-clock me-2"></i>Monitor de Asistencia</h5>
-                   <small style="color: rgba(255,255,255,0.8);">Reporte Diario Institucional</small>
+            <div class="card card-premium h-100 overflow-hidden">
+               <div class="card-header border-0 pt-5 pb-4 px-4 text-center text-white position-relative" 
+                    style="background: linear-gradient(135deg, #157347 0%, #0d9668 100%) !important;">
+                   <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" 
+                        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==');"></div>
+                   
+                   <h4 class="fw-black text-white mb-1 position-relative z-1" style="color: #ffffff !important;">
+                       <i class="fas fa-clock me-2"></i>Monitor de Asistencia
+                   </h4>
+                   <p class="mb-0 small position-relative z-1" style="color: rgba(255,255,255,0.95) !important;">
+                       Reporte Diario en Tiempo Real
+                   </p>
                </div>
-               <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center">
-                   <div style="height: 280px; width: 100%; position: relative;">
+               
+               <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center bg-white">
+                   <div style="height: 250px; width: 100%; position: relative;">
                        <canvas id="asistenciaChartSupremo"></canvas>
                        <div class="chart-center-label">
-                           <h4 class="mb-0 fw-black text-success">92%</h4>
-                           <small class="text-muted fw-bold">Efectividad</small>
+                           <h3 class="mb-0 fw-black text-success">92%</h3>
+                           <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Efectividad</small>
                        </div>
                    </div>
-                   <div class="mt-4 w-100 border-top pt-4 text-center">
-                       <div class="row">
-                           <div class="col-6 border-end">
-                               <h6 class="mb-0 fw-bold text-dark">Estable</h6>
-                               <small class="text-muted">Estado Red</small>
-                           </div>
-                           <div class="col-6">
-                               <h6 class="mb-0 fw-bold text-success">-2.4%</h6>
-                               <small class="text-muted">Deserción Prev.</small>
-                           </div>
+                   <div class="row w-100 mt-4 text-center">
+                       <div class="col-4 border-end">
+                           <span class="d-block fw-bold text-dark">--</span>
+                           <small class="text-muted x-small">Fallas</small>
+                       </div>
+                       <div class="col-4 border-end">
+                           <span class="d-block fw-bold text-dark">--</span>
+                           <small class="text-muted x-small">Tardes</small>
+                       </div>
+                       <div class="col-4">
+                           <span class="d-block fw-bold text-success">OK</span>
+                           <small class="text-muted x-small">Estado</small>
                        </div>
                    </div>
                </div>
@@ -439,21 +506,18 @@
 
    <div class="row mb-5 animate__animated animate__fadeInUp">
        <div class="col-lg-6 mb-4 mb-lg-0">
-           <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
+           <div class="card card-premium h-100">
                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <div>
-                       <h5 class="fw-bold text-danger mb-0"><i class="fas fa-user-times me-2"></i>Alertas de Ausentismo Crítico</h5>
-                       <p class="text-muted x-small mb-0">Estudiantes con inasistencia superior al umbral establecido.</p>
-                   </div>
-                   <a href="{% url 'historial_asistencia' %}" class="btn btn-xs btn-outline-danger rounded-pill px-3 fw-bold">Gestionar</a>
+                   <h5 class="fw-bold text-danger mb-0"><i class="fas fa-user-clock me-2"></i>Alertas de Asistencia</h5>
+                   <a href="{% url 'historial_asistencia' %}" class="btn btn-xs btn-light text-danger fw-bold rounded-pill border">Ver Todo</a>
                </div>
                <div class="card-body p-0">
                    <div class="table-responsive">
                        <table class="table table-hover align-middle mb-0">
-                           <thead class="bg-light text-muted x-small text-uppercase fw-bold border-bottom">
+                           <thead class="bg-light text-muted x-small text-uppercase fw-bold">
                                <tr>
-                                   <th class="ps-4">Identidad del Alumno</th>
-                                   <th class="text-center">Fallas Totales</th>
+                                   <th class="ps-4">Estudiante</th>
+                                   <th class="text-center">Fallas</th>
                                    <th class="text-end pe-4">Acción</th>
                                </tr>
                            </thead>
@@ -462,24 +526,24 @@
                                <tr>
                                    <td class="ps-4 py-3">
                                        <div class="d-flex align-items-center">
-                                           <div class="avatar-xs rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center me-3 fw-bold shadow-sm">
-                                               {{ alerta.estudiante__first_name|slice:":1" }}
-                                           </div>
-                                           <div>
-                                               <div class="fw-bold text-dark small">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</div>
-                                               <small class="text-muted x-small">{{ alerta.curso__nombre }}</small>
-                                           </div>
+                                            <div class="avatar-xs rounded-circle bg-danger-subtle text-danger fw-bold d-flex align-items-center justify-content-center me-3">
+                                                {{ alerta.estudiante__first_name|slice:":1" }}
+                                            </div>
+                                            <div class="lh-1">
+                                                <span class="fw-bold text-dark d-block mb-1">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</span>
+                                                <small class="text-muted x-small">{{ alerta.curso__nombre }}</small>
+                                            </div>
                                        </div>
                                    </td>
                                    <td class="text-center">
-                                       <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm fw-bold">{{ alerta.total }}</span>
+                                       <span class="badge bg-danger rounded-pill">{{ alerta.total }}</span>
                                    </td>
                                    <td class="text-end pe-4">
-                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary border rounded-circle shadow-sm"><i class="fas fa-eye"></i></a>
+                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-icon btn-light text-primary"><i class="fas fa-eye"></i></a>
                                    </td>
                                </tr>
                                {% empty %}
-                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">Sin alertas críticas de inasistencia.</td></tr>
+                               <tr><td colspan="3" class="text-center py-5 text-muted small">Sin alertas de asistencia.</td></tr>
                                {% endfor %}
                            </tbody>
                        </table>
@@ -489,21 +553,19 @@
        </div>
 
        <div class="col-lg-6">
-           <div class="card border-0 shadow-lg h-100 bg-white rounded-5 overflow-hidden">
-               <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                   <div>
-                       <h5 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Zonas de Riesgo Convivencial</h5>
-                       <p class="text-muted x-small mb-0">Estudiantes con calificación de convivencia inferior a 3.5.</p>
-                   </div>
+           <div class="card card-premium h-100">
+               <div class="card-header bg-white border-0 pt-4 px-4">
+                   <h5 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Riesgo Convivencial</h5>
+                   <p class="text-muted x-small mb-0">Nota inferior a 3.5 en componente comportamental.</p>
                </div>
                <div class="card-body p-0">
                    <div class="table-responsive">
                        <table class="table table-hover align-middle mb-0">
-                           <thead class="bg-light text-muted x-small text-uppercase fw-bold border-bottom">
+                           <thead class="bg-light text-muted x-small text-uppercase fw-bold">
                                <tr>
-                                   <th class="ps-4">Identidad del Alumno</th>
-                                   <th class="text-center">Nota Promedio</th>
-                                   <th class="text-end pe-4">Intervenir</th>
+                                   <th class="ps-4">Estudiante</th>
+                                   <th class="text-center">Nota</th>
+                                   <th class="text-end pe-4">Gestión</th>
                                </tr>
                            </thead>
                            <tbody>
@@ -511,24 +573,26 @@
                                <tr>
                                    <td class="ps-4 py-3">
                                        <div class="d-flex align-items-center">
-                                           <div class="avatar-xs rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center me-3 fw-bold border border-warning-subtle shadow-sm">
-                                               {{ alerta.estudiante__first_name|slice:":1" }}
-                                           </div>
-                                           <div>
-                                               <div class="fw-bold text-dark small">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</div>
-                                               <small class="text-muted x-small">{{ alerta.materia__curso__nombre }}</small>
-                                           </div>
+                                            <div class="avatar-xs rounded-circle bg-warning-subtle text-warning fw-bold d-flex align-items-center justify-content-center me-3">
+                                                {{ alerta.estudiante__first_name|slice:":1" }}
+                                            </div>
+                                            <div class="lh-1">
+                                                <span class="fw-bold text-dark d-block mb-1">{{ alerta.estudiante__first_name }} {{ alerta.estudiante__last_name }}</span>
+                                                <small class="text-muted x-small">{{ alerta.materia__curso__nombre }}</small>
+                                            </div>
                                        </div>
                                    </td>
                                    <td class="text-center">
-                                       <span class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-2 fw-black shadow-sm">{{ alerta.promedio|floatformat:2 }}</span>
+                                       <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-3">
+                                            {{ alerta.promedio|default:alerta.nota_convivencia|floatformat:1 }}
+                                       </span>
                                    </td>
                                    <td class="text-end pe-4">
-                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary border rounded-circle transition-all"><i class="fas fa-pen-nib"></i></a>
+                                       <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-icon btn-light text-dark"><i class="fas fa-pen"></i></a>
                                    </td>
                                </tr>
                                {% empty %}
-                               <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">El clima escolar es excelente. No hay alertas.</td></tr>
+                               <tr><td colspan="3" class="text-center py-5 text-muted small">Excelente clima escolar reportado.</td></tr>
                                {% endfor %}
                            </tbody>
                        </table>
@@ -538,17 +602,14 @@
        </div>
    </div>
 
-   <div class="card border-0 shadow-lg mb-5 overflow-hidden rounded-5" style="background-color: #ffffff;">
+   <div class="card card-premium mb-5">
        <div class="card-body p-5 text-center bg-gradient-light-subtle">
-           <h3 class="fw-black mb-2 text-dark">Búsqueda Maestra Stratos</h3>
-           <p class="text-muted mb-4 lead">Acceda instantáneamente a observador, notas y analítica del alumno.</p>
            <form method="GET" action="">
-               <div class="input-group input-group-lg shadow-2xl rounded-pill overflow-hidden border w-75 mx-auto transition-all focus-within-scale border-primary-subtle">
+               <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border w-75 mx-auto">
                    <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-muted"></i></span>
-                   <input type="text" name="q" class="form-control bg-white border-0 py-4 shadow-none"
-                          placeholder="Ingrese nombre, código de matrícula o ID..."
-                          value="{{ query|default:'' }}">
-                    <button class="btn btn-primary px-5 fw-bold text-uppercase" type="submit">Ejecutar Búsqueda</button>
+                   <input type="text" name="q" class="form-control bg-white border-0 shadow-none"
+                          placeholder="Nombre, ID o Matrícula..." value="{{ query|default:'' }}">
+                    <button class="btn btn-primary px-5 fw-bold" type="submit">Buscar</button>
                </div>
            </form>
        </div>
@@ -556,185 +617,31 @@
 
    {% if query %}
        <div class="mb-5 animate__animated animate__fadeIn px-2">
-           <h5 class="fw-bold text-secondary mb-4 px-3 d-flex align-items-center">
-               <i class="fas fa-list-ul me-3 text-primary"></i>
-               Coincidencias detectadas para: <span class="text-primary ms-2">"{{ query }}"</span>
-           </h5>
+           <h5 class="fw-bold text-secondary mb-4 px-3"><i class="fas fa-list me-2"></i>Resultados para: "{{ query }}"</h5>
             {% if estudiantes %}
                <div class="row g-4">
                    {% for estudiante in estudiantes %}
                    <div class="col-md-6 col-lg-4 col-xl-3">
-                       <div class="card h-100 border-0 shadow-sm hover-elevate rounded-5 overflow-hidden">
+                       <div class="card card-premium h-100">
                            <div class="card-body d-flex align-items-center p-3">
-                               <div class="avatar-md me-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center rounded-circle fw-black shadow-sm">
+                               <div class="avatar-md me-3 bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold">
                                    {{ estudiante.first_name|slice:":1" }}{{ estudiante.last_name|slice:":1" }}
                                </div>
                                <div class="flex-grow-1 overflow-hidden">
-                                   <h6 class="fw-bold mb-0 text-dark text-truncate">{{ estudiante.get_full_name }}</h6>
-                                    <small class="text-muted">ID: {{ estudiante.username }}</small>
+                                   <h6 class="fw-bold mb-0 text-truncate">{{ estudiante.get_full_name }}</h6>
+                                    <small class="text-muted">{{ estudiante.username }}</small>
                                </div>
-                               <div class="d-flex flex-column gap-1">
-                                   <a href="{% url 'ver_observador' estudiante.id %}" class="btn btn-sm btn-primary rounded-circle shadow-sm">
-                                       <i class="fas fa-folder-open"></i>
-                                   </a>
-                                   <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ estudiante.id }}" class="btn btn-sm btn-purple rounded-circle shadow-sm">
-                                       <i class="fas fa-robot"></i>
-                                   </a>
-                               </div>
+                               <a href="{% url 'ver_observador' estudiante.id %}" class="btn btn-sm btn-light rounded-circle"><i class="fas fa-chevron-right"></i></a>
                            </div>
                        </div>
                    </div>
                    {% endfor %}
                 </div>
            {% else %}
-               <div class="alert alert-warning border-0 shadow-lg p-4 rounded-5 text-center">
-                   <i class="fas fa-user-slash fa-3x mb-3 opacity-25"></i>
-                   <p class="mb-0 fw-bold">No se han detectado registros asociados en la base de datos.</p>
-               </div>
+               <div class="alert alert-light border shadow-sm text-center rounded-pill">No se encontraron estudiantes.</div>
            {% endif %}
        </div>
    {% endif %}
-
-   <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4 px-2">
-       <h4 class="fw-bold text-dark mb-0 d-flex align-items-center">
-           <div class="bg-primary rounded-3 p-2 me-3 text-white shadow-sm transition-all hover-scale"><i class="fas fa-chalkboard-teacher"></i></div>
-           Rendimiento Académico por Grupos
-       </h4>
-       <div class="d-flex gap-2">
-           <span class="badge bg-soft-primary text-primary px-4 py-2 rounded-pill fw-bold border border-primary-subtle shadow-sm">Cursos Activos: {{ vista_cursos|length }}</span>
-       </div>
-    </div>
-
-   <div class="accordion shadow-sm rounded-5 overflow-hidden border-0" id="accordionProMaster">
-       {% for item in vista_cursos %}
-       <div class="accordion-item border-0 mb-4 shadow-lg rounded-5 overflow-hidden">
-           <h2 class="accordion-header">
-               <button class="accordion-button collapsed py-4 bg-white text-dark fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.curso.id }}">
-                   <div class="row w-100 align-items-center">
-                       <div class="col-md-3 d-flex align-items-center">
-                            <span class="badge bg-primary px-4 py-2 me-3 shadow-lg rounded-pill">{{ item.curso.nombre }}</span>
-                           <span class="small text-muted fw-bold">{{ item.stats.alumnos }} Matrículas</span>
-                       </div>
-                       <div class="col-md-3 text-center d-none d-md-block border-start">
-                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Promedio Grupo</small>
-                           <div class="fw-black text-info fs-4">{{ item.stats.acad }}</div>
-                       </div>
-                       <div class="col-md-3 text-center d-none d-md-block border-start">
-                           <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Índice Clima</small>
-                            <div class="fw-black text-warning fs-4">{{ item.stats.conv }}</div>
-                       </div>
-                       <div class="col-md-3 text-end d-none d-md-block border-start">
-                           <span class="badge {% if item.stats.acad < 3.2 %}bg-danger animate__animated animate__pulse animate__infinite{% else %}bg-success{% endif %} px-4 py-2 rounded-pill shadow-sm">
-                               {% if item.stats.acad < 3.2 %}Acción Prioritaria{% else %}Óptimo{% endif %}
-                           </span>
-                       </div>
-                   </div>
-               </button>
-           </h2>
-           <div id="collapse{{ item.curso.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionProMaster">
-               <div class="accordion-body p-0 bg-light-subtle">
-                   
-                   {% if item.top_10_academico %}
-                   <div class="p-4 bg-white border-bottom shadow-inner">
-                       <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
-                           <div class="card-header bg-gradient-success text-white py-3 d-flex justify-content-between align-items-center border-0">
-                               <h6 class="mb-0 fw-bold"><i class="fas fa-award me-2 text-warning"></i>Excelencia Académica (Top 10)</h6>
-                               <span class="badge bg-white text-success rounded-pill fw-bold border px-3">2024-B</span>
-                           </div>
-                           <div class="card-body p-0">
-                               <div class="table-responsive">
-                                   <table class="table table-sm table-striped mb-0 small text-center align-middle">
-                                       <thead class="text-secondary bg-light text-uppercase fw-bold" style="font-size: 0.65rem;">
-                                           <tr>
-                                               <th style="width: 100px;">Ranking</th>
-                                               <th class="text-start ps-5">Nombre del Alumno</th>
-                                               <th style="width: 200px;">GPA Definitivo</th>
-                                           </tr>
-                                       </thead>
-                                       <tbody>
-                                           {% for top_est in item.top_10_academico %}
-                                           <tr>
-                                               <td class="fw-bold py-3 text-center">
-                                                   {% if forloop.counter == 1 %}<div class="rank-circle rank-gold mx-auto">1</div>
-                                                   {% elif forloop.counter == 2 %}<div class="rank-circle rank-silver mx-auto">2</div>
-                                                   {% elif forloop.counter == 3 %}<div class="rank-circle rank-bronze mx-auto">3</div>
-                                                   {% else %}<span class="text-muted fw-black">#{{ forloop.counter }}</span>{% endif %}
-                                               </td>
-                                               <td class="text-start ps-5 fw-bold text-dark fs-6">{{ top_est.nombre }}</td>
-                                               <td><div class="d-inline-block px-3 py-1 bg-success bg-opacity-10 text-success rounded-pill fw-black shadow-sm">{{ top_est.promedio }}</div></td>
-                                           </tr>
-                                           {% endfor %}
-                                       </tbody>
-                                   </table>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-                   {% endif %}
-
-                   <div class="table-responsive p-4">
-                       <table class="table table-hover align-middle mb-0 bg-white rounded-5 shadow-sm border overflow-hidden">
-                            <thead class="bg-dark text-white small text-uppercase fw-bold border-0">
-                               <tr>
-                                   <th class="ps-4 py-4">Información del Estudiante</th>
-                                   {% for p in periodos %}
-                                       <th class="text-center">Periodo {{ forloop.counter }}</th>
-                                   {% endfor %}
-                                   <th class="text-end pe-5">Gestión Individual</th>
-                               </tr>
-                           </thead>
-                            <tbody>
-                               {% for obj_est in item.estudiantes %}
-                               <tr>
-                                   <td class="ps-4 py-3">
-                                       <div class="d-flex align-items-center">
-                                           <div class="avatar-xs rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center me-3 border border-primary-subtle fw-black shadow-sm">
-                                               {{ obj_est.obj.first_name|slice:":1" }}
-                                           </div>
-                                           <div>
-                                               <span class="fw-bold text-dark d-block mb-0">{{ obj_est.obj.get_full_name }}</span>
-                                               <small class="text-muted x-small fw-bold">Matrícula: {{ obj_est.obj.username }}</small>
-                                           </div>
-                                        </div>
-                                   </td>
-                                   
-                                   {% for p in periodos %}
-                                       <td class="text-center">
-                                           {% with nota=obj_est.notas|get_item:p.id %}
-                                               {% if nota != "-" %}
-                                                   <div class="nota-bubble {% if nota < 3.0 %}nota-fail{% elif nota >= 4.0 %}nota-success{% else %}nota-warning{% endif %}">
-                                                       {{ nota }}
-                                                    </div>
-                                               {% else %}
-                                                   <span class="text-muted opacity-25 x-small"><i class="fas fa-minus"></i></span>
-                                               {% endif %}
-                                           {% endwith %}
-                                       </td>
-                                   {% endfor %}
-
-                                   <td class="text-end pe-5">
-                                       <div class="btn-group btn-group-sm shadow-sm rounded-pill overflow-hidden border">
-                                           <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ obj_est.obj.id }}" class="btn btn-white text-purple" title="Analítica IA"><i class="fas fa-robot"></i></a>
-                                           <a href="{% url 'crear_observacion' obj_est.obj.id %}" class="btn btn-white text-primary" title="Generar Nota"><i class="fas fa-plus-circle"></i></a>
-                                           <a href="{% url 'ver_observador' obj_est.obj.id %}" class="btn btn-white text-dark" title="Abrir Historial"><i class="fas fa-folder-open"></i></a>
-                                       </div>
-                                   </td>
-                               </tr>
-                               {% endfor %}
-                           </tbody>
-                       </table>
-                   </div>
-                </div>
-           </div>
-       </div>
-       {% empty %}
-       <div class="p-5 text-center text-muted bg-white rounded-5 border border-dashed shadow-sm">
-           <i class="fas fa-project-diagram fa-4x mb-4 opacity-25"></i>
-           <h5 class="fw-bold">No hay Cursos Detectados</h5>
-           <p class="mb-0">Verifique la configuración académica en el panel administrativo.</p>
-       </div>
-       {% endfor %}
-    </div>
 </div>
 
 <div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -746,8 +653,8 @@
                         <i class="fas fa-robot fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-black fs-4">Consultoría Estratégica Stratos AI</h5>
-                        <p class="mb-0 small opacity-75">Análisis heurístico basado en datos institucionales en tiempo real.</p>
+                        <h5 class="modal-title fw-black fs-4">Consultoría Stratos AI</h5>
+                        <p class="mb-0 small opacity-75">Análisis heurístico institucional en tiempo real.</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto shadow-none" data-bs-dismiss="modal"></button>
                 </div>
@@ -791,24 +698,22 @@
            new Chart(ctxRadar, {
                type: 'radar',
                data: {
-                   // 🔥 CIRUGÍA: Inyectamos los datos reales del backend
                    labels: JSON.parse('{{ chart_data.labels|safe|escapejs }}'),
                    datasets: [{
                        label: 'Rendimiento Promedio Institucional',
                        data: JSON.parse('{{ chart_data.acad|safe|escapejs }}'),
                        backgroundColor: 'rgba(67, 97, 238, 0.25)',
                        borderColor: '#4361ee',
-                       borderWidth: 4,
+                       borderWidth: 3,
                        pointBackgroundColor: '#4361ee',
                        pointBorderColor: '#fff',
-                       pointHoverRadius: 10,
+                       pointHoverRadius: 8,
                        fill: true
                    }, {
                        label: 'Meta Institucional (4.0)',
-                       // Generamos dinámicamente el array de metas (4.0) según la cantidad de labels
                        data: Array(JSON.parse('{{ chart_data.labels|safe|escapejs }}').length).fill(4.0),
                        backgroundColor: 'rgba(25, 135, 84, 0.05)',
-                       borderColor: 'rgba(25, 135, 84, 0.5)',
+                       borderColor: 'rgba(25, 135, 84, 0.4)',
                        borderWidth: 2,
                        borderDash: [5, 5],
                        pointRadius: 0
@@ -821,24 +726,29 @@
                        r: { 
                            beginAtZero: true, 
                            max: 5, 
-                           // OPTIMIZACIÓN: Líneas de guía más claras para lectura fácil
                            ticks: { stepSize: 1, display: false },
                            grid: { color: 'rgba(0,0,0,0.05)' },
-                           angleLines: { color: 'rgba(0,0,0,0.1)' },
+                           angleLines: { color: 'rgba(0,0,0,0.05)' },
                            pointLabels: {
-                               font: { size: 12, weight: 'bold' } // Texto más grande para celular
+                               font: { size: 11, weight: 'bold', family: 'Inter' },
+                               color: '#64748b'
                            }
                        }
                    },
                    plugins: { 
                        legend: { 
                            position: 'bottom', 
-                           labels: { usePointStyle: true, font: { weight: 'bold', size: 11 } } 
+                           labels: { usePointStyle: true, font: { weight: 'bold', size: 11 }, padding: 20 } 
                        },
                        tooltip: {
+                           backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                           padding: 12,
+                           titleFont: { size: 13 },
+                           bodyFont: { size: 13 },
+                           cornerRadius: 8,
                            callbacks: {
                                label: function(context) {
-                                   return context.dataset.label + ': ' + Number(context.raw).toFixed(2); // Force 2 decimals to match KPI
+                                   return context.dataset.label + ': ' + Number(context.raw).toFixed(2);
                                }
                            }
                        }
@@ -863,17 +773,17 @@
                            label: 'Promedio Académico',
                            data: dataAcad,
                            backgroundColor: '#4361ee', 
-                           borderRadius: 12,
-                           barThickness: 24,
+                           borderRadius: 6,
+                           barThickness: 18,
                            hoverBackgroundColor: '#3a0ca3'
                        },
                        {
                            label: 'Índice Convivencial',
                            data: dataConv,
-                           backgroundColor: '#ffc107', 
-                           borderRadius: 12,
-                           barThickness: 24,
-                           hoverBackgroundColor: '#fb8500'
+                           backgroundColor: '#facc15', 
+                           borderRadius: 6,
+                           barThickness: 18,
+                           hoverBackgroundColor: '#eab308'
                        }
                    ]
                },
@@ -881,12 +791,12 @@
                    responsive: true,
                    maintainAspectRatio: false,
                    plugins: { 
-                       legend: { position: 'top', align: 'end', labels: { usePointStyle: true, font: { weight: 'bold' } } },
-                       tooltip: { padding: 15, backgroundColor: 'rgba(0,0,0,0.85)', titleFont: { size: 14, weight: 'bold' }, cornerRadius: 12 }
+                       legend: { position: 'top', align: 'end', labels: { usePointStyle: true, font: { weight: 'bold', family: 'Inter' } } },
+                       tooltip: { padding: 15, backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 13, weight: 'bold' }, cornerRadius: 8 }
                    },
                    scales: {
-                       y: { beginAtZero: true, max: 5, grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false } },
-                       x: { grid: { display: false } }
+                       y: { beginAtZero: true, max: 5, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false }, ticks: { font: { family: 'Inter' } } },
+                       x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
                    }
                }
            });
@@ -902,25 +812,24 @@
                    labels: ['Presentes', 'Fallas', 'Excusas', 'Tardanzas'],
                    datasets: [{
                        data: dataAsistencia,
-                       backgroundColor: ['#198754', '#dc3545', '#0dcaf0', '#ffc107'],
-                       borderWidth: 8,
-                       borderColor: '#ffffff',
-                       hoverOffset: 20
+                       backgroundColor: ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'],
+                       borderWidth: 0,
+                       hoverOffset: 15
                    }]
                },
                options: {
                    responsive: true,
                    maintainAspectRatio: false,
-                   cutout: '80%',
+                   cutout: '85%',
                    plugins: {
-                       legend: { position: 'bottom', labels: { padding: 25, usePointStyle: true, font: { weight: 'bold' } } }
+                       legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, font: { weight: 'bold', size: 11, family: 'Inter' } } }
                    }
                }
            });
        }
    });
 
-   // MOTOR DE AUDITORÍA IA STRATOS - VERSIÓN FINAL (CONTEXTO FULL BLINDADO)
+   // MOTOR DE AUDITORÍA IA STRATOS - VERSIÓN FINAL
    async function iniciarAnalisisIA() {
        const modal = new bootstrap.Modal(document.getElementById('modalIA'));
        const loading = document.getElementById('aiLoading');
@@ -932,15 +841,10 @@
        loading.classList.remove('d-none');
        results.classList.add('d-none');
 
-       // 1. RECOLECCIÓN DE DATOS DE TODA LA INSTITUCIÓN
-       // MODIFICACIÓN CRÍTICA: Eliminamos al solicitante para evitar sesgo de la IA.
-       
+       // 1. RECOLECCIÓN DE DATOS
        const datosContexto = {
-           tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL", // Nombre técnico que suena a "solo datos"
-           // solicitante: "{{ user.get_full_name }}...",  <-- ELIMINADO PARA QUE NO ANALICE AL ADMIN
-           
-           entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)", // Le decimos explícitamente a quién analizar
-           
+           tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL",
+           entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)",
            indicadores_globales: {
                total_alumnos: "{{ kpi.total_alumnos }}",
                promedio_academico_global: "{{ kpi.prom_global_acad }}",
@@ -948,8 +852,6 @@
                materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}",
                total_cursos_activos: "{{ kpi.total_cursos }}"
            },
-           
-           // LISTA DE ESTUDIANTES EN RIESGO (Notas Reales)
            riesgos_criticos_detectados: [
                {% for riesgo in top_riesgo_academico %}
                {
@@ -960,8 +862,6 @@
                },
                {% endfor %}
            ],
-
-           // LISTA DE ALERTAS DE CONVIVENCIA
            alertas_convivencia: [
                {% for alerta in alertas_convivencia %}
                {
@@ -971,8 +871,6 @@
                },
                {% endfor %}
            ],
-           
-           // LISTA DE ALERTAS DE ASISTENCIA
            alertas_asistencia: [
                {% for alerta in top_fallas %}
                {
@@ -982,8 +880,6 @@
                },
                {% endfor %}
            ],
-
-           // RENDIMIENTO POR CURSOS
            rendimiento_cursos: [
                {% for item in vista_cursos %}
                {
@@ -996,7 +892,7 @@
            ]
        };
 
-       // 2. UX: Mensajes de estado para el usuario
+       // 2. UX
        const steps = [
            "Leyendo Archivo Maestro PEI...",
            "Analizando Manual de Convivencia...",
@@ -1014,7 +910,6 @@
        }, 1200);
 
        try {
-           // 3. ENVÍO AL BACKEND
            const response = await fetch("{% url 'ai_engine' %}?action=analisis_global_bienestar", {
                method: "POST",
                headers: {
@@ -1022,14 +917,12 @@
                    "X-CSRFToken": "{{ csrf_token }}",
                    "X-Requested-With": "XMLHttpRequest"
                },
-               // INSTRUCCIÓN IMPERSONAL
                body: JSON.stringify({
                    contexto_datos: datosContexto,
                    instruccion: "Genera un reporte de auditoría basado estrictamente en los arrays de datos suministrados (riesgos_criticos, alertas). Identifica los estudiantes con problemas y propón soluciones."
                })
            });
 
-           // Diagnóstico de error HTML
            const rawText = await response.text();
            clearInterval(stepInterval);
 
@@ -1059,82 +952,4 @@
        }
    }
 </script>
-
-<style>
-   /* Tu CSS existente se mantiene aquí */
-   :root { --purple-primary: #6610f2; --blue-institutional: #4361ee; --soft-gray: #f4f7fe; --text-dark: #1a1c23; }
-   body { background-color: var(--soft-gray); font-family: 'Inter', sans-serif; }
-   .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; }
-   .markdown-body ul { padding-left: 20px; }
-   .markdown-body blockquote { border-left: 5px solid #a855f7; padding-left: 15px; background: #f8fafc; color: #555; }
-   
-   /* === CORE DESIGN SYSTEM STRATOS === */
-   .fw-black { font-weight: 900; }
-   .ls-2 { letter-spacing: 2px; }
-   .ls-1 { letter-spacing: 1px; }
-   .x-small { font-size: 0.75rem; }
-   
-   .icon-box-xl { width: 95px; height: 95px; border-radius: 50%; }
-   .icon-box-lg { width: 65px; height: 65px; }
-   .icon-box-md { width: 55px; height: 55px; }
-   
-   .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
-   .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-   .btn-ai-magic { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; transition: all 0.4s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
-   .btn-ai-magic:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
-
-   /* === INTERFAZ PREMIUM === */
-   .hover-elevate { transition: all 0.3s ease-out; }
-   .hover-elevate:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important; }
-   
-   .card-doc { border-top-width: 8px !important; }
-   .pei-border { border-top: 8px solid var(--purple-primary) !important; }
-   .manual-border { border-top: 8px solid #fd7e14 !important; }
-   .malla-border { border-top: 8px solid #20c997 !important; }
-   .calendario-border { border-top: 8px solid #dc3545 !important; }
-
-   .bg-soft-danger { background-color: #fff5f5; }
-   .bg-soft-info { background-color: #eefbff; }
-   .bg-soft-primary { background-color: #eef2ff; }
-   .bg-soft-warning { background-color: #fffcf0; }
-   .bg-purple-soft { background-color: #f3e8ff; }
-   .bg-orange-soft { background-color: #fff7ed; }
-   .bg-teal-soft { background-color: #f0fdfa; }
-   .bg-danger-soft { background-color: #fef2f2; }
-
-   /* === NOTAS Y RANKING === */
-   .nota-bubble { display: inline-block; padding: 6px 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
-   .nota-fail { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
-   .nota-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-   .nota-warning { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
-
-   .rank-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-   .rank-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
-   .rank-silver { background: linear-gradient(135deg, #94a3b8, #475569); }
-   .rank-bronze { background: linear-gradient(135deg, #d97706, #78350f); }
-
-   /* === SCROLL Y ETIQUETAS === */
-   .scroll-pro::-webkit-scrollbar { width: 8px; }
-   .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 2px solid #f8fafc; }
-   .scroll-pro::-webkit-scrollbar-track { background: #f1f5f9; }
-
-   .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
-   .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
-
-   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; font-weight: 800; }
-   .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
-
-   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-   
-   /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
-   .chart-container-responsive {
-       min-height: 350px;
-   }
-   @media (max-width: 768px) {
-       .chart-container-responsive {
-           min-height: 400px; /* Más alto en móvil para que se vea mejor */
-       }
-   }
-</style>
 {% endblock %}
