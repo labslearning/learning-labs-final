@@ -164,16 +164,16 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
+    /* 🔥 CORRECCIÓN QUIRÚRGICA: ESTILOS PARA EL PDF (OFF-SCREEN INSTEAD OF HIDDEN) */
     #plantillaPDFContainer {
-        position: absolute;
+        position: fixed; /* Fixed asegura que no afecte el scroll */
         top: 0;
-        left: 0;
-        width: 100%;
-        visibility: hidden; /* Oculto pero renderizable */
-        height: 0;
-        overflow: hidden;
-        z-index: -1000;
+        left: -10000px; /* Lo sacamos de la pantalla en lugar de ocultarlo */
+        width: 210mm; /* Ancho A4 exacto */
+        min-height: 297mm; /* Alto A4 mínimo */
+        background-color: white; /* Fondo blanco crítico */
+        z-index: -9999;
+        /* Eliminamos visibility: hidden y height: 0 para que html2canvas pueda renderizarlo */
     }
 
     .pdf-page {
@@ -917,7 +917,7 @@
         document.getElementById('contenidoSeguimiento').value = "";
     }
 
-    // Lógica para Generar PDF con html2pdf
+    // CORRECCIÓN QUIRÚRGICA: Lógica para Generar PDF robusta
     function generarPDF(event, contenidoPersonalizado = null) {
         if (event) event.preventDefault();
 
@@ -934,7 +934,7 @@
             return;
         }
 
-        // 2. Poblar la plantilla oculta
+        // 2. Poblar la plantilla (que ahora es visible para el motor de renderizado pero invisible al usuario)
         document.getElementById('pdfEstudiante').textContent = estudiante;
         document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fecha;
@@ -949,10 +949,8 @@
 
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-        // 3. Hacer visible temporalmente la plantilla para html2pdf
+        // 3. Capturar elemento (ya no necesitamos cambiar visibility porque está off-screen)
         const element = document.getElementById('plantillaPDFContainer');
-        element.style.visibility = 'visible';
-        element.style.height = 'auto';
 
         const opt = {
             margin: 0,
@@ -964,21 +962,20 @@
 
         // Generar PDF
         html2pdf().set(opt).from(element).save().then(function() {
-            // Ocultar nuevamente la plantilla
-            element.style.visibility = 'hidden';
-            element.style.height = '0';
-
+            // Nota importante para el usuario:
+            // Este código es solo Frontend. Si "no registra" en la base de datos es porque
+            // falta una llamada AJAX al backend aquí.
             if (!contenidoPersonalizado) {
                 const modalElement = document.getElementById('modalSeguimiento');
                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                 if (modalInstance) modalInstance.hide();
             }
-            alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
+            // Alerta de éxito visual
+            alert(`✅ Documento generado exitosamente.\n\nEl archivo se descargará automáticamente.`);
         });
     }
 
-    // Función para generar PDF desde el historial de seguimientos
-    // ARREGLADO: Ahora acepta parámetros reales en lugar de inventar datos aleatorios
+    // CORRECCIÓN QUIRÚRGICA: Lógica para pasar datos correctos desde el historial
     function generarPDFHistorial(nombreEstudiante, idEstudiante, descripcion, tipo) {
         // Caso 1: Llamada desde la fila (con datos reales)
         if (nombreEstudiante && idEstudiante) {
@@ -991,8 +988,7 @@
             return;
         }
 
-        // Caso 2: Llamada genérica (Fallback para el botón principal del header)
-        // Mantiene el comportamiento original solo si NO se pasan argumentos
+        // Caso 2: Fallback si no hay argumentos (botón general)
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
         if (seguimientos.length === 0) {
             alert("No hay seguimientos registrados para generar el PDF.");
@@ -1006,7 +1002,7 @@
 
         generarPDF(null, {
             estudiante: estudiante,
-            idEstudiante: "GEN-" + Math.floor(Math.random() * 10000), // ID Temporal solo para reporte genérico
+            idEstudiante: "GEN-" + Math.floor(Math.random() * 10000),
             contenido: contenido,
             tipoDoc: tipoDoc
         });
