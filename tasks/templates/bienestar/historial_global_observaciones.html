@@ -735,7 +735,7 @@
             </table>
         </div>
     </div>
-</div>
+    </div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -756,7 +756,6 @@
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
                     {% csrf_token %}
-                    
                     <div class="mb-4 text-center">
                         <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
                         <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
@@ -911,24 +910,6 @@
 
 <script>
     // ============================================
-    // UTILS: OBTENER CSRF TOKEN PARA AJAX
-    // ============================================
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // ============================================
     // LOGICA 1: PREPARACIÓN DEL MODAL
     // ============================================
     function prepararSeguimiento(id, nombre) {
@@ -938,7 +919,7 @@
     }
 
     // ============================================
-    // LOGICA 2: GENERACIÓN DE PDF Y GUARDADO (CRÍTICO)
+    // LOGICA 2: GENERACIÓN DE PDF (NUEVO REPORTE)
     // ============================================
     function generarPDF(event, contenidoPersonalizado = null) {
         if (event) event.preventDefault();
@@ -974,8 +955,8 @@
 
         // 3. Configurar html2pdf
         const element = document.getElementById('plantillaPDFContainer');
-        // NOTA: Ya no modificamos visibility aquí, está manejado por CSS (left: -10000px)
-
+        
+        // OPCIONES PDF
         const opt = {
             margin: 0,
             filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
@@ -984,24 +965,20 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 4. Generar y Descargar PDF
+        // 4. Generar y Descargar
         html2pdf().set(opt).from(element).save().then(function() {
-            // UNA VEZ GENERADO EL PDF, GUARDAMOS EN LA BD
+            // UNA VEZ EL PDF SE DESCARGA, GUARDAMOS EN LA BD
             if (!contenidoPersonalizado) {
                 guardarEnBackend(idEstudiante, tipoDoc, contenido);
             }
-        }).catch(err => {
-            console.error("Error al generar PDF:", err);
-            alert("Error al generar el PDF. Revise la consola.");
         });
     }
 
     // ============================================
-    // LOGICA 3: ENVIAR AL BACKEND (LA PARTE QUE FALTABA)
+    // LOGICA 3: ENVIAR AL BACKEND (LA PARTE QUE FALLABA)
     // ============================================
     function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // Asegúrate de tener esta URL configurada en tu urls.py
-        // Ejemplo: path('guardar-seguimiento/', views.guardar_seguimiento, name='guardar_seguimiento')
+        // Asegúrate que esta URL coincida con tu urls.py
         const url = "/guardar-seguimiento/"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -1019,23 +996,21 @@
         })
         .then(response => {
             if (response.ok) {
-                // Cerrar modal y notificar éxito
                 const modalElement = document.getElementById('modalSeguimiento');
                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                 if (modalInstance) modalInstance.hide();
                 
-                alert("✅ Documento PDF descargado y registro guardado exitosamente en el historial.");
+                alert("✅ Documento generado y seguimiento guardado exitosamente en el historial.");
                 
-                // Opcional: Recargar para ver el nuevo registro en la tabla
+                // Recargar para ver el nuevo registro en la tabla
                 setTimeout(() => location.reload(), 1000);
             } else {
-                alert("⚠️ El PDF se generó, pero hubo un error al guardar en el sistema. Verifique su conexión o contacte al admin.");
-                console.error("Error del servidor:", response.statusText);
+                return response.text().then(text => { throw new Error(text) });
             }
         })
         .catch(error => {
-            console.error('Error en fetch:', error);
-            alert("⚠️ El PDF se generó, pero no se pudo conectar con el servidor para guardar el historial.");
+            console.error('Error del servidor:', error);
+            alert("⚠️ El PDF se generó, pero hubo un error al guardar en el sistema. Revise la consola (F12) para ver el detalle.");
         });
     }
 
@@ -1068,7 +1043,7 @@
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
         const element = document.getElementById('plantillaPDFContainer');
-        
+
         const opt = {
             margin: 0,
             filename: `Copia_Seguimiento_${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
