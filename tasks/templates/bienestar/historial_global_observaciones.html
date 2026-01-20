@@ -162,17 +162,16 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN CRÍTICA: ESTILOS PARA EL PDF (Solución al PDF en blanco) */
-    /* En lugar de visibility:hidden, lo movemos fuera de la pantalla */
+    /* 🔥 SOLUCIÓN CRÍTICA PDF: OCULTAR SIN USAR DISPLAY:NONE O VISIBILITY:HIDDEN */
     #plantillaPDFContainer {
-        position: fixed; /* Fixed evita problemas de scroll */
+        position: fixed; 
         top: 0;
-        left: -10000px; /* Lo sacamos de la pantalla pero sigue renderizado */
-        width: 210mm;   /* Ancho exacto A4 */
+        left: -10000px; /* Sacado de la pantalla pero renderizado */
+        width: 210mm;
         min-height: 297mm;
         z-index: -1000;
         background: white;
-        visibility: visible; /* IMPORTANTE: Debe ser visible para html2canvas */
+        visibility: visible; /* CRUCIAL para html2canvas */
     }
 
     .pdf-page {
@@ -227,7 +226,7 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
-        white-space: pre-line; /* Respeta los saltos de línea */
+        white-space: pre-line;
     }
 
     .pdf-signatures {
@@ -735,7 +734,7 @@
             </table>
         </div>
     </div>
-    </div>
+</div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -756,6 +755,7 @@
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
                     {% csrf_token %}
+                    
                     <div class="mb-4 text-center">
                         <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
                         <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
@@ -802,7 +802,7 @@
 
                     <div class="text-end">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="generarPDF()">
+                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="generarPDF(event)">
                             <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
@@ -910,7 +910,7 @@
 
 <script>
     // ============================================
-    // LOGICA 1: PREPARACIÓN DEL MODAL
+    // LOGICA 1: PREPARAR MODAL
     // ============================================
     function prepararSeguimiento(id, nombre) {
         document.getElementById('idEstudianteModal').value = id;
@@ -919,140 +919,109 @@
     }
 
     // ============================================
-    // LOGICA 2: GENERACIÓN DE PDF (NUEVO REPORTE)
+    // LOGICA 2: GENERAR PDF + GUARDAR
     // ============================================
     function generarPDF(event, contenidoPersonalizado = null) {
         if (event) event.preventDefault();
 
-        // 1. Capturar datos del Formulario
+        // 1. Obtener Datos
         const estudiante = contenidoPersonalizado?.estudiante || document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = contenidoPersonalizado?.idEstudiante || document.getElementById('idEstudianteModal').value;
-        const contenido = contenidoPersonalizado?.contenido || document.getElementById('contenidoSeguimiento').value;
-        const tipoDoc = contenidoPersonalizado?.tipoDoc || document.querySelector('input[name="tipo_documento"]:checked').value;
-        
-        // Fechas actuales
-        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
+        const descripcion = contenidoPersonalizado?.contenido || document.getElementById('contenidoSeguimiento').value;
+        const tipo = contenidoPersonalizado?.tipoDoc || document.querySelector('input[name="tipo_documento"]:checked').value;
 
-        if (!contenido.trim()) {
-            alert("⚠️ Por favor ingrese los detalles del seguimiento antes de generar el documento.");
+        if (!descripcion.trim()) {
+            alert("⚠️ Por favor ingrese los detalles del seguimiento.");
             return;
         }
 
-        // 2. Poblar la plantilla oculta
+        // 2. Preparar Fechas
+        const fechaLarga = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
+
+        // 3. Llenar Plantilla PDF
         document.getElementById('pdfEstudiante').textContent = estudiante;
         document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fecha;
+        document.getElementById('pdfFecha').textContent = fechaLarga;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
+        document.getElementById('pdfContenido').innerHTML = descripcion.replace(/\n/g, '<br>');
 
-        let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
-        if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+        let titulo = "ACTA DE SEGUIMIENTO";
+        if (tipo === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
+        if (tipo === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+        if (tipo === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
 
-        document.getElementById('pdfTipoDoc').textContent = tituloDoc;
+        document.getElementById('pdfTipoDoc').textContent = titulo;
 
-        // 3. Configurar html2pdf
+        // 4. Generar PDF
         const element = document.getElementById('plantillaPDFContainer');
-        
-        // OPCIONES PDF
         const opt = {
             margin: 0,
-            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            filename: `${tipo}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 4. Generar y Descargar
-        html2pdf().set(opt).from(element).save().then(function() {
-            // UNA VEZ EL PDF SE DESCARGA, GUARDAMOS EN LA BD
+        html2pdf().set(opt).from(element).save().then(() => {
+            // 5. SOLO SI NO ES REIMPRESIÓN -> GUARDAR EN BACKEND
             if (!contenidoPersonalizado) {
-                guardarEnBackend(idEstudiante, tipoDoc, contenido);
+                guardarEnBackend(idEstudiante, tipo, descripcion);
             }
         });
     }
 
     // ============================================
-    // LOGICA 3: ENVIAR AL BACKEND (LA PARTE QUE FALLABA)
+    // LOGICA 3: ENVIAR A BACKEND (CORREGIDO)
     // ============================================
     function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // Asegúrate que esta URL coincida con tu urls.py
+        // Usa la URL reversa de Django si es posible, sino usa la relativa
         const url = "/guardar-seguimiento/"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const formData = new FormData();
         formData.append('estudiante_id', estudianteId);
         formData.append('tipo', tipo);
-        formData.append('contenido', descripcion);
+        // 🔥 CORRECCIÓN CLAVE: Enviar 'descripcion' que es lo que espera tu vista
+        formData.append('descripcion', descripcion); 
 
         fetch(url, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken
-            },
+            headers: { 'X-CSRFToken': csrftoken },
             body: formData
         })
         .then(response => {
             if (response.ok) {
-                const modalElement = document.getElementById('modalSeguimiento');
-                const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                if (modalInstance) modalInstance.hide();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSeguimiento'));
+                if (modal) modal.hide();
+
+                alert("✅ Documento generado y seguimiento guardado correctamente en el historial.");
                 
-                alert("✅ Documento generado y seguimiento guardado exitosamente en el historial.");
-                
-                // Recargar para ver el nuevo registro en la tabla
-                setTimeout(() => location.reload(), 1000);
+                // Recargar página para actualizar historial
+                setTimeout(() => location.reload(), 800);
             } else {
-                return response.text().then(text => { throw new Error(text) });
+                console.error("Error servidor:", response.statusText);
+                alert("⚠️ El PDF se generó, pero hubo un error al guardar. Verifica la consola.");
             }
         })
-        .catch(error => {
-            console.error('Error del servidor:', error);
-            alert("⚠️ El PDF se generó, pero hubo un error al guardar en el sistema. Revise la consola (F12) para ver el detalle.");
+        .catch(err => {
+            console.error("Error Fetch:", err);
+            alert("⚠️ Error de conexión al guardar el seguimiento.");
         });
     }
 
     // ============================================
-    // LOGICA 4: PDF DESDE HISTORIAL (REIMPRESIÓN)
+    // LOGICA 4: REIMPRESIÓN HISTORIAL
     // ============================================
-    function generarPDFHistorial(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal) {
-        if (!estudiante || !idEstudiante || !contenido || !tipoDoc) {
-            alert("❌ Error: datos incompletos del seguimiento.");
-            return;
-        }
-
-        const fechaParaMostrar = fechaOriginal ? fechaOriginal : new Date().toLocaleDateString('es-ES', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    function generarPDFHistorial(estudiante, idEstudiante, descripcion, tipo, fechaOriginal) {
+        generarPDF(null, {
+            estudiante: estudiante,
+            idEstudiante: idEstudiante,
+            contenido: descripcion,
+            tipoDoc: tipo,
+            // Truco: Usamos fechaOriginal formateada o la actual si no viene
+            fecha: fechaOriginal 
         });
-
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
-
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fechaParaMostrar;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
-
-        let tituloDoc = "HISTORIAL DE SEGUIMIENTO";
-        if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO";
-
-        document.getElementById('pdfTipoDoc').textContent = tituloDoc;
-
-        const element = document.getElementById('plantillaPDFContainer');
-
-        const opt = {
-            margin: 0,
-            filename: `Copia_Seguimiento_${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save();
     }
 
     // ============================================
@@ -1123,7 +1092,7 @@
     });
 
     // ============================================
-    // LOGICA 6: INTELIGENCIA ARTIFICIAL (SIMULACIÓN)
+    // LOGICA 6: IA SIMULADA
     // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
