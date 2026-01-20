@@ -21,6 +21,12 @@ body {
     background-color: var(--edu-acudiente-bg);
 }
 
+/* 📱 UTILIDAD RESPONSIVA PERSONALIZADA */
+/* En escritorio, el ancho vuelve a ser automático. En móvil será 100% por defecto del d-grid */
+@media (min-width: 768px) {
+    .w-md-auto { width: auto !important; }
+}
+
 .acudiente-header {
     padding: 2.5rem 1.5rem;
     background: linear-gradient(135deg, var(--edu-acudiente-primary), #208a38); /* Gradiente sutil */
@@ -158,31 +164,31 @@ body {
                      id="content-{{ data.estudiante.id }}" role="tabpanel"
                      aria-labelledby="tab-{{ data.estudiante.id }}">
 
-                    <div class="d-flex justify-content-end gap-2 mb-3 border-bottom pb-3 align-items-center">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3 border-bottom pb-3 align-items-center">
                         
                         <a href="{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}" 
-                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm">
+                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm w-100 w-md-auto">
                             <i class="fas fa-robot me-2"></i>Guía de Apoyo Familiar
                         </a>
 
                         {# 1. BOTÓN BOLETÍN #}
                         {% if data.matricula and data.matricula.puede_generar_boletin %}
-                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
+                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success w-100 w-md-auto" target="_blank" title="Ver boletín en PDF">
                                 <i class="fas fa-file-pdf me-2"></i>Boletín
                             </a>
                         {% else %}
-                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada.">
+                            <button class="btn btn-secondary w-100 w-md-auto" disabled title="La generación de boletines no está habilitada.">
                                 <i class="fas fa-file-pdf me-2"></i>Boletín (No disp.)
                             </button>
                         {% endif %}
 
                         {# 2. BOTÓN OBSERVADOR #}
                         {% if data.matricula and data.matricula.puede_ver_observador %}
-                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary">
+                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary w-100 w-md-auto">
                                 <i class="fas fa-file-signature me-2"></i>Observador
                             </a>
                         {% else %}
-                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible">
+                            <button type="button" class="btn btn-outline-secondary w-100 w-md-auto" disabled title="Documento no disponible">
                                 <i class="fas fa-clock me-2"></i>Obs. (No disp.)
                             </button>
                         {% endif %}
