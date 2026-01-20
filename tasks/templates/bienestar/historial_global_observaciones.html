@@ -677,9 +677,6 @@
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- NUEVA SECCIÓN: HISTORIAL DE SEGUIMIENTOS -->
-    <!-- ============================================= -->
     <div id="historial-seguimientos-section" class="historial-seguimientos animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
         <div class="historial-header">
             <h3 class="historial-title">
@@ -740,10 +737,7 @@
             </table>
         </div>
     </div>
-    <!-- ============================================= -->
-    <!-- FIN DE LA NUEVA SECCIÓN -->
-    <!-- ============================================= -->
-</div>
+    </div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -984,8 +978,21 @@
     }
 
     // Función para generar PDF desde el historial de seguimientos
-    function generarPDFHistorial() {
-        // Ejemplo: Generar PDF para el primer seguimiento del historial
+    // ARREGLADO: Ahora acepta parámetros reales en lugar de inventar datos aleatorios
+    function generarPDFHistorial(nombreEstudiante, idEstudiante, descripcion, tipo) {
+        // Caso 1: Llamada desde la fila (con datos reales)
+        if (nombreEstudiante && idEstudiante) {
+            generarPDF(null, {
+                estudiante: nombreEstudiante,
+                idEstudiante: idEstudiante,
+                contenido: descripcion,
+                tipoDoc: tipo
+            });
+            return;
+        }
+
+        // Caso 2: Llamada genérica (Fallback para el botón principal del header)
+        // Mantiene el comportamiento original solo si NO se pasan argumentos
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
         if (seguimientos.length === 0) {
             alert("No hay seguimientos registrados para generar el PDF.");
@@ -999,7 +1006,7 @@
 
         generarPDF(null, {
             estudiante: estudiante,
-            idEstudiante: "ID-" + Math.floor(Math.random() * 10000),
+            idEstudiante: "GEN-" + Math.floor(Math.random() * 10000), // ID Temporal solo para reporte genérico
             contenido: contenido,
             tipoDoc: tipoDoc
         });
