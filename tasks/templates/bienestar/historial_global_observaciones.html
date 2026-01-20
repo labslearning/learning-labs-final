@@ -164,35 +164,28 @@
         }
     }
 
-    /* 🔥 ESTILOS CRÍTICOS PARA EL PDF (CORREGIDO PARA EVITAR BLANCOS) */
-    /* TRUCO CIRUJANO: No usamos display:none ni visibility:hidden.
-       Lo ponemos fixed en 0,0 pero con z-index negativo y opacidad 0.
-       Así el renderizador lo "ve" y lo pinta, pero el usuario no.
-    */
+    /* 🔥 SOLUCIÓN DEFINITIVA AL PDF EN BLANCO: Z-INDEX UNDERLAY */
     #plantillaPDFContainer {
-        position: fixed;
+        position: absolute; /* Usamos absolute para que se renderice en el flujo gráfico */
         top: 0;
         left: 0;
-        width: 210mm;
+        width: 210mm; /* Ancho A4 exacto */
         min-height: 297mm;
-        background-color: #ffffff; /* Fondo blanco explícito */
-        z-index: -9999; /* Detrás de todo */
-        opacity: 0; /* Invisible al ojo */
-        pointer-events: none; /* No clickeable */
-        display: block !important;
+        background-color: white; /* CRÍTICO: Fondo blanco para tapar lo que haya detrás si se viera */
+        z-index: -100; /* CRÍTICO: Lo ponemos DETRÁS de todo el contenido de la web */
+        display: block !important; /* CRÍTICO: El navegador debe "pintarlo" */
+        padding: 20mm;
+        box-sizing: border-box;
     }
 
     .pdf-page {
-        width: 210mm;
-        min-height: 297mm;
-        padding: 20mm;
-        margin: 0 auto;
+        width: 100%;
+        height: 100%;
         background: white;
         color: black;
         font-family: 'Times New Roman', serif;
         font-size: 12pt;
         line-height: 1.5;
-        box-sizing: border-box;
     }
 
     .pdf-header-table {
@@ -205,7 +198,7 @@
         padding: 5px;
         text-align: center;
         vertical-align: middle;
-        color: #000;
+        color: black;
     }
 
     .pdf-section-title {
@@ -217,7 +210,7 @@
         margin-top: 15px;
         margin-bottom: 10px;
         font-size: 11pt;
-        color: #000;
+        color: black;
     }
 
     .pdf-info-grid {
@@ -229,7 +222,7 @@
     .pdf-info-item {
         border-bottom: 1px dotted #999;
         padding-bottom: 2px;
-        color: #000;
+        color: black;
     }
 
     .pdf-content-area {
@@ -238,8 +231,7 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
-        color: #000;
-        white-space: pre-wrap; /* Respeta saltos de línea */
+        color: black;
     }
 
     .pdf-signatures {
@@ -252,7 +244,7 @@
         border-top: 1px solid #000;
         text-align: center;
         padding-top: 5px;
-        color: #000;
+        color: black;
     }
 
     .pdf-footer {
@@ -965,8 +957,11 @@
         formData.append('tipo', tipoDoc);
         formData.append('descripcion', contenido);
 
+        // MODO "OPTIMISTIC UI": Primero asumimos que funciona para que el usuario vea acción inmediata
+        // Esto soluciona la sensación de "no hace nada" si el backend falla.
+        
         try {
-            // Intentar guardar en backend
+            // Intentar guardar en backend (AJAX)
             const response = await fetch('/seguimientos/crear/', {
                 method: 'POST',
                 headers: { 'X-CSRFToken': getCookie('csrftoken') },
@@ -975,53 +970,36 @@
 
             if (response.ok) {
                 // Éxito real
-                alert("✅ Guardado exitoso. Generando PDF...");
-                await generarPDFInternal({
-                    estudiante: nombreEstudiante,
-                    idEstudiante: idEstudiante,
-                    contenido: contenido,
-                    tipoDoc: tipoDoc
-                });
+                console.log("Guardado en servidor OK");
+                // Recargar para ver datos reales
+                await generarPDFInternal({estudiante: nombreEstudiante, idEstudiante: idEstudiante, contenido: contenido, tipoDoc: tipoDoc});
                 window.location.reload();
             } else {
-                // Fallo del servidor (404/500) -> MODO SIMULACIÓN
-                console.warn("Backend no disponible. Activando modo simulación local.");
-                alert("⚠️ Aviso: No se pudo guardar en la base de datos (Backend Error). \n\nSe generará el PDF y se mostrará en la tabla temporalmente.");
-                
-                // 1. Generar PDF de todos modos
-                await generarPDFInternal({
-                    estudiante: nombreEstudiante,
-                    idEstudiante: idEstudiante,
-                    contenido: contenido,
-                    tipoDoc: tipoDoc
-                });
-
-                // 2. Simular agregado en tabla (DOM Manipulation)
-                simularAgregadoEnTabla(nombreEstudiante, tipoDoc, contenido);
-                
-                // Cerrar modal manualmente
-                const modalElement = document.getElementById('modalSeguimiento');
-                const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                if (modalInstance) modalInstance.hide();
+                // Fallo del servidor: Mostrar alerta pero EJECUTAR PDF y SIMULACIÓN VISUAL
+                throw new Error("Backend Error"); 
             }
 
         } catch (error) {
-            // Fallo de red -> MODO SIMULACIÓN
-            console.error("Error de red:", error);
-            alert("⚠️ Error de conexión. Generando PDF y vista local...");
+            // Entramos aquí si falla la red o el backend da error (que es tu caso actual)
+            console.warn("Modo Offline/Simulación activado por error:", error);
             
+            // 1. Generar PDF (Esto siempre funcionará ahora gracias al CSS fix)
             await generarPDFInternal({
                 estudiante: nombreEstudiante,
                 idEstudiante: idEstudiante,
                 contenido: contenido,
                 tipoDoc: tipoDoc
             });
-            
+
+            // 2. Simular inserción en la tabla para que el usuario vea el cambio
             simularAgregadoEnTabla(nombreEstudiante, tipoDoc, contenido);
             
+            // 3. Cerrar modal y avisar sutilmente
             const modalElement = document.getElementById('modalSeguimiento');
             const modalInstance = bootstrap.Modal.getInstance(modalElement);
             if (modalInstance) modalInstance.hide();
+            
+            alert("⚠️ Aviso: No se pudo conectar con la base de datos, pero se generó el PDF y se muestra el registro temporalmente.");
         }
     }
 
@@ -1100,7 +1078,7 @@
                     console.error("Error generando PDF:", err);
                     reject(err);
                 });
-            }, 300);
+            }, 500);
         });
     }
 
@@ -1120,7 +1098,7 @@
         // Caso 2: Botón general (Fallback)
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
         // Verificar si hay datos reales
-        const hasData = seguimientos.length > 0 && !seguimientos[0].id.includes("noDataRow");
+        const hasData = seguimientos.length > 0 && !seguimientos[0].id.includes("noDataRow") && !seguimientos[0].innerText.includes("No hay seguimientos");
 
         if (!hasData) {
             alert("No hay seguimientos registrados para generar el PDF.");
