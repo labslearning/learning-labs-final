@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
-{% load dict_filters %}
 {% load static %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
     :root {
@@ -16,8 +14,8 @@
         --info-gradient: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
         --purple-gradient: linear-gradient(135deg, #7209b7 0%, #3a0ca3 100%);
         
-        --glass-bg: rgba(255, 255, 255, 0.90);
-        --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.6);
         --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
         
@@ -29,7 +27,6 @@
     body {
         background-color: #f4f7f6;
         font-family: var(--font-main);
-        /* Fondo sutil profesional */
         background-image: radial-gradient(circle at 10% 20%, rgba(67, 97, 238, 0.04) 0%, transparent 40%),
                           radial-gradient(circle at 90% 80%, rgba(32, 201, 151, 0.04) 0%, transparent 40%);
         background-attachment: fixed;
@@ -495,6 +492,11 @@
                                             <i class="fas fa-folder-open text-primary me-2"></i>Ver Expediente
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="#" data-bs-toggle="modal" data-bs-target="#modalSeguimiento" onclick="prepararSeguimiento('{{ obs.estudiante.id }}', '{{ obs.estudiante.get_full_name|escapejs }}')">
+                                            <i class="fas fa-file-contract text-success me-2"></i>📝 Reportar Seguimiento
+                                        </a>
+                                    </li>
                                     {% if obs.tipo == 'ACADEMICO' %}
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 mb-1" href="#">
@@ -514,6 +516,80 @@
         <div class="card-footer bg-white border-top py-3 px-4">
             <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">Mostrando <span class="fw-bold text-dark">{{ observaciones.count }}</span> registros en total.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #0f9d58 0%, #20c997 100%); color: white;">
+                <div class="position-relative z-1 d-flex align-items-center w-100">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-clipboard-check fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold">Nuevo Seguimiento Documental</h5>
+                        <p class="mb-0 small opacity-75">Generación de Actas y Compromisos Institucionales</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 bg-light-subtle">
+                <form id="formSeguimiento">
+                    <div class="mb-4 text-center">
+                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
+                        <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
+                        <input type="hidden" id="idEstudianteModal" name="estudiante_id">
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Acta de Convivencia</h6>
+                                    <small class="text-muted x-small">Mediación y Descargos</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-user-md"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Seguimiento Psico</h6>
+                                    <small class="text-muted x-small">Orientación Escolar</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book-reader"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Compromiso Acad.</h6>
+                                    <small class="text-muted x-small">Plan de Mejoramiento</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
+                        <textarea class="form-control border-0 bg-white shadow-sm p-3" rows="4" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold">
+                            <i class="fas fa-save me-2"></i>Guardar y Generar PDF
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -559,6 +635,12 @@
 </div>
 
 <script>
+    // Lógica para pasar datos al Modal de Seguimiento
+    function prepararSeguimiento(id, nombre) {
+        document.getElementById('idEstudianteModal').value = id;
+        document.getElementById('nombreEstudianteModal').textContent = nombre;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
