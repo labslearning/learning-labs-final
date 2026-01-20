@@ -164,22 +164,25 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (CORREGIDO PARA EVITAR HOJA EN BLANCO) */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (ARREGLADO PARA NO SALIR EN BLANCO) */
+    /* El truco está en tenerlo 'hidden' pero en 'visibility', no en 'display'.
+       Y usar una clase especial para traerlo al frente cuando se imprime.
+    */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
         left: -9999px; /* Fuera de pantalla por defecto */
         z-index: -1000;
-        visibility: hidden; /* Oculto para que no estorbe */
+        visibility: hidden; 
+        background: white;
     }
 
-    /* Clase mágica que aplicaremos con JS al momento de imprimir */
+    /* CLASE MÁGICA QUE APLICAREMOS CON JS AL GENERAR */
     #plantillaPDFContainer.preparado-impresion {
         left: 0 !important;
         top: 0 !important;
         z-index: 9999 !important;
         visibility: visible !important;
-        background: white;
     }
     
     .pdf-page {
@@ -291,7 +294,7 @@
                 <i class="fas fa-chart-pie me-2"></i>Tablero
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
-                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
+                <i class="fas fa-print me-2"></i>Imprimir Vista General
             </button>
         </div>
     </div>
@@ -796,6 +799,7 @@
     }
 
     // 🔥 LOGICA ARREGLADA PARA GENERAR PDF SIN PANTALLA BLANCA
+    // El secreto es la clase 'preparado-impresion' que definimos en el CSS
     function generarPDF(event) {
         if(event) event.preventDefault();
 
