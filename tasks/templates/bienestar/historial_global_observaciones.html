@@ -164,13 +164,12 @@
 
     /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
     #plantillaPDFContainer {
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        visibility: hidden; /* Oculto pero renderizable */
-        height: 0;
-        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
         z-index: -1000;
     }
 
@@ -950,7 +949,12 @@
             },
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // 3. Poblar la plantilla oculta con los datos guardados
@@ -970,8 +974,10 @@
 
                 // 4. Hacer visible temporalmente la plantilla para html2pdf
                 const element = document.getElementById('plantillaPDFContainer');
-                element.style.visibility = 'visible';
-                element.style.height = 'auto';
+                const pdfPage = element.querySelector('.pdf-page');
+
+                element.style.opacity = '1';
+                element.style.pointerEvents = 'auto';
 
                 // Forzar renderizado antes de generar el PDF
                 setTimeout(() => {
@@ -983,11 +989,11 @@
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
-                    // Generar PDF
-                    html2pdf().set(opt).from(element).save().then(function() {
+                    // Generar PDF desde el elemento .pdf-page
+                    html2pdf().set(opt).from(pdfPage).save().then(function() {
                         // Ocultar nuevamente la plantilla
-                        element.style.visibility = 'hidden';
-                        element.style.height = '0';
+                        element.style.opacity = '0';
+                        element.style.pointerEvents = 'none';
 
                         if (!contenidoPersonalizado) {
                             const modalElement = document.getElementById('modalSeguimiento');
@@ -1039,8 +1045,10 @@
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
         const element = document.getElementById('plantillaPDFContainer');
-        element.style.visibility = 'visible';
-        element.style.height = 'auto';
+        const pdfPage = element.querySelector('.pdf-page');
+
+        element.style.opacity = '1';
+        element.style.pointerEvents = 'auto';
 
         setTimeout(() => {
             const opt = {
@@ -1051,9 +1059,9 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.visibility = 'hidden';
-                element.style.height = '0';
+            html2pdf().set(opt).from(pdfPage).save().then(() => {
+                element.style.opacity = '0';
+                element.style.pointerEvents = 'none';
             });
         }, 500);
     }
