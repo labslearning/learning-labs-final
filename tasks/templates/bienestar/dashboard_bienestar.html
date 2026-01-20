@@ -116,7 +116,7 @@
                        <h6 class="text-center text-secondary x-small fw-bold text-uppercase mb-4">
                            <i class="fas fa-chart-line me-2"></i>Mapa de Calor Académico
                        </h6>
-                       <div style="height: 350px; width: 100%;">
+                       <div class="chart-container-responsive" style="width: 100%;">
                            <canvas id="radarChartPro"></canvas>
                        </div>
                        <p class="small text-muted mt-3 text-center px-4">Desviación del rendimiento actual vs metas del PEI.</p>
@@ -821,9 +821,13 @@
                        r: { 
                            beginAtZero: true, 
                            max: 5, 
+                           // OPTIMIZACIÓN: Líneas de guía más claras para lectura fácil
+                           ticks: { stepSize: 1, display: false },
                            grid: { color: 'rgba(0,0,0,0.05)' },
                            angleLines: { color: 'rgba(0,0,0,0.1)' },
-                           ticks: { display: false } 
+                           pointLabels: {
+                               font: { size: 12, weight: 'bold' } // Texto más grande para celular
+                           }
                        }
                    },
                    plugins: { 
@@ -1115,5 +1119,15 @@
    .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
 
    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+   
+   /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
+   .chart-container-responsive {
+       min-height: 350px;
+   }
+   @media (max-width: 768px) {
+       .chart-container-responsive {
+           min-height: 400px; /* Más alto en móvil para que se vea mejor */
+       }
+   }
 </style>
 {% endblock %}
