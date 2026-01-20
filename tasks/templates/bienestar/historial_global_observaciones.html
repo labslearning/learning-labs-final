@@ -164,17 +164,22 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN PDF: CONTENEDOR SIEMPRE VISIBLE PERO OCULTO VISUALMENTE */
+    /* 🔥 ESTILOS CRÍTICOS PARA EL PDF (CORREGIDO PARA EVITAR BLANCOS) */
+    /* TRUCO CIRUJANO: No usamos display:none ni visibility:hidden.
+       Lo ponemos fixed en 0,0 pero con z-index negativo y opacidad 0.
+       Así el renderizador lo "ve" y lo pinta, pero el usuario no.
+    */
     #plantillaPDFContainer {
-        position: fixed; /* Fixed para que no dependa del scroll */
+        position: fixed;
         top: 0;
-        left: -5000px; /* Sacado de la pantalla a la fuerza */
+        left: 0;
         width: 210mm;
         min-height: 297mm;
-        background-color: white; /* Fondo blanco OBLIGATORIO */
-        z-index: -9999;
-        display: block !important; /* IMPORTANTE: Debe ser block para renderizarse */
-        color: black !important;
+        background-color: #ffffff; /* Fondo blanco explícito */
+        z-index: -9999; /* Detrás de todo */
+        opacity: 0; /* Invisible al ojo */
+        pointer-events: none; /* No clickeable */
+        display: block !important;
     }
 
     .pdf-page {
@@ -200,7 +205,7 @@
         padding: 5px;
         text-align: center;
         vertical-align: middle;
-        color: black;
+        color: #000;
     }
 
     .pdf-section-title {
@@ -212,7 +217,7 @@
         margin-top: 15px;
         margin-bottom: 10px;
         font-size: 11pt;
-        color: black;
+        color: #000;
     }
 
     .pdf-info-grid {
@@ -224,7 +229,7 @@
     .pdf-info-item {
         border-bottom: 1px dotted #999;
         padding-bottom: 2px;
-        color: black;
+        color: #000;
     }
 
     .pdf-content-area {
@@ -233,7 +238,8 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
-        color: black;
+        color: #000;
+        white-space: pre-wrap; /* Respeta saltos de línea */
     }
 
     .pdf-signatures {
@@ -246,7 +252,7 @@
         border-top: 1px solid #000;
         text-align: center;
         padding-top: 5px;
-        color: black;
+        color: #000;
     }
 
     .pdf-footer {
@@ -694,7 +700,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="historial-table">
+            <table class="historial-table" id="tablaHistorial">
                 <thead>
                     <tr>
                         <th>Estudiante</th>
@@ -735,7 +741,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
+                    <tr id="noDataRow">
                         <td colspan="6" class="text-center text-muted py-4">No hay seguimientos registrados.</td>
                     </tr>
                     {% endfor %}
@@ -954,30 +960,35 @@
             return;
         }
 
-        // 2. Preparar datos para el Backend
         const formData = new FormData();
         formData.append('estudiante_id', idEstudiante);
         formData.append('tipo', tipoDoc);
         formData.append('descripcion', contenido);
-        // Agrega otros campos si tu modelo Django los requiere, ej: 'titulo'
 
         try {
-            // 3. Enviar al Backend (AJAX)
-            // NOTA: Reemplaza '/ruta-a-tu-vista-django-guardar/' con la URL real de tu urls.py
-            // Ejemplo: /seguimientos/crear/
-            // Si la URL es la misma página, puedes usar window.location.href o '.'
+            // Intentar guardar en backend
             const response = await fetch('/seguimientos/crear/', {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
                 body: formData
             });
 
             if (response.ok) {
-                console.log("✅ Seguimiento guardado en base de datos.");
+                // Éxito real
+                alert("✅ Guardado exitoso. Generando PDF...");
+                await generarPDFInternal({
+                    estudiante: nombreEstudiante,
+                    idEstudiante: idEstudiante,
+                    contenido: contenido,
+                    tipoDoc: tipoDoc
+                });
+                window.location.reload();
+            } else {
+                // Fallo del servidor (404/500) -> MODO SIMULACIÓN
+                console.warn("Backend no disponible. Activando modo simulación local.");
+                alert("⚠️ Aviso: No se pudo guardar en la base de datos (Backend Error). \n\nSe generará el PDF y se mostrará en la tabla temporalmente.");
                 
-                // Generar PDF
+                // 1. Generar PDF de todos modos
                 await generarPDFInternal({
                     estudiante: nombreEstudiante,
                     idEstudiante: idEstudiante,
@@ -985,49 +996,69 @@
                     tipoDoc: tipoDoc
                 });
 
-                // Cierre y recarga para ver los cambios
+                // 2. Simular agregado en tabla (DOM Manipulation)
+                simularAgregadoEnTabla(nombreEstudiante, tipoDoc, contenido);
+                
+                // Cerrar modal manualmente
                 const modalElement = document.getElementById('modalSeguimiento');
                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                 if (modalInstance) modalInstance.hide();
-                
-                alert("✅ Seguimiento guardado y PDF generado. La página se recargará para mostrar el nuevo registro.");
-                
-                // CRUCIAL: Recargar para ver los datos en la tabla
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000); 
-
-            } else {
-                console.error("Error al guardar:", response.statusText);
-                alert("⚠️ Error al guardar en el sistema. Se generará el PDF pero no quedará registro en la base de datos. Verifica la URL de tu backend.");
-                
-                // Aún así generamos el PDF por seguridad
-                await generarPDFInternal({
-                    estudiante: nombreEstudiante,
-                    idEstudiante: idEstudiante,
-                    contenido: contenido,
-                    tipoDoc: tipoDoc
-                });
             }
 
         } catch (error) {
+            // Fallo de red -> MODO SIMULACIÓN
             console.error("Error de red:", error);
-            alert("⚠️ Error de conexión. Generando PDF localmente...");
+            alert("⚠️ Error de conexión. Generando PDF y vista local...");
+            
             await generarPDFInternal({
-                    estudiante: nombreEstudiante,
-                    idEstudiante: idEstudiante,
-                    contenido: contenido,
-                    tipoDoc: tipoDoc
+                estudiante: nombreEstudiante,
+                idEstudiante: idEstudiante,
+                contenido: contenido,
+                tipoDoc: tipoDoc
             });
+            
+            simularAgregadoEnTabla(nombreEstudiante, tipoDoc, contenido);
+            
+            const modalElement = document.getElementById('modalSeguimiento');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) modalInstance.hide();
         }
     }
 
-    // Lógica interna de generación de PDF con RETRASO para evitar blanco
+    // Función para inyectar la fila en la tabla visualmente (cuando falla el backend)
+    function simularAgregadoEnTabla(nombre, tipo, descripcion) {
+        const tableBody = document.querySelector('#tablaHistorial tbody');
+        const noDataRow = document.getElementById('noDataRow');
+        
+        if (noDataRow) noDataRow.remove();
+
+        const fechaHoy = new Date().toLocaleDateString('es-ES');
+        
+        let badgeClass = 'bg-secondary-subtle text-secondary';
+        let tipoTexto = tipo;
+        if(tipo === 'CONVIVENCIA') { badgeClass = 'bg-warning-subtle text-warning'; tipoTexto = 'Comportamiento'; }
+        if(tipo === 'ACADEMICO') { badgeClass = 'bg-info-subtle text-info'; tipoTexto = 'Académico'; }
+        if(tipo === 'PSICOLOGIA') { badgeClass = 'bg-purple-subtle text-purple'; tipoTexto = 'Psicología'; }
+
+        const newRow = `
+            <tr class="animate__animated animate__fadeIn">
+                <td>${nombre}</td>
+                <td><span class="badge ${badgeClass} border border-opacity-10 rounded-pill px-3 py-1">${tipoTexto}</span></td>
+                <td>${fechaHoy}</td>
+                <td>Usuario Actual</td>
+                <td>${descripcion.substring(0, 50)}...</td>
+                <td><button class="btn btn-sm btn-outline-success rounded-pill px-3" disabled><i class="fas fa-check"></i> Nuevo</button></td>
+            </tr>
+        `;
+        
+        // Insertar al principio
+        tableBody.insertAdjacentHTML('afterbegin', newRow);
+    }
+
+    // Lógica interna de generación de PDF con espera para renderizado
     function generarPDFInternal(data) {
         return new Promise((resolve, reject) => {
-            // 1. Poblar la plantilla
-            const container = document.getElementById('plantillaPDFContainer');
-            
+            // 1. Poblar la plantilla oculta
             document.getElementById('pdfEstudiante').textContent = data.estudiante;
             document.getElementById('pdfID').textContent = data.idEstudiante;
             
@@ -1045,7 +1076,9 @@
 
             document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-            // 2. Configurar html2pdf con pausa
+            // 2. Configurar html2pdf
+            const element = document.getElementById('plantillaPDFContainer');
+            
             const opt = {
                 margin: 10,
                 filename: `${data.tipoDoc}_${data.estudiante.replace(/\s+/g, '_')}.pdf`,
@@ -1054,27 +1087,26 @@
                     scale: 2, 
                     useCORS: true, 
                     scrollY: 0,
-                    backgroundColor: '#ffffff', // Forzar fondo blanco
-                    logging: true // Para depurar en consola si falla
+                    backgroundColor: '#ffffff' // Forzar fondo blanco para evitar transparencias
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Pequeño retraso para asegurar que el DOM se pintó
+            // Pequeño timeout para asegurar que el DOM se actualizó antes de la foto
             setTimeout(() => {
-                html2pdf().set(opt).from(container).save().then(() => {
+                html2pdf().set(opt).from(element).save().then(() => {
                     resolve();
                 }).catch(err => {
                     console.error("Error generando PDF:", err);
                     reject(err);
                 });
-            }, 500); // Esperar medio segundo
+            }, 300);
         });
     }
 
-    // Función para generar PDF desde el historial (Reutiliza la lógica interna)
+    // Función para generar PDF desde el historial
     function generarPDFHistorial(nombreEstudiante, idEstudiante, descripcion, tipo) {
-        // Caso 1: Llamada desde la fila (con datos reales)
+        // Caso 1: Datos reales de la fila
         if (nombreEstudiante && idEstudiante) {
             generarPDFInternal({
                 estudiante: nombreEstudiante,
@@ -1085,20 +1117,18 @@
             return;
         }
 
-        // Caso 2: Fallback (botón general)
+        // Caso 2: Botón general (Fallback)
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
-        // Chequeo si la tabla tiene filas reales (ignorando el mensaje de "no hay datos")
-        const hasData = seguimientos.length > 0 && !seguimientos[0].innerText.includes("No hay seguimientos");
+        // Verificar si hay datos reales
+        const hasData = seguimientos.length > 0 && !seguimientos[0].id.includes("noDataRow");
 
         if (!hasData) {
             alert("No hay seguimientos registrados para generar el PDF.");
             return;
         }
 
-        // Tomar el primero como ejemplo si no se especifica
         const primerSeguimiento = seguimientos[0];
         const estudiante = primerSeguimiento.cells[0].textContent;
-        // Asumiendo que el tipo está en el badge dentro de la celda 1
         const tipoBadge = primerSeguimiento.cells[1].querySelector('.badge');
         const tipoDoc = tipoBadge ? tipoBadge.textContent.trim() : "GENERAL";
         const contenido = primerSeguimiento.cells[4].textContent;
@@ -1111,7 +1141,7 @@
         });
     }
 
-    // Código original de Gráficos (Mantenido intacto)
+    // Código original de Gráficos (Mantenido)
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
