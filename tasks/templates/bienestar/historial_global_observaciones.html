@@ -164,22 +164,17 @@
         }
     }
 
-    /* 🔥 ESTILOS CRÍTICOS PARA EL PDF */
-    /* El truco no es visibility:hidden, sino sacarlo del viewport y usar z-index bajo */
+    /* 🔥 CORRECCIÓN PDF: CONTENEDOR SIEMPRE VISIBLE PERO OCULTO VISUALMENTE */
     #plantillaPDFContainer {
-        position: absolute;
-        left: -9999px;
+        position: fixed; /* Fixed para que no dependa del scroll */
         top: 0;
+        left: -5000px; /* Sacado de la pantalla a la fuerza */
         width: 210mm;
-        background-color: white;
-        z-index: -1000;
-        /* Aseguramos que sea visible para el DOM renderer pero no para el usuario */
-        display: block !important;
-    }
-
-    /* Clase auxiliar cuando se está generando */
-    body.generating-pdf {
-        cursor: wait;
+        min-height: 297mm;
+        background-color: white; /* Fondo blanco OBLIGATORIO */
+        z-index: -9999;
+        display: block !important; /* IMPORTANTE: Debe ser block para renderizarse */
+        color: black !important;
     }
 
     .pdf-page {
@@ -205,6 +200,7 @@
         padding: 5px;
         text-align: center;
         vertical-align: middle;
+        color: black;
     }
 
     .pdf-section-title {
@@ -216,6 +212,7 @@
         margin-top: 15px;
         margin-bottom: 10px;
         font-size: 11pt;
+        color: black;
     }
 
     .pdf-info-grid {
@@ -227,6 +224,7 @@
     .pdf-info-item {
         border-bottom: 1px dotted #999;
         padding-bottom: 2px;
+        color: black;
     }
 
     .pdf-content-area {
@@ -235,6 +233,7 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
+        color: black;
     }
 
     .pdf-signatures {
@@ -247,6 +246,7 @@
         border-top: 1px solid #000;
         text-align: center;
         padding-top: 5px;
+        color: black;
     }
 
     .pdf-footer {
@@ -965,6 +965,7 @@
             // 3. Enviar al Backend (AJAX)
             // NOTA: Reemplaza '/ruta-a-tu-vista-django-guardar/' con la URL real de tu urls.py
             // Ejemplo: /seguimientos/crear/
+            // Si la URL es la misma página, puedes usar window.location.href o '.'
             const response = await fetch('/seguimientos/crear/', {
                 method: 'POST',
                 headers: {
@@ -974,10 +975,9 @@
             });
 
             if (response.ok) {
-                // Si guardó bien, generamos el PDF
                 console.log("✅ Seguimiento guardado en base de datos.");
                 
-                // Llamamos a la función de PDF pasando los datos
+                // Generar PDF
                 await generarPDFInternal({
                     estudiante: nombreEstudiante,
                     idEstudiante: idEstudiante,
@@ -985,17 +985,21 @@
                     tipoDoc: tipoDoc
                 });
 
-                // Limpiar y cerrar modal
+                // Cierre y recarga para ver los cambios
                 const modalElement = document.getElementById('modalSeguimiento');
                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                 if (modalInstance) modalInstance.hide();
                 
-                // Opcional: Recargar página para ver el nuevo registro en la tabla
-                // window.location.reload(); 
+                alert("✅ Seguimiento guardado y PDF generado. La página se recargará para mostrar el nuevo registro.");
+                
+                // CRUCIAL: Recargar para ver los datos en la tabla
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000); 
 
             } else {
                 console.error("Error al guardar:", response.statusText);
-                alert("⚠️ Error al guardar en el sistema. Se generará el PDF pero no quedará registro en la base de datos.");
+                alert("⚠️ Error al guardar en el sistema. Se generará el PDF pero no quedará registro en la base de datos. Verifica la URL de tu backend.");
                 
                 // Aún así generamos el PDF por seguridad
                 await generarPDFInternal({
@@ -1018,10 +1022,12 @@
         }
     }
 
-    // Lógica interna de generación de PDF (Desacoplada del evento del botón)
+    // Lógica interna de generación de PDF con RETRASO para evitar blanco
     function generarPDFInternal(data) {
         return new Promise((resolve, reject) => {
             // 1. Poblar la plantilla
+            const container = document.getElementById('plantillaPDFContainer');
+            
             document.getElementById('pdfEstudiante').textContent = data.estudiante;
             document.getElementById('pdfID').textContent = data.idEstudiante;
             
@@ -1039,12 +1045,7 @@
 
             document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-            // 2. Configurar html2pdf
-            const element = document.getElementById('plantillaPDFContainer');
-            
-            // Asegurar visibilidad para el renderizado (aunque esté fuera de pantalla)
-            element.style.display = 'block';
-
+            // 2. Configurar html2pdf con pausa
             const opt = {
                 margin: 10,
                 filename: `${data.tipoDoc}_${data.estudiante.replace(/\s+/g, '_')}.pdf`,
@@ -1053,19 +1054,21 @@
                     scale: 2, 
                     useCORS: true, 
                     scrollY: 0,
-                    // Importante: asegurar que capture el fondo blanco
-                    backgroundColor: '#ffffff'
+                    backgroundColor: '#ffffff', // Forzar fondo blanco
+                    logging: true // Para depurar en consola si falla
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 3. Generar
-            html2pdf().set(opt).from(element).save().then(() => {
-                resolve();
-            }).catch(err => {
-                console.error("Error generando PDF:", err);
-                reject(err);
-            });
+            // Pequeño retraso para asegurar que el DOM se pintó
+            setTimeout(() => {
+                html2pdf().set(opt).from(container).save().then(() => {
+                    resolve();
+                }).catch(err => {
+                    console.error("Error generando PDF:", err);
+                    reject(err);
+                });
+            }, 500); // Esperar medio segundo
         });
     }
 
@@ -1084,14 +1087,20 @@
 
         // Caso 2: Fallback (botón general)
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
-        if (seguimientos.length === 0) {
+        // Chequeo si la tabla tiene filas reales (ignorando el mensaje de "no hay datos")
+        const hasData = seguimientos.length > 0 && !seguimientos[0].innerText.includes("No hay seguimientos");
+
+        if (!hasData) {
             alert("No hay seguimientos registrados para generar el PDF.");
             return;
         }
 
+        // Tomar el primero como ejemplo si no se especifica
         const primerSeguimiento = seguimientos[0];
         const estudiante = primerSeguimiento.cells[0].textContent;
-        const tipoDoc = primerSeguimiento.cells[1].querySelector('.badge').textContent.trim();
+        // Asumiendo que el tipo está en el badge dentro de la celda 1
+        const tipoBadge = primerSeguimiento.cells[1].querySelector('.badge');
+        const tipoDoc = tipoBadge ? tipoBadge.textContent.trim() : "GENERAL";
         const contenido = primerSeguimiento.cells[4].textContent;
 
         generarPDFInternal({
@@ -1100,12 +1109,6 @@
             contenido: contenido,
             tipoDoc: tipoDoc
         });
-    }
-
-    // Mantenemos la función antigua por si acaso, pero redirigida
-    function generarPDF(event) {
-        // Wrapper para compatibilidad hacia atrás si algún onclick quedó suelto
-        guardarYGenerarPDF(event);
     }
 
     // Código original de Gráficos (Mantenido intacto)
