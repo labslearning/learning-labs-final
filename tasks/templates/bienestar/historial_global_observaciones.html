@@ -166,9 +166,13 @@
 
     /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
     #plantillaPDFContainer {
-        position: fixed;
+        position: absolute;
         top: 0;
-        left: -9999px; /* Fuera de pantalla pero renderizable */
+        left: 0;
+        width: 100%;
+        visibility: hidden; /* Oculto pero renderizable */
+        height: 0;
+        overflow: hidden;
         z-index: -1000;
     }
 
@@ -343,6 +347,9 @@
 
             <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white bg-white border shadow-sm btn-pill-modern text-secondary">
                 <i class="fas fa-chart-pie me-2"></i>Tablero
+            </a>
+            <a href="#historial-seguimientos-section" class="btn btn-outline-primary bg-white border shadow-sm btn-pill-modern text-primary">
+                <i class="fas fa-history me-2"></i>Historial
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
                 <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
@@ -673,7 +680,7 @@
     <!-- ============================================= -->
     <!-- NUEVA SECCIÓN: HISTORIAL DE SEGUIMIENTOS -->
     <!-- ============================================= -->
-    <div class="historial-seguimientos animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+    <div id="historial-seguimientos-section" class="historial-seguimientos animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
         <div class="historial-header">
             <h3 class="historial-title">
                 <i class="fas fa-history me-2"></i>Historial de Seguimientos
@@ -696,55 +703,39 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Ejemplo de datos estáticos, en producción debe cargarse desde el backend -->
+                    {% for seguimiento in historial_seguimientos %}
                     <tr>
-                        <td>Juan Pérez</td>
+                        <td>{{ seguimiento.estudiante.get_full_name }}</td>
                         <td>
-                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">
-                                Convivencia
+                            <span class="badge
+                                {% if seguimiento.tipo == 'CONVIVENCIA' %}bg-warning-subtle text-warning
+                                {% elif seguimiento.tipo == 'ACADEMICO' %}bg-info-subtle text-info
+                                {% elif seguimiento.tipo == 'PSICOLOGIA' %}bg-purple-subtle text-purple
+                                {% endif %}
+                                border border-warning-subtle rounded-pill px-3 py-1">
+                                {{ seguimiento.get_tipo_display }}
                             </span>
                         </td>
-                        <td>15/01/2026</td>
-                        <td>Dra. Ana López</td>
-                        <td>Seguimiento por incidente de convivencia en el aula.</td>
+                        <td>{{ seguimiento.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ seguimiento.profesional.get_full_name }}</td>
+                        <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('Juan Pérez', 'Seguimiento por incidente de convivencia en el aula.', '15/01/2026')">
-                                <i class="fas fa-eye me-1"></i>Ver
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                    onclick="generarPDFHistorial(
+                                        '{{ seguimiento.estudiante.get_full_name|escapejs }}',
+                                        '{{ seguimiento.estudiante.id }}',
+                                        '{{ seguimiento.descripcion|escapejs }}',
+                                        '{{ seguimiento.tipo }}'
+                                    )">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
                             </button>
                         </td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>María Gómez</td>
-                        <td>
-                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1">
-                                Académico
-                            </span>
-                        </td>
-                        <td>10/01/2026</td>
-                        <td>Prof. Carlos Ruiz</td>
-                        <td>Compromiso académico por bajo rendimiento en matemáticas.</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('María Gómez', 'Compromiso académico por bajo rendimiento en matemáticas.', '10/01/2026')">
-                                <i class="fas fa-eye me-1"></i>Ver
-                            </button>
-                        </td>
+                        <td colspan="6" class="text-center text-muted py-4">No hay seguimientos registrados.</td>
                     </tr>
-                    <tr>
-                        <td>Luis Martínez</td>
-                        <td>
-                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-3 py-1">
-                                Psicología
-                            </span>
-                        </td>
-                        <td>05/01/2026</td>
-                        <td>Psic. Laura Torres</td>
-                        <td>Orientación por ansiedad escolar.</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('Luis Martínez', 'Orientación por ansiedad escolar.', '05/01/2026')">
-                                <i class="fas fa-eye me-1"></i>Ver
-                            </button>
-                        </td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -929,18 +920,18 @@
     function prepararSeguimiento(id, nombre) {
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
-        document.getElementById('contenidoSeguimiento').value = ""; // Limpiar textarea
+        document.getElementById('contenidoSeguimiento').value = "";
     }
 
     // Lógica para Generar PDF con html2pdf
-    function generarPDF(event) {
-        if(event) event.preventDefault(); // Evitar envío del form
+    function generarPDF(event, contenidoPersonalizado = null) {
+        if (event) event.preventDefault();
 
         // 1. Capturar datos
-        const estudiante = document.getElementById('nombreEstudianteModal').textContent;
-        const idEstudiante = document.getElementById('idEstudianteModal').value;
-        const contenido = document.getElementById('contenidoSeguimiento').value;
-        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
+        const estudiante = contenidoPersonalizado?.estudiante || document.getElementById('nombreEstudianteModal').textContent;
+        const idEstudiante = contenidoPersonalizado?.idEstudiante || document.getElementById('idEstudianteModal').value;
+        const contenido = contenidoPersonalizado?.contenido || document.getElementById('contenidoSeguimiento').value;
+        const tipoDoc = contenidoPersonalizado?.tipoDoc || document.querySelector('input[name="tipo_documento"]:checked').value;
         const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const fechaCorta = new Date().toLocaleDateString('es-ES');
 
@@ -951,37 +942,42 @@
 
         // 2. Poblar la plantilla oculta
         document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante; // ID o matrícula si está disponible
+        document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fecha;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        // Convertir saltos de línea en <br> para el PDF
         document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
         let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
         if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
         if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
         if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+        if (tipoDoc === "HISTORIAL") tituloDoc = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
 
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-        // 3. Configuración y Generación
+        // 3. Hacer visible temporalmente la plantilla para html2pdf
         const element = document.getElementById('plantillaPDFContainer');
+        element.style.visibility = 'visible';
+        element.style.height = 'auto';
 
         const opt = {
-            margin:       0, // Sin márgenes automáticos, ya los tiene el CSS del .pdf-page
-            filename:     `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // Escala alta para nitidez
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin: 0,
+            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         // Generar PDF
         html2pdf().set(opt).from(element).save().then(function() {
-            // Callback: Cerrar modal y mostrar éxito
-            const modalElement = document.getElementById('modalSeguimiento');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) {
-                modalInstance.hide();
+            // Ocultar nuevamente la plantilla
+            element.style.visibility = 'hidden';
+            element.style.height = '0';
+
+            if (!contenidoPersonalizado) {
+                const modalElement = document.getElementById('modalSeguimiento');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) modalInstance.hide();
             }
             alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
         });
@@ -989,33 +985,23 @@
 
     // Función para generar PDF desde el historial de seguimientos
     function generarPDFHistorial() {
-        // 1. Capturar datos del historial (ejemplo con datos estáticos)
-        const estudiante = "Juan Pérez";
-        const contenido = "Seguimiento por incidente de convivencia en el aula. Se acordó un plan de mediación con el estudiante y sus compañeros.";
-        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
+        // Ejemplo: Generar PDF para el primer seguimiento del historial
+        const seguimientos = document.querySelectorAll('.historial-table tbody tr');
+        if (seguimientos.length === 0) {
+            alert("No hay seguimientos registrados para generar el PDF.");
+            return;
+        }
 
-        // 2. Poblar la plantilla oculta
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = "12345"; // ID o matrícula
-        document.getElementById('pdfFecha').textContent = fecha;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
-        document.getElementById('pdfTipoDoc').textContent = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
+        const primerSeguimiento = seguimientos[0];
+        const estudiante = primerSeguimiento.cells[0].textContent;
+        const tipoDoc = primerSeguimiento.cells[1].querySelector('.badge').textContent.trim();
+        const contenido = primerSeguimiento.cells[4].textContent;
 
-        // 3. Configuración y Generación
-        const element = document.getElementById('plantillaPDFContainer');
-        const opt = {
-            margin:       0,
-            filename:     `Historial_Seguimientos_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Generar PDF
-        html2pdf().set(opt).from(element).save().then(function() {
-            alert(`✅ Historial de seguimientos generado exitosamente.`);
+        generarPDF(null, {
+            estudiante: estudiante,
+            idEstudiante: "ID-" + Math.floor(Math.random() * 10000),
+            contenido: contenido,
+            tipoDoc: tipoDoc
         });
     }
 
