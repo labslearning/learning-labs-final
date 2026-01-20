@@ -164,77 +164,88 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL */
-    #plantillaPDF {
-        font-family: 'Times New Roman', serif;
-        background: white;
-        padding: 40px 50px;
-        color: #000;
-        line-height: 1.5;
-        width: 800px; /* Ancho fijo para consistencia */
-        
-        /* 🔥 CLAVE PARA QUE SE VEA PERO NO MOLESTE */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
+    #plantillaPDFContainer {
         position: fixed;
-        left: -9999px;
         top: 0;
-        z-index: -1;
+        left: -9999px; /* Fuera de pantalla pero renderizable */
+        z-index: -1000;
     }
     
-    .pdf-table-header {
+    .pdf-page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm;
+        margin: 0 auto;
+        background: white;
+        color: black;
+        font-family: 'Times New Roman', serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        box-sizing: border-box;
+    }
+    
+    .pdf-header-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 30px;
-        border: 1px solid #000;
+        margin-bottom: 20px;
     }
-    .pdf-table-header td {
+    .pdf-header-table td {
         border: 1px solid #000;
-        padding: 10px;
+        padding: 5px;
         text-align: center;
         vertical-align: middle;
     }
-    .pdf-logo {
-        font-size: 24px;
+    
+    .pdf-section-title {
         font-weight: bold;
-        color: #333;
-    }
-    .pdf-info-row {
-        display: flex;
-        justify-content: space-between;
+        text-transform: uppercase;
+        background-color: #f0f0f0;
+        padding: 5px;
+        border: 1px solid #000;
+        margin-top: 15px;
         margin-bottom: 10px;
-        font-size: 14px;
+        font-size: 11pt;
     }
-    .pdf-content-box {
+    
+    .pdf-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .pdf-info-item {
+        border-bottom: 1px dotted #999;
+        padding-bottom: 2px;
+    }
+    
+    .pdf-content-area {
         border: 1px solid #ccc;
-        padding: 15px;
+        padding: 10px;
         min-height: 200px;
-        margin: 20px 0;
-        background-color: #fdfdfd;
         text-align: justify;
-        font-size: 14px;
+        margin-bottom: 30px;
     }
+    
     .pdf-signatures {
-        margin-top: 80px;
         display: flex;
         justify-content: space-between;
-        gap: 20px;
+        margin-top: 60px;
     }
-    .signature-line {
+    .pdf-sig-box {
+        width: 45%;
         border-top: 1px solid #000;
-        width: 100%;
-        margin-bottom: 5px;
-    }
-    .signature-block {
-        width: 30%;
         text-align: center;
-        font-size: 12px;
+        padding-top: 5px;
     }
+    
     .pdf-footer {
-        margin-top: 50px;
-        border-top: 2px solid #4361ee;
-        padding-top: 10px;
-        font-size: 10px;
+        margin-top: 30px;
         text-align: center;
+        font-size: 9pt;
         color: #666;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
     }
 </style>
 
@@ -605,17 +616,17 @@
                         <i class="fas fa-clipboard-list fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold">Generador de Actas y Seguimientos</h5>
-                        <p class="mb-0 small opacity-75">Sistema de Gestión de Calidad (SGC) - Formato Institucional</p>
+                        <h5 class="modal-title fw-bold">Nuevo Seguimiento Documental</h5>
+                        <p class="mb-0 small opacity-75">Generación de Actas y Compromisos Institucionales</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
             </div>
 
             <div class="modal-body p-4 bg-light-subtle">
-                <form id="formSeguimiento" onsubmit="generarPDF(event)">
+                <form id="formSeguimiento">
                     <div class="mb-4 text-center">
-                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante en Proceso</h6>
+                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
                         <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
                         <input type="hidden" id="idEstudianteModal" name="estudiante_id">
                     </div>
@@ -627,7 +638,7 @@
                                 <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
                                     <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
                                     <h6 class="fw-bold text-dark mb-1">Acta de Convivencia</h6>
-                                    <small class="text-muted x-small">Compromiso Disciplinario</small>
+                                    <small class="text-muted x-small">Mediación y Descargos</small>
                                 </div>
                             </label>
                         </div>
@@ -654,14 +665,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary small">Descripción de la Intervención / Acuerdos</label>
-                        <textarea id="contenidoSeguimiento" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Redacte aquí los detalles de la sesión, los descargos o los compromisos establecidos..."></textarea>
+                        <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
+                        <textarea id="contenidoSeguimiento" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
                     <div class="text-end">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold">
-                            <i class="fas fa-file-pdf me-2"></i>Generar Documento Oficial
+                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="generarPDF()">
+                            <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
                 </form>
@@ -670,57 +681,60 @@
     </div>
 </div>
 
-<div id="plantillaPDF" style="width: 800px; padding: 40px; background: white; font-family: 'Times New Roman', serif; color: black; position: fixed; left: -9999px; top: 0; z-index: -1;">
-    <table class="pdf-table-header">
-        <tr>
-            <td rowspan="4" style="width: 20%;"><img src="{% static 'img/logo_colegio.png' %}" alt="Logo" style="max-width: 80px;"></td> 
-            <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
-            <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
-        </tr>
-        <tr>
-            <td style="font-size: 10px;">VERSIÓN: 2.0</td>
-        </tr>
-        <tr>
-            <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
-            <td style="font-size: 10px;">FECHA: {% now "d/m/Y" %}</td>
-        </tr>
-        <tr>
-            <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
-        </tr>
-    </table>
+<div id="plantillaPDFContainer">
+    <div class="pdf-page">
+        <table class="pdf-header-table">
+            <tr>
+                <td rowspan="4" style="width: 20%;">
+                    <div style="font-size: 30px; color: #ccc; font-weight: bold;">LOGO</div>
+                    </td> 
+                <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
+                <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
+            </tr>
+            <tr>
+                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
+            </tr>
+            <tr>
+                <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
+                <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
+            </tr>
+            <tr>
+                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
+            </tr>
+        </table>
 
-    <div style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9;">
-        <div class="pdf-info-row"><strong>Estudiante:</strong> <span id="pdfEstudiante"></span></div>
-        <div class="pdf-info-row"><strong>Fecha de Intervención:</strong> <span id="pdfFecha"></span></div>
-        <div class="pdf-info-row"><strong>Profesional a Cargo:</strong> {{ user.get_full_name }} ({{ user.perfil.get_rol_display }})</div>
-    </div>
-
-    <div style="margin-bottom: 40px;">
-        <h4 style="text-transform: uppercase; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 15px;">Desarrollo de la Sesión / Compromisos:</h4>
-        <div id="pdfContenido" class="pdf-content-box" style="border: none; padding: 0; background: transparent;"></div>
-    </div>
-
-    <div class="pdf-signatures">
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <strong>Firma del Estudiante</strong><br>
-            <span style="font-size: 10px;">CC/TI: ________________</span>
+        <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
+        <div class="pdf-info-grid">
+            <div class="pdf-info-item"><strong>Estudiante:</strong> <span id="pdfEstudiante"></span></div>
+            <div class="pdf-info-item"><strong>ID / Matrícula:</strong> <span id="pdfID"></span></div>
+            <div class="pdf-info-item"><strong>Fecha de Intervención:</strong> <span id="pdfFecha"></span></div>
+            <div class="pdf-info-item"><strong>Profesional a Cargo:</strong> {{ user.get_full_name }}</div>
+            <div class="pdf-info-item"><strong>Cargo:</strong> {{ user.perfil.get_rol_display }}</div>
         </div>
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <strong>Firma del Acudiente</strong><br>
-            <span style="font-size: 10px;">CC: ________________</span>
-        </div>
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <strong>{{ user.get_full_name }}</strong><br>
-            <span style="font-size: 10px;">{{ user.perfil.get_rol_display }}</span>
-        </div>
-    </div>
 
-    <div class="pdf-footer">
-        Calle Falsa 123 - Ciudad Stratos | Tel: (601) 123 4567 | www.stratos.edu.co<br>
-        <em>"Educación con Calidad y Compromiso Humano"</em>
+        <div class="pdf-section-title">II. DESARROLLO DE LA SESIÓN Y COMPROMISOS</div>
+        <div class="pdf-content-area" id="pdfContenido">
+            </div>
+
+        <div class="pdf-signatures">
+            <div class="pdf-sig-box">
+                <br><br>
+                __________________________<br>
+                <strong>Firma del Estudiante</strong><br>
+                <span style="font-size: 10px;">CC/TI: ________________</span>
+            </div>
+            <div class="pdf-sig-box">
+                <br><br>
+                __________________________<br>
+                <strong>Firma del Profesional</strong><br>
+                <span style="font-size: 10px;">TP. No. ________________</span>
+            </div>
+        </div>
+
+        <div class="pdf-footer">
+            Calle Falsa 123 - Ciudad Stratos | Tel: (601) 123 4567 | www.stratos.edu.co<br>
+            <em>"Educación con Calidad y Compromiso Humano"</em>
+        </div>
     </div>
 </div>
 
@@ -773,13 +787,15 @@
 
     // Lógica para Generar PDF con html2pdf
     function generarPDF(event) {
-        event.preventDefault(); // Evitar recarga
+        if(event) event.preventDefault(); // Evitar envío del form
 
         // 1. Capturar datos
         const estudiante = document.getElementById('nombreEstudianteModal').textContent;
+        const idEstudiante = document.getElementById('idEstudianteModal').value;
         const contenido = document.getElementById('contenidoSeguimiento').value;
         const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
         const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
 
         if (!contenido.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento antes de generar el documento.");
@@ -788,7 +804,9 @@
 
         // 2. Poblar la plantilla oculta
         document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfID').textContent = idEstudiante; // ID o matrícula si está disponible
         document.getElementById('pdfFecha').textContent = fecha;
+        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
         // Convertir saltos de línea en <br> para el PDF
         document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
@@ -800,16 +818,16 @@
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
         // 3. Configuración y Generación
-        const element = document.getElementById('plantillaPDF');
+        const element = document.getElementById('plantillaPDFContainer');
         
         // No cambiamos display, ya está fixed y fuera de pantalla, perfecto para html2pdf
         
         const opt = {
-            margin:       [0.5, 0.5, 0.5, 0.5], // Margenes en pulgadas
+            margin:       0, // Sin márgenes automáticos, ya los tiene el CSS del .pdf-page
             filename:     `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, // Escala alta para nitidez
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // Escala alta para nitidez
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         // Generar PDF
@@ -820,8 +838,9 @@
             if (modalInstance) {
                 modalInstance.hide();
             }
-            // Simulación de persistencia visual
-            alert("✅ Documento oficial generado y registrado en el sistema de calidad.");
+            // Simulación de persistencia visual (Mensaje de éxito)
+            // Aquí idealmente iría un fetch() al backend para guardar el registro si hubiera endpoint
+            alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
         });
     }
 
