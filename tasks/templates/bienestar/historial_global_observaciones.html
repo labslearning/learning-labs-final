@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
+{% load dict_filters %}
 {% load static %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
     :root {
@@ -14,8 +16,8 @@
         --info-gradient: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
         --purple-gradient: linear-gradient(135deg, #7209b7 0%, #3a0ca3 100%);
         
-        --glass-bg: rgba(255, 255, 255, 0.95);
-        --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+        --glass-bg: rgba(255, 255, 255, 0.90);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.5);
         --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
         
@@ -152,6 +154,16 @@
     .scroll-pro::-webkit-scrollbar { width: 6px; }
     .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .scroll-pro::-webkit-scrollbar-track { background: transparent; }
+    
+    /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
+    .chart-container-responsive {
+        min-height: 350px;
+    }
+    @media (max-width: 768px) {
+        .chart-container-responsive {
+            min-height: 400px; /* Más alto en móvil para que se vea mejor */
+        }
+    }
 </style>
 
 <div class="container-fluid py-5" style="max-width: 1800px;">
