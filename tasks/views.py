@@ -5583,3 +5583,43 @@ def guardar_seguimiento(request):
     except Exception as e:
         logger.error(f"Error guardando seguimiento: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# --- VISTA DE GENERACIÓN PDF (SERVER-SIDE) ---
+@login_required
+@role_required(['ADMINISTRADOR', 'COORD_CONVIVENCIA', 'PSICOLOGO', 'COORD_ACADEMICO', 'DOCENTE'])
+def descargar_seguimiento_pdf(request, seguimiento_id):
+    """
+    Genera un PDF oficial e inmutable desde el servidor.
+    Garantiza que lo que se imprime es EXACTAMENTE lo que está en la BD.
+    """
+    # 1. Fuente de Verdad: Base de Datos
+    seguimiento = get_object_or_404(Seguimiento, id=seguimiento_id)
+    
+    # 2. Contexto Institucional (Datos para el Template)
+    # Aquí podrías traer datos de la institución desde la BD si tienes el modelo Institucion
+    # Por ahora hardcodeamos lo básico o usamos lo que tengas.
+    context = {
+        'seguimiento': seguimiento,
+        'estudiante': seguimiento.estudiante,
+        'profesional': seguimiento.profesional,
+        'fecha_impresion': timezone.now(),
+        'request': request, # Para construir URLs absolutas de imágenes
+    }
+
+    # 3. Renderizado de Plantilla HTML Limpia
+    html_string = render_to_string('pdf/acta_seguimiento_oficial.html', context)
+
+    # 4. Compilación del PDF
+    if HTML:
+        base_url = request.build_absolute_uri('/')
+        pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
+        
+        # 5. Entrega del Documento
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        filename = f"Acta_{seguimiento.get_tipo_display()}_{seguimiento.estudiante.username}.pdf"
+        # 'inline' para ver en navegador, 'attachment' para forzar descarga
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
+    else:
+        return HttpResponse("Error: Librería de PDF no instalada en el servidor.", status=500)  

@@ -421,5 +421,6 @@ urlpatterns = [
     path('bienestar/historial-global/', views.historial_global_observaciones, name='historial_global_observaciones'),
 
     path('guardar-seguimiento/', views.guardar_seguimiento, name='guardar_seguimiento'),
+    path('seguimiento/pdf/<int:seguimiento_id>/', views.descargar_seguimiento_pdf, name='descargar_seguimiento_pdf'),
 
 ]
