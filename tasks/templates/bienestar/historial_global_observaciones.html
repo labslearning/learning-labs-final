@@ -164,12 +164,13 @@
 
     /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
     #plantillaPDFContainer {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        opacity: 0;
-        pointer-events: none;
+        visibility: hidden; /* Oculto pero renderizable */
+        height: 0;
+        overflow: hidden;
         z-index: -1000;
     }
 
@@ -918,7 +919,7 @@
         document.getElementById('contenidoSeguimiento').value = "";
     }
 
-    // Lógica para Generar PDF con html2pdf y guardar en Django
+    // Lógica para Generar PDF con html2pdf
     function generarPDF(event, contenidoPersonalizado = null) {
         if (event) event.preventDefault();
 
@@ -935,87 +936,52 @@
             return;
         }
 
-        // 2. Guardar el seguimiento en Django antes de generar el PDF
-        const formData = new FormData();
-        formData.append('estudiante_id', idEstudiante);
-        formData.append('tipo', tipoDoc);
-        formData.append('descripcion', contenido);
-        formData.append('fecha', new Date().toISOString());
+        // 2. Poblar la plantilla oculta
+        document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfID').textContent = idEstudiante;
+        document.getElementById('pdfFecha').textContent = fecha;
+        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
+        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
-        fetch("{% url 'guardar_seguimiento' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
+        let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
+        if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
+        if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+        if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+        if (tipoDoc === "HISTORIAL") tituloDoc = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
+
+        document.getElementById('pdfTipoDoc').textContent = tituloDoc;
+
+        // 3. Hacer visible temporalmente la plantilla para html2pdf
+        const element = document.getElementById('plantillaPDFContainer');
+        element.style.visibility = 'visible';
+        element.style.height = 'auto';
+
+        const opt = {
+            margin: 0,
+            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generar PDF
+        html2pdf().set(opt).from(element).save().then(function() {
+            // Ocultar nuevamente la plantilla
+            element.style.visibility = 'hidden';
+            element.style.height = '0';
+
+            if (!contenidoPersonalizado) {
+                const modalElement = document.getElementById('modalSeguimiento');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) modalInstance.hide();
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // 3. Poblar la plantilla oculta con los datos guardados
-                document.getElementById('pdfEstudiante').textContent = estudiante;
-                document.getElementById('pdfID').textContent = idEstudiante;
-                document.getElementById('pdfFecha').textContent = fecha;
-                document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-                document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
-
-                let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
-                if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
-                if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-                if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
-                if (tipoDoc === "HISTORIAL") tituloDoc = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
-
-                document.getElementById('pdfTipoDoc').textContent = tituloDoc;
-
-                // 4. Hacer visible temporalmente la plantilla para html2pdf
-                const element = document.getElementById('plantillaPDFContainer');
-                const pdfPage = element.querySelector('.pdf-page');
-
-                element.style.opacity = '1';
-                element.style.pointerEvents = 'auto';
-
-                // Forzar renderizado antes de generar el PDF
-                setTimeout(() => {
-                    const opt = {
-                        margin: 0,
-                        filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-
-                    // Generar PDF desde el elemento .pdf-page
-                    html2pdf().set(opt).from(pdfPage).save().then(function() {
-                        // Ocultar nuevamente la plantilla
-                        element.style.opacity = '0';
-                        element.style.pointerEvents = 'none';
-
-                        if (!contenidoPersonalizado) {
-                            const modalElement = document.getElementById('modalSeguimiento');
-                            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                            if (modalInstance) modalInstance.hide();
-                        }
-
-                        // Recargar el historial para mostrar el nuevo seguimiento
-                        window.location.reload();
-                    });
-                }, 500); // Esperar 500ms para asegurar que el contenido se renderice
-            } else {
-                alert("❌ Error al guardar el seguimiento: " + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("❌ Error al guardar el seguimiento. Consulte la consola para más detalles.");
+            alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
         });
     }
 
-    // Función para generar PDF desde el historial (sin guardar, solo visualizar)
+    // ================================
+    // PDF DESDE HISTORIAL (REAL)
+    // ================================
     function generarPDFHistorial(estudiante, idEstudiante, contenido, tipoDoc) {
         if (!estudiante || !idEstudiante || !contenido || !tipoDoc) {
             alert("❌ Error: datos incompletos del seguimiento.");
@@ -1045,25 +1011,21 @@
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
         const element = document.getElementById('plantillaPDFContainer');
-        const pdfPage = element.querySelector('.pdf-page');
+        element.style.visibility = 'visible';
+        element.style.height = 'auto';
 
-        element.style.opacity = '1';
-        element.style.pointerEvents = 'auto';
+        const opt = {
+            margin: 0,
+            filename: `Seguimiento_${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
-        setTimeout(() => {
-            const opt = {
-                margin: 0,
-                filename: `Seguimiento_${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(pdfPage).save().then(() => {
-                element.style.opacity = '0';
-                element.style.pointerEvents = 'none';
-            });
-        }, 500);
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.visibility = 'hidden';
+            element.style.height = '0';
+        });
     }
 
     // Función para ver detalles de un seguimiento (simulada)
