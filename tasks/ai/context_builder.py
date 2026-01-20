@@ -160,14 +160,26 @@ class ContextBuilder:
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
-            if action_type == ACCION_MEJORAS_DOCENTE:
-                contexto["objetivo"] = "Sugerir estrategias de aula personalizadas."
+            if action_type == ACCION_MEJORAS_ESTUDIANTE:
+                # 🔥 INSTRUCCIONES ESTRICTAS PARA EVITAR HORARIOS Y DAR ANÁLISIS DE DATOS
+                contexto["INSTRUCCIONES_ESTRICTAS_IA"] = {
+                    "PROHIBICION_ABSOLUTA": "⛔ ESTÁ PROHIBIDO GENERAR HORARIOS, CALENDARIOS O RUTINAS POR HORAS (Ej: 'Lunes 8:00 AM...'). NO LO HAGAS.",
+                    "ROL_ASIGNADO": "Analista de Datos Educativos y Estratega Pedagógico.",
+                    "OBJETIVO": "Realizar una autopsia de los datos académicos y generar un plan de choque basado en evidencias estadísticas.",
+                    "ESTRUCTURA_DE_RESPUESTA_OBLIGATORIA": [
+                        "1. 📊 DIAGNÓSTICO ESTADÍSTICO: Analiza si las notas están subiendo o bajando entre periodos. Cruza esto con las fallas de asistencia.",
+                        "2. 🛡️ ANÁLISIS DE FORTALEZAS: Identifica las materias con notas altas (>4.0) y explica qué habilidades demuestran (ej: Lógica, Creatividad, Memoria).",
+                        "3. ⚠️ ANÁLISIS DE BRECHAS (DEBILIDADES): Identifica las materias perdidas (<3.0). Explica POR QUÉ están fallando basándote en los datos (¿Es por inasistencia? ¿Es dificultad conceptual?).",
+                        "4. 🛠️ ESTRATEGIA DE COBERTURA: Para cada debilidad, propón una TÉCNICA DE ESTUDIO concreta (Ej: 'Mapas Mentales' o 'Feynman'). NO digas 'estudia más'.",
+                        "5. 🤖 HERRAMIENTA CLAVE (OBLIGATORIO): Recomienda explícitamente utilizar el 'Tutor Socrático' (disponible en el menú Learning Labs) para practicar preguntas difíciles y resolver dudas sin recibir la respuesta directa.",
+                        "6. 🚀 PLAN DE MEJORA: Define 3 metas medibles para el próximo periodo (Ej: 'Subir promedio de Matemáticas a 3.5')."
+                    ]
+                }
             elif action_type == ACCION_APOYO_ACUDIENTE:
                 contexto["objetivo"] = "Traducir hallazgos en pautas de acompañamiento familiar."
             elif action_type == ACCION_CHAT_SOCRATICO:
                 contexto["objetivo"] = "Facilitar la autorreflexión del estudiante."
-            elif action_type == ACCION_MEJORAS_ESTUDIANTE:
-                pass 
+            # (El pass anterior ya no es necesario porque inyectamos instrucciones arriba)
 
         return contexto
 

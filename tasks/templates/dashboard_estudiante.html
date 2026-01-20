@@ -7,25 +7,26 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="container py-5">
-    <div class="card p-5 border-0 shadow-lg animate animated fadeInUp mb-5" style="background-color: var(--color-bg-light);">
+    <div class="card p-4 p-md-5 border-0 shadow-lg animate animated fadeInUp mb-5" style="background-color: var(--color-bg-light);">
         <div class="text-center mb-4">
-            <i class="fas fa-user-graduate fa-5x mb-3 text-primary-alt animated animate zoomIn"></i>
-            <h1 class="display-4 fw-bold" style="color: var(--color-text-dark);">
+            <i class="fas fa-user-graduate fa-4x fa-md-5x mb-3 text-primary-alt animated animate zoomIn"></i>
+            <h1 class="display-5 display-md-4 fw-bold" style="color: var(--color-text-dark);">
                 ¡Bienvenido a tu panel, {{ estudiante.get_full_name|default:estudiante.username }}!
             </h1>
-            <p class="lead mt-2" style="color: var(--color-text-muted);">
+            <p class="lead mt-2 fs-6 fs-md-4" style="color: var(--color-text-muted);">
                 Usuario: <span class="fw-bold">{{ estudiante.username }}</span>. Rol: <span class="badge rounded-pill bg-primary-alt">{{ perfil.rol }}</span>.
             </p>
 
-            <div class="d-flex justify-content-center gap-3 mt-4 mb-2">
-                <a href="{% url 'ai_engine' %}?action=mejoras_estudiante" class="btn btn-lg btn-primary-alt rounded-pill px-4 shadow-sm border-0 animate animated pulse infinite" style="background-image: var(--gradient-primary); color: white;">
+            <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-4 mb-3">
+                <a href="{% url 'ai_engine' %}?action=mejoras_estudiante" class="btn btn-lg btn-primary-alt rounded-pill px-4 py-3 shadow-sm border-0 animate animated pulse infinite w-100 w-md-auto" style="background-image: var(--gradient-primary); color: white;">
                     <i class="fas fa-robot me-2"></i>¿Cómo puedo mejorar?
                 </a>
-                <a href="{% url 'ai_engine' %}?action=chat_socratico" class="btn btn-lg btn-outline-primary rounded-pill px-4 shadow-sm border-2">
+                <a href="{% url 'ai_engine' %}?action=chat_socratico" class="btn btn-lg btn-outline-primary rounded-pill px-4 py-3 shadow-sm border-2 w-100 w-md-auto">
                     <i class="fas fa-brain me-2"></i>Tutor Socrático
                 </a>
             </div>
-            <small class="text-muted d-block mt-2">Nuestra IA analizará tu boletín y comportamiento para guiarte según el PEI.</small>
+            
+            <small class="text-muted d-block mt-2 px-3">Nuestra IA analizará tu boletín y comportamiento para guiarte según el PEI.</small>
         </div>
 
         {% if curso %}
@@ -299,28 +300,56 @@
         <div class="col-12">
             <div class="card p-4 border-0 shadow-lg animate animated fadeInUp" style="background-color: var(--color-bg-light);">
                 <h3 class="text-center fw-bold text-dark mb-4"><i class="fas fa-handshake me-2"></i>Nota de Convivencia</h3>
-                {% if convivencia_notas %}
+                
+                {% if convivencia_notas or materias_con_notas %}
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead class="thead-dark">
                             <tr class="bg-primary text-white text-center">
                                 <th>Período</th>
                                 <th>Nota</th>
-                                <th>Comentario</th>
+                                <th>Comentario / Detalle</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for materia, periodos_notas in materias_con_notas.items %}
+                                {% if "convivencia" in materia.nombre|lower %}
+                                    {% for periodo in periodos_disponibles %}
+                                        {% with nota_promedio_obj=periodos_notas|get_item:periodo.id|find_note_by_number:5 %}
+                                        <tr>
+                                            <td class="fw-bold">{{ periodo.nombre }} <br><small class="text-muted fw-normal">(Asignatura)</small></td>
+                                            <td class="text-center align-middle">
+                                                <span class="badge rounded-pill p-2 fs-6 {% if nota_promedio_obj.valor >= 3.0 %}bg-success-alt{% else %}bg-danger-alt{% endif %}">
+                                                    {{ nota_promedio_obj.valor|default:"-" }}
+                                                </span>
+                                            </td>
+                                            <td class="align-middle">
+                                                {% with comentarios_list=comentarios_docente|get_item:materia.id %}
+                                                    {% for c in comentarios_list %}
+                                                        {% if c.periodo.id == periodo.id %}
+                                                            <i class="fas fa-comment-alt text-primary me-1"></i> {{ c.comentario }}<br>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endwith %}
+                                            </td>
+                                        </tr>
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+
                             {% for periodo in curso.periodos.all %}
                                 {% with nota_data=convivencia_notas|get_item:periodo.id %}
-                                    <tr>
-                                        <td>{{ periodo.nombre }}</td>
-                                        <td class="text-center">
+                                    {% if nota_data.valor %} <tr>
+                                        <td>{{ periodo.nombre }} <br><small class="text-muted">(Observador)</small></td>
+                                        <td class="text-center align-middle">
                                             <span class="badge rounded-pill p-2 fs-6 {% if nota_data.valor >= 3.0 %}bg-success-alt{% else %}bg-danger-alt{% endif %}">
                                                 {{ nota_data.valor|floatformat:2|default:"-" }}
                                             </span>
                                         </td>
-                                        <td>{{ nota_data.comentario|default:"-" }}</td>
+                                        <td class="align-middle">{{ nota_data.comentario|default:"-" }}</td>
                                     </tr>
+                                    {% endif %}
                                 {% endwith %}
                             {% endfor %}
                         </tbody>
@@ -401,6 +430,12 @@
 .border-primary-alt { border-color: var(--color-primary-alt) !important; }
 .bg-success-alt { background-color: var(--color-success) !important; }
 .bg-danger-alt { background-color: var(--color-danger) !important; }
+
+.w-md-auto { width: auto !important; } /* Utilidad personalizada para escritorio */
+
+@media (max-width: 768px) {
+    .w-md-auto { width: 100% !important; } /* En móvil ocupa todo el ancho */
+}
 
 .shadow-hover { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
 .shadow-hover:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important; }
