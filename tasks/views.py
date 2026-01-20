@@ -2,7 +2,7 @@
 from django.db.models import Avg, Count, Q, Min, Max
 import json
 from .models import Observacion, Institucion # <--- Importante importar Observacion
-from .models import  Seguimiento # Asegúrate que importas tus modelos correctamente
+from .models import Seguimiento # Asegúrate que importas tus modelos correctamente
 from django.core.serializers.json import DjangoJSONEncoder
 # --- AGREGA ESTO AL PRINCIPIO DE tasks/views.py ---
 from django.template.loader import get_template  # <--- FALTABA ESTO
@@ -5521,33 +5521,38 @@ def historial_global_observaciones(request):
 
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
+# EN tasks/views.py (Al final del archivo)
+
 @require_POST
 def guardar_seguimiento(request):
     try:
         # 1. Recibir datos del Javascript
         estudiante_id = request.POST.get('estudiante_id')
         tipo = request.POST.get('tipo')
-        descripcion = request.POST.get('descripcion') # OJO: Aquí estaba el error comun, mismatch de nombres
+        descripcion = request.POST.get('descripcion')
 
         if not all([estudiante_id, tipo, descripcion]):
-            return JsonResponse({'success': False, 'error': 'Faltan datos obligatorios (ID, Tipo o Descripción)'}, status=400)
+            return JsonResponse({'success': False, 'error': 'Faltan datos obligatorios'}, status=400)
 
-        # 2. Buscar estudiante
-        estudiante = Estudiante.objects.get(id=estudiante_id)
+        # 2. CORRECCIÓN CRÍTICA: Usar 'User', no 'Estudiante'
+        # El modelo 'Estudiante' no existe, son usuarios con rol.
+        estudiante = get_object_or_404(User, id=estudiante_id)
 
         # 3. Guardar en Base de Datos
+        # Asegúrate de que el modelo 'Seguimiento' exista en models.py
         Seguimiento.objects.create(
             estudiante=estudiante,
             tipo=tipo,
-            descripcion=descripcion, # Asegúrate que en tu modelo el campo se llame 'descripcion' o 'contenido'
+            descripcion=descripcion, 
             profesional=request.user, 
-            # fecha=timezone.now() # Django pone la fecha auto si tienes auto_now_add=True
+            fecha=timezone.now() 
         )
 
         return JsonResponse({'success': True})
 
-    except Estudiante.DoesNotExist:
+    except User.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'El estudiante no existe'}, status=404)
     except Exception as e:
+        # Esto imprimirá el error real en la consola si falla algo más
+        print(f"Error guardando seguimiento: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-

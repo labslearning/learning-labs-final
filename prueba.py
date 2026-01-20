@@ -8,8 +8,6 @@ from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.utils.text import slugify
-from django.contrib.auth import get_user_model
-User = get_user_model()
 
 
 from .ai.constants import (

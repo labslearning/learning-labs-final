@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-    /* === ESTILOS TIER EDUTECH 100000 (DISEÑO PROFESIONAL) === */
+    /* === ESTILOS TIER EDUTECH 100000 === */
     :root {
         --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
         --success-gradient: linear-gradient(135deg, #0f9d58 0%, #20c997 100%);
@@ -162,11 +162,12 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN PDF: No usar visibility:hidden, sino sacarlo de la pantalla */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
+    /* USAMOS FIXED Y COORDENADAS NEGATIVAS PARA QUE HTML2PDF LO VEA PERO EL USUARIO NO */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
-        left: -10000px; /* Sacado de la pantalla */
+        left: -10000px;
         width: 210mm;
         min-height: 297mm;
         z-index: -1000;
@@ -175,7 +176,8 @@
     }
 
     .pdf-page {
-        width: 100%;
+        width: 210mm; /* Ancho A4 exacto */
+        min-height: 297mm;
         padding: 20mm;
         margin: 0 auto;
         background: white;
@@ -226,7 +228,6 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
-        white-space: pre-line;
     }
 
     .pdf-signatures {
@@ -734,7 +735,7 @@
             </table>
         </div>
     </div>
-</div>
+    </div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -991,6 +992,7 @@
             body: formData
         })
         .then(response => {
+            // Convertimos a JSON para procesar respuesta
             return response.json().then(data => ({ status: response.status, body: data }));
         })
         .then(({ status, body }) => {
