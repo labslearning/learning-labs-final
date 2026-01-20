@@ -3857,6 +3857,7 @@ def dashboard_bienestar(request):
     - Analítica de Asistencia y Deserción.
     - Control de Clima Escolar (Convivencia).
     - Gestión por Grupos (Acordeones).
+    - [NUEVO] Historial de Seguimientos y Observaciones.
     """
     
     # ===================================================================
@@ -4005,10 +4006,10 @@ def dashboard_bienestar(request):
             notas_conv_periodo = {}
             for p in periodos_del_curso:
                 n_obj = Nota.objects.filter(
-    estudiante=estudiante, 
-    periodo=p, 
-    materia__nombre__icontains="Convivencia"
-).aggregate(promedio=Avg('valor'))['promedio']
+                    estudiante=estudiante, 
+                    periodo=p, 
+                    materia__nombre__icontains="Convivencia"
+                ).aggregate(promedio=Avg('valor'))['promedio']
                 notas_conv_periodo[p.id] = round(n_obj, 1) if n_obj is not None else "-"
             
             lista_estudiantes_curso.append({
@@ -4062,19 +4063,44 @@ def dashboard_bienestar(request):
     
     institucion = Institucion.objects.first()
 
+    # ===================================================================
+    # 5. [AGREGADO] HISTORIAL DE SEGUIMIENTOS Y OBSERVACIONES
+    # ===================================================================
+    # Obtenemos los seguimientos para la tabla de historial inferior
+    historial_seguimientos = Seguimiento.objects.select_related(
+        'estudiante', 'profesional'
+    ).all().order_by('-fecha')[:100]
+
+    # Obtenemos las observaciones para la tabla maestra superior (Registro de casos)
+    # Filtramos si hay query de búsqueda
+    base_observaciones = Observacion.objects.select_related(
+        'estudiante', 'autor'
+    ).all().order_by('-fecha_creacion')
+
+    if query:
+        base_observaciones = base_observaciones.filter(
+            Q(estudiante__username__icontains=query) |
+            Q(estudiante__first_name__icontains=query) |
+            Q(estudiante__last_name__icontains=query) |
+            Q(descripcion__icontains=query)
+        )
+    
+    # Limitamos para no saturar la vista inicial
+    observaciones = base_observaciones[:50]
+
     context = {
         'estudiantes': estudiantes_busqueda, 
         'query': query,
         'vista_cursos': vista_cursos,
         'periodos': periodos_header,
         'institucion': institucion,
-        'top_riesgo_academico': riesgo_academico_total, # <--- RANKING MAESTRO DE RIESGO
+        'top_riesgo_academico': riesgo_academico_total, 
         'kpi': {
             'total_alumnos': total_estudiantes_colegio,
             'prom_global_acad': prom_global_acad,
             'prom_global_conv': prom_global_conv,
             'total_cursos': cursos_activos.count(),
-            'total_materias_perdidas': total_materias_perdidas_institucional # KPI Card
+            'total_materias_perdidas': total_materias_perdidas_institucional 
         },
         'chart_data': {
             'labels': json.dumps(chart_labels),
@@ -4084,6 +4110,10 @@ def dashboard_bienestar(request):
         'stats_asistencia': json.dumps(list(stats_asistencia.values())),
         'top_fallas': top_fallas,
         'alertas_convivencia': alertas_convivencia,
+        
+        # --- NUEVOS DATOS PARA HISTORIAL Y PDF ---
+        'historial_seguimientos': historial_seguimientos, # Para la tabla inferior
+        'observaciones': observaciones, # Para la tabla superior (Maestra)
     }
 
     return render(request, 'bienestar/dashboard_bienestar.html', context)
