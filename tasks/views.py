@@ -2,7 +2,7 @@
 from django.db.models import Avg, Count, Q, Min, Max
 import json
 from .models import Observacion, Institucion # <--- Importante importar Observacion
-from .models import Estudiante, Seguimiento # Asegúrate que importas tus modelos correctamente
+from .models import  Seguimiento # Asegúrate que importas tus modelos correctamente
 from django.core.serializers.json import DjangoJSONEncoder
 # --- AGREGA ESTO AL PRINCIPIO DE tasks/views.py ---
 from django.template.loader import get_template  # <--- FALTABA ESTO
