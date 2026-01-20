@@ -164,12 +164,22 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (CORREGIDO PARA EVITAR HOJA EN BLANCO) */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
-        left: -9999px; /* Fuera de pantalla pero renderizable */
+        left: -9999px; /* Fuera de pantalla por defecto */
         z-index: -1000;
+        visibility: hidden; /* Oculto para que no estorbe */
+    }
+
+    /* Clase mágica que aplicaremos con JS al momento de imprimir */
+    #plantillaPDFContainer.preparado-impresion {
+        left: 0 !important;
+        top: 0 !important;
+        z-index: 9999 !important;
+        visibility: visible !important;
+        background: white;
     }
     
     .pdf-page {
@@ -785,29 +795,30 @@
         document.getElementById('contenidoSeguimiento').value = ""; // Limpiar textarea
     }
 
-    // Lógica para Generar PDF con html2pdf
+    // 🔥 LOGICA ARREGLADA PARA GENERAR PDF SIN PANTALLA BLANCA
     function generarPDF(event) {
-        if(event) event.preventDefault(); // Evitar envío del form
+        if(event) event.preventDefault();
 
-        // 1. Capturar datos
+        // 1. Validaciones
         const estudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const contenido = document.getElementById('contenidoSeguimiento').value;
         const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
-        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
-
+        
         if (!contenido.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento antes de generar el documento.");
             return;
         }
 
         // 2. Poblar la plantilla oculta
+        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
+
         document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante; // ID o matrícula si está disponible
+        document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fecha;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        // Convertir saltos de línea en <br> para el PDF
+        // Convertir saltos de línea
         document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
         let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
@@ -817,34 +828,40 @@
         
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-        // 3. Configuración y Generación
+        // 3. 🔥 EL TRUCO DEL CIRUJANO: Hacer visible el elemento TEMPORALMENTE para html2pdf
         const element = document.getElementById('plantillaPDFContainer');
         
-        // No cambiamos display, ya está fixed y fuera de pantalla, perfecto para html2pdf
-        
+        // Aplicamos la clase que lo pone visible y en primer plano (z-index 9999)
+        element.classList.add('preparado-impresion');
+
         const opt = {
-            margin:       0, // Sin márgenes automáticos, ya los tiene el CSS del .pdf-page
+            margin:       0,
             filename:     `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // Escala alta para nitidez
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Generar PDF
+        // Generar PDF y luego esconder de nuevo
         html2pdf().set(opt).from(element).save().then(function() {
-            // Callback: Cerrar modal y mostrar éxito
+            // Callback: Volver a ocultar la plantilla y cerrar modal
+            element.classList.remove('preparado-impresion');
+            
             const modalElement = document.getElementById('modalSeguimiento');
             const modalInstance = bootstrap.Modal.getInstance(modalElement);
             if (modalInstance) {
                 modalInstance.hide();
             }
-            // Simulación de persistencia visual (Mensaje de éxito)
-            // Aquí idealmente iría un fetch() al backend para guardar el registro si hubiera endpoint
             alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
+        }).catch(function(error) {
+            console.error("Error PDF:", error);
+            // Asegurarnos de ocultarlo si falla
+            element.classList.remove('preparado-impresion');
+            alert("Error generando el PDF. Revisa la consola.");
         });
     }
 
-    // Código original de Gráficos (Mantenido intacto)
+    // Gráficos (Mantenido intacto)
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
