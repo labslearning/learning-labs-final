@@ -1,477 +1,941 @@
 {% extends 'base.html' %}
+
 {% load dict_filters %}
+
 {% load custom_filters %}
+
 {% load note_filters %}
+
 {% load static %}
 
+
+
 {% block content %}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
+
 <style>
+
 /* Estilos adicionales para un look más profesional */
+
 :root {
+
     --edu-acudiente-primary: #28a745; /* Verde éxito de Bootstrap como primario */
+
     --edu-acudiente-primary-light: #d1e7dd; /* Verde claro para fondos */
+
     --edu-acudiente-bg: #f8f9fa; /* Fondo general */
+
     --edu-acudiente-card-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+
     --edu-acudiente-radius: 0.75rem; /* Bordes más redondeados */
+
 }
+
+
 
 body {
+
     background-color: var(--edu-acudiente-bg);
+
 }
 
-/* 📱 UTILIDAD RESPONSIVA PERSONALIZADA */
-/* En escritorio, el ancho vuelve a ser automático. En móvil será 100% por defecto del d-grid */
-@media (min-width: 768px) {
-    .w-md-auto { width: auto !important; }
-}
+
 
 .acudiente-header {
+
     padding: 2.5rem 1.5rem;
+
     background: linear-gradient(135deg, var(--edu-acudiente-primary), #208a38); /* Gradiente sutil */
+
     color: white;
+
     border-radius: var(--edu-acudiente-radius);
+
     margin-bottom: 2.5rem;
+
     box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.3);
+
 }
+
+
 
 .acudiente-header i {
+
     opacity: 0.8;
+
 }
+
+
 
 .nav-tabs .nav-link {
+
     color: var(--edu-acudiente-primary);
+
     font-weight: 500;
+
     border: none;
+
     border-bottom: 3px solid transparent;
+
     padding: 0.8rem 1.5rem;
+
     margin-bottom: -1px; /* Alinea con el borde del contenido */
+
     transition: all 0.2s ease-in-out;
+
 }
+
+
 
 .nav-tabs .nav-link.active {
+
     color: var(--edu-acudiente-primary);
+
     font-weight: 600;
+
     background-color: transparent; /* Fondo transparente */
+
     border-bottom: 3px solid var(--edu-acudiente-primary);
+
 }
+
+
 
 .nav-tabs .nav-link:hover:not(.active) {
+
     border-bottom: 3px solid #a6d9b3; /* Verde muy claro para hover */
+
     background-color: rgba(40, 167, 69, 0.05);
+
 }
+
+
 
 .tab-content {
+
     background-color: white;
+
     padding: 2rem;
+
     border: 1px solid #dee2e6;
+
     border-top: none; /* El borde superior lo simulan las tabs */
+
     border-radius: 0 0 var(--edu-acudiente-radius) var(--edu-acudiente-radius);
+
     box-shadow: var(--edu-acudiente-card-shadow);
+
 }
+
+
 
 /* Ajustes para el contenido incluido */
+
 .tab-pane .card {
+
     box-shadow: none !important; /* Quitar sombras anidadas si las hay */
+
     border: 1px solid #eee; /* Añadir un borde sutil si es necesario */
+
 }
+
+
 
 /* 🤖 Estilo para el botón de IA */
+
 .btn-ai-acudiente {
+
     background: linear-gradient(to right, #6a11cb, #2575fc);
+
     color: white;
+
     border: none;
+
     transition: transform 0.2s;
+
 }
+
 .btn-ai-acudiente:hover {
+
     transform: scale(1.05);
+
     color: white;
+
     box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
+
 }
+
+
 
 /* 📊 Nuevos Estilos para las Estadísticas */
+
 .stat-card {
+
     border: 1px solid rgba(0,0,0,0.05);
+
     border-radius: 1rem;
+
     box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+
     transition: transform 0.2s;
+
     height: 100%;
+
     background: #fff;
+
     position: relative;
+
 }
+
 .stat-card:hover {
+
     transform: translateY(-3px);
+
     box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+
 }
+
 .chart-container {
+
     position: relative;
+
     width: 100%;
+
 }
+
+
 
 /* Gráfico circular CSS para asistencia */
+
 .circular-chart {
+
   display: block;
+
   margin: 0 auto;
+
   max-width: 100%;
+
   max-height: 250px;
+
 }
+
 .circle-bg {
+
   fill: none;
+
   stroke: #eee;
+
   stroke-width: 3.8;
+
 }
+
 .circle {
+
   fill: none;
+
   stroke-width: 2.8;
+
   stroke-linecap: round;
+
   animation: progress 1s ease-out forwards;
+
 }
+
 @keyframes progress {
+
   0% { stroke-dasharray: 0 100; }
+
 }
+
 </style>
 
+
+
 <div class="container mt-4 py-4">
+
     <div class="acudiente-header text-center shadow-sm">
+
         <i class="fas fa-user-shield fa-4x mb-3"></i>
+
         <h2 class="fw-bold">Panel del Acudiente</h2>
+
         <p class="lead mb-0">Bienvenido, {{ acudiente.get_full_name|default:acudiente.username }}.</p>
+
     </div>
 
+
+
     {% if estudiantes_data %}
+
         {% if estudiantes_data|length > 1 %}
+
             <ul class="nav nav-tabs nav-fill mb-0" id="studentTab" role="tablist">
+
                 {% for data in estudiantes_data %}
+
                     <li class="nav-item" role="presentation">
+
                         <button class="nav-link {% if forloop.first %}active{% endif %}"
+
                                 id="tab-{{ data.estudiante.id }}"
+
                                 data-bs-toggle="tab"
+
                                 data-bs-target="#content-{{ data.estudiante.id }}"
+
                                 type="button" role="tab"
+
                                 aria-controls="content-{{ data.estudiante.id }}"
+
                                 aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+
                             <i class="fas fa-user-graduate me-2"></i>{{ data.estudiante.get_full_name }}
+
                         </button>
+
                     </li>
+
                 {% endfor %}
+
             </ul>
+
         {% endif %}
 
+
+
         <div class="tab-content {% if estudiantes_data|length == 1 %}mt-4{% endif %}" id="studentTabContent"> 
+
             {% for data in estudiantes_data %}
+
                 <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+
                      id="content-{{ data.estudiante.id }}" role="tabpanel"
+
                      aria-labelledby="tab-{{ data.estudiante.id }}">
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3 border-bottom pb-3 align-items-center">
+
+
+                    <div class="d-flex justify-content-end gap-2 mb-3 border-bottom pb-3 align-items-center">
+
                         
+
                         <a href="{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}" 
-                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm w-100 w-md-auto">
+
+                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm">
+
                             <i class="fas fa-robot me-2"></i>Guía de Apoyo Familiar
+
                         </a>
 
+
+
                         {# 1. BOTÓN BOLETÍN #}
+
                         {% if data.matricula and data.matricula.puede_generar_boletin %}
-                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success w-100 w-md-auto" target="_blank" title="Ver boletín en PDF">
+
+                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
+
                                 <i class="fas fa-file-pdf me-2"></i>Boletín
+
                             </a>
+
                         {% else %}
-                            <button class="btn btn-secondary w-100 w-md-auto" disabled title="La generación de boletines no está habilitada.">
+
+                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada.">
+
                                 <i class="fas fa-file-pdf me-2"></i>Boletín (No disp.)
+
                             </button>
+
                         {% endif %}
+
+
 
                         {# 2. BOTÓN OBSERVADOR #}
+
                         {% if data.matricula and data.matricula.puede_ver_observador %}
-                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary w-100 w-md-auto">
+
+                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary">
+
                                 <i class="fas fa-file-signature me-2"></i>Observador
+
                             </a>
+
                         {% else %}
-                            <button type="button" class="btn btn-outline-secondary w-100 w-md-auto" disabled title="Documento no disponible">
+
+                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible">
+
                                 <i class="fas fa-clock me-2"></i>Obs. (No disp.)
+
                             </button>
+
                         {% endif %}
+
                     </div>
+
+
 
                     <div class="row mb-4">
+
                         <div class="col-12">
+
                             <h4 class="fw-bold text-secondary mb-3"><i class="fas fa-chart-pie me-2"></i>Analítica de Rendimiento</h4>
-                        </div>
-                        
-                        <div class="col-md-3 mb-3">
-                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center h-100">
-                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Promedio General</h6>
-                                <h1 class="display-3 fw-bold mb-0 {% if data.stats.promedio_general < 3.5 %}text-danger{% else %}text-success{% endif %}">
-                                    {{ data.stats.promedio_general }}
-                                </h1>
-                                <small class="text-muted">Escala 1.0 - 5.0</small>
-                            </div>
+
                         </div>
 
+                        
+
                         <div class="col-md-3 mb-3">
+
                             <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center h-100">
-                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Asistencia Total</h6>
-                                <div class="position-relative d-flex justify-content-center align-items-center" style="width: 100px; height: 100px;">
-                                    <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
-                                        <path class="circle-bg"
-                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path class="circle"
-                                            stroke-dasharray="{{ data.stats.asistencia_pct }}, 100"
-                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                            stroke="{% if data.stats.asistencia_pct < 85 %}#dc3545{% else %}#28a745{% endif %}" />
-                                    </svg>
-                                    <div class="position-absolute fw-bold fs-4">{{ data.stats.asistencia_pct }}%</div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-muted d-block">Fallas acumuladas: <strong>{{ data.stats.total_fallas }}</strong></small>
-                                    {% if data.stats.total_fallas > 0 %}
-                                    <button class="btn btn-sm btn-outline-secondary mt-1 rounded-pill" data-bs-toggle="modal" data-bs-target="#modalAsistencia_{{ data.estudiante.id }}">
-                                        <i class="fas fa-list-ul"></i> Ver Historial
-                                    </button>
-                                    {% endif %}
-                                </div>
+
+                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Promedio General</h6>
+
+                                <h1 class="display-3 fw-bold mb-0 {% if data.stats.promedio_general < 3.5 %}text-danger{% else %}text-success{% endif %}">
+
+                                    {{ data.stats.promedio_general }}
+
+                                </h1>
+
+                                <small class="text-muted">Escala 1.0 - 5.0</small>
+
                             </div>
+
                         </div>
+
+
+
+                        <div class="col-md-3 mb-3">
+
+                            <div class="stat-card p-3 text-center d-flex flex-column justify-content-center align-items-center h-100">
+
+                                <h6 class="text-muted text-uppercase small ls-1 mb-2">Asistencia Total</h6>
+
+                                <div class="position-relative d-flex justify-content-center align-items-center" style="width: 100px; height: 100px;">
+
+                                    <svg viewBox="0 0 36 36" class="circular-chart" style="width: 100%; height: 100%;">
+
+                                        <path class="circle-bg"
+
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+
+                                        <path class="circle"
+
+                                            stroke-dasharray="{{ data.stats.asistencia_pct }}, 100"
+
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+
+                                            stroke="{% if data.stats.asistencia_pct < 85 %}#dc3545{% else %}#28a745{% endif %}" />
+
+                                    </svg>
+
+                                    <div class="position-absolute fw-bold fs-4">{{ data.stats.asistencia_pct }}%</div>
+
+                                </div>
+
+                                <div class="mt-2">
+
+                                    <small class="text-muted d-block">Fallas acumuladas: <strong>{{ data.stats.total_fallas }}</strong></small>
+
+                                    {% if data.stats.total_fallas > 0 %}
+
+                                    <button class="btn btn-sm btn-outline-secondary mt-1 rounded-pill" data-bs-toggle="modal" data-bs-target="#modalAsistencia_{{ data.estudiante.id }}">
+
+                                        <i class="fas fa-list-ul"></i> Ver Historial
+
+                                    </button>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
 
                         <div class="col-md-6 mb-3">
+
                             <div class="stat-card p-3 h-100">
+
                                 <h6 class="text-muted fw-bold mb-3">Evolución por Periodo</h6>
+
                                 <div class="chart-container" style="height: 180px;">
+
                                     <canvas id="chartPeriodos_{{ data.estudiante.id }}"></canvas>
+
                                 </div>
+
                             </div>
+
                         </div>
+
+
 
                         <div class="col-md-4 mb-3">
+
                             <div class="stat-card p-3 h-100">
+
                                 <h6 class="text-muted fw-bold mb-3">Estado de Materias</h6>
+
                                 <div class="d-flex align-items-center justify-content-center h-75">
+
                                     <div class="chart-container" style="height: 150px; width: 150px;">
+
                                         <canvas id="chartStatus_{{ data.estudiante.id }}"></canvas>
+
                                     </div>
+
                                     <div class="ms-3 small">
+
                                         <div class="mb-2"><span class="badge bg-success rounded-pill me-1">&bull;</span> Ganando: <strong>{{ data.stats.ganadas }}</strong></div>
+
                                         <div><span class="badge bg-danger rounded-pill me-1">&bull;</span> Perdiendo: <strong>{{ data.stats.perdidas }}</strong></div>
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                         </div>
+
+
 
                         <div class="col-md-8 mb-3">
+
                             <div class="stat-card p-3 h-100">
+
                                 <h6 class="text-muted fw-bold mb-3">Desempeño por Materia (Acumulado)</h6>
+
                                 <div class="chart-container" style="height: 200px;">
+
                                     <canvas id="chartMaterias_{{ data.estudiante.id }}"></canvas>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
+
 
                     <div class="row mb-5">
+
                         <div class="col-12">
+
                             <h4 class="fw-bold text-secondary mb-3"><i class="fas fa-chalkboard-teacher me-2"></i>Equipo Docente</h4>
+
                             
+
                             <div class="card stat-card shadow-sm">
+
                                 <div class="card-body p-0">
+
                                     <div class="table-responsive" style="max-height: 300px;">
+
                                         <table class="table table-hover align-middle mb-0">
+
                                             <thead class="bg-light sticky-top">
+
                                                 <tr>
+
                                                     <th class="ps-4" style="width: 60px;">Foto</th>
+
                                                     <th>Docente</th>
+
                                                     <th>Asignatura</th>
+
                                                     <th class="text-end pe-4">Contacto</th>
+
                                                 </tr>
+
                                             </thead>
+
                                             <tbody>
+
                                                 {% for profe in data.docentes %}
+
                                                 <tr>
+
                                                     <td class="ps-4">
+
                                                         <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style="width: 40px; height: 40px; font-size: 1.1em;">
+
                                                             {% if profe.foto_url %}
+
                                                                 <img src="{{ profe.foto_url }}" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+
                                                             {% else %}
+
                                                                 {{ profe.nombre|slice:":1" }}
+
                                                             {% endif %}
+
                                                         </div>
+
                                                     </td>
+
                                                     <td class="fw-bold text-dark">{{ profe.nombre }}</td>
+
                                                     <td class="text-muted">{{ profe.materia_principal }}</td>
+
                                                     <td class="text-end pe-4">
+
                                                         <a href="{% url 'enviar_mensaje' %}?destinatario={{ profe.id }}&asunto=Consulta de Acudiente: {{ data.estudiante.get_full_name }}" 
+
                                                            class="btn btn-outline-primary btn-sm rounded-pill px-3">
+
                                                             <i class="fas fa-envelope me-1"></i> Mensaje
+
                                                         </a>
+
                                                     </td>
+
                                                 </tr>
+
                                                 {% empty %}
+
                                                 <tr>
+
                                                     <td colspan="4" class="text-center py-4 text-muted">
+
                                                         No hay docentes asignados todavía.
+
                                                     </td>
+
                                                 </tr>
+
                                                 {% endfor %}
+
                                             </tbody>
+
                                         </table>
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
+
 
                     <div class="modal fade" id="modalAsistencia_{{ data.estudiante.id }}" tabindex="-1" aria-hidden="true">
+
                         <div class="modal-dialog modal-dialog-centered">
+
                             <div class="modal-content">
+
                                 <div class="modal-header bg-light">
+
                                     <h5 class="modal-title"><i class="fas fa-calendar-times text-danger me-2"></i>Historial de Fallas</h5>
+
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+
                                 </div>
+
                                 <div class="modal-body p-0">
+
                                     {% if data.stats.detalle_fallas %}
+
                                     <table class="table table-striped mb-0">
+
                                         <thead class="table-danger">
+
                                             <tr>
+
                                                 <th class="ps-4">Fecha</th>
+
                                                 <th>Materia / Clase</th>
+
                                                 <th>Estado</th>
+
                                             </tr>
+
                                         </thead>
+
                                         <tbody>
+
                                             {% for falla in data.stats.detalle_fallas %}
+
                                             <tr>
+
                                                 <td class="ps-4">{{ falla.fecha|date:"d M, Y" }}</td>
+
                                                 <td class="fw-bold">{{ falla.materia.nombre }}</td>
+
                                                 <td><span class="badge bg-danger">Falla</span></td>
+
                                             </tr>
+
                                             {% endfor %}
+
                                         </tbody>
+
                                     </table>
+
                                     {% else %}
+
                                     <div class="p-4 text-center text-muted">
+
                                         No hay detalles disponibles.
+
                                     </div>
+
                                     {% endif %}
+
                                 </div>
+
                                 <div class="modal-footer">
+
                                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                     
+
                     {# Encabezado del reporte si hay más de un estudiante #}
+
                     {% if estudiantes_data|length > 1 %}
+
                     <div class="student-report-header mb-4 p-3 rounded" style="background-color: var(--edu-acudiente-primary-light);">
+
                         <h4 class="mb-0 fw-semibold text-success d-flex justify-content-between align-items-center">
+
                             <span>
+
                                 <i class="fas fa-chart-line me-2"></i>
+
                                 Reporte de: {{ data.estudiante.get_full_name }}
+
                             </span>
+
                             {% if data.curso %}
+
                                 <span class="badge bg-success fw-normal">{{ data.curso.nombre }}</span>
+
                             {% else %}
+
                                 <span class="badge bg-warning text-dark fw-normal">Sin Matrícula Activa</span>
+
                             {% endif %}
+
                         </h4>
+
                     </div>
+
                     {% endif %}
 
+
+
                     {# Inclusión del dashboard original del estudiante #}
+
                     {% with estudiante=data.estudiante perfil=data.perfil curso=data.curso matricula=data.matricula periodos_disponibles=data.periodos_disponibles materias_con_notas=data.materias_con_notas comentarios_docente=data.comentarios_docente actividades_semanales=data.actividades_semanales logros_por_materia_por_periodo=data.logros_por_materia_por_periodo convivencia_notas=data.convivencia_notas %}
+
                         {% include "dashboard_estudiante.html" %}
+
                     {% endwith %}
 
+
+
                     <script>
+
                         document.addEventListener('DOMContentLoaded', function() {
+
                             // 1. Gráfica de Evolución (Línea)
+
                             const ctxPeriodos = document.getElementById('chartPeriodos_{{ data.estudiante.id }}');
+
                             if (ctxPeriodos) {
+
                                 new Chart(ctxPeriodos.getContext('2d'), {
+
                                     type: 'line',
+
                                     data: {
+
                                         labels: {{ data.stats.periodos_labels|safe }},
+
                                         datasets: [{
+
                                             label: 'Promedio',
+
                                             data: {{ data.stats.periodos_data|safe }},
+
                                             borderColor: '#28a745',
+
                                             backgroundColor: 'rgba(40, 167, 69, 0.1)',
+
                                             tension: 0.3,
+
                                             fill: true,
+
                                             pointRadius: 4,
+
                                             pointHoverRadius: 6
+
                                         }]
+
                                     },
+
                                     options: {
+
                                         responsive: true,
+
                                         maintainAspectRatio: false,
+
                                         scales: { y: { min: 1, max: 5, grid: { borderDash: [5, 5] } } },
+
                                         plugins: { legend: { display: false } }
+
                                     }
+
                                 });
+
                             }
+
+
 
                             // 2. Gráfica de Estatus (Dona)
+
                             const ctxStatus = document.getElementById('chartStatus_{{ data.estudiante.id }}');
+
                             if (ctxStatus) {
+
                                 new Chart(ctxStatus.getContext('2d'), {
+
                                     type: 'doughnut',
+
                                     data: {
+
                                         labels: ['Ganando', 'Perdiendo'],
+
                                         datasets: [{
+
                                             data: {{ data.stats.distribucion_data|safe }},
+
                                             backgroundColor: ['#28a745', '#dc3545'],
+
                                             borderWidth: 2,
+
                                             borderColor: '#ffffff'
+
                                         }]
+
                                     },
+
                                     options: {
+
                                         responsive: true,
+
                                         maintainAspectRatio: false,
+
                                         cutout: '70%',
+
                                         plugins: { legend: { display: false } }
+
                                     }
+
                                 });
+
                             }
+
+
 
                             // 3. Gráfica por Materias (Barras)
+
                             const ctxMaterias = document.getElementById('chartMaterias_{{ data.estudiante.id }}');
+
                             if (ctxMaterias) {
+
                                 const rawData = {{ data.stats.materias_data|safe }};
+
                                 const bgColors = rawData.map(val => val < 3.5 ? 'rgba(220, 53, 69, 0.8)' : 'rgba(40, 167, 69, 0.8)');
+
                                 
+
                                 new Chart(ctxMaterias.getContext('2d'), {
+
                                     type: 'bar',
+
                                     data: {
+
                                         labels: {{ data.stats.materias_labels|safe }},
+
                                         datasets: [{
+
                                             label: 'Promedio',
+
                                             data: rawData,
+
                                             backgroundColor: bgColors,
+
                                             borderRadius: 4,
+
                                             barPercentage: 0.7
+
                                         }]
+
                                     },
+
                                     options: {
+
                                         responsive: true,
+
                                         maintainAspectRatio: false,
+
                                         scales: { y: { min: 0, max: 5 } },
+
                                         plugins: { legend: { display: false } }
+
                                     }
+
                                 });
+
                             }
+
                         });
+
                     </script>
 
+
+
                 </div>
+
             {% endfor %}
+
         </div>
+
     {% else %}
+
         <div class="alert alert-warning text-center shadow-sm">
+
             <i class="fas fa-info-circle fa-2x me-2 align-middle"></i>
+
             <span class="align-middle fs-5">No tienes estudiantes vinculados a tu perfil. Por favor, contacta a la administración.</span>
+
         </div>
+
     {% endif %}
+
 </div>
+
+
 
 {% endblock %}

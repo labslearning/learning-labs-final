@@ -697,7 +697,7 @@
                                            </div>
                                         </div>
                                    </td>
-                                  
+                                   
                                    {% for p in periodos %}
                                        <td class="text-center">
                                            {% with nota=obj_est.notas|get_item:p.id %}
@@ -785,16 +785,17 @@
 <script>
    document.addEventListener('DOMContentLoaded', function() {
        
-       // 1. CONFIGURACIÓN DEL RADAR CHART ESTRATÉGICO
+       // 1. CONFIGURACIÓN DEL RADAR CHART ESTRATÉGICO CON DATOS REALES
        const ctxRadar = document.getElementById('radarChartPro');
        if (ctxRadar) {
            new Chart(ctxRadar, {
                type: 'radar',
                data: {
-                   labels: ['Matemáticas', 'Español', 'Ciencias Nat.', 'C. Sociales', 'Inglés', 'Tecnología'],
+                   // 🔥 CIRUGÍA: Inyectamos los datos reales del backend
+                   labels: JSON.parse('{{ chart_data.labels|safe|escapejs }}'),
                    datasets: [{
                        label: 'Rendimiento Promedio Institucional',
-                       data: [3.8, 4.2, 3.1, 4.0, 3.4, 4.6],
+                       data: JSON.parse('{{ chart_data.acad|safe|escapejs }}'),
                        backgroundColor: 'rgba(67, 97, 238, 0.25)',
                        borderColor: '#4361ee',
                        borderWidth: 4,
@@ -804,7 +805,8 @@
                        fill: true
                    }, {
                        label: 'Estándar PEI (Meta)',
-                       data: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0],
+                       // Generamos dinámicamente el array de metas (4.0) según la cantidad de labels
+                       data: Array(JSON.parse('{{ chart_data.labels|safe|escapejs }}').length).fill(4.0),
                        backgroundColor: 'rgba(25, 135, 84, 0.05)',
                        borderColor: 'rgba(25, 135, 84, 0.5)',
                        borderWidth: 2,
@@ -837,9 +839,9 @@
        // 2. CONFIGURACIÓN GRÁFICO BARRA SUPREMO (PEI VS REAL)
        const ctxBar = document.getElementById('peiChartSupremo');
        if (ctxBar) {
-           const labels = JSON.parse('{{ chart_data.labels|safe }}');
-           const dataAcad = JSON.parse('{{ chart_data.acad|safe }}');
-           const dataConv = JSON.parse('{{ chart_data.conv|safe }}');
+           const labels = JSON.parse('{{ chart_data.labels|safe|escapejs }}');
+           const dataAcad = JSON.parse('{{ chart_data.acad|safe|escapejs }}');
+           const dataConv = JSON.parse('{{ chart_data.conv|safe|escapejs }}');
 
            new Chart(ctxBar, {
                type: 'bar',
@@ -882,7 +884,7 @@
        // 3. CONFIGURACIÓN GRÁFICO ASISTENCIA (DONUT)
        const ctxDonut = document.getElementById('asistenciaChartSupremo');
        if (ctxDonut) {
-           const dataAsistencia = JSON.parse('{{ stats_asistencia|safe }}');
+           const dataAsistencia = JSON.parse('{{ stats_asistencia|safe|escapejs }}');
            new Chart(ctxDonut, {
                type: 'doughnut',
                data: {
@@ -923,64 +925,64 @@
        // MODIFICACIÓN CRÍTICA: Eliminamos al solicitante para evitar sesgo de la IA.
        
        const datosContexto = {
-            tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL", // Nombre técnico que suena a "solo datos"
-            // solicitante: "{{ user.get_full_name }}...",  <-- ELIMINADO PARA QUE NO ANALICE AL ADMIN
-            
-            entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)", // Le decimos explícitamente a quién analizar
-            
-            indicadores_globales: {
-                total_alumnos: "{{ kpi.total_alumnos }}",
-                promedio_academico_global: "{{ kpi.prom_global_acad }}",
-                indice_convivencia_global: "{{ kpi.prom_global_conv }}",
-                materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}",
-                total_cursos_activos: "{{ kpi.total_cursos }}"
-            },
-            
-            // LISTA DE ESTUDIANTES EN RIESGO (Notas Reales)
-            riesgos_criticos_detectados: [
-                {% for riesgo in top_riesgo_academico %}
-                {
-                    nombre_estudiante: "{{ riesgo.estudiante.get_full_name|escapejs }}",
-                    curso: "{{ riesgo.curso.nombre|escapejs }}",
-                    materias_perdidas_cantidad: {{ riesgo.materias_perdidas }},
-                    lista_materias: [{% for mat in riesgo.materias_nombres %}"{{ mat|escapejs }}",{% endfor %}]
-                },
-                {% endfor %}
-            ],
+           tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL", // Nombre técnico que suena a "solo datos"
+           // solicitante: "{{ user.get_full_name }}...",  <-- ELIMINADO PARA QUE NO ANALICE AL ADMIN
+           
+           entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)", // Le decimos explícitamente a quién analizar
+           
+           indicadores_globales: {
+               total_alumnos: "{{ kpi.total_alumnos }}",
+               promedio_academico_global: "{{ kpi.prom_global_acad }}",
+               indice_convivencia_global: "{{ kpi.prom_global_conv }}",
+               materias_reprobadas_totales: "{{ kpi.total_materias_perdidas }}",
+               total_cursos_activos: "{{ kpi.total_cursos }}"
+           },
+           
+           // LISTA DE ESTUDIANTES EN RIESGO (Notas Reales)
+           riesgos_criticos_detectados: [
+               {% for riesgo in top_riesgo_academico %}
+               {
+                   nombre_estudiante: "{{ riesgo.estudiante.get_full_name|escapejs }}",
+                   curso: "{{ riesgo.curso.nombre|escapejs }}",
+                   materias_perdidas_cantidad: {{ riesgo.materias_perdidas }},
+                   lista_materias: [{% for mat in riesgo.materias_nombres %}"{{ mat|escapejs }}",{% endfor %}]
+               },
+               {% endfor %}
+           ],
 
-            // LISTA DE ALERTAS DE CONVIVENCIA
-            alertas_convivencia: [
-                {% for alerta in alertas_convivencia %}
-                {
-                    nombre_estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
-                    curso: "{{ alerta.materia__curso__nombre|escapejs }}",
-                    nota_conducta: "{{ alerta.nota_promedio|floatformat:2 }}"
-                },
-                {% endfor %}
-            ],
-            
-            // LISTA DE ALERTAS DE ASISTENCIA
-            alertas_asistencia: [
-                {% for alerta in top_fallas %}
-                {
-                    nombre_estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
-                    fallas_acumuladas: {{ alerta.total }},
-                    curso: "{{ alerta.curso__nombre|escapejs }}"
-                },
-                {% endfor %}
-            ],
+           // LISTA DE ALERTAS DE CONVIVENCIA
+           alertas_convivencia: [
+               {% for alerta in alertas_convivencia %}
+               {
+                   nombre_estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                   curso: "{{ alerta.materia__curso__nombre|escapejs }}",
+                   nota_conducta: "{{ alerta.nota_promedio|floatformat:2 }}"
+               },
+               {% endfor %}
+           ],
+           
+           // LISTA DE ALERTAS DE ASISTENCIA
+           alertas_asistencia: [
+               {% for alerta in top_fallas %}
+               {
+                   nombre_estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
+                   fallas_acumuladas: {{ alerta.total }},
+                   curso: "{{ alerta.curso__nombre|escapejs }}"
+               },
+               {% endfor %}
+           ],
 
-            // RENDIMIENTO POR CURSOS
-            rendimiento_cursos: [
-                {% for item in vista_cursos %}
-                {
-                    nombre_curso: "{{ item.curso.nombre|escapejs }}",
-                    promedio_grupo: "{{ item.stats.acad }}",
-                    indice_clima: "{{ item.stats.conv }}",
-                    cantidad_alumnos: "{{ item.stats.alumnos }}"
-                },
-                {% endfor %}
-            ]
+           // RENDIMIENTO POR CURSOS
+           rendimiento_cursos: [
+               {% for item in vista_cursos %}
+               {
+                   nombre_curso: "{{ item.curso.nombre|escapejs }}",
+                   promedio_grupo: "{{ item.stats.acad }}",
+                   indice_clima: "{{ item.stats.conv }}",
+                   cantidad_alumnos: "{{ item.stats.alumnos }}"
+               },
+               {% endfor %}
+           ]
        };
 
        // 2. UX: Mensajes de estado para el usuario
@@ -1048,15 +1050,15 @@
 </script>
 
 <style>
-    /* Tu CSS existente se mantiene aquí */
-    :root { --purple-primary: #6610f2; --blue-institutional: #4361ee; --soft-gray: #f4f7fe; --text-dark: #1a1c23; }
-    body { background-color: var(--soft-gray); font-family: 'Inter', sans-serif; }
-    .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-    .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; }
-    .markdown-body ul { padding-left: 20px; }
-    .markdown-body blockquote { border-left: 5px solid #a855f7; padding-left: 15px; background: #f8fafc; color: #555; }
-    
-    /* === CORE DESIGN SYSTEM STRATOS === */
+   /* Tu CSS existente se mantiene aquí */
+   :root { --purple-primary: #6610f2; --blue-institutional: #4361ee; --soft-gray: #f4f7fe; --text-dark: #1a1c23; }
+   body { background-color: var(--soft-gray); font-family: 'Inter', sans-serif; }
+   .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; }
+   .markdown-body ul { padding-left: 20px; }
+   .markdown-body blockquote { border-left: 5px solid #a855f7; padding-left: 15px; background: #f8fafc; color: #555; }
+   
+   /* === CORE DESIGN SYSTEM STRATOS === */
    .fw-black { font-weight: 900; }
    .ls-2 { letter-spacing: 2px; }
    .ls-1 { letter-spacing: 1px; }
