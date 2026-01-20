@@ -164,16 +164,22 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN QUIRÚRGICA: ESTILOS PARA EL PDF (OFF-SCREEN INSTEAD OF HIDDEN) */
+    /* 🔥 ESTILOS CRÍTICOS PARA EL PDF */
+    /* El truco no es visibility:hidden, sino sacarlo del viewport y usar z-index bajo */
     #plantillaPDFContainer {
-        position: fixed; /* Fixed asegura que no afecte el scroll */
+        position: absolute;
+        left: -9999px;
         top: 0;
-        left: -10000px; /* Lo sacamos de la pantalla en lugar de ocultarlo */
-        width: 210mm; /* Ancho A4 exacto */
-        min-height: 297mm; /* Alto A4 mínimo */
-        background-color: white; /* Fondo blanco crítico */
-        z-index: -9999;
-        /* Eliminamos visibility: hidden y height: 0 para que html2canvas pueda renderizarlo */
+        width: 210mm;
+        background-color: white;
+        z-index: -1000;
+        /* Aseguramos que sea visible para el DOM renderer pero no para el usuario */
+        display: block !important;
+    }
+
+    /* Clase auxiliar cuando se está generando */
+    body.generating-pdf {
+        cursor: wait;
     }
 
     .pdf-page {
@@ -803,7 +809,7 @@
 
                     <div class="text-end">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="generarPDF()">
+                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="guardarYGenerarPDF(event)">
                             <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
@@ -917,69 +923,157 @@
         document.getElementById('contenidoSeguimiento').value = "";
     }
 
-    // CORRECCIÓN QUIRÚRGICA: Lógica para Generar PDF robusta
-    function generarPDF(event, contenidoPersonalizado = null) {
-        if (event) event.preventDefault();
+    // Helper para obtener el token CSRF de Django
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-        // 1. Capturar datos
-        const estudiante = contenidoPersonalizado?.estudiante || document.getElementById('nombreEstudianteModal').textContent;
-        const idEstudiante = contenidoPersonalizado?.idEstudiante || document.getElementById('idEstudianteModal').value;
-        const contenido = contenidoPersonalizado?.contenido || document.getElementById('contenidoSeguimiento').value;
-        const tipoDoc = contenidoPersonalizado?.tipoDoc || document.querySelector('input[name="tipo_documento"]:checked').value;
-        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
+    // Función principal que Orquesta el Guardado y la Generación del PDF
+    async function guardarYGenerarPDF(event) {
+        if(event) event.preventDefault();
+
+        // 1. Recolectar datos del formulario
+        const idEstudiante = document.getElementById('idEstudianteModal').value;
+        const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
+        const contenido = document.getElementById('contenidoSeguimiento').value;
+        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
 
         if (!contenido.trim()) {
-            alert("⚠️ Por favor ingrese los detalles del seguimiento antes de generar el documento.");
+            alert("⚠️ Por favor ingrese los detalles del seguimiento.");
             return;
         }
 
-        // 2. Poblar la plantilla (que ahora es visible para el motor de renderizado pero invisible al usuario)
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fecha;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
+        // 2. Preparar datos para el Backend
+        const formData = new FormData();
+        formData.append('estudiante_id', idEstudiante);
+        formData.append('tipo', tipoDoc);
+        formData.append('descripcion', contenido);
+        // Agrega otros campos si tu modelo Django los requiere, ej: 'titulo'
 
-        let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
-        if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
-        if (tipoDoc === "HISTORIAL") tituloDoc = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
+        try {
+            // 3. Enviar al Backend (AJAX)
+            // NOTA: Reemplaza '/ruta-a-tu-vista-django-guardar/' con la URL real de tu urls.py
+            // Ejemplo: /seguimientos/crear/
+            const response = await fetch('/seguimientos/crear/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            });
 
-        document.getElementById('pdfTipoDoc').textContent = tituloDoc;
+            if (response.ok) {
+                // Si guardó bien, generamos el PDF
+                console.log("✅ Seguimiento guardado en base de datos.");
+                
+                // Llamamos a la función de PDF pasando los datos
+                await generarPDFInternal({
+                    estudiante: nombreEstudiante,
+                    idEstudiante: idEstudiante,
+                    contenido: contenido,
+                    tipoDoc: tipoDoc
+                });
 
-        // 3. Capturar elemento (ya no necesitamos cambiar visibility porque está off-screen)
-        const element = document.getElementById('plantillaPDFContainer');
-
-        const opt = {
-            margin: 0,
-            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Generar PDF
-        html2pdf().set(opt).from(element).save().then(function() {
-            // Nota importante para el usuario:
-            // Este código es solo Frontend. Si "no registra" en la base de datos es porque
-            // falta una llamada AJAX al backend aquí.
-            if (!contenidoPersonalizado) {
+                // Limpiar y cerrar modal
                 const modalElement = document.getElementById('modalSeguimiento');
                 const modalInstance = bootstrap.Modal.getInstance(modalElement);
                 if (modalInstance) modalInstance.hide();
+                
+                // Opcional: Recargar página para ver el nuevo registro en la tabla
+                // window.location.reload(); 
+
+            } else {
+                console.error("Error al guardar:", response.statusText);
+                alert("⚠️ Error al guardar en el sistema. Se generará el PDF pero no quedará registro en la base de datos.");
+                
+                // Aún así generamos el PDF por seguridad
+                await generarPDFInternal({
+                    estudiante: nombreEstudiante,
+                    idEstudiante: idEstudiante,
+                    contenido: contenido,
+                    tipoDoc: tipoDoc
+                });
             }
-            // Alerta de éxito visual
-            alert(`✅ Documento generado exitosamente.\n\nEl archivo se descargará automáticamente.`);
+
+        } catch (error) {
+            console.error("Error de red:", error);
+            alert("⚠️ Error de conexión. Generando PDF localmente...");
+            await generarPDFInternal({
+                    estudiante: nombreEstudiante,
+                    idEstudiante: idEstudiante,
+                    contenido: contenido,
+                    tipoDoc: tipoDoc
+            });
+        }
+    }
+
+    // Lógica interna de generación de PDF (Desacoplada del evento del botón)
+    function generarPDFInternal(data) {
+        return new Promise((resolve, reject) => {
+            // 1. Poblar la plantilla
+            document.getElementById('pdfEstudiante').textContent = data.estudiante;
+            document.getElementById('pdfID').textContent = data.idEstudiante;
+            
+            const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const fechaCorta = new Date().toLocaleDateString('es-ES');
+            
+            document.getElementById('pdfFecha').textContent = fecha;
+            document.getElementById('pdfFechaHeader').textContent = fechaCorta;
+            document.getElementById('pdfContenido').innerHTML = data.contenido.replace(/\n/g, '<br>');
+
+            let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
+            if (data.tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
+            if (data.tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+            if (data.tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+
+            document.getElementById('pdfTipoDoc').textContent = tituloDoc;
+
+            // 2. Configurar html2pdf
+            const element = document.getElementById('plantillaPDFContainer');
+            
+            // Asegurar visibilidad para el renderizado (aunque esté fuera de pantalla)
+            element.style.display = 'block';
+
+            const opt = {
+                margin: 10,
+                filename: `${data.tipoDoc}_${data.estudiante.replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    scrollY: 0,
+                    // Importante: asegurar que capture el fondo blanco
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 3. Generar
+            html2pdf().set(opt).from(element).save().then(() => {
+                resolve();
+            }).catch(err => {
+                console.error("Error generando PDF:", err);
+                reject(err);
+            });
         });
     }
 
-    // CORRECCIÓN QUIRÚRGICA: Lógica para pasar datos correctos desde el historial
+    // Función para generar PDF desde el historial (Reutiliza la lógica interna)
     function generarPDFHistorial(nombreEstudiante, idEstudiante, descripcion, tipo) {
         // Caso 1: Llamada desde la fila (con datos reales)
         if (nombreEstudiante && idEstudiante) {
-            generarPDF(null, {
+            generarPDFInternal({
                 estudiante: nombreEstudiante,
                 idEstudiante: idEstudiante,
                 contenido: descripcion,
@@ -988,7 +1082,7 @@
             return;
         }
 
-        // Caso 2: Fallback si no hay argumentos (botón general)
+        // Caso 2: Fallback (botón general)
         const seguimientos = document.querySelectorAll('.historial-table tbody tr');
         if (seguimientos.length === 0) {
             alert("No hay seguimientos registrados para generar el PDF.");
@@ -1000,17 +1094,18 @@
         const tipoDoc = primerSeguimiento.cells[1].querySelector('.badge').textContent.trim();
         const contenido = primerSeguimiento.cells[4].textContent;
 
-        generarPDF(null, {
+        generarPDFInternal({
             estudiante: estudiante,
-            idEstudiante: "GEN-" + Math.floor(Math.random() * 10000),
+            idEstudiante: "HISTORIAL", 
             contenido: contenido,
             tipoDoc: tipoDoc
         });
     }
 
-    // Función para ver detalles de un seguimiento (simulada)
-    function verDetalleSeguimiento(estudiante, detalles, fecha) {
-        alert(`Detalle del seguimiento:\n\nEstudiante: ${estudiante}\nFecha: ${fecha}\nDetalles: ${detalles}`);
+    // Mantenemos la función antigua por si acaso, pero redirigida
+    function generarPDF(event) {
+        // Wrapper para compatibilidad hacia atrás si algún onclick quedó suelto
+        guardarYGenerarPDF(event);
     }
 
     // Código original de Gráficos (Mantenido intacto)
