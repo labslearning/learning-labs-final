@@ -305,20 +305,48 @@ class ContextBuilder:
         return {"inasistencias_totales": fallas, "llegadas_tarde": tardes, "riesgo_desercion": "ALTO" if fallas > 3 else "BAJO"} # Ajustado a 3 según Numeral 6.2
 
     def _get_rendimiento_como_docente(self, docente):
+        """
+        Calcula métricas de los cursos asignados al docente con validaciones de seguridad.
+        """
+        # 1. Buscamos materias donde el docente es titular
         materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
-        if not materias.exists(): return []
+        
+        # Validación de seguridad: Si no tiene materias, retornamos mensaje en lugar de lista vacía muda
+        if not materias.exists():
+            return [{"mensaje": "No se encontraron asignaciones académicas activas para este periodo."}]
+
         reporte = []
         for mat in materias:
             notas_curso = Nota.objects.filter(materia=mat)
-            promedio = notas_curso.aggregate(Avg('valor'))['valor__avg'] or 0
-            reprobados = notas_curso.filter(valor__lt=3.0).count()
+            
+            # 2. Cálculo SEGURO del promedio (Evita el error 'NoneType' si no hay notas)
+            agregados = notas_curso.aggregate(promedio=Avg('valor'))
+            promedio_val = agregados['promedio']
+            # Convertimos a float para evitar problemas de serialización JSON con Decimal
+            promedio_final = float(promedio_val) if promedio_val is not None else 0.0
+            
+            # 3. Contamos estudiantes únicos (más preciso que contar notas)
+            total_estudiantes = notas_curso.values('estudiante').distinct().count()
+            
+            # 4. Contamos reprobados reales (<3.0)
+            reprobados = notas_curso.filter(valor__lt=3.0).values('estudiante').distinct().count()
+            
+            # 5. Cálculo de Tasa de Reprobación (Evita la división por Cero)
+            if total_estudiantes > 0:
+                tasa_reprobacion = (reprobados / total_estudiantes) * 100
+            else:
+                tasa_reprobacion = 0.0
+
             reporte.append({
                 "materia": str(mat.nombre),
-                "curso": str(mat.curso),
-                "promedio_grupo": round(promedio, 2),
+                "curso": str(mat.curso.nombre) if mat.curso else "Sin Curso",
+                "promedio_grupo": round(promedio_final, 2),
+                "total_estudiantes": total_estudiantes,
                 "total_evaluaciones": notas_curso.count(),
-                "estudiantes_reprobando": reprobados
+                "cantidad_reprobando": reprobados,
+                "tasa_reprobacion": f"{round(tasa_reprobacion, 1)}%" # Dato clave para la IA
             })
+            
         return reporte
 
     def _get_grado_actual(self, usuario):
