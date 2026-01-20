@@ -15,12 +15,12 @@
         --warning-gradient: linear-gradient(135deg, #f8961e 0%, #f9c74f 100%);
         --info-gradient: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
         --purple-gradient: linear-gradient(135deg, #7209b7 0%, #3a0ca3 100%);
-        
+
         --glass-bg: rgba(255, 255, 255, 0.95);
         --glass-border: 1px solid rgba(255, 255, 255, 0.6);
         --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-        
+
         --radius-xl: 1.5rem;
         --radius-lg: 1rem;
         --font-main: 'Inter', system-ui, -apple-system, sans-serif;
@@ -44,7 +44,7 @@
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         overflow: hidden;
     }
-    
+
     .card-premium:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-hover);
@@ -88,13 +88,13 @@
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
-    
+
     .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
 
     /* === TABLA MAESTRA === */
     .custom-table { border-collapse: separate; border-spacing: 0 8px; }
-    
+
     .custom-table thead th {
         background-color: transparent;
         color: #64748b;
@@ -105,13 +105,13 @@
         border: none;
         padding: 0 1.5rem 1rem 1.5rem;
     }
-    
+
     .custom-table tbody tr {
         background-color: #ffffff;
         box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         transition: all 0.2s ease;
     }
-    
+
     .custom-table tbody tr:hover {
         transform: scale(1.002);
         box-shadow: 0 8px 25px rgba(0,0,0,0.06);
@@ -124,20 +124,20 @@
         border: none;
         vertical-align: middle;
     }
-    
+
     .custom-table tbody tr td:first-child { border-top-left-radius: 1rem; border-bottom-left-radius: 1rem; }
     .custom-table tbody tr td:last-child { border-top-right-radius: 1rem; border-bottom-right-radius: 1rem; }
 
     /* === AVATAR GRADIENT === */
-    .gradient-avatar { 
-        background: linear-gradient(135deg, #4361ee, #7209b7); 
-        color: white; 
+    .gradient-avatar {
+        background: linear-gradient(135deg, #4361ee, #7209b7);
+        color: white;
         font-family: var(--font-main);
     }
 
     /* === BADGES === */
     .badge-soft { padding: 0.5em 1em; border-radius: 50rem; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; }
-    
+
     /* Colores sutiles */
     .bg-purple-subtle { background-color: rgba(111, 66, 193, 0.1) !important; color: #6f42c1 !important; }
     .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; color: #059669 !important; }
@@ -148,12 +148,12 @@
     /* === UTILS === */
     .border-start-danger { border-left: 4px solid #ef4444 !important; }
     .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    
+
     /* Scrollbar */
     .scroll-pro::-webkit-scrollbar { width: 6px; }
     .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .scroll-pro::-webkit-scrollbar-track { background: transparent; }
-    
+
     /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
     .chart-container-responsive {
         min-height: 350px;
@@ -164,27 +164,14 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (ARREGLADO PARA NO SALIR EN BLANCO) */
-    /* El truco está en tenerlo 'hidden' pero en 'visibility', no en 'display'.
-       Y usar una clase especial para traerlo al frente cuando se imprime.
-    */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
-        left: -9999px; /* Fuera de pantalla por defecto */
+        left: -9999px; /* Fuera de pantalla pero renderizable */
         z-index: -1000;
-        visibility: hidden; 
-        background: white;
     }
 
-    /* CLASE MÁGICA QUE APLICAREMOS CON JS AL GENERAR */
-    #plantillaPDFContainer.preparado-impresion {
-        left: 0 !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        visibility: visible !important;
-    }
-    
     .pdf-page {
         width: 210mm;
         min-height: 297mm;
@@ -197,7 +184,7 @@
         line-height: 1.5;
         box-sizing: border-box;
     }
-    
+
     .pdf-header-table {
         width: 100%;
         border-collapse: collapse;
@@ -209,7 +196,7 @@
         text-align: center;
         vertical-align: middle;
     }
-    
+
     .pdf-section-title {
         font-weight: bold;
         text-transform: uppercase;
@@ -220,7 +207,7 @@
         margin-bottom: 10px;
         font-size: 11pt;
     }
-    
+
     .pdf-info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -231,7 +218,7 @@
         border-bottom: 1px dotted #999;
         padding-bottom: 2px;
     }
-    
+
     .pdf-content-area {
         border: 1px solid #ccc;
         padding: 10px;
@@ -239,7 +226,7 @@
         text-align: justify;
         margin-bottom: 30px;
     }
-    
+
     .pdf-signatures {
         display: flex;
         justify-content: space-between;
@@ -251,7 +238,7 @@
         text-align: center;
         padding-top: 5px;
     }
-    
+
     .pdf-footer {
         margin-top: 30px;
         text-align: center;
@@ -259,6 +246,70 @@
         color: #666;
         border-top: 1px solid #ddd;
         padding-top: 10px;
+    }
+
+    /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
+    .historial-seguimientos {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-soft);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .historial-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .historial-title {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .historial-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .historial-table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .historial-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .historial-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .btn-generar-pdf {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-generar-pdf:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
 </style>
 
@@ -275,7 +326,7 @@
                 <p class="text-muted lead mb-0 fs-6 mt-1">Análisis predictivo de Comportamiento, Rendimiento Académico y Psico-Orientación.</p>
             </div>
         </div>
-        
+
         <div class="d-flex gap-3 align-items-center mt-4 mt-xl-0">
             <div class="text-end d-none d-lg-block border-end pe-4 me-2">
                 <small class="d-block text-muted text-uppercase fw-bold x-small ls-1">Estado del Sistema</small>
@@ -294,13 +345,13 @@
                 <i class="fas fa-chart-pie me-2"></i>Tablero
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
-                <i class="fas fa-print me-2"></i>Imprimir Vista General
+                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
             </button>
         </div>
     </div>
 
     <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
-        
+
         <div class="col-xl-3 col-md-6">
             <div class="card card-premium h-100 position-relative">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
@@ -317,7 +368,7 @@
                         </div>
                         <p class="text-muted small mb-0">Registros en seguimiento este periodo.</p>
                     </div>
-                    
+
                     <div class="mt-4 border-top pt-3">
                         <div class="row g-0 text-center divide-x">
                             <div class="col-4 border-end">
@@ -372,7 +423,7 @@
         <div class="col-xl-3 col-md-6">
              <div class="card card-premium h-100 position-relative overflow-hidden">
                 <div style="position: absolute; top:0; left:0; width:100%; height:4px; background: var(--danger-gradient);"></div>
-                
+
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div class="d-flex align-items-center">
@@ -385,7 +436,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-1">
                             <span class="x-small fw-bold text-uppercase ls-1 text-dark">Riesgo Académico</span>
@@ -434,7 +485,7 @@
                 <i class="fas fa-bell me-1"></i>Intervención Requerida
             </span>
         </div>
-        
+
         <div class="row g-3">
             {% for obs in observaciones %}
                 {% if obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
@@ -459,7 +510,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="bg-light rounded-3 p-3 mb-3 border border-light-subtle">
                                     <h6 class="text-secondary text-uppercase x-small fw-bold mb-1 ls-1">Observación:</h6>
                                     <p class="small text-dark mb-0 fst-italic text-truncate-2">"{{ obs.descripcion }}"</p>
@@ -611,13 +662,96 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div class="card-footer bg-white border-top py-3 px-4">
             <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">Mostrando <span class="fw-bold text-dark">{{ observaciones.count }}</span> registros en total.</small>
             </div>
         </div>
     </div>
+
+    <!-- ============================================= -->
+    <!-- NUEVA SECCIÓN: HISTORIAL DE SEGUIMIENTOS -->
+    <!-- ============================================= -->
+    <div class="historial-seguimientos animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+        <div class="historial-header">
+            <h3 class="historial-title">
+                <i class="fas fa-history me-2"></i>Historial de Seguimientos
+            </h3>
+            <button class="btn-generar-pdf" onclick="generarPDFHistorial()">
+                <i class="fas fa-file-pdf me-2"></i>Generar PDF Institucional
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="historial-table">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Tipo de Seguimiento</th>
+                        <th>Fecha</th>
+                        <th>Profesional</th>
+                        <th>Detalles</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Ejemplo de datos estáticos, en producción debe cargarse desde el backend -->
+                    <tr>
+                        <td>Juan Pérez</td>
+                        <td>
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">
+                                Convivencia
+                            </span>
+                        </td>
+                        <td>15/01/2026</td>
+                        <td>Dra. Ana López</td>
+                        <td>Seguimiento por incidente de convivencia en el aula.</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('Juan Pérez', 'Seguimiento por incidente de convivencia en el aula.', '15/01/2026')">
+                                <i class="fas fa-eye me-1"></i>Ver
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>María Gómez</td>
+                        <td>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1">
+                                Académico
+                            </span>
+                        </td>
+                        <td>10/01/2026</td>
+                        <td>Prof. Carlos Ruiz</td>
+                        <td>Compromiso académico por bajo rendimiento en matemáticas.</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('María Gómez', 'Compromiso académico por bajo rendimiento en matemáticas.', '10/01/2026')">
+                                <i class="fas fa-eye me-1"></i>Ver
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Luis Martínez</td>
+                        <td>
+                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-3 py-1">
+                                Psicología
+                            </span>
+                        </td>
+                        <td>05/01/2026</td>
+                        <td>Psic. Laura Torres</td>
+                        <td>Orientación por ansiedad escolar.</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="verDetalleSeguimiento('Luis Martínez', 'Orientación por ansiedad escolar.', '05/01/2026')">
+                                <i class="fas fa-eye me-1"></i>Ver
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- ============================================= -->
+    <!-- FIN DE LA NUEVA SECCIÓN -->
+    <!-- ============================================= -->
 </div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -700,7 +834,7 @@
             <tr>
                 <td rowspan="4" style="width: 20%;">
                     <div style="font-size: 30px; color: #ccc; font-weight: bold;">LOGO</div>
-                    </td> 
+                    </td>
                 <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
                 <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
             </tr>
@@ -798,74 +932,99 @@
         document.getElementById('contenidoSeguimiento').value = ""; // Limpiar textarea
     }
 
-    // 🔥 LOGICA ARREGLADA PARA GENERAR PDF SIN PANTALLA BLANCA
-    // El secreto es la clase 'preparado-impresion' que definimos en el CSS
+    // Lógica para Generar PDF con html2pdf
     function generarPDF(event) {
-        if(event) event.preventDefault();
+        if(event) event.preventDefault(); // Evitar envío del form
 
-        // 1. Validaciones
+        // 1. Capturar datos
         const estudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const contenido = document.getElementById('contenidoSeguimiento').value;
         const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
-        
+        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
+
         if (!contenido.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento antes de generar el documento.");
             return;
         }
 
         // 2. Poblar la plantilla oculta
-        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
-
         document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
+        document.getElementById('pdfID').textContent = idEstudiante; // ID o matrícula si está disponible
         document.getElementById('pdfFecha').textContent = fecha;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        // Convertir saltos de línea
+        // Convertir saltos de línea en <br> para el PDF
         document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
         let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
         if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
         if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
         if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
-        
+
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-        // 3. 🔥 EL TRUCO DEL CIRUJANO: Hacer visible el elemento TEMPORALMENTE para html2pdf
+        // 3. Configuración y Generación
         const element = document.getElementById('plantillaPDFContainer');
-        
-        // Aplicamos la clase que lo pone visible y en primer plano (z-index 9999)
-        element.classList.add('preparado-impresion');
 
         const opt = {
-            margin:       0,
+            margin:       0, // Sin márgenes automáticos, ya los tiene el CSS del .pdf-page
             filename:     `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // Escala alta para nitidez
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Generar PDF y luego esconder de nuevo
+        // Generar PDF
         html2pdf().set(opt).from(element).save().then(function() {
-            // Callback: Volver a ocultar la plantilla y cerrar modal
-            element.classList.remove('preparado-impresion');
-            
+            // Callback: Cerrar modal y mostrar éxito
             const modalElement = document.getElementById('modalSeguimiento');
             const modalInstance = bootstrap.Modal.getInstance(modalElement);
             if (modalInstance) {
                 modalInstance.hide();
             }
             alert(`✅ Documento generado exitosamente.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
-        }).catch(function(error) {
-            console.error("Error PDF:", error);
-            // Asegurarnos de ocultarlo si falla
-            element.classList.remove('preparado-impresion');
-            alert("Error generando el PDF. Revisa la consola.");
         });
     }
 
-    // Gráficos (Mantenido intacto)
+    // Función para generar PDF desde el historial de seguimientos
+    function generarPDFHistorial() {
+        // 1. Capturar datos del historial (ejemplo con datos estáticos)
+        const estudiante = "Juan Pérez";
+        const contenido = "Seguimiento por incidente de convivencia en el aula. Se acordó un plan de mediación con el estudiante y sus compañeros.";
+        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
+
+        // 2. Poblar la plantilla oculta
+        document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfID').textContent = "12345"; // ID o matrícula
+        document.getElementById('pdfFecha').textContent = fecha;
+        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
+        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
+        document.getElementById('pdfTipoDoc').textContent = "HISTORIAL DE SEGUIMIENTOS INSTITUCIONALES";
+
+        // 3. Configuración y Generación
+        const element = document.getElementById('plantillaPDFContainer');
+        const opt = {
+            margin:       0,
+            filename:     `Historial_Seguimientos_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generar PDF
+        html2pdf().set(opt).from(element).save().then(function() {
+            alert(`✅ Historial de seguimientos generado exitosamente.`);
+        });
+    }
+
+    // Función para ver detalles de un seguimiento (simulada)
+    function verDetalleSeguimiento(estudiante, detalles, fecha) {
+        alert(`Detalle del seguimiento:\n\nEstudiante: ${estudiante}\nFecha: ${fecha}\nDetalles: ${detalles}`);
+    }
+
+    // Código original de Gráficos (Mantenido intacto)
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
         const conv = {{ kpi.convivencia|default:0 }};
@@ -982,7 +1141,7 @@
 * **Intervención:** Implementar tutorías entre pares (Estudiantes Sobresalientes apoyando a Riesgo).
 * **Foco Administrativo:** Revisar la carga de tareas en grados con mayor número de reportes.
             `;
-        } 
+        }
         else if (stats.conv > stats.acad) {
             diagnostico = "🚨 **Desequilibrio Convivencial: Clima Escolar en Riesgo**";
             articuloManual = "Capítulo 4 del Manual de Convivencia (Protocolos de Mediación)";
@@ -991,7 +1150,7 @@
 * **Intervención:** Jornada de justicia restaurativa para los estudiantes con reportes reincidentes.
 * **Foco en el Hogar:** Citar a escuela de padres enfocada en comunicación asertiva y límites.
             `;
-        } 
+        }
         else {
             diagnostico = "🚨 **Alerta de Salud Mental: Necesidades Psicosociales Elevadas**";
             articuloManual = "Ruta de Atención Integral (RAI) - Ley 1620";
@@ -1021,7 +1180,7 @@ ${soluciones}
         `;
 
         container.innerHTML = marked.parse(reportContent);
-        
+
         loading.classList.add('d-none');
         results.classList.remove('d-none');
     }
