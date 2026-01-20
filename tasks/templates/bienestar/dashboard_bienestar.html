@@ -804,7 +804,7 @@
                        pointHoverRadius: 10,
                        fill: true
                    }, {
-                       label: 'Estándar PEI (Meta)',
+                       label: 'Meta Institucional (4.0)',
                        // Generamos dinámicamente el array de metas (4.0) según la cantidad de labels
                        data: Array(JSON.parse('{{ chart_data.labels|safe|escapejs }}').length).fill(4.0),
                        backgroundColor: 'rgba(25, 135, 84, 0.05)',
@@ -834,7 +834,14 @@
                        legend: { 
                            position: 'bottom', 
                            labels: { usePointStyle: true, font: { weight: 'bold', size: 11 } } 
-                       } 
+                       },
+                       tooltip: {
+                           callbacks: {
+                               label: function(context) {
+                                   return context.dataset.label + ': ' + Number(context.raw).toFixed(2); // Force 2 decimals to match KPI
+                               }
+                           }
+                       }
                    }
                }
            });
@@ -1115,7 +1122,7 @@
    .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
    .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
 
-   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-top: 30px; font-weight: 800; }
+   .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; font-weight: 800; }
    .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
 
    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
