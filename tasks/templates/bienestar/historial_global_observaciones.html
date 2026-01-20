@@ -158,25 +158,26 @@
     }
     @media (max-width: 768px) {
         .chart-container-responsive {
-            min-height: 400px;
+            min-height: 400px; /* Más alto en móvil para que se vea mejor */
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
-    /* USAMOS FIXED Y COORDENADAS NEGATIVAS PARA QUE HTML2PDF LO VEA PERO EL USUARIO NO */
+    /* 🔥 CORRECCIÓN CRÍTICA: ESTILOS PARA EL PDF (Solución Pantalla Blanca) */
+    /* Usamos z-index negativo para ponerlo "detrás" pero visible al renderizador */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
-        left: -10000px;
+        left: 0;
         width: 210mm;
         min-height: 297mm;
-        z-index: -1000;
+        z-index: -9999; 
         background: white;
-        visibility: visible;
+        opacity: 0; /* Invisible al ojo, pero presente en el DOM */
+        pointer-events: none;
     }
 
     .pdf-page {
-        width: 210mm; /* Ancho A4 exacto */
+        width: 210mm;
         min-height: 297mm;
         padding: 20mm;
         margin: 0 auto;
@@ -228,6 +229,7 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
+        white-space: pre-line; /* Respetar saltos de línea */
     }
 
     .pdf-signatures {
@@ -735,7 +737,7 @@
             </table>
         </div>
     </div>
-    </div>
+</div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -803,7 +805,7 @@
 
                     <div class="text-end">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="generarPDF(event)">
+                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
                             <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
@@ -920,117 +922,127 @@
     }
 
     // ============================================
-    // LOGICA 2: GENERAR PDF + GUARDAR
+    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> PDF)
     // ============================================
-    function generarPDF(event, contenidoPersonalizado = null) {
+    async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
 
         // 1. Obtener Datos
-        const estudiante = contenidoPersonalizado?.estudiante || document.getElementById('nombreEstudianteModal').textContent;
-        const idEstudiante = contenidoPersonalizado?.idEstudiante || document.getElementById('idEstudianteModal').value;
-        const descripcion = contenidoPersonalizado?.contenido || document.getElementById('contenidoSeguimiento').value;
-        const tipo = contenidoPersonalizado?.tipoDoc || document.querySelector('input[name="tipo_documento"]:checked').value;
+        const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
+        const idEstudiante = document.getElementById('idEstudianteModal').value;
+        const descripcion = document.getElementById('contenidoSeguimiento').value;
+        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
 
         if (!descripcion.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento.");
             return;
         }
 
-        // 2. Preparar Fechas
-        const fechaLarga = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = new Date().toLocaleDateString('es-ES');
+        // 2. GUARDAR EN BACKEND PRIMERO
+        const guardadoExitoso = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
 
-        // 3. Llenar Plantilla PDF
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fechaLarga;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = descripcion.replace(/\n/g, '<br>');
-
-        let titulo = "ACTA DE SEGUIMIENTO";
-        if (tipo === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipo === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipo === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
-
-        document.getElementById('pdfTipoDoc').textContent = titulo;
-
-        // 4. Generar PDF
-        const element = document.getElementById('plantillaPDFContainer');
-        const opt = {
-            margin: 0,
-            filename: `${tipo}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            // 5. SOLO SI NO ES REIMPRESIÓN -> GUARDAR EN BACKEND
-            if (!contenidoPersonalizado) {
-                guardarEnBackend(idEstudiante, tipo, descripcion);
-            }
-        });
+        if (guardadoExitoso) {
+            // 3. GENERAR PDF (Solo si guardó)
+            await generarPDFVisual(nombreEstudiante, idEstudiante, descripcion, tipoDoc);
+            
+            // 4. CERRAR Y RECARGAR
+            const modalElement = document.getElementById('modalSeguimiento');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            
+            // Recargar para ver el nuevo registro en la tabla
+            setTimeout(() => location.reload(), 1500); 
+        }
     }
 
     // ============================================
     // LOGICA 3: ENVIAR A BACKEND (CORREGIDO)
     // ============================================
-    function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // Usa la URL reversa de Django si es posible, sino usa la relativa
-        const url = "/guardar-seguimiento/"; 
+    async function guardarEnBackend(estudianteId, tipo, descripcion) {
+        // 🔥 CORRECCIÓN CLAVE: Usamos la URL reversa de Django
+        const url = "{% url 'guardar_seguimiento' %}"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const formData = new FormData();
         formData.append('estudiante_id', estudianteId);
         formData.append('tipo', tipo);
-        // 🔥 CORRECCIÓN CLAVE: Enviar 'descripcion' que es lo que espera tu vista
         formData.append('descripcion', descripcion); 
 
-        fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            body: formData
-        })
-        .then(response => {
-            // Convertimos a JSON para procesar respuesta
-            return response.json().then(data => ({ status: response.status, body: data }));
-        })
-        .then(({ status, body }) => {
-            if (status === 200 && body.success) {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSeguimiento'));
-                if (modal) modal.hide();
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                body: formData
+            });
 
-                alert("✅ Documento generado y seguimiento guardado correctamente en el historial.");
-                
-                // Recargar página para actualizar historial
-                setTimeout(() => location.reload(), 800);
+            const data = await response.json();
+            
+            if (data.success) {
+                return true;
             } else {
-                console.error("Error servidor:", body.error);
-                alert("⚠️ El PDF se generó, pero hubo un error al guardar: " + (body.error || "Error desconocido"));
+                alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
+                console.error("Detalle error:", data);
+                return false;
             }
-        })
-        .catch(err => {
-            console.error("Error Fetch:", err);
-            alert("⚠️ Error de conexión al guardar el seguimiento.");
-        });
+        } catch (error) {
+            alert("❌ Error de conexión al guardar el seguimiento.");
+            console.error(error);
+            return false;
+        }
     }
 
     // ============================================
-    // LOGICA 4: REIMPRESIÓN HISTORIAL
+    // LOGICA 4: GENERAR PDF VISUAL (CSS CORREGIDO)
+    // ============================================
+    async function generarPDFVisual(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal = null) {
+        // Fechas
+        const fechaObj = new Date();
+        const fechaLarga = fechaOriginal || fechaObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const fechaCorta = fechaObj.toLocaleDateString('es-ES');
+
+        // Llenar Plantilla
+        document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfID').textContent = idEstudiante;
+        document.getElementById('pdfFecha').textContent = fechaLarga;
+        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
+        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
+
+        let titulo = "ACTA DE SEGUIMIENTO GENERAL";
+        if (tipoDoc === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
+        if (tipoDoc === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+        if (tipoDoc === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
+        document.getElementById('pdfTipoDoc').textContent = titulo;
+
+        // Configuración html2pdf
+        const element = document.getElementById('plantillaPDFContainer');
+        
+        // 🔥 TRUCO: Hacer visible temporalmente (opacidad 1) para que html2canvas lo capture
+        // El elemento ya está "fixed" pero con z-index negativo, así que no tapa la pantalla
+        element.style.opacity = '1';
+
+        const opt = {
+            margin: 0,
+            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        await html2pdf().set(opt).from(element).save();
+        
+        // Volver a ocultar
+        element.style.opacity = '0';
+    }
+
+    // ============================================
+    // LOGICA 5: REIMPRESIÓN HISTORIAL
     // ============================================
     function generarPDFHistorial(estudiante, idEstudiante, descripcion, tipo, fechaOriginal) {
-        generarPDF(null, {
-            estudiante: estudiante,
-            idEstudiante: idEstudiante,
-            contenido: descripcion,
-            tipoDoc: tipo,
-            // Truco: Usamos fechaOriginal formateada o la actual si no viene
-            fecha: fechaOriginal 
-        });
+        generarPDFVisual(estudiante, idEstudiante, descripcion, tipo, fechaOriginal);
     }
 
     // ============================================
-    // LOGICA 5: GRÁFICOS E INICIALIZACIÓN
+    // LOGICA 6: GRÁFICOS E INICIALIZACIÓN
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
@@ -1097,7 +1109,7 @@
     });
 
     // ============================================
-    // LOGICA 6: IA SIMULADA
+    // LOGICA 7: IA SIMULADA
     // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
