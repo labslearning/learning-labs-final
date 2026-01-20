@@ -162,21 +162,21 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) */
+    /* 🔥 CORRECCIÓN CRÍTICA: ESTILOS PARA EL PDF (Solución al PDF en blanco) */
+    /* En lugar de visibility:hidden, lo movemos fuera de la pantalla */
     #plantillaPDFContainer {
-        position: absolute;
+        position: fixed; /* Fixed evita problemas de scroll */
         top: 0;
-        left: 0;
-        width: 100%;
-        visibility: hidden; /* Oculto pero renderizable */
-        height: 0;
-        overflow: hidden;
+        left: -10000px; /* Lo sacamos de la pantalla pero sigue renderizado */
+        width: 210mm;   /* Ancho exacto A4 */
+        min-height: 297mm;
         z-index: -1000;
+        background: white;
+        visibility: visible; /* IMPORTANTE: Debe ser visible para html2canvas */
     }
 
     .pdf-page {
-        width: 210mm;
-        min-height: 297mm;
+        width: 100%;
         padding: 20mm;
         margin: 0 auto;
         background: white;
@@ -227,6 +227,7 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
+        white-space: pre-line; /* Respeta los saltos de línea */
     }
 
     .pdf-signatures {
@@ -734,7 +735,7 @@
             </table>
         </div>
     </div>
-    </div>
+</div>
 
 <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -754,6 +755,8 @@
 
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
+                    {% csrf_token %}
+                    
                     <div class="mb-4 text-center">
                         <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
                         <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
@@ -795,7 +798,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
-                        <textarea id="contenidoSeguimiento" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
+                        <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
                     <div class="text-end">
@@ -908,6 +911,24 @@
 
 <script>
     // ============================================
+    // UTILS: OBTENER CSRF TOKEN PARA AJAX
+    // ============================================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // ============================================
     // LOGICA 1: PREPARACIÓN DEL MODAL
     // ============================================
     function prepararSeguimiento(id, nombre) {
@@ -917,7 +938,7 @@
     }
 
     // ============================================
-    // LOGICA 2: GENERACIÓN DE PDF (NUEVO REPORTE)
+    // LOGICA 2: GENERACIÓN DE PDF Y GUARDADO (CRÍTICO)
     // ============================================
     function generarPDF(event, contenidoPersonalizado = null) {
         if (event) event.preventDefault();
@@ -937,11 +958,7 @@
             return;
         }
 
-        // 2. Simulación de Guardado en Historial (Backend Call)
-        // Aquí iría el fetch() a tu vista de Django para guardar en BD
-        console.log("Guardando seguimiento para:", estudiante, "Tipo:", tipoDoc);
-
-        // 3. Poblar la plantilla oculta
+        // 2. Poblar la plantilla oculta
         document.getElementById('pdfEstudiante').textContent = estudiante;
         document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fecha;
@@ -955,10 +972,9 @@
 
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
-        // 4. Configurar html2pdf
+        // 3. Configurar html2pdf
         const element = document.getElementById('plantillaPDFContainer');
-        element.style.visibility = 'visible';
-        element.style.height = 'auto';
+        // NOTA: Ya no modificamos visibility aquí, está manejado por CSS (left: -10000px)
 
         const opt = {
             margin: 0,
@@ -968,25 +984,63 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 5. Generar y Descargar
+        // 4. Generar y Descargar PDF
         html2pdf().set(opt).from(element).save().then(function() {
-            element.style.visibility = 'hidden';
-            element.style.height = '0';
-
+            // UNA VEZ GENERADO EL PDF, GUARDAMOS EN LA BD
             if (!contenidoPersonalizado) {
-                const modalElement = document.getElementById('modalSeguimiento');
-                const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                if (modalInstance) modalInstance.hide();
+                guardarEnBackend(idEstudiante, tipoDoc, contenido);
             }
-            // Mensaje de éxito al usuario
-            alert(`✅ Documento generado y guardado en historial.\n\nEl seguimiento ha sido registrado en el expediente digital de ${estudiante}.`);
-            // Opcional: Recargar página para mostrar en tabla historial
-            // location.reload(); 
+        }).catch(err => {
+            console.error("Error al generar PDF:", err);
+            alert("Error al generar el PDF. Revise la consola.");
         });
     }
 
     // ============================================
-    // LOGICA 3: PDF DESDE HISTORIAL (REIMPRESIÓN)
+    // LOGICA 3: ENVIAR AL BACKEND (LA PARTE QUE FALTABA)
+    // ============================================
+    function guardarEnBackend(estudianteId, tipo, descripcion) {
+        // Asegúrate de tener esta URL configurada en tu urls.py
+        // Ejemplo: path('guardar-seguimiento/', views.guardar_seguimiento, name='guardar_seguimiento')
+        const url = "/guardar-seguimiento/"; 
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const formData = new FormData();
+        formData.append('estudiante_id', estudianteId);
+        formData.append('tipo', tipo);
+        formData.append('contenido', descripcion);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Cerrar modal y notificar éxito
+                const modalElement = document.getElementById('modalSeguimiento');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) modalInstance.hide();
+                
+                alert("✅ Documento PDF descargado y registro guardado exitosamente en el historial.");
+                
+                // Opcional: Recargar para ver el nuevo registro en la tabla
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert("⚠️ El PDF se generó, pero hubo un error al guardar en el sistema. Verifique su conexión o contacte al admin.");
+                console.error("Error del servidor:", response.statusText);
+            }
+        })
+        .catch(error => {
+            console.error('Error en fetch:', error);
+            alert("⚠️ El PDF se generó, pero no se pudo conectar con el servidor para guardar el historial.");
+        });
+    }
+
+    // ============================================
+    // LOGICA 4: PDF DESDE HISTORIAL (REIMPRESIÓN)
     // ============================================
     function generarPDFHistorial(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal) {
         if (!estudiante || !idEstudiante || !contenido || !tipoDoc) {
@@ -994,12 +1048,11 @@
             return;
         }
 
-        // Si viene fechaOriginal del historial, usarla. Si no, usar fecha actual.
         const fechaParaMostrar = fechaOriginal ? fechaOriginal : new Date().toLocaleDateString('es-ES', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        const fechaCorta = new Date().toLocaleDateString('es-ES'); // Fecha de impresión
+        const fechaCorta = new Date().toLocaleDateString('es-ES');
 
         document.getElementById('pdfEstudiante').textContent = estudiante;
         document.getElementById('pdfID').textContent = idEstudiante;
@@ -1015,9 +1068,7 @@
         document.getElementById('pdfTipoDoc').textContent = tituloDoc;
 
         const element = document.getElementById('plantillaPDFContainer');
-        element.style.visibility = 'visible';
-        element.style.height = 'auto';
-
+        
         const opt = {
             margin: 0,
             filename: `Copia_Seguimiento_${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
@@ -1026,14 +1077,11 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            element.style.visibility = 'hidden';
-            element.style.height = '0';
-        });
+        html2pdf().set(opt).from(element).save();
     }
 
     // ============================================
-    // LOGICA 4: GRÁFICOS E INICIALIZACIÓN
+    // LOGICA 5: GRÁFICOS E INICIALIZACIÓN
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
@@ -1100,7 +1148,7 @@
     });
 
     // ============================================
-    // LOGICA 5: INTELIGENCIA ARTIFICIAL (SIMULACIÓN)
+    // LOGICA 6: INTELIGENCIA ARTIFICIAL (SIMULACIÓN)
     // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
