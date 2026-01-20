@@ -5529,23 +5529,21 @@ def guardar_seguimiento(request):
         # 1. Recibir datos del Javascript
         estudiante_id = request.POST.get('estudiante_id')
         tipo = request.POST.get('tipo')
-        descripcion = request.POST.get('descripcion')
+        descripcion = request.POST.get('descripcion') 
 
         if not all([estudiante_id, tipo, descripcion]):
             return JsonResponse({'success': False, 'error': 'Faltan datos obligatorios'}, status=400)
 
-        # 2. CORRECCIÓN CRÍTICA: Usar 'User', no 'Estudiante'
-        # El modelo 'Estudiante' no existe, son usuarios con rol.
+        # 2. Buscar estudiante (USANDO EL MODELO USER, NO ESTUDIANTE)
         estudiante = get_object_or_404(User, id=estudiante_id)
 
         # 3. Guardar en Base de Datos
-        # Asegúrate de que el modelo 'Seguimiento' exista en models.py
         Seguimiento.objects.create(
             estudiante=estudiante,
             tipo=tipo,
-            descripcion=descripcion, 
+            descripcion=descripcion,
             profesional=request.user, 
-            fecha=timezone.now() 
+            # fecha se pone sola por el auto_now_add=True del modelo
         )
 
         return JsonResponse({'success': True})
@@ -5553,6 +5551,5 @@ def guardar_seguimiento(request):
     except User.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'El estudiante no existe'}, status=404)
     except Exception as e:
-        # Esto imprimirá el error real en la consola si falla algo más
-        print(f"Error guardando seguimiento: {e}")
+        logger.error(f"Error guardando seguimiento: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
