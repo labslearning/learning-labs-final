@@ -36,6 +36,8 @@ from tasks.ai.constants import (
     ACCION_MEJORA_STAFF_ACADEMICO   # Agrego esta por seguridad si la usas
 )
 
+
+from tasks.ai.context_builder import context_builder  # <--- ESTO ES LO QUE FALTA
 # 1. IMPORTACIONES AÑADIDAS
 from django.contrib.auth import login, logout, authenticate, get_user_model, update_session_auth_hash
 from django.db import IntegrityError, transaction
@@ -801,7 +803,7 @@ def dashboard_docente(request):
                 estudiante=estudiante_obj,
                 materia_id__in=mis_materias_ids,
                 estado__in=['FALLA', 'TARDE']
-            ).select_related('materia').order_by('-fecha', '-hora') # Orden descendente
+            ).select_related('materia').order_by('-fecha', '-id') # Orden descendente
             
             # Guardamos la consulta en el diccionario del estudiante
             item['historial'] = list(detalle_fallas)
@@ -5199,13 +5201,11 @@ def cargar_periodos_por_curso(request):
 @login_required
 def ai_analysis_engine(request):
     """
-    MOTOR CENTRAL DE ANÁLISIS (FASE 12 - CON MEMORIA).
-    Vista robusta, segura y preparada para escalar.
+    MOTOR CENTRAL DE ANÁLISIS (TIER 1000 - CONTEXTO REAL).
+    Sincroniza la base de datos con la IA mediante inyección directa de contexto.
     """
 
-    # --------------------------------------------------
     # 1. DETECCIÓN DE CONTEXTO (AJAX / JSON / HTML)
-    # --------------------------------------------------
     accept_header = request.headers.get("Accept", "")
     is_ajax = (
         request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -5213,12 +5213,12 @@ def ai_analysis_engine(request):
         or "application/json" in accept_header.lower()
     )
 
-    # --------------------------------------------------
-    # 2. CONFIGURACIÓN INICIAL DE ACCIÓN
-    # --------------------------------------------------
+    # 2. CONFIGURACIÓN INICIAL DE ACCIÓN Y ROL
     perfil = getattr(request.user, "perfil", None)
+    rol_usuario = perfil.rol if perfil else "ESTUDIANTE"
 
-    if perfil and perfil.rol == "DOCENTE":
+    # Definir acción por defecto basada en el rol si no viene ninguna
+    if rol_usuario == "DOCENTE":
         default_action = ACCION_MEJORAS_DOCENTE
     else:
         default_action = ACCION_MEJORAS_ESTUDIANTE
@@ -5227,109 +5227,82 @@ def ai_analysis_engine(request):
     target_id = request.GET.get("target_id")
     user_query = request.GET.get("user_query")
 
-    # --------------------------------------------------
     # 3. CAPTURA Y VALIDACIÓN DE MEMORIA (HISTORIAL)
-    # --------------------------------------------------
     historial_msgs = []
     raw_history = request.GET.get("history")
-
     if raw_history:
         try:
             parsed = json.loads(raw_history)
-
-            # Validación estructural mínima
             if isinstance(parsed, list):
-                historial_msgs = [
-                    msg for msg in parsed
-                    if isinstance(msg, dict)
-                    and "role" in msg
-                    and "content" in msg
-                ]
+                historial_msgs = [msg for msg in parsed if isinstance(msg, dict) and "role" in msg]
+        except Exception:
+            logger.warning("[AI] Error procesando historial de chat.")
 
-        except json.JSONDecodeError as e:
-            logger.warning(f"[AI] Historial inválido (JSON): {e}")
-        except Exception as e:
-            logger.warning(f"[AI] Error procesando historial: {e}")
-
-    # --------------------------------------------------
     # 4. RUTEADO DE INTERFAZ (CHAT HTML)
-    # --------------------------------------------------
     if action_type == ACCION_CHAT_SOCRATICO and not is_ajax:
-        return render(request, "tasks/ai_chat.html", {
-            "target_user": request.user
-        })
+        return render(request, "tasks/ai_chat.html", {"target_user": request.user})
 
-    # --------------------------------------------------
-    # 5. RESOLUCIÓN DEL TARGET_USER
-    # --------------------------------------------------
+    # 5. RESOLUCIÓN DEL TARGET_USER (Sujeto del análisis)
     target_user = request.user
 
     try:
-        if perfil and perfil.rol == "ACUDIENTE":
+        # Lógica de resolución de sujeto según rol
+        if rol_usuario == "ACUDIENTE":
             if target_id:
                 target_user = get_object_or_404(User, id=target_id)
             else:
-                relacion = (
-                    Acudiente.objects
-                    .filter(acudiente=request.user)
-                    .select_related("estudiante")
-                    .first()
-                )
-                if not relacion or not relacion.estudiante:
-                    raise ValueError("No se encontró estudiante asociado al acudiente.")
+                relacion = Acudiente.objects.filter(acudiente=request.user).select_related("estudiante").first()
+                if not relacion:
+                    raise ValueError("No se encontró un estudiante vinculado a su cuenta.")
                 target_user = relacion.estudiante
+
+        elif rol_usuario == "DOCENTE":
+            target_user = request.user
+            # Forzamos acción de docente si el sistema está intentando usar la de estudiante
+            if action_type == ACCION_MEJORAS_ESTUDIANTE:
+                action_type = ACCION_MEJORAS_DOCENTE
 
         elif target_id:
             target_user = get_object_or_404(User, id=target_id)
 
-        elif perfil and perfil.rol == "DOCENTE":
-            target_user = request.user
+        # 6. CONSTRUCCIÓN DE CONTEXTO RICO (TIER 1000)
+        # Importante: Asegúrate de que 'context_builder' esté importado al inicio del archivo
+        try:
+            contexto_enriquecido = context_builder.get_context(
+                usuario=request.user,
+                action_type=action_type,
+                target_user=target_user
+            )
+        except Exception as e:
+            logger.error(f"[AI] Error en ContextBuilder: {e}", exc_info=True)
+            raise ValueError("No se pudo extraer la evidencia académica de la base de datos.")
 
-        # --------------------------------------------------
-        # 6. EJECUCIÓN DEL MOTOR DE IA (ORQUESTADOR)
-        # --------------------------------------------------
+        # 7. EJECUCIÓN DEL MOTOR DE IA (ORQUESTADOR)
+        # Se envía el 'context_override' para que la IA use datos reales y no alucine
         resultado = ai_orchestrator.process_request(
             user=request.user,
             action_type=action_type,
             user_query=user_query,
             target_user=target_user,
-            historial=historial_msgs
+            historial=historial_msgs,
+            context_override=contexto_enriquecido # 🔥 ESTA ES LA CLAVE DE LOS DATOS REALES
         )
 
     except ValueError as e:
-        logger.warning(f"[AI] Error de negocio: {e}")
-        resultado = {
-            "success": False,
-            "content": str(e),
-            "source": "BUSINESS_LOGIC_ERROR"
-        }
-
+        resultado = {"success": False, "content": str(e), "source": "BUSINESS_LOGIC"}
     except Exception as e:
-        logger.error("[AI] CRASH CRÍTICO", exc_info=True)
-        resultado = {
-            "success": False,
-            "content": "Error interno del sistema. Intenta nuevamente.",
-            "source": "INTERNAL_SYSTEM_ERROR"
-        }
+        logger.error("[AI] CRASH CRÍTICO EN ENGINE", exc_info=True)
+        resultado = {"success": False, "content": "Error interno en el motor de IA."}
 
-    # --------------------------------------------------
-    # 7. RESPUESTA FINAL (JSON / HTML)
-    # --------------------------------------------------
+    # 8. RESPUESTA FINAL
     if is_ajax:
         return JsonResponse(resultado, safe=False)
 
     return render(request, "tasks/ai_report.html", {
-        "ai_json_response": json.dumps(
-            resultado,
-            default=str,
-            cls=DjangoJSONEncoder
-        ),
+        "ai_json_response": json.dumps(resultado, default=str, cls=DjangoJSONEncoder),
         "titulo_analisis": str(action_type).replace("_", " ").title(),
         "target_user": target_user
     })
-
-
-
 
 @login_required
 def test_ai_connection(request):

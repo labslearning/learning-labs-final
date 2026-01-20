@@ -20,16 +20,17 @@ logger = logging.getLogger(__name__)
 
 class AIOrchestrator:
     """
-    EL DIRECTOR DE ORQUESTA (Producción - Fase 11 + MEMORIA).
+    EL DIRECTOR DE ORQUESTA (Producción - Fase 12 + Context Injection).
     
     Responsabilidad:
     Coordinar el flujo entre seguridad, datos, caché y la API de IA.
-    Mantiene el patrón 'Update Ticket': el Gatekeeper abre el log y este lo cierra.
+    Soporta inyección de contexto manual (override) para vistas avanzadas.
     """
 
     def process_request(self, user, action_type, user_query=None, **kwargs):
         """
         Punto único de entrada para todas las solicitudes de IA.
+        Acepta 'context_override' en kwargs para saltar la construcción automática.
         """
         # ---------------------------------------------------------
         # 1. GATEKEEPER — PERMISOS + TICKET
@@ -55,16 +56,24 @@ class AIOrchestrator:
             
             # [NUEVO] Extraemos el historial de chat si viene en los parámetros
             historial_chat = kwargs.pop('historial', None)
+            
+            # [NUEVO] Extraemos override de contexto (Viene desde views.py)
+            context_override = kwargs.pop('context_override', None)
 
             # ---------------------------------------------------------
             # 3. CONTEXT BUILDER (Extracción de datos SQL)
             # ---------------------------------------------------------
-            contexto_json = context_builder.get_context(
-                usuario=user,
-                action_type=action_type,
-                target_user=target_user,
-                **kwargs
-            )
+            if context_override:
+                # Si la vista ya hizo el trabajo pesado (Tier 1000), usamos eso.
+                contexto_json = context_override
+            else:
+                # Si no, dejamos que el builder construya el contexto estándar
+                contexto_json = context_builder.get_context(
+                    usuario=user,
+                    action_type=action_type,
+                    target_user=target_user,
+                    **kwargs
+                )
             
             if "error" in contexto_json:
                 self._cerrar_ticket(
@@ -89,10 +98,8 @@ class AIOrchestrator:
             # Generamos la huella digital del contexto
             current_hash = ai_cache.calculate_hash(contexto_json)
 
-            # 🔴 MODIFICACIÓN PARA "SIEMPRE FRESCO":
-            # Calculamos el hash para el registro, pero ignoramos el caché guardado
-            # cache_result = ai_cache.get_cached_response(target_user, action_type, contexto_json)
-            cache_result = None # <--- ESTO OBLIGA A GENERAR RESPUESTA NUEVA SIEMPRE
+            # 🔴 POLÍTICA "SIEMPRE FRESCO": Ignoramos caché de lectura para asegurar datos en tiempo real
+            cache_result = None 
 
             if cache_result:
                 self._cerrar_ticket(
@@ -121,7 +128,7 @@ class AIOrchestrator:
             # ---------------------------------------------------------
             # 5. PROMPT FACTORY (Construcción del lenguaje)
             # ---------------------------------------------------------
-            # Ahora prompt_factory es la instancia correcta y recibe el historial
+            # Ensamblamos el prompt final con el contexto (sea inyectado o construido)
             messages = prompt_factory.ensamblar_prompt(
                 accion=action_type,
                 contexto=contexto_json,
@@ -132,7 +139,7 @@ class AIOrchestrator:
             # Configuración dinámica de la IA
             ai_config = {
                 "temperature": 0.7, # Default
-                "max_tokens": 1500
+                "max_tokens": 2000 # Aumentado para soportar reportes largos
             }
             
             if action_type == ACCION_ANALISIS_CONVIVENCIA:
@@ -166,7 +173,7 @@ class AIOrchestrator:
                 metadata_extra={
                     "request_id": api_result.get("request_id"),
                     "source": "API",
-                    "target_user_id": target_user.id,
+                    "target_user_id": target_user.id if hasattr(target_user, 'id') else None,
                     "model": MODEL_NAME
                 }
             )
