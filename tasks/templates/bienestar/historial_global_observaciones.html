@@ -4,8 +4,10 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+    /* === ESTILOS TIER EDUTECH 100000 === */
     :root {
         --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
         --success-gradient: linear-gradient(135deg, #0f9d58 0%, #20c997 100%);
@@ -160,6 +162,46 @@
         .chart-container-responsive {
             min-height: 400px; /* Más alto en móvil para que se vea mejor */
         }
+    }
+
+    /* 🔥 ESTILOS PARA LA PLANTILLA PDF OCULTA */
+    #plantillaPDF {
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+        color: #000;
+        background: white;
+        padding: 40px;
+    }
+    .pdf-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    .pdf-title {
+        font-size: 18px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .pdf-meta {
+        font-size: 12px;
+        color: #555;
+    }
+    .pdf-body {
+        font-size: 14px;
+        text-align: justify;
+    }
+    .pdf-signature {
+        margin-top: 80px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .signature-box {
+        width: 40%;
+        border-top: 1px solid #000;
+        text-align: center;
+        padding-top: 5px;
     }
 </style>
 
@@ -538,7 +580,7 @@
             </div>
 
             <div class="modal-body p-4 bg-light-subtle">
-                <form id="formSeguimiento">
+                <form id="formSeguimiento" onsubmit="generarPDF(event)">
                     <div class="mb-4 text-center">
                         <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
                         <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
@@ -580,13 +622,13 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
-                        <textarea class="form-control border-0 bg-white shadow-sm p-3" rows="4" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
+                        <textarea id="contenidoSeguimiento" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
                     <div class="text-end">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold">
-                            <i class="fas fa-save me-2"></i>Guardar y Generar PDF
+                            <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
                 </form>
@@ -595,41 +637,38 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white;">
-                <div class="position-relative z-1 d-flex align-items-center w-100">
-                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
-                        <i class="fas fa-robot fa-lg"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold">IA Stratos: Consultor Educativo</h5>
-                        <p class="mb-0 small opacity-75">Análisis Predictivo Integral vs PEI y Manual de Convivencia</p>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
+<div id="plantillaPDF" style="display: none;">
+    <div class="pdf-header">
+        <div style="text-align: center;">
+            <h2 class="pdf-title">INSTITUCIÓN EDUCATIVA STRATOS</h2>
+            <p class="pdf-meta">NIT: 890.980.123-1 | Resolución No. 12345 de 2024</p>
+            <h3 class="pdf-title" style="margin-top: 20px; color: #444;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</h3>
+        </div>
+    </div>
+    
+    <div class="pdf-body">
+        <p><strong>Fecha:</strong> <span id="pdfFecha"></span></p>
+        <p><strong>Estudiante:</strong> <span id="pdfEstudiante"></span></p>
+        <p><strong>Responsable:</strong> {{ user.get_full_name }} ({{ user.perfil.get_rol_display }})</p>
+        <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
+        
+        <h4 style="text-transform: uppercase; font-size: 14px;">Descripción de la Intervención:</h4>
+        <div id="pdfContenido" style="margin-bottom: 40px; text-align: justify; line-height: 1.8;"></div>
+        
+        <div class="pdf-signature">
+            <div class="signature-box">
+                <p>__________________________</p>
+                <p><strong>Firma del Estudiante</strong></p>
             </div>
-
-            <div class="modal-body p-4 bg-light-subtle" style="min-height: 400px;">
-                <div id="aiLoading" class="text-center py-5">
-                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Ejecutando Diagnóstico Profundo...</h5>
-                    <p class="text-muted small" id="aiStatusText">Cruzando métricas de comportamiento y academia...</p>
-                </div>
-
-                <div id="aiResults" class="d-none animate__animated animate__fadeIn">
-                    <div class="bg-white p-4 rounded-3 border shadow-sm">
-                        <div id="aiTextContent" class="markdown-body"></div>
-                    </div>
-                    <div class="mt-4 text-end">
-                        <button class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cerrar</button>
-                        <button class="btn btn-primary rounded-pill px-4 shadow-lg" onclick="window.print()">
-                            <i class="fas fa-download me-2"></i>Descargar
-                        </button>
-                    </div>
-                </div>
+            <div class="signature-box">
+                <p>__________________________</p>
+                <p><strong>Firma del Profesional</strong></p>
+                <p style="font-size: 10px;">TP. No. ________________</p>
             </div>
+        </div>
+
+        <div style="margin-top: 50px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
+            Documento generado automáticamente por el Sistema de Gestión Stratos el {% now "d/m/Y H:i" %}.
         </div>
     </div>
 </div>
@@ -639,6 +678,53 @@
     function prepararSeguimiento(id, nombre) {
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
+    }
+
+    // Lógica para Generar PDF
+    function generarPDF(event) {
+        event.preventDefault(); // Evitar envío real del formulario por ahora
+
+        // 1. Capturar datos del formulario
+        const estudiante = document.getElementById('nombreEstudianteModal').textContent;
+        const contenido = document.getElementById('contenidoSeguimiento').value;
+        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
+        const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // 2. Poblar la plantilla oculta
+        document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfFecha').textContent = fecha;
+        document.getElementById('pdfContenido').textContent = contenido;
+
+        let tituloDoc = "ACTA DE SEGUIMIENTO GENERAL";
+        if (tipoDoc === "CONVIVENCIA") tituloDoc = "ACTA DE COMPROMISO CONVIVENCIAL";
+        if (tipoDoc === "PSICOLOGIA") tituloDoc = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+        if (tipoDoc === "ACADEMICO") tituloDoc = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+        
+        document.getElementById('pdfTipoDoc').textContent = tituloDoc;
+
+        // 3. Configuración de html2pdf
+        const elemento = document.getElementById('plantillaPDF');
+        elemento.style.display = 'block'; // Mostrar temporalmente para renderizar
+
+        const opt = {
+            margin:       1,
+            filename:     `Seguimiento_${estudiante.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // 4. Generar y Descargar
+        html2pdf().set(opt).from(elemento).save().then(function() {
+            elemento.style.display = 'none'; // Volver a ocultar
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalSeguimiento'));
+            modal.hide();
+            
+            // Notificación (opcional)
+            alert("✅ Documento generado y descargado exitosamente.");
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
