@@ -2,233 +2,316 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Acta Institucional de Seguimiento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acta Institucional de Seguimiento - Documento Oficial</title>
     <style>
-        /* =========================================
-           CONFIGURACIÓN DE PÁGINA (WeasyPrint)
-           ========================================= */
+        /* =============================================================
+           CONFIGURACIÓN DE PÁGINA PARA IMPRESIÓN (WeasyPrint)
+           ============================================================= */
         @page {
             size: A4;
-            /* Margen: Arriba, Derecha, Abajo, Izquierda */
-            margin: 1cm 2cm 3cm 2cm; 
-            
-            /* Paginación automática al pie */
+            /* Márgenes simétricos y profesionales */
+            margin: 1.5cm 2cm 2.5cm 2cm;
+
             @bottom-center {
                 content: "Página " counter(page) " de " counter(pages);
-                font-family: 'Helvetica', sans-serif;
-                font-size: 9pt;
-                color: #888;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #666666;
                 margin-bottom: 10px;
             }
         }
 
-        /* =========================================
-           VARIABLES Y TIPOGRAFÍA
-           ========================================= */
+        /* =============================================================
+           VARIABLES GLOBALES Y COLORES INSTITUCIONALES
+           ============================================================= */
         :root {
-            --primary-color: #1a237e; /* Azul Institucional Profundo */
-            --success-color: #2e7d32; /* Verde para Felicitaciones */
-            --secondary-color: #444;  /* Gris Texto */
-            --accent-bg: #f4f4f4;     /* Fondo Gris Claro */
-            --border-color: #333;     /* Bordes oscuros para nitidez */
+            --primary-color: #1a237e; /* Azul Institucional */
+            --success-color: #2e7d32;
+            --secondary-color: #444444;
+            --accent-bg: #f4f6f8;     /* Gris azulado muy suave para encabezados */
+            --border-color: #333333;
+            --light-border: #cccccc;
+            --text-primary: #222222;
+            --text-secondary: #555555;
+        }
+
+        /* =============================================================
+           RESET Y ESTILOS BASE
+           ============================================================= */
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 11pt;
-            color: #000;
-            line-height: 1.5; /* Interlineado limpio y legible */
-            position: relative;
+            color: var(--text-primary);
+            line-height: 1.5;
+            background-color: #ffffff;
         }
 
-        /* =========================================
-           MARCA DE AGUA (FONDO)
-           ========================================= */
+        /* =============================================================
+           MARCA DE AGUA
+           ============================================================= */
         #watermark {
             position: fixed;
             top: 25%;
             left: 10%;
             width: 80%;
             height: auto;
-            z-index: -1000; /* Detrás del texto */
-            opacity: 0.08;  /* Transparencia sutil */
+            z-index: -1000;
+            opacity: 0.06;
             transform: rotate(-30deg);
             text-align: center;
         }
+
         #watermark img {
             width: 60%;
             filter: grayscale(100%);
         }
 
-        /* =========================================
+        /* =============================================================
            ENCABEZADO ISO (TABLA SUPERIOR)
-           ========================================= */
+           ============================================================= */
         .iso-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 25px;
             border: 1px solid var(--border-color);
         }
+
         .iso-table td {
             border: 1px solid var(--border-color);
             padding: 8px;
             vertical-align: middle;
-            text-align: center;
         }
-        
-        /* Logo */
-        .col-logo { width: 20%; }
-        .logo-img { max-width: 90px; max-height: 80px; object-fit: contain; }
 
-        /* Información Central */
-        .col-info { width: 55%; }
+        /* Columna Logo */
+        .col-logo { 
+            width: 20%; 
+            text-align: center; 
+        }
+        .logo-img {
+            max-width: 85px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        /* Columna Información Central */
+        .col-info { 
+            width: 55%; 
+            text-align: center; 
+        }
         .inst-title {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: bold;
             color: var(--primary-color);
             text-transform: uppercase;
             margin-bottom: 5px;
-            line-height: 1.1;
+            line-height: 1.2;
         }
         .inst-subtitle {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: var(--secondary-color);
+            line-height: 1.4;
         }
 
-        /* Metadatos (Código, Versión) */
-        .col-meta { width: 25%; font-size: 8pt; text-align: left !important; padding-left: 15px !important; }
-        .meta-item { margin-bottom: 3px; }
-        .meta-bold { font-weight: bold; color: var(--primary-color); display: inline-block; width: 65px; }
+        /* Columna Metadatos (La que arreglamos) */
+        .col-meta { 
+            width: 25%; 
+            padding: 10px !important;
+            vertical-align: top;
+        }
 
-        /* =========================================
+        /* Estilos específicos para que el ACTA/CÓDIGO se vea ordenado */
+        .meta-row {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 8pt;
+            border-bottom: 1px dotted #eeeeee; /* Línea sutil separadora */
+            padding-bottom: 2px;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            /* Ancho fijo aumentado para que "VERSIÓN" quepa bien */
+            display: inline-block;
+            width: 75px; 
+        }
+        
+        .meta-value {
+            display: inline-block;
+            color: #333;
+        }
+
+        /* =============================================================
            TÍTULO DEL DOCUMENTO
-           ========================================= */
+           ============================================================= */
         .doc-header {
             text-align: center;
-            background-color: var(--primary-color);
             color: white;
             font-weight: bold;
             font-size: 12pt;
-            padding: 8px;
+            padding: 8px 15px;
             text-transform: uppercase;
             border-radius: 4px;
             margin-bottom: 20px;
             border: 1px solid transparent;
+            letter-spacing: 0.5px;
         }
 
-        /* =========================================
-           TABLAS DE INFORMACIÓN (DATOS)
-           ========================================= */
+        /* =============================================================
+           CAJAS DE INFORMACIÓN
+           ============================================================= */
         .data-box {
             width: 100%;
             margin-bottom: 20px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--light-border);
             border-radius: 4px;
             overflow: hidden;
         }
+
         .box-header {
             background-color: var(--accent-bg);
-            border-bottom: 1px solid #ccc;
-            padding: 6px 10px;
+            border-bottom: 1px solid var(--light-border);
+            padding: 8px 15px;
             font-size: 10pt;
             font-weight: bold;
             color: var(--primary-color);
             text-transform: uppercase;
-            text-align: left; /* Alineación del título de la caja */
+            text-align: left; /* Alineado a la izquierda para formalidad */
         }
+
         .info-grid {
             width: 100%;
             border-collapse: collapse;
             font-size: 10pt;
         }
+
         .info-grid td {
-            padding: 8px 10px;
-            border-bottom: 1px dotted #ddd;
+            padding: 8px 12px;
+            border-bottom: 1px dotted var(--light-border);
+            vertical-align: top;
             text-align: left;
         }
+
+        .info-grid tr:last-child td {
+            border-bottom: none;
+        }
+
         .label {
             font-weight: bold;
             width: 30%;
-            color: #555;
+            color: var(--secondary-color);
             background-color: #fafafa;
         }
+
         .value {
             width: 70%;
             font-weight: normal;
+            color: var(--text-primary);
         }
 
-        /* =========================================
-           ÁREA DE CONTENIDO (TEXTO GRANDE)
-           ========================================= */
+        /* =============================================================
+           ÁREA DE CONTENIDO (TEXTO PRINCIPAL)
+           ============================================================= */
         .content-area {
-            border: 1px solid #999;
+            border: 1px solid var(--light-border);
+            /* Borde superior eliminado porque se pega al header */
+            border-top: none; 
             
-            /* Padding lateral amplio para elegancia */
-            padding: 20px 35px; 
+            /* Espaciado interno generoso */
+            padding: 20px 35px;
             
-            min-height: 250px;
+            min-height: 200px;
             
-            /* Alineación JUSTIFICADA PROFESIONAL */
-            text-align: justify; 
+            /* JUSTIFICADO PROFESIONAL */
+            text-align: justify;
             text-justify: inter-word;
             
-            /* Permite saltos de línea naturales */
+            /* IMPORTANTE: white-space normal para que el navegador ajuste los párrafos */
             white-space: normal; 
             
             font-size: 11pt;
-            background-color: rgba(255, 255, 255, 0.95); 
-            margin-top: -1px; /* Pegado al header */
+            line-height: 1.6; /* Interlineado elegante */
+            
+            background-color: #ffffff;
+            margin-top: -1px;
             border-radius: 0 0 4px 4px;
-            color: #222; 
+            color: var(--text-primary);
         }
 
-        /* Estilo para párrafos generados */
+        /* Estilos para los párrafos generados por Django */
         .content-area p {
             margin-top: 0;
-            margin-bottom: 10px;
-            text-indent: 30px; /* Sangría de primera línea */
+            margin-bottom: 12px;
+            text-indent: 30px; /* Sangría en primera línea (Estilo Acta) */
         }
 
-        /* =========================================
-           FIRMAS
-           ========================================= */
-        .signatures-section {
-            margin-top: 60px;
-            width: 100%;
-            page-break-inside: avoid; /* Evita cortar firmas entre páginas */
+        .placeholder-message {
+            color: #999;
+            text-align: center;
+            font-style: italic;
+            margin-top: 40px;
+            text-indent: 0 !important;
         }
-        .sig-table { width: 100%; border-collapse: collapse; }
+
+        /* =============================================================
+           SECCIÓN DE FIRMAS
+           ============================================================= */
+        .signatures-section {
+            margin-top: 50px;
+            width: 100%;
+            page-break-inside: avoid;
+        }
+
+        .sig-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
         .sig-table td {
             width: 45%;
             vertical-align: top;
             text-align: center;
+            padding: 0 10px;
         }
+
         .sig-line {
             border-top: 1px solid #000;
-            margin: 0 30px 5px 30px;
+            margin: 0 auto 8px auto;
+            width: 85%;
+            padding-top: 5px;
         }
+
         .sig-name {
             font-weight: bold;
             font-size: 10pt;
             text-transform: uppercase;
-        }
-        .sig-role {
-            font-size: 9pt;
-            color: #666;
-            font-style: italic;
+            display: block;
         }
 
-        /* =========================================
-           PIE DE PÁGINA (FIXED)
-           ========================================= */
+        .sig-role {
+            font-size: 9pt;
+            color: var(--text-secondary);
+            font-style: italic;
+            display: block;
+        }
+
+        /* =============================================================
+           PIE DE PÁGINA
+           ============================================================= */
         .footer-fixed {
             position: fixed;
-            bottom: -20px; /* Ajuste fino */
+            bottom: -20px;
             left: 0;
             right: 0;
             text-align: center;
             font-size: 8pt;
-            color: #666;
+            color: var(--text-secondary);
             border-top: 2px solid var(--primary-color);
             padding-top: 8px;
             background: white;
@@ -241,7 +324,7 @@
         {% if institucion.logo %}
             <img src="{{ institucion.logo.url }}" alt="Marca de Agua">
         {% else %}
-            <h1 style="font-size: 80pt; color: #eee; transform: rotate(0deg);">STRATOS</h1>
+            <h1 style="font-size: 80pt; color: #eeeeee; transform: rotate(0deg); letter-spacing: 15px;">STRATOS</h1>
         {% endif %}
     </div>
 
@@ -251,33 +334,59 @@
                 {% if institucion.logo %}
                     <img src="{{ institucion.logo.url }}" class="logo-img" alt="Logo Institucional">
                 {% else %}
-                    <h3 style="color: #ccc;">SIN LOGO</h3>
+                    <h3 style="color: #cccccc; font-size: 9pt;">SIN LOGO</h3>
                 {% endif %}
             </td>
+            
             <td class="col-info">
-                <div class="inst-title">{{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA STRATOS" }}</div>
+                <div class="inst-title">
+                    {{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA STRATOS" }}
+                </div>
                 <div class="inst-subtitle">
-                    NIT: {{ institucion.nit|default:"800.000.000-0" }}<br>
-                    Resolución No. {{ institucion.resolucion|default:"Pendiente" }}<br>
-                    <em>"{{ institucion.lema|default:'Excelencia, Compromiso y Calidad Humana' }}"</em>
+                    <strong>NIT:</strong> {{ institucion.nit|default:"800.000.000-0" }}<br>
+                    <strong>Resolución No.</strong> {{ institucion.resolucion|default:"Pendiente" }}<br>
+                    <em>"Excelencia, Compromiso y Calidad Humana"</em>
                 </div>
             </td>
+            
             <td class="col-meta">
-                <div class="meta-item"><span class="meta-bold">CÓDIGO:</span> G-BIEN-001</div>
-                <div class="meta-item"><span class="meta-bold">VERSIÓN:</span> 3.0</div>
-                <div class="meta-item"><span class="meta-bold">FECHA:</span> {% now "d/m/Y" %}</div>
-                <div class="meta-item"><span class="meta-bold" style="color: #d32f2f;">ACTA No:</span> {{ seguimiento.id|stringformat:"05d" }}</div>
+                <div class="meta-row">
+                    <span class="meta-label">CÓDIGO:</span>
+                    <span class="meta-value">G-BIEN-001</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">VERSIÓN:</span>
+                    <span class="meta-value">3.0</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">FECHA:</span>
+                    <span class="meta-value">{% now "d/m/Y" %}</span>
+                </div>
+                <div class="meta-row" style="border-bottom: none;">
+                    <span class="meta-label" style="color: #d32f2f;">ACTA No:</span>
+                    <span class="meta-value" style="font-weight: bold; color: #d32f2f;">{{ seguimiento.id|stringformat:"05d" }}</span>
+                </div>
             </td>
         </tr>
     </table>
 
-    <div class="doc-header" style="background-color: {% if seguimiento.tipo == 'FELICITACION' %}var(--success-color){% else %}var(--primary-color){% endif %}; border-color: {% if seguimiento.tipo == 'FELICITACION' %}var(--success-color){% else %}var(--primary-color){% endif %};">
-        ACTA DE SEGUIMIENTO - 
-        {% if seguimiento.tipo == 'CONVIVENCIA' %}COMPORTAMIENTO Y CONVIVENCIA
-        {% elif seguimiento.tipo == 'ACADEMICO' %}SEGUIMIENTO ACADÉMICO
-        {% elif seguimiento.tipo == 'PSICOLOGIA' %}ORIENTACIÓN PSICO-SOCIAL
-        {% elif seguimiento.tipo == 'FELICITACION' %}RECONOCIMIENTO Y FELICITACIÓN
-        {% else %}{{ seguimiento.get_tipo_display|upper }}{% endif %}
+    <div class="doc-header"
+         style="
+             background-color: {% if seguimiento.tipo == 'FELICITACION' %}var(--success-color){% else %}var(--primary-color){% endif %};
+             border-color: {% if seguimiento.tipo == 'FELICITACION' %}var(--success-color){% else %}var(--primary-color){% endif %};
+         ">
+        ACTA DE SEGUIMIENTO -
+        {% if seguimiento.tipo == 'CONVIVENCIA' %}
+            COMPORTAMIENTO Y CONVIVENCIA
+        {% elif seguimiento.tipo == 'ACADEMICO' %}
+            SEGUIMIENTO ACADÉMICO
+        {% elif seguimiento.tipo == 'PSICOLOGIA' %}
+            ORIENTACIÓN PSICO-SOCIAL
+        {% elif seguimiento.tipo == 'FELICITACION' %}
+            RECONOCIMIENTO Y FELICITACIÓN
+        {% else %}
+            {{ seguimiento.get_tipo_display|upper }}
+        {% endif %}
     </div>
 
     <div class="data-box">
@@ -285,41 +394,61 @@
         <table class="info-grid">
             <tr>
                 <td class="label">ESTUDIANTE:</td>
-                <td class="value"><strong>{{ estudiante.get_full_name|upper }}</strong></td>
+                <td class="value">
+                    <strong>{{ estudiante.get_full_name|upper }}</strong>
+                </td>
             </tr>
             <tr>
                 <td class="label">FECHA DE INTERVENCIÓN:</td>
-                <td class="value">{{ seguimiento.fecha|date:"l, d \d\e F \d\e Y"|capfirst }}</td>
+                <td class="value">
+                    {{ seguimiento.fecha|date:"l, d \d\e F \d\e Y"|capfirst }}
+                </td>
             </tr>
             <tr>
                 <td class="label">PROFESIONAL RESPONSABLE:</td>
-                <td class="value">{{ profesional.get_full_name|upper }} ({{ profesional.perfil.get_rol_display|default:"Docente/Orientador" }})</td>
+                <td class="value">
+                    {{ profesional.get_full_name|upper }} ({{ profesional.perfil.get_rol_display|default:"Docente/Orientador" }})
+                </td>
             </tr>
         </table>
     </div>
 
-    <div class="box-header" style="border: 1px solid #999; border-bottom: none; border-radius: 4px 4px 0 0;">
+    <div class="box-header"
+         style="
+             border: 1px solid var(--light-border);
+             border-bottom: none;
+             border-radius: 4px 4px 0 0;
+             background-color: var(--accent-bg);
+         ">
         II. DETALLE DE LA OBSERVACIÓN, DESCARGOS Y COMPROMISOS
     </div>
     <div class="content-area">
         {% if seguimiento.descripcion %}
             {{ seguimiento.descripcion|linebreaks }}
         {% else %}
-            <p style="color:#888; text-align:center; font-style:italic;">-- No se ha registrado información detallada en este seguimiento --</p>
+            <p class="placeholder-message">
+                -- No se ha registrado información detallada en este seguimiento --
+            </p>
         {% endif %}
     </div>
 
-    <br><br>
+    <br>
 
-    <div class="box-header" style="border: 1px solid #999; border-bottom: none; border-radius: 4px 4px 0 0;">
+    <div class="box-header"
+         style="
+             border: 1px solid var(--light-border);
+             border-bottom: none;
+             border-radius: 4px 4px 0 0;
+             background-color: var(--accent-bg);
+         ">
         III. OBSERVACIONES ADICIONALES / COMPROMISOS FINALES
     </div>
     <div class="content-area" style="min-height: 120px;">
         {% if seguimiento.observaciones_adicionales %}
             {{ seguimiento.observaciones_adicionales|linebreaks }}
         {% else %}
-            <div style="border-bottom: 1px dotted #ccc; height: 30px; width: 100%;"></div>
-            <div style="border-bottom: 1px dotted #ccc; height: 30px; width: 100%;"></div>
+            <div style="border-bottom: 1px dotted #ccc; height: 30px; width: 100%; margin-bottom: 10px;"></div>
+            <div style="border-bottom: 1px dotted #ccc; height: 30px; width: 100%; margin-bottom: 10px;"></div>
             <div style="border-bottom: 1px dotted #ccc; height: 30px; width: 100%;"></div>
         {% endif %}
     </div>
@@ -328,18 +457,18 @@
         <table class="sig-table">
             <tr>
                 <td>
-                    <br><br><br>
-                    <div class="sig-line"></div>
+                    <div style="height: 40px;"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ estudiante.get_full_name|upper }}</div>
                     <div class="sig-role">Firma del Estudiante</div>
                 </td>
-                <td style="width: 10%;"></td> 
+                <td style="width: 10%;"></td>
                 <td>
-                    <br><br><br>
-                    <div class="sig-line"></div>
+                    <div style="height: 40px;"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ profesional.get_full_name|upper }}</div>
                     <div class="sig-role">Firma Profesional / Docente</div>
-                    <div style="font-size:8pt;">{{ institucion.nombre|default:"Institución Educativa" }}</div>
+                    <div style="font-size: 8pt; color: #666; margin-top: 3px;">
+                        {{ institucion.nombre|default:"Institución Educativa Stratos" }}
+                    </div>
                 </td>
             </tr>
         </table>
@@ -347,12 +476,14 @@
 
     <div class="footer-fixed">
         <strong>{{ institucion.nombre|default:"Institución Educativa Stratos" }}</strong><br>
-        {{ institucion.direccion|default:"Sede Principal" }} | 
-        {{ institucion.ciudad|default:"Ciudad" }} - {{ institucion.departamento|default:"Dpto" }} |
-        Teléfono: {{ institucion.telefono|default:"(000) 000 0000" }} | 
-        {{ institucion.correo|default:"contacto@stratos.edu.co" }}<br>
-        <em>Este documento es oficial y de carácter confidencial. Generado por la plataforma Stratos.</em>
+        <span style="font-size: 7.5pt;">
+            {{ institucion.direccion|default:"Sede Principal" }} &nbsp;|&nbsp;
+            Teléfono: {{ institucion.telefono|default:"(000) 000 0000" }} &nbsp;|&nbsp;
+            {{ institucion.sitio_web|default:"www.stratos.edu.co" }}
+        </span><br>
+        <em style="font-size: 7pt;">
+            Este documento es oficial y de carácter confidencial. Generado automáticamente por la plataforma Stratos.
+        </em>
     </div>
-
 </body>
 </html>
