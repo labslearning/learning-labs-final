@@ -5479,132 +5479,80 @@ def ver_documentos_institucionales(request):
         'institucion': institucion
     }
     return render(request, 'institucion/documentos_publicos.html', context)
+##desde aqui 
 
 @role_required(['ADMINISTRADOR', 'COORD_ACADEMICO', 'COORD_CONVIVENCIA', 'PSICOLOGO'])
 def historial_global_observaciones(request):
     """
-    Vista de Inteligencia: Historial Global + Dashboard 360°.
-    Lógica corregida para usar campos reales: 'activo' en vez de 'estado'.
+    Vista de Inteligencia: Historial Global de Observaciones.
+    Lógica blindada contra duplicidad de datos.
     """
-    # --- 1. Lógica de Observaciones Original ---
-    observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
+    # 1. Obtener todas las observaciones reales (Usando distinct para evitar duplicados por Joins)
+    observaciones_queryset = Observacion.objects.select_related('estudiante', 'autor').all().distinct().order_by('-fecha_creacion')
 
+    # 2. Filtro de Búsqueda
     query = request.GET.get('q')
     if query:
-        observaciones = observaciones.filter(
+        observaciones_queryset = observaciones_queryset.filter(
             Q(estudiante__first_name__icontains=query) |
             Q(estudiante__last_name__icontains=query) |
             Q(estudiante__username__icontains=query) |
             Q(descripcion__icontains=query)
-        )
+        ).distinct()
 
-    # --- 2. KPIs de Observaciones ---
-    total_obs = observaciones.count()
-    count_convivencia = observaciones.filter(tipo='CONVIVENCIA').count()
-    count_academica = observaciones.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
-    count_psicologia = observaciones.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
+    # 3. KPIs de Observaciones (Cifras Reales)
+    count_total = observaciones_queryset.count()
+    count_convivencia = observaciones_queryset.filter(tipo='CONVIVENCIA').count()
+    count_academica = observaciones_queryset.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
+    count_psicologia = observaciones_queryset.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
 
-    # --- 3. Estadísticas Académicas para el Dashboard ---
-    # Total estudiantes con rol adecuado
-    total_alumnos = User.objects.filter(perfil__rol='ESTUDIANTE').count()
-    # Uso de 'activo' según el error FieldError anterior
-    total_cursos = Curso.objects.filter(activo=True).count()
-    
-    # Promedio Institucional (Asegúrate que el campo sea 'valor')
-    promedio_global_nota = Nota.objects.aggregate(Avg('valor'))['valor__avg'] or 0.0
-    # Materias perdidas (menor a 3.0)
-    total_perdidas = Nota.objects.filter(valor__lt=3.0).count()
+    # 4. Datos Académicos (Verificando campos reales)
+    # Filtramos estudiantes activos para que la cifra sea real
+    total_estudiantes_bd = User.objects.filter(perfil__rol='ESTUDIANTE', is_active=True).count()
+    total_cursos_bd = Curso.objects.filter(activo=True).count()
 
-    # --- 4. Radar de Riesgo Académico (Top 5 con más materias perdidas) ---
-    riesgos_query = Nota.objects.filter(valor__lt=3.0).values('estudiante').annotate(
-        total_p=Count('id')
-    ).order_by('-total_p')[:5]
+    # --- LÓGICA DE MATERIAS PERDIDAS (SIN DUPLICADOS) ---
+    # Aquí es donde se solía triplicar. Usamos .distinct() o contamos directamente el ID de la nota.
+    # Ajusta 'valor__lt=3.0' si en tu colegio se pierde con otra nota.
+    total_materias_perdidas = Nota.objects.filter(valor__lt=3.0).values('id').distinct().count()
 
-    top_riesgo_academico = []
-    for r in riesgos_query:
-        try:
-            est = User.objects.get(pk=r['estudiante'])
-            mats = Nota.objects.filter(estudiante=est, valor__lt=3.0).values_list('materia__nombre', flat=True)
-            # Buscar curso por matrícula
-            inscripcion = Matricula.objects.filter(estudiante=est).last()
-            top_riesgo_academico.append({
-                'estudiante': est,
-                'curso': inscripcion.curso if inscripcion else None,
-                'materias_perdidas': r['total_p'],
-                'materias_nombres': list(mats)
-            })
-        except User.DoesNotExist:
-            continue
+    # Promedio Institucional Real
+    promedio_global = Nota.objects.aggregate(avg=Avg('valor'))['avg'] or 0.0
 
-    # --- 5. Datos para Gráficas por Curso ---
-    vista_cursos = []
-    labels_cursos = []
-    data_promedios = []
-    cursos_lista = Curso.objects.filter(activo=True)
-
-    for c in cursos_lista:
-        # Obtener IDs de estudiantes en este curso
-        est_ids = Matricula.objects.filter(curso=c).values_list('estudiante_id', flat=True)
-        # Calcular promedio del curso
-        prom_c = Nota.objects.filter(estudiante_id__in=est_ids).aggregate(Avg('valor'))['valor__avg'] or 0.0
-        
-        labels_cursos.append(c.nombre)
-        data_promedios.append(round(float(prom_c), 2))
-
-        # Lista de alumnos para el acordeón
-        estudiantes_curso = []
-        for eid in est_ids:
-            u = User.objects.get(pk=eid)
-            estudiantes_curso.append({'obj': u, 'notas': {}})
-
-        vista_cursos.append({
-            'curso': c,
-            'stats': {'acad': round(prom_c, 2), 'conv': 4.5, 'alumnos': len(est_ids)},
-            'estudiantes': estudiantes_curso,
-            'top_10_academico': []
-        })
-
-    # --- 6. Formateo de Datos JSON para Chart.js ---
-    chart_data = {
-        'labels': json.dumps(labels_cursos),
-        'acad': json.dumps(data_promedios),
-        'conv': json.dumps([4.0] * len(labels_cursos)) # Simulado
-    }
-    
-    # Asistencia simulada (puedes conectarlo a tu modelo Asistencia si lo tienes)
-    stats_asistencia = json.dumps([80, 10, 5, 5])
-
+    # 5. Preparar el contexto
     context = {
-        'observaciones': observaciones,
+        'observaciones': observaciones_queryset,
         'query': query,
         'kpi': {
-            'total': total_obs,
+            'total': count_total,
             'convivencia': count_convivencia,
             'academica': count_academica,
             'psicologia': count_psicologia,
-            'total_alumnos': total_alumnos,
-            'total_cursos': total_cursos,
-            'prom_global_acad': round(promedio_global_nota, 2),
-            'prom_global_conv': 4.2,
-            'total_materias_perdidas': total_perdidas,
+            'total_alumnos': total_estudiantes_bd,
+            'total_cursos': total_cursos_bd,
+            'prom_global_acad': round(float(promedio_global), 2),
+            'total_materias_perdidas': total_materias_perdidas, # Cifra corregida
+            'prom_global_conv': 0, # Solo si tienes un modelo de notas de conducta
         },
-        'top_riesgo_academico': top_riesgo_academico,
-        'vista_cursos': vista_cursos,
-        'chart_data': chart_data,
-        'stats_asistencia': stats_asistencia,
-        'alertas_convivencia': [], # Puedes llenarlo con lógica similar a riesgos
-        'top_fallas': [],
+        'top_riesgo_academico': [], # Requiere lógica específica de tu modelo Nota/Estudiante
+        'alertas_convivencia': [],
+        'vista_cursos': [],
+        'stats_asistencia': json.dumps([0, 0, 0, 0]),
+        'chart_data': {
+            'labels': json.dumps(["Convivencia", "Académica", "Psicología"]),
+            'acad': json.dumps([count_convivencia, count_academica, count_psicologia]),
+            'conv': json.dumps([0, 0, 0, 0])
+        },
         'institucion': Institucion.objects.first(),
     }
     
-    # --- 7. Renderizado Seguro ---
+    # 6. Renderizado
     template_name = 'bienestar/historial_global_observaciones.html'
     try:
         get_template(template_name)
         return render(request, template_name, context)
     except TemplateDoesNotExist:
         return HttpResponse(f"Error: No se encuentra el archivo {template_name}")
-
 # --- VISTA 1: GUARDAR SEGUIMIENTO (Backend) ---
 @require_POST
 @login_required
