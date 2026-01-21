@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
+{% load dict_filters %}
 {% load static %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
     /* === ESTILOS TIER EDUTECH 100000 === */
@@ -157,7 +160,7 @@
     }
     @media (max-width: 768px) {
         .chart-container-responsive {
-            min-height: 400px; /* Más alto en móvil para que se vea mejor */
+            min-height: 400px;
         }
     }
 
@@ -224,6 +227,40 @@
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
+    
+    /* Estilos adicionales de tu template */
+    .icon-box-xl { width: 95px; height: 95px; border-radius: 50%; }
+    .icon-box-lg { width: 65px; height: 65px; }
+    .icon-box-md { width: 55px; height: 55px; }
+    .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+    .btn-ai-magic { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; transition: all 0.4s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+    .btn-ai-magic:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
+    .hover-elevate { transition: all 0.3s ease-out; }
+    .hover-elevate:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important; }
+    .card-doc { border-top-width: 8px !important; }
+    .pei-border { border-top: 8px solid var(--purple-primary) !important; }
+    .manual-border { border-top: 8px solid #fd7e14 !important; }
+    .malla-border { border-top: 8px solid #20c997 !important; }
+    .calendario-border { border-top: 8px solid #dc3545 !important; }
+    .bg-soft-danger { background-color: #fff5f5; }
+    .bg-soft-info { background-color: #eefbff; }
+    .bg-soft-primary { background-color: #eef2ff; }
+    .bg-soft-warning { background-color: #fffcf0; }
+    .bg-purple-soft { background-color: #f3e8ff; }
+    .bg-orange-soft { background-color: #fff7ed; }
+    .bg-teal-soft { background-color: #f0fdfa; }
+    .bg-danger-soft { background-color: #fef2f2; }
+    .nota-bubble { display: inline-block; padding: 6px 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
+    .nota-fail { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+    .nota-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .nota-warning { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+    .rank-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .rank-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
+    .rank-silver { background: linear-gradient(135deg, #94a3b8, #475569); }
+    .rank-bronze { background: linear-gradient(135deg, #d97706, #78350f); }
+    .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
+    .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
 
 <div class="container-fluid py-5" style="max-width: 1800px;">
@@ -620,13 +657,11 @@
                                 {{ seguimiento.get_tipo_display }}
                             </span>
                         </td>
-                        <td>{{ seguimiento.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ seguimiento.fecha|date:"d M, Y" }}</td>
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
                         <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" 
-                               class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                               target="_blank">
+                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                 <i class="fas fa-file-pdf me-1"></i>Descargar PDF
                             </a>
                         </td>
@@ -640,76 +675,182 @@
             </table>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #0f9d58 0%, #20c997 100%); color: white;">
-                <div class="position-relative z-1 d-flex align-items-center w-100">
-                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
-                        <i class="fas fa-clipboard-list fa-lg"></i>
+   <div class="row mb-5 animate__animated animate__fadeIn" style="margin-top: 3rem;">
+       <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
+           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
+           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
+       </div>
+       
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-purple-soft rounded-4 d-flex align-items-center justify-content-center text-purple shadow-sm">
+                            <i class="fas fa-university fa-lg"></i>
+                        </div>
+                        {% if institucion.archivo_pei %}
+                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Vigente</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3">Pendiente</span>
+                        {% endif %}
                     </div>
-                    <div>
-                        <h5 class="modal-title fw-bold">Nuevo Seguimiento Documental</h5>
-                        <p class="mb-0 small opacity-75">Generación de Actas y Compromisos Institucionales</p>
+                    <h5 class="fw-bold text-dark mb-2">Proyecto Educativo (PEI)</h5>
+                    <p class="text-muted small">Marco pedagógico y horizonte institucional.</p>
+                    <div class="mt-auto pt-3">
+                        {% if institucion.archivo_pei %}
+                         <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-sm btn-outline-purple rounded-pill fw-bold py-2 shadow-sm w-100">
+                             <i class="fas fa-download me-2"></i> Descargar
+                         </a>
+                        {% endif %}
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
             </div>
+        </div>
 
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-orange-soft rounded-4 d-flex align-items-center justify-content-center text-orange shadow-sm">
+                            <i class="fas fa-gavel fa-lg"></i>
+                        </div>
+                        {% if institucion.archivo_manual_convivencia %}
+                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3">Requerido</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Manual Convivencial</h5>
+                    <p class="text-muted small">Normas, derechos y deberes.</p>
+                    <div class="mt-auto pt-3">
+                        {% if institucion.archivo_manual_convivencia %}
+                         <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2 shadow-sm w-100">
+                             <i class="fas fa-download me-2"></i> Descargar
+                         </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-teal-soft rounded-4 d-flex align-items-center justify-content-center text-teal shadow-sm">
+                            <i class="fas fa-scroll fa-lg"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">DBA Estructurado</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Malla Curricular</h5>
+                    <p class="text-muted small">Contenidos programáticos, competencias y estándares por nivel académico.</p>
+                    <div class="mt-auto pt-3 d-grid gap-2">
+                        {% if institucion.archivo_malla_curricular %}
+                            <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-sm btn-outline-teal rounded-pill fw-bold py-2">
+                                <i class="fas fa-th-list me-2"></i> Ver Planes
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-danger-soft rounded-4 d-flex align-items-center justify-content-center text-danger shadow-sm">
+                            <i class="fas fa-calendar-alt fa-lg"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">2025 Activo</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Cronograma Anual</h5>
+                    <p class="text-muted small">Agenda de actividades, evaluaciones institucionales y jornadas pedagógicas.</p>
+                    <div class="mt-auto pt-3 d-grid gap-2">
+                        {% if institucion.archivo_calendario %}
+                            <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-bold py-2">
+                                <i class="fas fa-clock me-2"></i> Ver Agenda
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
+</div>
+
+<div class="modal fade" id="modalSeguimiento" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 p-4 bg-primary text-white">
+                <div>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-pen-fancy me-2"></i>Nuevo Seguimiento</h5>
+                    <p class="mb-0 small opacity-75">Generación de Acta y Registro en Historial</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
                     {% csrf_token %}
-                    
-                    <div class="mb-4 text-center">
-                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
-                        <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
+                    <div class="text-center mb-4">
+                        <h4 class="fw-black text-dark" id="nombreEstudianteModal">Cargando...</h4>
                         <input type="hidden" id="idEstudianteModal" name="estudiante_id">
                     </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
                                 <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Acta de Convivencia</h6>
-                                    <small class="text-muted x-small">Mediación y Descargos</small>
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Convivencia</span>
                                 </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
                                 <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-user-md"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Seguimiento Psico</h6>
-                                    <small class="text-muted x-small">Orientación Escolar</small>
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-brain"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Psicología</span>
                                 </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
                                 <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book-reader"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Compromiso Acad.</h6>
-                                    <small class="text-muted x-small">Plan de Mejoramiento</small>
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Académico</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
+                                <input type="radio" name="tipo_documento" value="FELICITACION" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-success-subtle text-success rounded-circle mx-auto mb-2"><i class="fas fa-star"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Felicitación</span>
                                 </div>
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
-                        <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
+                        <label class="form-label fw-bold text-secondary small text-uppercase ls-1">I. Detalle de la Observación / Situación</label>
+                        <textarea id="contenidoSeguimiento" class="form-control shadow-sm border-0" rows="5" placeholder="Describa detalladamente la situación presentada, los descargos o el motivo de la felicitación..."></textarea>
                     </div>
 
-                    <div class="text-end">
-                        <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
-                            <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small text-uppercase ls-1">II. Observaciones Adicionales / Compromisos</label>
+                        <textarea id="observacionesAdicionales" class="form-control shadow-sm border-0" rows="3" placeholder="Espacio para acuerdos, compromisos, notas finales o recomendaciones..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success rounded-pill px-5 fw-bold shadow-lg" onclick="procesarSeguimiento(event)">
+                            <i class="fas fa-save me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
                 </form>
@@ -765,10 +906,11 @@
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
         document.getElementById('contenidoSeguimiento').value = "";
+        document.getElementById('observacionesAdicionales').value = ""; // Limpiar nuevo campo
     }
 
     // ============================================
-    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> ABRIR PDF DJANGO)
+    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> SERVER PDF)
     // ============================================
     async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
@@ -776,53 +918,53 @@
         // 1. Obtener Datos
         const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
-        const descripcion = document.getElementById('contenidoSeguimiento').value;
         
-        // CORRECCIÓN: Selección más robusta del radio button
+        // CAPTURAMOS AMBOS CAMPOS DE TEXTO
+        const descripcion = document.getElementById('contenidoSeguimiento').value;
+        const observacionesAdic = document.getElementById('observacionesAdicionales').value;
+        
+        // CAPTURAMOS LA OPCIÓN DE RADIO (INCLUYENDO FELICITACIÓN)
         const tipoDocElement = document.querySelector('input[name="tipo_documento"]:checked');
-        const tipoDoc = tipoDocElement ? tipoDocElement.value : 'CONVIVENCIA'; // Valor por defecto
+        const tipoDoc = tipoDocElement ? tipoDocElement.value : 'CONVIVENCIA';
 
         if (!descripcion.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento.");
             return;
         }
 
-        // 2. GUARDAR EN BACKEND
-        const resultado = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
+        // 2. GUARDAR EN BACKEND (ENVIANDO DATOS EXTRA)
+        const respuesta = await guardarEnBackend(idEstudiante, tipoDoc, descripcion, observacionesAdic);
 
-        if (resultado && resultado.success) {
-            // 3. ¡AQUÍ ESTÁ LA SOLUCIÓN! 
-            // En lugar de generar el PDF con JS, abrimos la URL de Django
-            // Usamos el ID que nos devolvió el servidor
-            const pdfUrl = `/seguimiento/pdf/${resultado.id}/`; 
+        if (respuesta && respuesta.success) {
+            // 3. ABRIR PDF DESDE EL SERVIDOR (SOLUCIÓN PROFESIONAL)
+            const pdfUrl = `/seguimiento/pdf/${respuesta.id}/`;
             
-            // 🔥 CORRECCIÓN CLAVE: Abrir PDF *ANTES* de cualquier reload para evitar bloqueos
+            // Abrimos en nueva pestaña INMEDIATAMENTE
             window.open(pdfUrl, '_blank');
-
-            // 4. CERRAR Y RECARGAR (Con un poco más de tiempo para que la pestaña abra bien)
+            
+            // 4. CERRAR Y RECARGAR
             const modalElement = document.getElementById('modalSeguimiento');
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
-
+            
             // Recargar para ver el nuevo registro en la tabla
-            setTimeout(() => location.reload(), 2000); 
+            setTimeout(() => location.reload(), 1500); 
         }
     }
 
     // ============================================
     // LOGICA 3: ENVIAR A BACKEND
     // ============================================
-    async function guardarEnBackend(estudianteId, tipo, descripcion) {
-        const url = "{% url 'guardar_seguimiento' %}";
+    async function guardarEnBackend(estudianteId, tipo, descripcion, observacionesAdic) {
+        const url = "{% url 'guardar_seguimiento' %}"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // DEBUG: Para ver si el dato viaja correctamente
-        console.log("Enviando descripción:", descripcion); 
 
         const formData = new FormData();
         formData.append('estudiante_id', estudianteId);
         formData.append('tipo', tipo);
-        formData.append('descripcion', descripcion); // Asegúrate de que views.py lea 'descripcion'
+        formData.append('descripcion', descripcion);
+        // ENVIAMOS EL NUEVO CAMPO (El frontend cumple con enviarlo)
+        formData.append('observaciones_adicionales', observacionesAdic); 
 
         try {
             const response = await fetch(url, {
@@ -832,9 +974,10 @@
             });
 
             const data = await response.json();
-
+            
+            // Devolvemos todo el objeto data para poder usar data.id arriba
             if (data.success) {
-                return data; // Devolvemos TODO el objeto para tener acceso al ID
+                return data; 
             } else {
                 alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
                 console.error("Detalle error:", data);
