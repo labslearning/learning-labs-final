@@ -623,9 +623,7 @@
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
                         <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" 
-                               target="_blank"
-                               class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                 <i class="fas fa-file-pdf me-1"></i>Descargar PDF
                             </a>
                         </td>
@@ -798,10 +796,10 @@
             });
             const data = await response.json();
 
+            // 🔥 CAMBIO CRÍTICO: Si guarda, abrimos el PDF del servidor, no generamos nada local
             if (data.success) {
-                // 3. ÉXITO: ABRIR PDF GENERADO POR EL SERVIDOR (WeasyPrint)
                 // Construimos la URL usando el ID que nos devolvió el backend
-                const pdfUrl = `/seguimiento/pdf/${data.id}/`; // Ajusta esta ruta si tu proyecto tiene prefijos
+                const pdfUrl = `/seguimiento/pdf/${data.id}/`; 
                 
                 // Abrir PDF en nueva pestaña
                 window.open(pdfUrl, '_blank');
