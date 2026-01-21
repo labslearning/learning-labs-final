@@ -20,7 +20,9 @@
         --glass-bg: rgba(255, 255, 255, 0.95);
         --glass-border: 1px solid rgba(255, 255, 255, 0.6);
         --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
         --radius-xl: 1.5rem;
+        --radius-lg: 1rem;
         --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -32,6 +34,7 @@
         background-attachment: fixed;
     }
 
+    /* === TARJETAS PREMIUM CON GLASSMORPHISM === */
     .card-premium {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
@@ -42,54 +45,137 @@
         overflow: hidden;
     }
 
-    .card-premium:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: rgba(67, 97, 238, 0.3); }
-    .icon-box-xxl { width: 80px; height: 80px; font-size: 1.8rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(67, 97, 238, 0.25); }
-    .icon-box { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 14px; }
-    .icon-box-sm { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+    .card-premium:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: rgba(67, 97, 238, 0.3);
+    }
+
+    /* === ICON BOXES === */
+    .icon-box-xxl {
+        width: 80px; height: 80px; font-size: 1.8rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(67, 97, 238, 0.25);
+    }
+    .icon-box {
+        width: 48px; height: 48px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        border-radius: 14px;
+    }
+    .icon-box-sm {
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 10px;
+    }
+
+    /* === TIPOGRAFÍA === */
     .fw-black { font-weight: 900; }
     .ls-1 { letter-spacing: 0.5px; }
     .ls-2 { letter-spacing: 1.5px; }
     .x-small { font-size: 0.75rem; }
 
-    .btn-pill-modern { border-radius: 50px; font-weight: 600; letter-spacing: 0.3px; transition: all 0.3s ease; padding: 0.7rem 1.8rem; border: 1px solid rgba(0,0,0,0.05); }
-    .btn-pill-modern:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    /* === BOTONES MODERNOS === */
+    .btn-pill-modern {
+        border-radius: 50px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        padding: 0.7rem 1.8rem;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .btn-pill-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
     .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
 
+    /* === TABLA MAESTRA === */
     .custom-table { border-collapse: separate; border-spacing: 0 8px; }
-    .custom-table thead th { background-color: transparent; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; font-size: 0.7rem; border: none; padding: 0 1.5rem 1rem 1.5rem; }
-    .custom-table tbody tr { background-color: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; }
-    .custom-table tbody tr:hover { transform: scale(1.002); box-shadow: 0 8px 25px rgba(0,0,0,0.06); z-index: 10; position: relative; }
-    .custom-table tbody td { padding: 1.2rem 1.5rem; border: none; vertical-align: middle; }
+
+    .custom-table thead th {
+        background-color: transparent;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-size: 0.7rem;
+        border: none;
+        padding: 0 1.5rem 1rem 1.5rem;
+    }
+
+    .custom-table tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        transform: scale(1.002);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        z-index: 10;
+        position: relative;
+    }
+
+    .custom-table tbody td {
+        padding: 1.2rem 1.5rem;
+        border: none;
+        vertical-align: middle;
+    }
+
     .custom-table tbody tr td:first-child { border-top-left-radius: 1rem; border-bottom-left-radius: 1rem; }
     .custom-table tbody tr td:last-child { border-top-right-radius: 1rem; border-bottom-right-radius: 1rem; }
 
-    .gradient-avatar { background: linear-gradient(135deg, #4361ee, #7209b7); color: white; font-family: var(--font-main); }
+    /* === AVATAR GRADIENT === */
+    .gradient-avatar {
+        background: linear-gradient(135deg, #4361ee, #7209b7);
+        color: white;
+        font-family: var(--font-main);
+    }
+
+    /* === BADGES === */
     .badge-soft { padding: 0.5em 1em; border-radius: 50rem; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; }
 
+    /* Colores sutiles */
     .bg-purple-subtle { background-color: rgba(111, 66, 193, 0.1) !important; color: #6f42c1 !important; }
     .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; color: #059669 !important; }
     .bg-danger-subtle { background-color: rgba(239, 68, 68, 0.1) !important; color: #dc2626 !important; }
     .bg-warning-subtle { background-color: rgba(245, 158, 11, 0.1) !important; color: #d97706 !important; }
     .bg-info-subtle { background-color: rgba(59, 130, 246, 0.1) !important; color: #2563eb !important; }
+
+    /* === UTILS === */
     .border-start-danger { border-left: 4px solid #ef4444 !important; }
     .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Scrollbar */
     .scroll-pro::-webkit-scrollbar { width: 6px; }
     .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .scroll-pro::-webkit-scrollbar-track { background: transparent; }
-    .chart-container-responsive { min-height: 350px; }
-    @media (max-width: 768px) { .chart-container-responsive { min-height: 400px; } }
 
-    /* 🔥 SOLUCIÓN DEFINITIVA AL PDF EN BLANCO 🔥 */
-    /* El truco es no usar opacity:0 ni visibility:hidden. Lo sacamos de la pantalla. */
+    /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
+    .chart-container-responsive {
+        min-height: 350px;
+    }
+    @media (max-width: 768px) {
+        .chart-container-responsive {
+            min-height: 400px;
+        }
+    }
+
+    /* 🔥 CORRECCIÓN CRÍTICA PDF: OCULTAR DETRÁS, NO FUERA DE PANTALLA 🔥 */
+    /* Usamos z-index negativo para ponerlo "detrás" pero visible al renderizador */
     #plantillaPDFContainer {
         position: fixed;
-        top: -15000px;
-        left: -15000px;
+        top: 0;
+        left: 0;
         width: 210mm;
         min-height: 297mm;
-        z-index: 10000; /* Alto z-index para cuando lo mostremos */
+        z-index: -9999; 
         background: white;
+        opacity: 0; /* Invisible al ojo, presente en el DOM */
+        pointer-events: none;
     }
 
     .pdf-page {
@@ -104,28 +190,135 @@
         box-sizing: border-box;
     }
 
-    .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .pdf-header-table td { border: 1px solid #000; padding: 5px; text-align: center; vertical-align: middle; }
-    .pdf-section-title { font-weight: bold; text-transform: uppercase; background-color: #f0f0f0; padding: 5px; border: 1px solid #000; margin-top: 15px; margin-bottom: 10px; font-size: 11pt; }
-    .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .pdf-info-item { border-bottom: 1px dotted #999; padding-bottom: 2px; }
-    .pdf-content-area { border: 1px solid #ccc; padding: 10px; min-height: 200px; text-align: justify; margin-bottom: 30px; white-space: pre-line; }
-    .pdf-signatures { display: flex; justify-content: space-between; margin-top: 60px; }
-    .pdf-sig-box { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px; }
-    .pdf-footer { margin-top: 30px; text-align: center; font-size: 9pt; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+    .pdf-header-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    .pdf-header-table td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: center;
+        vertical-align: middle;
+    }
 
-    .historial-seguimientos { background: white; border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); padding: 2rem; margin-bottom: 2rem; }
-    .historial-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
-    .historial-title { font-weight: 700; color: #2c3e50; font-size: 1.5rem; }
-    .historial-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    .historial-table th { background-color: #f8f9fa; color: #495057; font-weight: 600; padding: 1rem; text-align: left; border-bottom: 2px solid #e9ecef; }
-    .historial-table td { padding: 1rem; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
-    .historial-table tr:hover { background-color: #f8f9fa; }
+    .pdf-section-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        background-color: #f0f0f0;
+        padding: 5px;
+        border: 1px solid #000;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-size: 11pt;
+    }
 
-    .btn-generar-pdf { background: var(--primary-gradient); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600; transition: all 0.3s ease; }
-    .btn-generar-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
+    .pdf-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .pdf-info-item {
+        border-bottom: 1px dotted #999;
+        padding-bottom: 2px;
+    }
+
+    .pdf-content-area {
+        border: 1px solid #ccc;
+        padding: 10px;
+        min-height: 200px;
+        text-align: justify;
+        margin-bottom: 30px;
+        white-space: pre-line;
+    }
+
+    .pdf-signatures {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+    }
+    .pdf-sig-box {
+        width: 45%;
+        border-top: 1px solid #000;
+        text-align: center;
+        padding-top: 5px;
+    }
+
+    .pdf-footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 9pt;
+        color: #666;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+
+    /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
+    .historial-seguimientos {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-soft);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .historial-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .historial-title {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .historial-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .historial-table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .historial-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .historial-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .btn-generar-pdf {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-generar-pdf:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
     
-    /* Estilos del Dashboard IA y Gráficos (Mantenidos) */
+    /* Estilos adicionales de tu template */
     .icon-box-xl { width: 95px; height: 95px; border-radius: 50%; }
     .icon-box-lg { width: 65px; height: 65px; }
     .icon-box-md { width: 55px; height: 55px; }
@@ -523,6 +716,9 @@
             <h3 class="historial-title">
                 <i class="fas fa-history me-2"></i>Historial de Seguimientos
             </h3>
+            <button class="btn-generar-pdf" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Imprimir Reporte General
+            </button>
         </div>
 
         <div class="table-responsive">
@@ -576,76 +772,115 @@
             </table>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #0f9d58 0%, #20c997 100%); color: white;">
-                <div class="position-relative z-1 d-flex align-items-center w-100">
-                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
-                        <i class="fas fa-clipboard-list fa-lg"></i>
+    <div class="row mb-5 animate__animated animate__fadeIn" style="margin-top: 3rem;">
+       <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
+           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
+           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
+       </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-purple-soft rounded-4 d-flex align-items-center justify-content-center text-purple shadow-sm">
+                            <i class="fas fa-university fa-lg"></i>
+                        </div>
+                        {% if institucion.archivo_pei %}
+                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Vigente</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3">Pendiente</span>
+                        {% endif %}
                     </div>
-                    <div>
-                        <h5 class="modal-title fw-bold">Nuevo Seguimiento Documental</h5>
-                        <p class="mb-0 small opacity-75">Generación de Actas y Compromisos Institucionales</p>
+                    <h5 class="fw-bold text-dark mb-2">Proyecto Educativo (PEI)</h5>
+                    <p class="text-muted small">Marco pedagógico y horizonte institucional.</p>
+                    <div class="mt-auto pt-3">
+                        {% if institucion.archivo_pei %}
+                         <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-sm btn-outline-purple rounded-pill fw-bold py-2 shadow-sm w-100">
+                             <i class="fas fa-download me-2"></i> Descargar
+                         </a>
+                        {% endif %}
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
             </div>
+        </div>
 
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-orange-soft rounded-4 d-flex align-items-center justify-content-center text-orange shadow-sm">
+                            <i class="fas fa-gavel fa-lg"></i>
+                        </div>
+                        {% if institucion.archivo_manual_convivencia %}
+                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3">Requerido</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Manual Convivencial</h5>
+                    <p class="text-muted small">Normas, derechos y deberes.</p>
+                    <div class="mt-auto pt-3">
+                        {% if institucion.archivo_manual_convivencia %}
+                         <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2 shadow-sm w-100">
+                             <i class="fas fa-download me-2"></i> Descargar
+                         </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
+</div>
+
+<div class="modal fade" id="modalSeguimiento" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 p-4 bg-primary text-white">
+                <div>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-pen-fancy me-2"></i>Nuevo Seguimiento</h5>
+                    <p class="mb-0 small opacity-75">Generación de Acta y Registro en Historial</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
                     {% csrf_token %}
-                    
-                    <div class="mb-4 text-center">
-                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
-                        <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
+                    <div class="text-center mb-4">
+                        <h4 class="fw-black text-dark" id="nombreEstudianteModal">Cargando...</h4>
                         <input type="hidden" id="idEstudianteModal" name="estudiante_id">
                     </div>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
-                                <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Acta de Convivencia</h6>
-                                    <small class="text-muted x-small">Mediación y Descargos</small>
-                                </div>
+                            <input type="radio" class="btn-check" name="tipo_documento" id="opt1" value="CONVIVENCIA" checked>
+                            <label class="btn btn-outline-warning w-100 p-3 h-100 rounded-3 shadow-sm" for="opt1">
+                                <i class="fas fa-handshake fa-2x mb-2 d-block"></i>Convivencia
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
-                                <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-user-md"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Seguimiento Psico</h6>
-                                    <small class="text-muted x-small">Orientación Escolar</small>
-                                </div>
+                            <input type="radio" class="btn-check" name="tipo_documento" id="opt2" value="PSICOLOGIA">
+                            <label class="btn btn-outline-purple w-100 p-3 h-100 rounded-3 shadow-sm" for="opt2">
+                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>Psicología
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-check-label w-100 h-100">
-                                <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
-                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
-                                    <div class="icon-box bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book-reader"></i></div>
-                                    <h6 class="fw-bold text-dark mb-1">Compromiso Acad.</h6>
-                                    <small class="text-muted x-small">Plan de Mejoramiento</small>
-                                </div>
+                            <input type="radio" class="btn-check" name="tipo_documento" id="opt3" value="ACADEMICO">
+                            <label class="btn btn-outline-info w-100 p-3 h-100 rounded-3 shadow-sm" for="opt3">
+                                <i class="fas fa-book fa-2x mb-2 d-block"></i>Académico
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
-                        <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
+                        <label class="form-label fw-bold text-secondary">Detalles y Acuerdos</label>
+                        <textarea id="contenidoSeguimiento" class="form-control shadow-sm" rows="8" placeholder="Describa la situación, los descargos y los compromisos adquiridos..."></textarea>
                     </div>
 
-                    <div class="text-end">
-                        <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
-                            <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success rounded-pill px-5 fw-bold shadow-lg" onclick="procesarSeguimiento(event)">
+                            <i class="fas fa-save me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
                 </form>
@@ -664,16 +899,12 @@
                 <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
                 <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
             </tr>
-            <tr>
-                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
-            </tr>
+            <tr><td style="font-size: 10px;">VERSIÓN: 2.0</td></tr>
             <tr>
                 <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
                 <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
             </tr>
-            <tr>
-                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
-            </tr>
+            <tr><td style="font-size: 10px;">PÁGINA 1 DE 1</td></tr>
         </table>
 
         <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
