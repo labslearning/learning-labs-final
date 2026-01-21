@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acta Institucional de Seguimiento - Documento Oficial</title>
+    <title>Acta Institucional de Seguimiento</title>
     <style>
         /* =============================================================
            CONFIGURACIÓN DE PÁGINA (WeasyPrint)
            ============================================================= */
         @page {
             size: A4;
-            /* Márgenes amplios y simétricos */
             margin: 1.5cm 2cm 3cm 2cm;
 
             @bottom-center {
@@ -55,7 +54,7 @@
         #watermark img { width: 60%; filter: grayscale(100%); }
 
         /* =============================================================
-           ENCABEZADO ISO (LA PARTE QUE SE VEÍA DESORDENADA)
+           ENCABEZADO ISO
            ============================================================= */
         .iso-table {
             width: 100%;
@@ -74,7 +73,7 @@
         .col-logo { width: 20%; text-align: center; }
         .logo-img { max-width: 85px; max-height: 80px; object-fit: contain; }
 
-        /* 2. Columna Info Colegio */
+        /* 2. Columna Info Colegio (Dinámica) */
         .col-info { width: 50%; text-align: center; }
         .inst-title {
             font-size: 12pt; font-weight: bold; color: var(--primary-color);
@@ -82,7 +81,7 @@
         }
         .inst-subtitle { font-size: 8.5pt; color: var(--secondary-color); line-height: 1.4; }
 
-        /* 3. Columna Metadatos (CORREGIDA) */
+        /* 3. Columna Metadatos (Estructura Ordenada) */
         .col-meta { 
             width: 30%; 
             padding: 5px 10px !important; 
@@ -90,9 +89,8 @@
             text-align: left;
         }
 
-        /* Filas individuales para evitar superposición */
         .meta-row {
-            display: block; /* Fuerza cada dato en una nueva línea */
+            display: block;
             border-bottom: 1px dotted #eee;
             padding-bottom: 3px;
             margin-bottom: 3px;
@@ -100,12 +98,11 @@
         }
         .meta-row:last-child { border-bottom: none; }
 
-        /* Etiqueta con ancho fijo para alinear verticalmente los dos puntos */
         .meta-label {
             font-weight: bold;
             color: var(--primary-color);
             display: inline-block;
-            width: 75px; /* Ancho fijo clave para el orden */
+            width: 75px; /* Ancho fijo para alineación perfecta */
         }
         .meta-value { display: inline-block; color: #333; }
 
@@ -134,16 +131,15 @@
         .label { font-weight: bold; width: 30%; color: var(--secondary-color); background-color: #fafafa; }
         .value { width: 70%; font-weight: normal; }
 
-        /* Área de texto grande (Justificado y limpio) */
+        /* Área de texto grande (Justificado) */
         .content-area {
             border: 1px solid var(--light-border); border-top: none;
             padding: 20px 35px; min-height: 200px;
-            text-align: justify; text-justify: inter-word; /* Justificado profesional */
+            text-align: justify; text-justify: inter-word;
             white-space: normal;
             background: #fff; margin-top: -1px; border-radius: 0 0 4px 4px;
         }
         
-        /* Párrafos generados por Django */
         .content-area p { margin: 0 0 12px 0; text-indent: 30px; }
 
         /* =============================================================
@@ -170,9 +166,11 @@
 
     <div id="watermark">
         {% if institucion.logo %}
-            <img src="{{ institucion.logo.url }}" alt="Marca de Agua">
+            <img src="{{ institucion.logo.url }}" alt="Marca de Agua Institucional">
         {% else %}
-            <h1 style="font-size: 80pt; color: #eee; transform: rotate(0deg);">STRATOS</h1>
+            <h1 style="font-size: 60pt; color: #eee; transform: rotate(0deg);">
+                {{ institucion.nombre|default:"STRATOS"|truncatewords:1|upper }}
+            </h1>
         {% endif %}
     </div>
 
@@ -180,7 +178,7 @@
         <tr>
             <td class="col-logo">
                 {% if institucion.logo %}
-                    <img src="{{ institucion.logo.url }}" class="logo-img" alt="Logo Institucional">
+                    <img src="{{ institucion.logo.url }}" class="logo-img" alt="Logo">
                 {% else %}
                     <h3 style="color: #ccc; font-size: 9pt;">SIN LOGO</h3>
                 {% endif %}
@@ -188,14 +186,16 @@
             
             <td class="col-info">
                 <div class="inst-title">
-                    {{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA STRATOS" }}
+                    {{ institucion.nombre|default:"NOMBRE DE LA INSTITUCIÓN"|upper }}
                 </div>
                 <div class="inst-subtitle">
-                    <strong>NIT:</strong> {{ institucion.nit|default:"800.000.000-0" }}<br>
+                    <strong>NIT:</strong> {{ institucion.nit|default:"Pendiente" }}<br>
                     {% if institucion.resolucion %}
-                        <strong>Resolución No.</strong> {{ institucion.resolucion }}<br>
+                        <strong>Resolución:</strong> {{ institucion.resolucion }}<br>
                     {% endif %}
-                    <em>"{{ institucion.lema|default:'Excelencia, Compromiso y Calidad Humana' }}"</em>
+                    {% if institucion.lema %}
+                        <em>"{{ institucion.lema }}"</em>
+                    {% endif %}
                 </div>
             </td>
             
@@ -290,18 +290,36 @@
                     <div style="height: 40px;"></div> <div class="sig-line"></div>
                     <div class="sig-name">{{ profesional.get_full_name|upper }}</div>
                     <div class="sig-role">Firma Profesional / Docente</div>
-                    <div style="font-size:8pt; margin-top: 4px;">{{ institucion.nombre|default:"Institución Educativa Stratos" }}</div>
+                    <div style="font-size:8pt; margin-top: 4px; color: #666;">
+                        {{ institucion.nombre|default:"Institución Educativa" }}
+                    </div>
                 </td>
             </tr>
         </table>
     </div>
 
     <div class="footer-fixed">
-        <strong>{{ institucion.nombre|default:"Institución Educativa Stratos" }}</strong><br>
-        {{ institucion.direccion|default:"Sede Principal" }} 
-        {% if institucion.ciudad %} | {{ institucion.ciudad }}{% endif %}
-        | Teléfono: {{ institucion.telefono|default:"(000) 000 0000" }} | 
-        {{ institucion.correo|default:"contacto@stratos.edu.co" }}<br>
+        <strong>{{ institucion.nombre|default:"NOMBRE INSTITUCIÓN" }}</strong><br>
+        
+        {% if institucion.direccion %}
+            {{ institucion.direccion }}
+        {% else %}
+            Sede Principal
+        {% endif %}
+        
+        {% if institucion.ciudad %}
+             | {{ institucion.ciudad }} 
+             {% if institucion.departamento %} - {{ institucion.departamento }}{% endif %}
+        {% endif %}
+        
+        {% if institucion.telefono %}
+             | Tel: {{ institucion.telefono }}
+        {% endif %}
+        
+        {% if institucion.correo %}
+             | {{ institucion.correo }}
+        {% endif %}
+        <br>
         <em style="font-size: 7pt;">Este documento es oficial y de carácter confidencial. Generado por la plataforma Stratos.</em>
     </div>
 
