@@ -5552,8 +5552,9 @@ def historial_global_observaciones(request):
 #Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
 
 # EN tasks/views.py (Al final del archivo)
-
+# --- VISTA 1: GUARDAR (AJUSTADA PARA RETORNAR ID) ---
 @require_POST
+@login_required
 def guardar_seguimiento(request):
     try:
         # 1. Recibir datos del Javascript
@@ -5564,54 +5565,68 @@ def guardar_seguimiento(request):
         if not all([estudiante_id, tipo, descripcion]):
             return JsonResponse({'success': False, 'error': 'Faltan datos obligatorios'}, status=400)
 
-        # 2. Buscar estudiante (USANDO EL MODELO USER, NO ESTUDIANTE)
+        # 2. Buscar estudiante
         estudiante = get_object_or_404(User, id=estudiante_id)
 
-        # 3. Guardar en Base de Datos
-        Seguimiento.objects.create(
+        # 3. Guardar en Base de Datos y ASIGNAR A VARIABLE
+        nuevo_seguimiento = Seguimiento.objects.create(
             estudiante=estudiante,
             tipo=tipo,
             descripcion=descripcion,
             profesional=request.user, 
-            # fecha se pone sola por el auto_now_add=True del modelo
+            # fecha se pone sola por el auto_now_add=True
         )
 
-        return JsonResponse({'success': True})
+        # 🔥 CAMBIO CRÍTICO: Devolvemos el ID del nuevo registro
+        return JsonResponse({'success': True, 'id': nuevo_seguimiento.id})
 
     except User.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'El estudiante no existe'}, status=404)
     except Exception as e:
-        logger.error(f"Error guardando seguimiento: {e}")
+        print(f"Error guardando seguimiento: {e}") # O usa tu logger
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-# --- VISTA DE GENERACIÓN PDF (SERVER-SIDE) ---
+# --- VISTA 2: GENERAR PDF (WEASYPRINT) ---
 @login_required
-def descargar_seguimiento_pdf(request, seguimiento_id):
-    """
-    Genera el PDF oficial de un seguimiento específico.
-    """
+def generar_seguimiento_pdf(request, seguimiento_id):
+    # 1. Obtener datos reales de la BD
     seguimiento = get_object_or_404(Seguimiento, id=seguimiento_id)
-    institucion = Institucion.objects.first() # Obtiene datos del colegio
+    institucion = Institucion.objects.first() # Traemos datos del colegio 
 
+    # [cite_start]2. Mapeo de títulos según el tipo [cite: 2293]
+    titulos = {
+        "CONVIVENCIA": "ACTA DE COMPROMISO CONVIVENCIAL",
+        "ACADEMICO": "COMPROMISO ACADÉMICO",
+        "PSICOLOGIA": "REGISTRO DE ORIENTACIÓN ESCOLAR"
+    }
+    titulo_doc = titulos.get(seguimiento.tipo, "ACTA DE SEGUIMIENTO")
+
+    # 3. Contexto para el template
     context = {
         'seguimiento': seguimiento,
         'estudiante': seguimiento.estudiante,
         'profesional': seguimiento.profesional,
         'institucion': institucion,
+        'titulo': titulo_doc,
         'fecha_impresion': timezone.now(),
-        'request': request, # Necesario para URLs absolutas de imágenes
+        # IMPORTANTE: Base URL para que WeasyPrint encuentre las imágenes estáticas/media
+        'base_url': request.build_absolute_uri('/') 
     }
 
-    html_string = render_to_string('pdf/acta_seguimiento_oficial.html', context)
+    # 4. Renderizar HTML
+    # Asegúrate de haber creado este template en el Paso 2 (templates/pdf/seguimiento_oficial.html)
+    html_string = render_to_string('pdf/seguimiento_oficial.html', context)
 
-    if HTML:
-        base_url = request.build_absolute_uri('/')
-        pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
-        
-        response = HttpResponse(pdf_file, content_type='application/pdf')
-        filename = f"Acta_{seguimiento.get_tipo_display()}_{seguimiento.estudiante.username}.pdf"
-        response['Content-Disposition'] = f'inline; filename="{filename}"' # 'inline' para ver en navegador, 'attachment' para descargar
-        return response
-    else:
-        return HttpResponse("Error: Librería PDF no instalada.", status=500)
+    # 5. Generar PDF
+    pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
+
+    # 6. Respuesta HTTP
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    filename = f"Seguimiento_{seguimiento.estudiante.username}_{seguimiento.id}.pdf"
+    
+    # 'inline' abre en el navegador (recomendado para previsualizar)
+    # Cambia a 'attachment' si prefieres que se descargue directo sin abrirse
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    return response

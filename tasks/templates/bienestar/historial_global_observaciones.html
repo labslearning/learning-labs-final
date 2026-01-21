@@ -4,8 +4,6 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <style>
     /* === ESTILOS TIER EDUTECH 100000 === */
     :root {
@@ -162,97 +160,6 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN CRÍTICA: ESTILOS PARA EL PDF (Solución Pantalla Blanca) */
-    /* Usamos z-index negativo para ponerlo "detrás" pero visible al renderizador */
-    #plantillaPDFContainer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 210mm;
-        min-height: 297mm;
-        z-index: -9999; 
-        background: white;
-        opacity: 0; /* Invisible al ojo, pero presente en el DOM */
-        pointer-events: none;
-    }
-
-    .pdf-page {
-        width: 210mm;
-        min-height: 297mm;
-        padding: 20mm;
-        margin: 0 auto;
-        background: white;
-        color: black;
-        font-family: 'Times New Roman', serif;
-        font-size: 12pt;
-        line-height: 1.5;
-        box-sizing: border-box;
-    }
-
-    .pdf-header-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    .pdf-header-table td {
-        border: 1px solid #000;
-        padding: 5px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .pdf-section-title {
-        font-weight: bold;
-        text-transform: uppercase;
-        background-color: #f0f0f0;
-        padding: 5px;
-        border: 1px solid #000;
-        margin-top: 15px;
-        margin-bottom: 10px;
-        font-size: 11pt;
-    }
-
-    .pdf-info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    .pdf-info-item {
-        border-bottom: 1px dotted #999;
-        padding-bottom: 2px;
-    }
-
-    .pdf-content-area {
-        border: 1px solid #ccc;
-        padding: 10px;
-        min-height: 200px;
-        text-align: justify;
-        margin-bottom: 30px;
-        white-space: pre-line; /* Respetar saltos de línea */
-    }
-
-    .pdf-signatures {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 60px;
-    }
-    .pdf-sig-box {
-        width: 45%;
-        border-top: 1px solid #000;
-        text-align: center;
-        padding-top: 5px;
-    }
-
-    .pdf-footer {
-        margin-top: 30px;
-        text-align: center;
-        font-size: 9pt;
-        color: #666;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
-    }
-
     /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
     .historial-seguimientos {
         background: white;
@@ -352,7 +259,7 @@
                 <i class="fas fa-history me-2"></i>Historial
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
-                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
+                <i class="fas fa-print me-2"></i>Imprimir Vista
             </button>
         </div>
     </div>
@@ -716,16 +623,11 @@
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
                         <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                    onclick="generarPDFHistorial(
-                                        '{{ seguimiento.estudiante.get_full_name|escapejs }}',
-                                        '{{ seguimiento.estudiante.id }}',
-                                        '{{ seguimiento.descripcion|escapejs }}',
-                                        '{{ seguimiento.tipo }}',
-                                        '{{ seguimiento.fecha|date:"d \d\e F \d\e Y" }}'
-                                    )">
+                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" 
+                               target="_blank"
+                               class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                 <i class="fas fa-file-pdf me-1"></i>Descargar PDF
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
@@ -815,63 +717,6 @@
     </div>
 </div>
 
-<div id="plantillaPDFContainer">
-    <div class="pdf-page">
-        <table class="pdf-header-table">
-            <tr>
-                <td rowspan="4" style="width: 20%;">
-                    <div style="font-size: 30px; color: #ccc; font-weight: bold;">LOGO</div>
-                </td>
-                <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
-                <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
-            </tr>
-            <tr>
-                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
-            </tr>
-            <tr>
-                <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
-                <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
-            </tr>
-            <tr>
-                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
-            </tr>
-        </table>
-
-        <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
-        <div class="pdf-info-grid">
-            <div class="pdf-info-item"><strong>Estudiante:</strong> <span id="pdfEstudiante"></span></div>
-            <div class="pdf-info-item"><strong>ID / Matrícula:</strong> <span id="pdfID"></span></div>
-            <div class="pdf-info-item"><strong>Fecha de Intervención:</strong> <span id="pdfFecha"></span></div>
-            <div class="pdf-info-item"><strong>Profesional a Cargo:</strong> {{ user.get_full_name }}</div>
-            <div class="pdf-info-item"><strong>Cargo:</strong> {{ user.perfil.get_rol_display }}</div>
-        </div>
-
-        <div class="pdf-section-title">II. DESARROLLO DE LA SESIÓN Y COMPROMISOS</div>
-        <div class="pdf-content-area" id="pdfContenido">
-        </div>
-
-        <div class="pdf-signatures">
-            <div class="pdf-sig-box">
-                <br><br>
-                __________________________<br>
-                <strong>Firma del Estudiante</strong><br>
-                <span style="font-size: 10px;">CC/TI: ________________</span>
-            </div>
-            <div class="pdf-sig-box">
-                <br><br>
-                __________________________<br>
-                <strong>Firma del Profesional</strong><br>
-                <span style="font-size: 10px;">TP. No. ________________</span>
-            </div>
-        </div>
-
-        <div class="pdf-footer">
-            Calle Falsa 123 - Ciudad Stratos | Tel: (601) 123 4567 | www.stratos.edu.co<br>
-            <em>"Educación con Calidad y Compromiso Humano"</em>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
@@ -922,13 +767,12 @@
     }
 
     // ============================================
-    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> PDF)
+    // LOGICA 2: PROCESAR SEGUIMIENTO (BACKEND PURO)
     // ============================================
     async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
 
         // 1. Obtener Datos
-        const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const descripcion = document.getElementById('contenidoSeguimiento').value;
         const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
@@ -938,35 +782,13 @@
             return;
         }
 
-        // 2. GUARDAR EN BACKEND PRIMERO
-        const guardadoExitoso = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
-
-        if (guardadoExitoso) {
-            // 3. GENERAR PDF (Solo si guardó)
-            await generarPDFVisual(nombreEstudiante, idEstudiante, descripcion, tipoDoc);
-            
-            // 4. CERRAR Y RECARGAR
-            const modalElement = document.getElementById('modalSeguimiento');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
-            
-            // Recargar para ver el nuevo registro en la tabla
-            setTimeout(() => location.reload(), 1500); 
-        }
-    }
-
-    // ============================================
-    // LOGICA 3: ENVIAR A BACKEND (CORREGIDO)
-    // ============================================
-    async function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // 🔥 CORRECCIÓN CLAVE: Usamos la URL reversa de Django
-        const url = "{% url 'guardar_seguimiento' %}"; 
+        // 2. GUARDAR EN BACKEND
+        const url = "{% url 'guardar_seguimiento' %}";
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
         const formData = new FormData();
-        formData.append('estudiante_id', estudianteId);
-        formData.append('tipo', tipo);
-        formData.append('descripcion', descripcion); 
+        formData.append('estudiante_id', idEstudiante);
+        formData.append('tipo', tipoDoc);
+        formData.append('descripcion', descripcion);
 
         try {
             const response = await fetch(url, {
@@ -974,71 +796,29 @@
                 headers: { 'X-CSRFToken': csrftoken },
                 body: formData
             });
-
             const data = await response.json();
-            
+
             if (data.success) {
-                return true;
+                // 3. ÉXITO: ABRIR PDF GENERADO POR EL SERVIDOR (WeasyPrint)
+                // Construimos la URL usando el ID que nos devolvió el backend
+                const pdfUrl = `/seguimiento/pdf/${data.id}/`; // Ajusta esta ruta si tu proyecto tiene prefijos
+                
+                // Abrir PDF en nueva pestaña
+                window.open(pdfUrl, '_blank');
+
+                // 4. CERRAR Y RECARGAR
+                const modalElement = document.getElementById('modalSeguimiento');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+                setTimeout(() => location.reload(), 1000);
+                
             } else {
                 alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
-                console.error("Detalle error:", data);
-                return false;
             }
         } catch (error) {
-            alert("❌ Error de conexión al guardar el seguimiento.");
             console.error(error);
-            return false;
+            alert("❌ Error de conexión.");
         }
-    }
-
-    // ============================================
-    // LOGICA 4: GENERAR PDF VISUAL (CSS CORREGIDO)
-    // ============================================
-    async function generarPDFVisual(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal = null) {
-        // Fechas
-        const fechaObj = new Date();
-        const fechaLarga = fechaOriginal || fechaObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = fechaObj.toLocaleDateString('es-ES');
-
-        // Llenar Plantilla
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fechaLarga;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
-
-        let titulo = "ACTA DE SEGUIMIENTO GENERAL";
-        if (tipoDoc === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipoDoc === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipoDoc === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
-        document.getElementById('pdfTipoDoc').textContent = titulo;
-
-        // Configuración html2pdf
-        const element = document.getElementById('plantillaPDFContainer');
-        
-        // 🔥 TRUCO: Hacer visible temporalmente (opacidad 1) para que html2canvas lo capture
-        // El elemento ya está "fixed" pero con z-index negativo, así que no tapa la pantalla
-        element.style.opacity = '1';
-
-        const opt = {
-            margin: 0,
-            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        await html2pdf().set(opt).from(element).save();
-        
-        // Volver a ocultar
-        element.style.opacity = '0';
-    }
-
-    // ============================================
-    // LOGICA 5: REIMPRESIÓN HISTORIAL
-    // ============================================
-    function generarPDFHistorial(estudiante, idEstudiante, descripcion, tipo, fechaOriginal) {
-        generarPDFVisual(estudiante, idEstudiante, descripcion, tipo, fechaOriginal);
     }
 
     // ============================================
