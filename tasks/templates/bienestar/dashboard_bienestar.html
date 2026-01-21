@@ -164,18 +164,17 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO - CORREGIDO) */
-    /* ✅ SOLUCIÓN: Position fixed, z-index negativo. NUNCA display:none */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (CORREGIDO) */
+    /* ✅ SOLUCIÓN: Usar left: -9999px para que se renderice pero no se vea */
     #plantillaPDFContainer {
         position: fixed;
         top: 0;
-        left: 0;
+        left: -9999px; /* Mover fuera de pantalla */
         width: 100%;
         min-height: 100vh;
-        z-index: -9999; 
+        z-index: 10000; /* Z-index alto para captura */
         background: white;
-        opacity: 0; /* Invisible al ojo, presente en el DOM */
-        pointer-events: none;
+        visibility: visible; /* Debe ser visible para el motor de render */
     }
 
     .pdf-page {
@@ -1112,7 +1111,7 @@
     }
 
     // ============================================
-    // LOGICA 4: GENERAR PDF VISUAL (SOLUCIÓN "FLASH")
+    // LOGICA 4: GENERAR PDF VISUAL (CORREGIDO)
     // ============================================
     async function generarPDFVisual(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal = null) {
         // Fechas
@@ -1125,7 +1124,9 @@
         document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fechaLarga;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
+        
+        // Convertir saltos de línea en <br> para que se vean en el PDF
+        document.getElementById('pdfContenido').innerHTML = contenido ? contenido.replace(/\n/g, '<br>') : "";
 
         let titulo = "ACTA DE SEGUIMIENTO GENERAL";
         if (tipoDoc === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
@@ -1135,33 +1136,33 @@
 
         // Configuración html2pdf
         const element = document.getElementById('plantillaPDFContainer');
-        
-        // 🔥 TRUCO DEL FLASH: Traer al frente y hacer visible SOLO para la foto
-        const originalTop = element.style.top;
-        const originalLeft = element.style.left;
-        const originalZ = element.style.zIndex;
-        
-        element.style.top = "0px";
+
+        // 🔥 TRUCO: Traer a pantalla para captura
+        window.scrollTo(0,0);
         element.style.left = "0px";
-        element.style.zIndex = "10000";
-        element.style.opacity = "1";
 
         const opt = {
             margin: 0,
             filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: '#ffffff' },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                scrollY: 0,
+                windowWidth: document.documentElement.offsetWidth,
+                windowHeight: document.documentElement.offsetHeight
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         try {
             await html2pdf().set(opt).from(element).save();
+        } catch (error) {
+            console.error("Error PDF:", error);
+            alert("Error al generar PDF.");
         } finally {
-            // Volver a esconder INMEDIATAMENTE
-            element.style.top = originalTop;
-            element.style.left = originalLeft;
-            element.style.zIndex = originalZ;
-            element.style.opacity = "0";
+            // Ocultar de nuevo (fuera de pantalla)
+            element.style.left = "-9999px";
         }
     }
 
