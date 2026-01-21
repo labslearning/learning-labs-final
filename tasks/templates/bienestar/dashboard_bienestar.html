@@ -165,9 +165,17 @@
     }
 
     /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO - CORREGIDO) */
+    /* ✅ SOLUCIÓN: Position fixed, z-index negativo. NUNCA display:none */
     #plantillaPDFContainer {
-        /* NO usamos opacity:0 ni fixed lejos. Lo escondemos con display:none y lo mostramos al imprimir */
-        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 100vh;
+        z-index: -9999; 
+        background: white;
+        opacity: 0; /* Invisible al ojo, presente en el DOM */
+        pointer-events: none;
     }
 
     .pdf-page {
@@ -1067,10 +1075,10 @@
     }
 
     // ============================================
-    // LOGICA 3: ENVIAR A BACKEND
+    // LOGICA 3: ENVIAR A BACKEND (CORREGIDO)
     // ============================================
     async function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // 🔥 URL dinámica para evitar errores 404
+        // 🔥 CORRECCIÓN CLAVE: Usamos la URL reversa de Django
         const url = "{% url 'guardar_seguimiento' %}"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
