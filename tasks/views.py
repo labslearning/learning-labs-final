@@ -5549,84 +5549,74 @@ def historial_global_observaciones(request):
         return HttpResponse(debug_msg)
 
 
-#Agregando funcion nueva de bienestar para leer todo el pei, manual y demas 
-
-# EN tasks/views.py (Al final del archivo)
-# --- VISTA 1: GUARDAR (AJUSTADA PARA RETORNAR ID) ---
+# --- VISTA 1: GUARDAR SEGUIMIENTO (Backend) ---
 @require_POST
 @login_required
 def guardar_seguimiento(request):
     try:
-        # 1. Recibir datos del Javascript
+        # 1. Capturar datos del formulario
         estudiante_id = request.POST.get('estudiante_id')
         tipo = request.POST.get('tipo')
-        descripcion = request.POST.get('descripcion') 
+        descripcion = request.POST.get('descripcion')
+        
+        # 2. Capturar el NUEVO CAMPO (Observaciones Adicionales)
+        observaciones_adicionales = request.POST.get('observaciones_adicionales', '')
 
+        # 3. Validar datos obligatorios
         if not all([estudiante_id, tipo, descripcion]):
             return JsonResponse({'success': False, 'error': 'Faltan datos obligatorios'}, status=400)
 
-        # 2. Buscar estudiante
+        User = get_user_model()
         estudiante = get_object_or_404(User, id=estudiante_id)
 
-        # 3. Guardar en Base de Datos y ASIGNAR A VARIABLE
+        # 4. Crear y Guardar en Base de Datos
         nuevo_seguimiento = Seguimiento.objects.create(
             estudiante=estudiante,
             tipo=tipo,
             descripcion=descripcion,
+            observaciones_adicionales=observaciones_adicionales, # <--- ¡AQUÍ SE GUARDA!
             profesional=request.user, 
-            # fecha se pone sola por el auto_now_add=True
         )
 
-        # 🔥 CAMBIO CRÍTICO: Devolvemos el ID del nuevo registro
+        # 5. Retornar éxito y ID para generar el PDF
         return JsonResponse({'success': True, 'id': nuevo_seguimiento.id})
 
-    except User.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'El estudiante no existe'}, status=404)
     except Exception as e:
-        print(f"Error guardando seguimiento: {e}") # O usa tu logger
+        print(f"Error guardando seguimiento: {e}") 
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-# --- VISTA 2: GENERAR PDF (WEASYPRINT) ---
+# --- VISTA 2: GENERAR PDF (Backend + WeasyPrint) ---
 @login_required
 def generar_seguimiento_pdf(request, seguimiento_id):
-    # 1. Obtener datos reales de la BD
-    seguimiento = get_object_or_404(Seguimiento, id=seguimiento_id)
-    institucion = Institucion.objects.first() # Traemos datos del colegio 
+    # 1. Obtener el Seguimiento (Optimizada con select_related)
+    seguimiento = get_object_or_404(Seguimiento.objects.select_related('estudiante', 'profesional'), id=seguimiento_id)
+    
+    # 2. Obtener la Institución (Datos para el encabezado y logo)
+    institucion = Institucion.objects.first() 
 
-    # [cite_start]2. Mapeo de títulos según el tipo [cite: 2293]
-    titulos = {
-        "CONVIVENCIA": "ACTA DE COMPROMISO CONVIVENCIAL",
-        "ACADEMICO": "COMPROMISO ACADÉMICO",
-        "PSICOLOGIA": "REGISTRO DE ORIENTACIÓN ESCOLAR"
-    }
-    titulo_doc = titulos.get(seguimiento.tipo, "ACTA DE SEGUIMIENTO")
-
-    # 3. Contexto para el template
+    # 3. Preparar el Contexto para el Template
     context = {
         'seguimiento': seguimiento,
         'estudiante': seguimiento.estudiante,
         'profesional': seguimiento.profesional,
-        'institucion': institucion,
-        'titulo': titulo_doc,
-        'fecha_impresion': timezone.now(),
-        # IMPORTANTE: Base URL para que WeasyPrint encuentre las imágenes estáticas/media
-        'base_url': request.build_absolute_uri('/') 
+        'institucion': institucion, 
+        'request': request, # Necesario para construir URLs absolutas (imágenes)
     }
 
-    # 4. Renderizar HTML
-    # Asegúrate de haber creado este template en el Paso 2 (templates/pdf/seguimiento_oficial.html)
-    html_string = render_to_string('pdf/seguimiento_oficial.html', context)
+    # 4. Renderizar HTML a String
+    # Django busca en: templates/pdf/seguimiento_pdf.html
+    html_string = render_to_string('pdf/seguimiento_pdf.html', context)
 
-    # 5. Generar PDF
+    # 5. Generar PDF con WeasyPrint
+    # base_url='/' permite que WeasyPrint encuentre las imágenes estáticas/media
     pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
 
-    # 6. Respuesta HTTP
+    # 6. Respuesta HTTP (Descarga o Visualización)
     response = HttpResponse(pdf_file, content_type='application/pdf')
     filename = f"Seguimiento_{seguimiento.estudiante.username}_{seguimiento.id}.pdf"
     
-    # 'inline' abre en el navegador (recomendado para previsualizar)
-    # Cambia a 'attachment' si prefieres que se descargue directo sin abrirse
+    # 'inline' abre el PDF en el navegador. Cambiar a 'attachment' para forzar descarga.
     response['Content-Disposition'] = f'inline; filename="{filename}"'
-    
+
     return response

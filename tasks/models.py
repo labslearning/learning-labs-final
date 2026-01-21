@@ -1345,12 +1345,18 @@ class Seguimiento(models.Model):
         ('CONVIVENCIA', 'Convivencia'),
         ('ACADEMICO', 'Académico'),
         ('PSICOLOGIA', 'Psicología'),
+        ('FELICITACION', 'Felicitación / Reconocimiento'), # <--- NUEVA OPCIÓN AGREGADA
     ]
     
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='seguimientos_recibidos')
     profesional = models.ForeignKey(User, on_delete=models.CASCADE, related_name='seguimientos_realizados')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    descripcion = models.TextField()
+    
+    descripcion = models.TextField(verbose_name="Detalle Principal")
+    
+    # <--- ESTE ES EL CAMPO QUE FALTABA PARA QUE EL PDF MUESTRE EL SEGUNDO TEXTO
+    observaciones_adicionales = models.TextField(blank=True, null=True, verbose_name="Observaciones Adicionales")
+    
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

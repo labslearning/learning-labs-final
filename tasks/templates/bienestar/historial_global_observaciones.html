@@ -4,6 +4,7 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <style>
     /* === ESTILOS TIER EDUTECH 100000 === */
     :root {
@@ -259,7 +260,7 @@
                 <i class="fas fa-history me-2"></i>Historial
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
-                <i class="fas fa-print me-2"></i>Imprimir Vista
+                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
             </button>
         </div>
     </div>
@@ -623,7 +624,9 @@
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
                         <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" 
+                               class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                               target="_blank">
                                 <i class="fas fa-file-pdf me-1"></i>Descargar PDF
                             </a>
                         </td>
@@ -765,15 +768,19 @@
     }
 
     // ============================================
-    // LOGICA 2: PROCESAR SEGUIMIENTO (BACKEND PURO)
+    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> ABRIR PDF DJANGO)
     // ============================================
     async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
 
         // 1. Obtener Datos
+        const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const descripcion = document.getElementById('contenidoSeguimiento').value;
-        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
+        
+        // CORRECCIÓN: Selección más robusta del radio button
+        const tipoDocElement = document.querySelector('input[name="tipo_documento"]:checked');
+        const tipoDoc = tipoDocElement ? tipoDocElement.value : 'CONVIVENCIA'; // Valor por defecto
 
         if (!descripcion.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento.");
@@ -781,12 +788,41 @@
         }
 
         // 2. GUARDAR EN BACKEND
+        const resultado = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
+
+        if (resultado && resultado.success) {
+            // 3. ¡AQUÍ ESTÁ LA SOLUCIÓN! 
+            // En lugar de generar el PDF con JS, abrimos la URL de Django
+            // Usamos el ID que nos devolvió el servidor
+            const pdfUrl = `/seguimiento/pdf/${resultado.id}/`; 
+            
+            // 🔥 CORRECCIÓN CLAVE: Abrir PDF *ANTES* de cualquier reload para evitar bloqueos
+            window.open(pdfUrl, '_blank');
+
+            // 4. CERRAR Y RECARGAR (Con un poco más de tiempo para que la pestaña abra bien)
+            const modalElement = document.getElementById('modalSeguimiento');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+            // Recargar para ver el nuevo registro en la tabla
+            setTimeout(() => location.reload(), 2000); 
+        }
+    }
+
+    // ============================================
+    // LOGICA 3: ENVIAR A BACKEND
+    // ============================================
+    async function guardarEnBackend(estudianteId, tipo, descripcion) {
         const url = "{% url 'guardar_seguimiento' %}";
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // DEBUG: Para ver si el dato viaja correctamente
+        console.log("Enviando descripción:", descripcion); 
+
         const formData = new FormData();
-        formData.append('estudiante_id', idEstudiante);
-        formData.append('tipo', tipoDoc);
-        formData.append('descripcion', descripcion);
+        formData.append('estudiante_id', estudianteId);
+        formData.append('tipo', tipo);
+        formData.append('descripcion', descripcion); // Asegúrate de que views.py lea 'descripcion'
 
         try {
             const response = await fetch(url, {
@@ -794,33 +830,25 @@
                 headers: { 'X-CSRFToken': csrftoken },
                 body: formData
             });
+
             const data = await response.json();
 
-            // 🔥 CAMBIO CRÍTICO: Si guarda, abrimos el PDF del servidor, no generamos nada local
             if (data.success) {
-                // Construimos la URL usando el ID que nos devolvió el backend
-                const pdfUrl = `/seguimiento/pdf/${data.id}/`; 
-                
-                // Abrir PDF en nueva pestaña
-                window.open(pdfUrl, '_blank');
-
-                // 4. CERRAR Y RECARGAR
-                const modalElement = document.getElementById('modalSeguimiento');
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
-                setTimeout(() => location.reload(), 1000);
-                
+                return data; // Devolvemos TODO el objeto para tener acceso al ID
             } else {
                 alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
+                console.error("Detalle error:", data);
+                return null;
             }
         } catch (error) {
+            alert("❌ Error de conexión al guardar el seguimiento.");
             console.error(error);
-            alert("❌ Error de conexión.");
+            return null;
         }
     }
 
     // ============================================
-    // LOGICA 6: GRÁFICOS E INICIALIZACIÓN
+    // LOGICA 4: GRÁFICOS E INICIALIZACIÓN
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
@@ -887,7 +915,7 @@
     });
 
     // ============================================
-    // LOGICA 7: IA SIMULADA
+    // LOGICA 5: IA SIMULADA
     // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));

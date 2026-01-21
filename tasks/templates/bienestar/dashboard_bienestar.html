@@ -164,96 +164,6 @@
         }
     }
 
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (CORREGIDO) */
-    /* ✅ SOLUCIÓN: Usar left: -9999px para que se renderice pero no se vea */
-    #plantillaPDFContainer {
-        position: fixed;
-        top: 0;
-        left: -9999px; /* Mover fuera de pantalla */
-        width: 100%;
-        min-height: 100vh;
-        z-index: 10000; /* Z-index alto para captura */
-        background: white;
-        visibility: visible; /* Debe ser visible para el motor de render */
-    }
-
-    .pdf-page {
-        width: 210mm;
-        min-height: 297mm;
-        padding: 20mm;
-        margin: 0 auto;
-        background: white;
-        color: black;
-        font-family: 'Times New Roman', serif;
-        font-size: 12pt;
-        line-height: 1.5;
-        box-sizing: border-box;
-    }
-
-    .pdf-header-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    .pdf-header-table td {
-        border: 1px solid #000;
-        padding: 5px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .pdf-section-title {
-        font-weight: bold;
-        text-transform: uppercase;
-        background-color: #f0f0f0;
-        padding: 5px;
-        border: 1px solid #000;
-        margin-top: 15px;
-        margin-bottom: 10px;
-        font-size: 11pt;
-    }
-
-    .pdf-info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    .pdf-info-item {
-        border-bottom: 1px dotted #999;
-        padding-bottom: 2px;
-    }
-
-    .pdf-content-area {
-        border: 1px solid #ccc;
-        padding: 10px;
-        min-height: 200px;
-        text-align: justify;
-        margin-bottom: 30px;
-        white-space: pre-line;
-    }
-
-    .pdf-signatures {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 60px;
-    }
-    .pdf-sig-box {
-        width: 45%;
-        border-top: 1px solid #000;
-        text-align: center;
-        padding-top: 5px;
-    }
-
-    .pdf-footer {
-        margin-top: 30px;
-        text-align: center;
-        font-size: 9pt;
-        color: #666;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
-    }
-
     /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
     .historial-seguimientos {
         background: white;
@@ -751,16 +661,9 @@
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
                         <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                    onclick="generarPDFHistorial(
-                                        '{{ seguimiento.estudiante.get_full_name|escapejs }}',
-                                        '{{ seguimiento.estudiante.id }}',
-                                        '{{ seguimiento.descripcion|escapejs }}',
-                                        '{{ seguimiento.tipo }}',
-                                        '{{ seguimiento.fecha|date:"d \d\e F \d\e Y" }}'
-                                    )">
+                            <a href="{% url 'generar_seguimiento_pdf' seguimiento.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                 <i class="fas fa-file-pdf me-1"></i>Descargar PDF
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
@@ -778,7 +681,7 @@
            <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
            <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
        </div>
-        
+       
         <div class="col-md-6 col-lg-3 mb-4">
             <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
                 <div class="card-body p-4 d-flex flex-column">
@@ -830,7 +733,7 @@
                 </div>
             </div>
         </div>
-        
+       
         <div class="col-md-6 col-lg-3 mb-4">
             <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border rounded-5">
                 <div class="card-body p-4 d-flex flex-column">
@@ -895,30 +798,53 @@
                         <input type="hidden" id="idEstudianteModal" name="estudiante_id">
                     </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt1" value="CONVIVENCIA" checked>
-                            <label class="btn btn-outline-warning w-100 p-3 h-100 rounded-3 shadow-sm" for="opt1">
-                                <i class="fas fa-handshake fa-2x mb-2 d-block"></i>Convivencia
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
+                                <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Convivencia</span>
+                                </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt2" value="PSICOLOGIA">
-                            <label class="btn btn-outline-purple w-100 p-3 h-100 rounded-3 shadow-sm" for="opt2">
-                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>Psicología
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
+                                <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-brain"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Psicología</span>
+                                </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt3" value="ACADEMICO">
-                            <label class="btn btn-outline-info w-100 p-3 h-100 rounded-3 shadow-sm" for="opt3">
-                                <i class="fas fa-book fa-2x mb-2 d-block"></i>Académico
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
+                                <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Académico</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-check-label w-100 h-100 cursor-pointer">
+                                <input type="radio" name="tipo_documento" value="FELICITACION" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-2 border-0 shadow-sm hover-lift">
+                                    <div class="icon-box-sm bg-success-subtle text-success rounded-circle mx-auto mb-2"><i class="fas fa-star"></i></div>
+                                    <span class="fw-bold text-dark x-small d-block">Felicitación</span>
+                                </div>
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Detalles y Acuerdos</label>
-                        <textarea id="contenidoSeguimiento" class="form-control shadow-sm" rows="8" placeholder="Describa la situación, los descargos y los compromisos adquiridos..."></textarea>
+                        <label class="form-label fw-bold text-secondary small text-uppercase ls-1">I. Detalle de la Observación / Situación</label>
+                        <textarea id="contenidoSeguimiento" class="form-control shadow-sm border-0" rows="5" placeholder="Describa detalladamente la situación presentada, los descargos o el motivo de la felicitación..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small text-uppercase ls-1">II. Observaciones Adicionales / Compromisos</label>
+                        <textarea id="observacionesAdicionales" class="form-control shadow-sm border-0" rows="3" placeholder="Espacio para acuerdos, compromisos, notas finales o recomendaciones..."></textarea>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
@@ -929,63 +855,6 @@
                     </div>
                 </form>
             </div>
-        </div>
-    </div>
-</div>
-
-<div id="plantillaPDFContainer">
-    <div class="pdf-page">
-        <table class="pdf-header-table">
-            <tr>
-                <td rowspan="4" style="width: 20%;">
-                    <div style="font-size: 30px; color: #ccc; font-weight: bold;">LOGO</div>
-                </td>
-                <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
-                <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
-            </tr>
-            <tr>
-                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
-            </tr>
-            <tr>
-                <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
-                <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
-            </tr>
-            <tr>
-                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
-            </tr>
-        </table>
-
-        <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
-        <div class="pdf-info-grid">
-            <div class="pdf-info-item"><strong>Estudiante:</strong> <span id="pdfEstudiante"></span></div>
-            <div class="pdf-info-item"><strong>ID / Matrícula:</strong> <span id="pdfID"></span></div>
-            <div class="pdf-info-item"><strong>Fecha de Intervención:</strong> <span id="pdfFecha"></span></div>
-            <div class="pdf-info-item"><strong>Profesional a Cargo:</strong> {{ user.get_full_name }}</div>
-            <div class="pdf-info-item"><strong>Cargo:</strong> {{ user.perfil.get_rol_display }}</div>
-        </div>
-
-        <div class="pdf-section-title">II. DESARROLLO DE LA SESIÓN Y COMPROMISOS</div>
-        <div class="pdf-content-area" id="pdfContenido">
-        </div>
-
-        <div class="pdf-signatures">
-            <div class="pdf-sig-box">
-                <br><br>
-                __________________________<br>
-                <strong>Firma del Estudiante</strong><br>
-                <span style="font-size: 10px;">CC/TI: ________________</span>
-            </div>
-            <div class="pdf-sig-box">
-                <br><br>
-                __________________________<br>
-                <strong>Firma del Profesional</strong><br>
-                <span style="font-size: 10px;">TP. No. ________________</span>
-            </div>
-        </div>
-
-        <div class="pdf-footer">
-            Calle Falsa 123 - Ciudad Stratos | Tel: (601) 123 4567 | www.stratos.edu.co<br>
-            <em>"Educación con Calidad y Compromiso Humano"</em>
         </div>
     </div>
 </div>
@@ -1037,10 +906,11 @@
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
         document.getElementById('contenidoSeguimiento').value = "";
+        document.getElementById('observacionesAdicionales').value = ""; // Limpiar nuevo campo
     }
 
     // ============================================
-    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> PDF)
+    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> SERVER PDF)
     // ============================================
     async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
@@ -1048,20 +918,29 @@
         // 1. Obtener Datos
         const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
+        
+        // CAPTURAMOS AMBOS CAMPOS DE TEXTO
         const descripcion = document.getElementById('contenidoSeguimiento').value;
-        const tipoDoc = document.querySelector('input[name="tipo_documento"]:checked').value;
+        const observacionesAdic = document.getElementById('observacionesAdicionales').value;
+        
+        // CAPTURAMOS LA OPCIÓN DE RADIO (INCLUYENDO FELICITACIÓN)
+        const tipoDocElement = document.querySelector('input[name="tipo_documento"]:checked');
+        const tipoDoc = tipoDocElement ? tipoDocElement.value : 'CONVIVENCIA';
 
         if (!descripcion.trim()) {
             alert("⚠️ Por favor ingrese los detalles del seguimiento.");
             return;
         }
 
-        // 2. GUARDAR EN BACKEND PRIMERO
-        const guardadoExitoso = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
+        // 2. GUARDAR EN BACKEND (ENVIANDO DATOS EXTRA)
+        const respuesta = await guardarEnBackend(idEstudiante, tipoDoc, descripcion, observacionesAdic);
 
-        if (guardadoExitoso) {
-            // 3. GENERAR PDF (Solo si guardó)
-            await generarPDFVisual(nombreEstudiante, idEstudiante, descripcion, tipoDoc);
+        if (respuesta && respuesta.success) {
+            // 3. ABRIR PDF DESDE EL SERVIDOR (SOLUCIÓN PROFESIONAL)
+            const pdfUrl = `/seguimiento/pdf/${respuesta.id}/`;
+            
+            // Abrimos en nueva pestaña INMEDIATAMENTE
+            window.open(pdfUrl, '_blank');
             
             // 4. CERRAR Y RECARGAR
             const modalElement = document.getElementById('modalSeguimiento');
@@ -1074,18 +953,18 @@
     }
 
     // ============================================
-    // LOGICA 3: ENVIAR A BACKEND (CORREGIDO)
+    // LOGICA 3: ENVIAR A BACKEND
     // ============================================
-    async function guardarEnBackend(estudianteId, tipo, descripcion) {
-        // 🔥 CORRECCIÓN CLAVE: Usamos la URL reversa de Django
+    async function guardarEnBackend(estudianteId, tipo, descripcion, observacionesAdic) {
         const url = "{% url 'guardar_seguimiento' %}"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const formData = new FormData();
         formData.append('estudiante_id', estudianteId);
         formData.append('tipo', tipo);
-        // 🔥 IMPORTANTE: El campo debe llamarse 'descripcion' para coincidir con tu vista
-        formData.append('descripcion', descripcion); 
+        formData.append('descripcion', descripcion);
+        // ENVIAMOS EL NUEVO CAMPO (El frontend cumple con enviarlo)
+        formData.append('observaciones_adicionales', observacionesAdic); 
 
         try {
             const response = await fetch(url, {
@@ -1096,85 +975,23 @@
 
             const data = await response.json();
             
+            // Devolvemos todo el objeto data para poder usar data.id arriba
             if (data.success) {
-                return true;
+                return data; 
             } else {
                 alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
                 console.error("Detalle error:", data);
-                return false;
+                return null;
             }
         } catch (error) {
             alert("❌ Error de conexión al guardar el seguimiento.");
             console.error(error);
-            return false;
+            return null;
         }
     }
 
     // ============================================
-    // LOGICA 4: GENERAR PDF VISUAL (CORREGIDO)
-    // ============================================
-    async function generarPDFVisual(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal = null) {
-        // Fechas
-        const fechaObj = new Date();
-        const fechaLarga = fechaOriginal || fechaObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const fechaCorta = fechaObj.toLocaleDateString('es-ES');
-
-        // Llenar Plantilla
-        document.getElementById('pdfEstudiante').textContent = estudiante;
-        document.getElementById('pdfID').textContent = idEstudiante;
-        document.getElementById('pdfFecha').textContent = fechaLarga;
-        document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        
-        // Convertir saltos de línea en <br> para que se vean en el PDF
-        document.getElementById('pdfContenido').innerHTML = contenido ? contenido.replace(/\n/g, '<br>') : "";
-
-        let titulo = "ACTA DE SEGUIMIENTO GENERAL";
-        if (tipoDoc === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipoDoc === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipoDoc === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
-        document.getElementById('pdfTipoDoc').textContent = titulo;
-
-        // Configuración html2pdf
-        const element = document.getElementById('plantillaPDFContainer');
-
-        // 🔥 TRUCO: Traer a pantalla para captura
-        window.scrollTo(0,0);
-        element.style.left = "0px";
-
-        const opt = {
-            margin: 0,
-            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                scrollY: 0,
-                windowWidth: document.documentElement.offsetWidth,
-                windowHeight: document.documentElement.offsetHeight
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        try {
-            await html2pdf().set(opt).from(element).save();
-        } catch (error) {
-            console.error("Error PDF:", error);
-            alert("Error al generar PDF.");
-        } finally {
-            // Ocultar de nuevo (fuera de pantalla)
-            element.style.left = "-9999px";
-        }
-    }
-
-    // ============================================
-    // LOGICA 5: REIMPRESIÓN HISTORIAL
-    // ============================================
-    function generarPDFHistorial(estudiante, idEstudiante, descripcion, tipo, fechaOriginal) {
-        generarPDFVisual(estudiante, idEstudiante, descripcion, tipo, fechaOriginal);
-    }
-
-    // ============================================
-    // LOGICA 6: GRÁFICOS E INICIALIZACIÓN
+    // LOGICA 4: GRÁFICOS E INICIALIZACIÓN
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         const total = {{ kpi.total|default:0 }};
@@ -1241,7 +1058,7 @@
     });
 
     // ============================================
-    // LOGICA 7: IA SIMULADA
+    // LOGICA 5: IA SIMULADA
     // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));

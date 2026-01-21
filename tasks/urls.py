@@ -423,5 +423,5 @@ urlpatterns = [
     path('guardar-seguimiento/', views.guardar_seguimiento, name='guardar_seguimiento'),
     #path('seguimiento/pdf/<int:seguimiento_id>/', views.descargar_seguimiento_pdf, name='descargar_seguimiento_pdf'),
     path('seguimiento/pdf/<int:seguimiento_id>/', views.generar_seguimiento_pdf, name='generar_seguimiento_pdf'),
-
+    #path('prueba-pdf/', views.prueba_pdf_directa, name='prueba_pdf_directa'),
 ]
