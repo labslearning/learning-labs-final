@@ -164,22 +164,15 @@
         }
     }
 
-    /* 🔥 CORRECCIÓN CRÍTICA PDF: OCULTAR DETRÁS, NO FUERA DE PANTALLA 🔥 */
-    /* Usamos z-index negativo para ponerlo "detrás" pero visible al renderizador */
+    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO - CORREGIDO) */
     #plantillaPDFContainer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 210mm;
-        min-height: 297mm;
-        z-index: -9999; 
-        background: white;
-        opacity: 0; /* Invisible al ojo, presente en el DOM */
-        pointer-events: none;
+        /* NO usamos opacity:0 ni fixed lejos. Lo escondemos con display:none y lo mostramos al imprimir */
+        display: none;
     }
 
     .pdf-page {
-        width: 100%;
+        width: 210mm;
+        min-height: 297mm;
         padding: 20mm;
         margin: 0 auto;
         background: white;
@@ -230,7 +223,6 @@
         min-height: 200px;
         text-align: justify;
         margin-bottom: 30px;
-        white-space: pre-line;
     }
 
     .pdf-signatures {
@@ -773,7 +765,7 @@
         </div>
     </div>
 
-    <div class="row mb-5 animate__animated animate__fadeIn" style="margin-top: 3rem;">
+   <div class="row mb-5 animate__animated animate__fadeIn" style="margin-top: 3rem;">
        <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
            <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
            <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
@@ -825,6 +817,50 @@
                          <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2 shadow-sm w-100">
                              <i class="fas fa-download me-2"></i> Descargar
                          </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc malla-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-teal-soft rounded-4 d-flex align-items-center justify-content-center text-teal shadow-sm">
+                            <i class="fas fa-scroll fa-lg"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">DBA Estructurado</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Malla Curricular</h5>
+                    <p class="text-muted small">Contenidos programáticos, competencias y estándares por nivel académico.</p>
+                    <div class="mt-auto pt-3 d-grid gap-2">
+                        {% if institucion.archivo_malla_curricular %}
+                            <a href="{{ institucion.archivo_malla_curricular.url }}" target="_blank" class="btn btn-sm btn-outline-teal rounded-pill fw-bold py-2">
+                                <i class="fas fa-th-list me-2"></i> Ver Planes
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc calendario-border rounded-5">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="icon-box-lg bg-danger-soft rounded-4 d-flex align-items-center justify-content-center text-danger shadow-sm">
+                            <i class="fas fa-calendar-alt fa-lg"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">2025 Activo</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Cronograma Anual</h5>
+                    <p class="text-muted small">Agenda de actividades, evaluaciones institucionales y jornadas pedagógicas.</p>
+                    <div class="mt-auto pt-3 d-grid gap-2">
+                        {% if institucion.archivo_calendario %}
+                            <a href="{{ institucion.archivo_calendario.url }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-bold py-2">
+                                <i class="fas fa-clock me-2"></i> Ver Agenda
+                            </a>
                         {% endif %}
                     </div>
                 </div>
@@ -899,12 +935,16 @@
                 <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
                 <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
             </tr>
-            <tr><td style="font-size: 10px;">VERSIÓN: 2.0</td></tr>
+            <tr>
+                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
+            </tr>
             <tr>
                 <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
                 <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
             </tr>
-            <tr><td style="font-size: 10px;">PÁGINA 1 DE 1</td></tr>
+            <tr>
+                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
+            </tr>
         </table>
 
         <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
