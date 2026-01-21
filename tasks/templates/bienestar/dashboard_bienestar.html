@@ -20,9 +20,7 @@
         --glass-bg: rgba(255, 255, 255, 0.95);
         --glass-border: 1px solid rgba(255, 255, 255, 0.6);
         --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-        --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
         --radius-xl: 1.5rem;
-        --radius-lg: 1rem;
         --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -34,7 +32,6 @@
         background-attachment: fixed;
     }
 
-    /* === TARJETAS PREMIUM CON GLASSMORPHISM === */
     .card-premium {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
@@ -45,141 +42,58 @@
         overflow: hidden;
     }
 
-    .card-premium:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-hover);
-        border-color: rgba(67, 97, 238, 0.3);
-    }
-
-    /* === ICON BOXES === */
-    .icon-box-xxl {
-        width: 80px; height: 80px; font-size: 1.8rem;
-        border-radius: 24px;
-        box-shadow: 0 15px 35px rgba(67, 97, 238, 0.25);
-    }
-    .icon-box {
-        width: 48px; height: 48px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-        border-radius: 14px;
-    }
-    .icon-box-sm {
-        width: 36px; height: 36px;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 10px;
-    }
-
-    /* === TIPOGRAFÍA === */
+    .card-premium:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: rgba(67, 97, 238, 0.3); }
+    .icon-box-xxl { width: 80px; height: 80px; font-size: 1.8rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(67, 97, 238, 0.25); }
+    .icon-box { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 14px; }
+    .icon-box-sm { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
     .fw-black { font-weight: 900; }
     .ls-1 { letter-spacing: 0.5px; }
     .ls-2 { letter-spacing: 1.5px; }
     .x-small { font-size: 0.75rem; }
 
-    /* === BOTONES MODERNOS === */
-    .btn-pill-modern {
-        border-radius: 50px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        padding: 0.7rem 1.8rem;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-    .btn-pill-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-
+    .btn-pill-modern { border-radius: 50px; font-weight: 600; letter-spacing: 0.3px; transition: all 0.3s ease; padding: 0.7rem 1.8rem; border: 1px solid rgba(0,0,0,0.05); }
+    .btn-pill-modern:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
     .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
 
-    /* === TABLA MAESTRA === */
     .custom-table { border-collapse: separate; border-spacing: 0 8px; }
-
-    .custom-table thead th {
-        background-color: transparent;
-        color: #64748b;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        font-size: 0.7rem;
-        border: none;
-        padding: 0 1.5rem 1rem 1.5rem;
-    }
-
-    .custom-table tbody tr {
-        background-color: #ffffff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        transition: all 0.2s ease;
-    }
-
-    .custom-table tbody tr:hover {
-        transform: scale(1.002);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-        z-index: 10;
-        position: relative;
-    }
-
-    .custom-table tbody td {
-        padding: 1.2rem 1.5rem;
-        border: none;
-        vertical-align: middle;
-    }
-
+    .custom-table thead th { background-color: transparent; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; font-size: 0.7rem; border: none; padding: 0 1.5rem 1rem 1.5rem; }
+    .custom-table tbody tr { background-color: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; }
+    .custom-table tbody tr:hover { transform: scale(1.002); box-shadow: 0 8px 25px rgba(0,0,0,0.06); z-index: 10; position: relative; }
+    .custom-table tbody td { padding: 1.2rem 1.5rem; border: none; vertical-align: middle; }
     .custom-table tbody tr td:first-child { border-top-left-radius: 1rem; border-bottom-left-radius: 1rem; }
     .custom-table tbody tr td:last-child { border-top-right-radius: 1rem; border-bottom-right-radius: 1rem; }
 
-    /* === AVATAR GRADIENT === */
-    .gradient-avatar {
-        background: linear-gradient(135deg, #4361ee, #7209b7);
-        color: white;
-        font-family: var(--font-main);
-    }
-
-    /* === BADGES === */
+    .gradient-avatar { background: linear-gradient(135deg, #4361ee, #7209b7); color: white; font-family: var(--font-main); }
     .badge-soft { padding: 0.5em 1em; border-radius: 50rem; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; }
 
-    /* Colores sutiles */
     .bg-purple-subtle { background-color: rgba(111, 66, 193, 0.1) !important; color: #6f42c1 !important; }
     .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; color: #059669 !important; }
     .bg-danger-subtle { background-color: rgba(239, 68, 68, 0.1) !important; color: #dc2626 !important; }
     .bg-warning-subtle { background-color: rgba(245, 158, 11, 0.1) !important; color: #d97706 !important; }
     .bg-info-subtle { background-color: rgba(59, 130, 246, 0.1) !important; color: #2563eb !important; }
-
-    /* === UTILS === */
     .border-start-danger { border-left: 4px solid #ef4444 !important; }
     .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-    /* Scrollbar */
     .scroll-pro::-webkit-scrollbar { width: 6px; }
     .scroll-pro::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .scroll-pro::-webkit-scrollbar-track { background: transparent; }
+    .chart-container-responsive { min-height: 350px; }
+    @media (max-width: 768px) { .chart-container-responsive { min-height: 400px; } }
 
-    /* 🔥 UTILIDAD RESPONSIVA PARA CHART */
-    .chart-container-responsive {
-        min-height: 350px;
-    }
-    @media (max-width: 768px) {
-        .chart-container-responsive {
-            min-height: 400px;
-        }
-    }
-
-    /* 🔥 ESTILOS PARA EL PDF INSTITUCIONAL (OCULTO EN PANTALLA) - SOLUCIÓN APLICADA */
+    /* 🔥 SOLUCIÓN DEFINITIVA AL PDF EN BLANCO 🔥 */
+    /* El truco es no usar opacity:0 ni visibility:hidden. Lo sacamos de la pantalla. */
     #plantillaPDFContainer {
         position: fixed;
-        top: 0;
-        left: 0;
+        top: -15000px;
+        left: -15000px;
         width: 210mm;
         min-height: 297mm;
-        z-index: -9999; 
+        z-index: 10000; /* Alto z-index para cuando lo mostremos */
         background: white;
-        opacity: 0; /* Invisible al ojo, presente en el DOM */
-        pointer-events: none;
     }
 
     .pdf-page {
-        width: 210mm;
-        min-height: 297mm;
+        width: 100%;
         padding: 20mm;
         margin: 0 auto;
         background: white;
@@ -190,153 +104,41 @@
         box-sizing: border-box;
     }
 
-    .pdf-header-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    .pdf-header-table td {
-        border: 1px solid #000;
-        padding: 5px;
-        text-align: center;
-        vertical-align: middle;
-    }
+    .pdf-header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .pdf-header-table td { border: 1px solid #000; padding: 5px; text-align: center; vertical-align: middle; }
+    .pdf-section-title { font-weight: bold; text-transform: uppercase; background-color: #f0f0f0; padding: 5px; border: 1px solid #000; margin-top: 15px; margin-bottom: 10px; font-size: 11pt; }
+    .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .pdf-info-item { border-bottom: 1px dotted #999; padding-bottom: 2px; }
+    .pdf-content-area { border: 1px solid #ccc; padding: 10px; min-height: 200px; text-align: justify; margin-bottom: 30px; white-space: pre-line; }
+    .pdf-signatures { display: flex; justify-content: space-between; margin-top: 60px; }
+    .pdf-sig-box { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px; }
+    .pdf-footer { margin-top: 30px; text-align: center; font-size: 9pt; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
 
-    .pdf-section-title {
-        font-weight: bold;
-        text-transform: uppercase;
-        background-color: #f0f0f0;
-        padding: 5px;
-        border: 1px solid #000;
-        margin-top: 15px;
-        margin-bottom: 10px;
-        font-size: 11pt;
-    }
+    .historial-seguimientos { background: white; border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); padding: 2rem; margin-bottom: 2rem; }
+    .historial-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+    .historial-title { font-weight: 700; color: #2c3e50; font-size: 1.5rem; }
+    .historial-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .historial-table th { background-color: #f8f9fa; color: #495057; font-weight: 600; padding: 1rem; text-align: left; border-bottom: 2px solid #e9ecef; }
+    .historial-table td { padding: 1rem; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
+    .historial-table tr:hover { background-color: #f8f9fa; }
 
-    .pdf-info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    .pdf-info-item {
-        border-bottom: 1px dotted #999;
-        padding-bottom: 2px;
-    }
-
-    .pdf-content-area {
-        border: 1px solid #ccc;
-        padding: 10px;
-        min-height: 200px;
-        text-align: justify;
-        margin-bottom: 30px;
-    }
-
-    .pdf-signatures {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 60px;
-    }
-    .pdf-sig-box {
-        width: 45%;
-        border-top: 1px solid #000;
-        text-align: center;
-        padding-top: 5px;
-    }
-
-    .pdf-footer {
-        margin-top: 30px;
-        text-align: center;
-        font-size: 9pt;
-        color: #666;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
-    }
-
-    /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
-    .historial-seguimientos {
-        background: white;
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-soft);
-        padding: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .historial-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-    }
-
-    .historial-title {
-        font-weight: 700;
-        color: #2c3e50;
-        font-size: 1.5rem;
-    }
-
-    .historial-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-    }
-
-    .historial-table th {
-        background-color: #f8f9fa;
-        color: #495057;
-        font-weight: 600;
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .historial-table td {
-        padding: 1rem;
-        border-bottom: 1px solid #e9ecef;
-        vertical-align: middle;
-    }
-
-    .historial-table tr:hover {
-        background-color: #f8f9fa;
-    }
-
-    .btn-generar-pdf {
-        background: var(--primary-gradient);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-generar-pdf:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
+    .btn-generar-pdf { background: var(--primary-gradient); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600; transition: all 0.3s ease; }
+    .btn-generar-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
     
-    /* Estilos adicionales que tenías en tu template original */
+    /* Estilos del Dashboard IA y Gráficos (Mantenidos) */
     .icon-box-xl { width: 95px; height: 95px; border-radius: 50%; }
     .icon-box-lg { width: 65px; height: 65px; }
     .icon-box-md { width: 55px; height: 55px; }
-    
-    .bg-gradient-primary { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
     .bg-gradient-ai { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
     .btn-ai-magic { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; transition: all 0.4s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
     .btn-ai-magic:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4); }
-
-    /* === INTERFAZ PREMIUM === */
     .hover-elevate { transition: all 0.3s ease-out; }
     .hover-elevate:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.1) !important; }
-    
     .card-doc { border-top-width: 8px !important; }
     .pei-border { border-top: 8px solid var(--purple-primary) !important; }
     .manual-border { border-top: 8px solid #fd7e14 !important; }
     .malla-border { border-top: 8px solid #20c997 !important; }
     .calendario-border { border-top: 8px solid #dc3545 !important; }
-
     .bg-soft-danger { background-color: #fff5f5; }
     .bg-soft-info { background-color: #eefbff; }
     .bg-soft-primary { background-color: #eef2ff; }
@@ -345,304 +147,415 @@
     .bg-orange-soft { background-color: #fff7ed; }
     .bg-teal-soft { background-color: #f0fdfa; }
     .bg-danger-soft { background-color: #fef2f2; }
-
-    /* === NOTAS Y RANKING === */
     .nota-bubble { display: inline-block; padding: 6px 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
     .nota-fail { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
     .nota-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
     .nota-warning { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
-
     .rank-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .rank-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
     .rank-silver { background: linear-gradient(135deg, #94a3b8, #475569); }
     .rank-bronze { background: linear-gradient(135deg, #d97706, #78350f); }
-
     .chart-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; margin-top: -15px; }
     .radial-progress-kpi { width: 65px; height: 65px; border-radius: 50%; border: 6px solid #eef2ff; border-top-color: var(--blue-institutional); display: flex; align-items: center; justify-content: center; }
-
-    .markdown-body h3 { color: var(--blue-institutional); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 20px; font-weight: 800; }
-    .markdown-body blockquote { border-left: 6px solid #6366f1; background: #f8fafc; padding: 20px; border-radius: 0 20px 20px 0; font-style: italic; }
-
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
 
-<div class="container-fluid py-5 bg-light-subtle" style="max-width: 1800px; min-height: 100vh;">
-  
-   <div class="row mb-5 align-items-center animate__animated animate__fadeInDown">
-       <div class="col-lg-5 mb-3 mb-lg-0">
-           <div class="d-flex align-items-center justify-content-center justify-content-lg-start">
-               <div class="icon-box-xl bg-gradient-primary text-white rounded-circle shadow-lg me-4 d-flex align-items-center justify-content-center transition-all hover-scale">
-                   <i class="fas fa-chart-pie fa-3x"></i>
-               </div>
-               <div class="text-center text-lg-start">
-                   <h6 class="text-uppercase text-secondary fw-bold ls-2 mb-1">Ecosistema Digital Stratos</h6>
-                   <h1 class="fw-bolder text-dark mb-0 display-5">Gestión & Bienestar</h1>
-                   <p class="text-muted lead mb-0">
-                       <span class="badge bg-soft-primary text-primary me-2 px-3 py-2 rounded-pill shadow-sm border">
-                           <i class="fas fa-user-shield me-1"></i> {{ user.perfil.get_rol_display }}
-                       </span>
-                       Centro de Control Institucional
-                   </p>
-               </div>
-           </div>
-       </div>
-       
-       <div class="col-lg-7">
-           <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-3 align-items-center">
-                <button class="btn btn-ai-magic rounded-pill px-4 py-2 shadow-lg fw-bold text-white hover-lift" onclick="iniciarAnalisisIA()">
-                    <i class="fas fa-sparkles me-2 animate__animated animate__pulse animate__infinite"></i> Consultar IA Stratos
-                </button>
-
-                <div class="vr mx-2 opacity-25 d-none d-lg-block"></div>
-
-                <a href="{% url 'reporte_consolidado' %}" class="btn btn-white border shadow-sm text-success fw-bold hover-scale px-4 py-2" title="Descargar Sábana Excel">
-                    <i class="fas fa-file-excel me-2"></i>Sábana
-                </a>
-
-                <a href="#historial-seguimientos-section" class="btn btn-white border shadow-sm text-primary fw-bold hover-scale px-4 py-2" title="Ver Historial de Procesos">
-                    <i class="fas fa-history me-2"></i>Historial
-                </a>
-                
-                <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold hover-scale px-4 py-2">
-                    <i class="fas fa-brain me-2"></i>IA Académica
-                </a>
-
-                <a href="{% url 'dashboard_bienestar' %}" class="btn btn-primary shadow-lg hover-scale px-3 py-2" title="Recargar Datos">
-                    <i class="fas fa-sync-alt"></i>
-                </a>
-           </div>
-           
-           <div class="text-center text-lg-end mt-3">
-               <div class="d-inline-flex align-items-center bg-white border px-3 py-1 rounded-pill shadow-sm">
-                   <span class="dot bg-success me-2"></span>
-                   <small class="text-muted fw-bold ls-1 text-uppercase">Sincronización Stratos: <span class="text-dark">{% now "d M, Y - H:i" %}</span></small>
-               </div>
-           </div>
-       </div>
-   </div>
-
-   <div class="card border-0 shadow-lg rounded-5 overflow-hidden mb-5 animate__animated animate__fadeInUp">
-       <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-           <div>
-               <h4 class="fw-bold text-dark mb-1">
-                   <i class="fas fa-satellite-dish me-2 text-danger animate__animated animate__flash animate__infinite animate__slow"></i>
-                   Radar de Riesgo Académico Institucional
-               </h4>
-               <p class="text-muted small mb-0">Priorización automática de estudiantes con bajo rendimiento por volumen de asignaturas perdidas.</p>
-           </div>
-           <div class="d-flex gap-2">
-               <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   <i class="fas fa-bell me-2"></i>Fallas Académicas Críticas
-               </span>
-               <span class="badge bg-dark text-white px-3 py-2 rounded-pill fw-bold shadow-sm">
-                   {{ top_riesgo_academico|length }} Casos en Seguimiento
-               </span>
-           </div>
-       </div>
-       <div class="card-body p-4">
-           <div class="row g-4">
-               <div class="col-lg-3">
-                   <div class="d-flex flex-column gap-3 h-100">
-                       <div class="card bg-soft-danger border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-danger">
-                           <div class="text-center py-2">
-                               <h6 class="text-uppercase text-danger fw-bold x-small mb-2 ls-1">Materias Perdidas (Colegio)</h6>
-                               <h2 class="display-3 fw-black text-danger mb-0">{{ kpi.total_materias_perdidas|default:"0" }}</h2>
-                               <div class="mt-2">
-                                   <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>Impacto Curricular</small>
-                               </div>
-                           </div>
-                       </div>
-                       <div class="card bg-soft-info border-0 p-4 shadow-sm rounded-4 flex-grow-1 transition-all hover-lift border-start border-5 border-info">
-                           <div class="text-center py-2">
-                               <h6 class="text-uppercase text-info fw-bold x-small mb-2 ls-1">Promedio Institucional</h6>
-                               <h2 class="display-3 fw-black text-info mb-0">{{ kpi.prom_global_acad|default:"0.0" }}</h2>
-                               <div class="progress mt-3 mx-auto shadow-sm" style="height: 10px; width: 80%; border-radius: 10px;">
-                                   <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" 
-                                        role="progressbar" 
-                                        style="width: {% widthratio kpi.prom_global_acad 5 100 %}%"></div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-
-               <div class="col-lg-4">
-                   <div class="card border bg-white p-4 rounded-5 h-100 shadow-sm d-flex flex-column justify-content-center align-items-center border-0">
-                       <h6 class="text-center text-secondary x-small fw-bold text-uppercase mb-4">
-                           <i class="fas fa-chart-line me-2"></i>Mapa de Calor Académico
-                       </h6>
-                       <div class="chart-container-responsive" style="width: 100%;">
-                           <canvas id="radarChartPro"></canvas>
-                       </div>
-                       <p class="small text-muted mt-3 text-center px-4">Desviación del rendimiento actual vs metas del PEI.</p>
-                   </div>
-               </div>
-
-               <div class="col-lg-5">
-                   <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-                        <h6 class="text-secondary x-small fw-bold text-uppercase mb-0">Listado de Reprobación Crítica</h6>
-                        <span class="x-small text-muted fw-bold"><i class="fas fa-sort-amount-down me-1"></i>Mayor Riesgo Primero</span>
-                   </div>
-                   
-                   <div class="scroll-pro pe-2" style="max-height: 480px; overflow-y: auto;">
-                       <div class="list-group list-group-flush gap-3">
-                           {% for riesgo in top_riesgo_academico %}
-                           <div class="card border-0 shadow-sm rounded-4 mb-2 hover-elevate transition-all border-start border-5 {% if riesgo.materias_perdidas > 3 %}border-danger{% else %}border-warning{% endif %}">
-                               <div class="card-body p-3">
-                                   <div class="d-flex align-items-start">
-                                       <div class="position-relative me-3">
-                                           <div class="avatar-md rounded-circle {% if riesgo.materias_perdidas > 3 %}bg-danger{% else %}bg-warning{% endif %} text-white d-flex align-items-center justify-content-center fw-black shadow-lg">
-                                               {{ riesgo.estudiante.first_name|slice:":1" }}{{ riesgo.estudiante.last_name|slice:":1" }}
-                                           </div>
-                                           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-white">
-                                               #{{ forloop.counter }}
-                                           </span>
-                                       </div>
-                                       <div class="flex-grow-1 overflow-hidden">
-                                           <h6 class="mb-1 fw-bold text-dark">{{ riesgo.estudiante.get_full_name }}</h6>
-                                           <span class="badge bg-light text-muted border px-2 py-1 rounded-pill x-small">
-                                               <i class="fas fa-graduation-cap me-1"></i> {{ riesgo.curso.nombre }}
-                                           </span>
-                                           
-                                           <div class="mt-3 p-2 bg-light rounded-3 shadow-inner">
-                                               <p class="x-small fw-bold text-uppercase text-danger mb-1"><i class="fas fa-book-dead me-1"></i> Materias Reprobadas:</p>
-                                               <div class="d-flex flex-wrap gap-1">
-                                                   {% for materia_name in riesgo.materias_nombres %}
-                                                   <span class="badge bg-danger text-white x-small rounded-pill">{{ materia_name }}</span>
-                                                   {% empty %}
-                                                   <span class="x-small text-muted">Sin datos de materias.</span>
-                                                   {% endfor %}
-                                               </div>
-                                           </div>
-                                       </div>
-                                       <div class="text-end ms-2">
-                                           <div class="display-6 fw-black text-danger mb-0">{{ riesgo.materias_perdidas }}</div>
-                                           <small class="text-uppercase text-muted fw-bold" style="font-size: 0.5rem;">Asignaturas</small>
-                                           <div class="mt-3">
-                                               <button class="btn btn-sm btn-success rounded-circle shadow-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#modalSeguimiento" 
-                                                        onclick="prepararSeguimiento('{{ riesgo.estudiante.id }}', '{{ riesgo.estudiante.get_full_name|escapejs }}')">
-                                                    <i class="fas fa-file-contract"></i>
-                                                </button>
-                                           </div>
-                                       </div>
-                                   </div>
-                               </div>
-                           </div>
-                           {% empty %}
-                           <div class="text-center p-5 text-muted bg-white rounded-5 shadow-inner border border-dashed">
-                               <i class="fas fa-check-double fa-4x mb-3 text-success opacity-25"></i>
-                               <p class="mb-0 fw-bold">Ecosistema sin Alertas de Reprobación</p>
-                               <small>Todos los estudiantes cumplen satisfactoriamente el PEI.</small>
-                           </div>
-                           {% endfor %}
-                       </div>
-                   </div>
-                   
-                   <div class="mt-4 bg-primary bg-opacity-10 p-3 rounded-4 border border-primary border-dashed text-center">
-                       <p class="x-small text-primary fw-bold mb-0">
-                           <i class="fas fa-shield-alt me-1"></i> 
-                           El sistema analiza en tiempo real las notas finales de cada asignatura.
-                       </p>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </div>
-
-    <div class="card card-premium overflow-hidden animate__animated animate__fadeInUp" style="margin-bottom: 3rem;">
-        <div class="card-header bg-transparent border-bottom py-4 px-4">
-            <h5 class="fw-bold text-dark mb-1">Registro Maestro de Casos</h5>
-            <p class="text-muted x-small mb-0">Base de datos unificada de observaciones.</p>
+<div class="container-fluid py-5" style="max-width: 1800px;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
+        <div class="d-flex align-items-center gap-4">
+            <div class="icon-box-xxl bg-gradient-primary text-white d-flex align-items-center justify-content-center hover-lift transition-all">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div>
+                <h6 class="text-uppercase text-primary fw-bold ls-2 mb-1">Panel de Inteligencia</h6>
+                <h1 class="fw-black text-dark mb-0 display-6">Seguimiento Estudiantil 360°</h1>
+                <p class="text-muted lead mb-0 fs-6 mt-1">Análisis predictivo de Comportamiento, Rendimiento Académico y Psico-Orientación.</p>
+            </div>
         </div>
+
+        <div class="d-flex gap-3 align-items-center mt-4 mt-xl-0">
+            <div class="text-end d-none d-lg-block border-end pe-4 me-2">
+                <small class="d-block text-muted text-uppercase fw-bold x-small ls-1">Estado del Sistema</small>
+                <div class="d-inline-flex align-items-center gap-2 mt-1">
+                    <span class="position-relative d-flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                    </span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                        En línea &bull; {% now "H:i" %}
+                    </span>
+                </div>
+            </div>
+
+            <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white bg-white border shadow-sm btn-pill-modern text-secondary">
+                <i class="fas fa-chart-pie me-2"></i>Tablero
+            </a>
+            <a href="#historial-seguimientos-section" class="btn btn-outline-primary bg-white border shadow-sm btn-pill-modern text-primary">
+                <i class="fas fa-history me-2"></i>Historial
+            </a>
+            <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
+                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-premium h-100 position-relative">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="text-uppercase text-muted fw-bold x-small ls-1">Total de Reportes</h6>
+                            <div class="icon-box bg-primary-subtle text-primary rounded-circle"><i class="fas fa-users"></i></div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h2 class="display-4 fw-black text-dark mb-0">{{ kpi.total }}</h2>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                <i class="fas fa-arrow-up me-1"></i>Activo
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-0">Registros en seguimiento este periodo.</p>
+                    </div>
+
+                    <div class="mt-4 border-top pt-3">
+                        <div class="row g-0 text-center divide-x">
+                            <div class="col-4 border-end">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.convivencia }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-bold mt-1">Cond.</span>
+                            </div>
+                            <div class="col-4 border-end">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.academica }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-bold mt-1">Acad.</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="d-block fw-bold text-dark fs-5">{{ kpi.psicologia }}</span>
+                                <span class="d-block x-small text-muted text-uppercase fw-bold mt-1">Psic.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-md-12">
+            <div class="card card-premium h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Analítica de Casos</h6>
+                        <small class="text-muted x-small">Distribución y Tendencias</small>
+                    </div>
+                    <div class="btn-group btn-group-sm rounded-pill shadow-sm" role="group">
+                        <button type="button" class="btn btn-light fw-bold active border">Mes</button>
+                        <button type="button" class="btn btn-light fw-bold border">Trimestre</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center h-100">
+                        <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end pe-4">
+                            <div style="height: 150px; width: 100%;">
+                                <canvas id="chartDistribucion"></canvas>
+                            </div>
+                            <small class="text-muted x-small mt-3 text-center d-block fw-bold text-uppercase ls-1">Distribución Actual</small>
+                        </div>
+                        <div class="col-md-7 ps-md-4">
+                            <h6 class="fw-bold text-secondary x-small text-uppercase mb-3 ls-1">Tendencia Semestral</h6>
+                            <div style="height: 160px; width: 100%;">
+                                <canvas id="chartTendencia"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-premium h-100 position-relative overflow-hidden">
+                <div style="position: absolute; top:0; left:0; width:100%; height:4px; background: var(--danger-gradient);"></div>
+
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-danger-subtle text-danger rounded-circle me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0">Áreas de Foco</h5>
+                                <small class="text-muted">Intervención prioritaria</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Riesgo Académico</span>
+                            <span class="x-small fw-bold text-danger">{{ kpi.academica }} Casos</span>
+                        </div>
+                        <div class="progress bg-light rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 75%"></div>
+                        </div>
+                        <div class="d-flex align-items-center mt-2">
+                            <i class="fas fa-info-circle text-muted x-small me-1"></i>
+                            <small class="text-muted x-small">Estudiantes reprobando 2+ materias.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="x-small fw-bold text-uppercase ls-1 text-dark">Conductual</span>
+                            <span class="x-small fw-bold text-warning">{{ kpi.convivencia }} Casos</span>
+                        </div>
+                        <div class="progress bg-light rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 45%"></div>
+                        </div>
+                        <div class="d-flex align-items-center mt-2">
+                            <i class="fas fa-info-circle text-muted x-small me-1"></i>
+                            <small class="text-muted x-small">Acciones disciplinarias recientes.</small>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold hover-lift">
+                        Ver Reportes Críticos <i class="fas fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
+                </h5>
+                <p class="text-muted x-small mb-0">Estudiantes marcados para intervención inmediata según datos de desempeño recientes.</p>
+            </div>
+            <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
+                <i class="fas fa-bell me-1"></i>Intervención Requerida
+            </span>
+        </div>
+
+        <div class="row g-3">
+            {% for obs in observaciones %}
+                {% if obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
+                    {% if forloop.counter <= 4 %}
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-hover h-100 card-premium border-start-danger rounded-4 overflow-hidden">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="position-relative">
+                                        <div class="avatar-md rounded-circle bg-white text-danger d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm border border-danger-subtle" style="width: 50px; height: 50px;">
+                                            {{ obs.estudiante.first_name|slice:":1" }}
+                                        </div>
+                                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                            <span class="visually-hidden">Alerta Crítica</span>
+                                        </span>
+                                    </div>
+                                    <div class="ms-3 overflow-hidden">
+                                        <h6 class="fw-bold text-dark mb-0 text-truncate">{{ obs.estudiante.get_full_name }}</h6>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <span class="badge bg-danger-subtle text-danger x-small border border-danger-subtle rounded-pill">CRÍTICO</span>
+                                            <span class="badge bg-light text-muted x-small border rounded-pill">Grado 9</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-light rounded-3 p-3 mb-3 border border-light-subtle">
+                                    <h6 class="text-secondary text-uppercase x-small fw-bold mb-1 ls-1">Observación:</h6>
+                                    <p class="small text-dark mb-0 fst-italic text-truncate-2">"{{ obs.descripcion }}"</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="text-muted x-small fw-bold"><i class="far fa-clock me-1"></i>{{ obs.fecha_creacion|date:"d M" }}</span>
+                                    <a href="{% url 'ver_observador' obs.estudiante.id %}" class="btn btn-dark btn-sm rounded-pill fw-bold px-3 shadow-sm hover-lift">
+                                        Revisar Caso
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card card-premium overflow-hidden animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+        <div class="card-header bg-transparent border-bottom py-4 px-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-5">
+                    <h5 class="fw-bold text-dark mb-1">Registro Maestro de Casos</h5>
+                    <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones y reportes estudiantiles.</p>
+                </div>
+                <div class="col-lg-7">
+                    <form method="GET" class="d-flex gap-2 justify-content-lg-end">
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white w-100" style="max-width: 450px;">
+                            <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="fas fa-filter"></i></span>
+                            <input type="text" name="q" class="form-control bg-white border-0 shadow-none" placeholder="Buscar por nombre, ID..." value="{{ query|default:'' }}">
+                            {% if query %}
+                                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border-0 text-muted px-3"><i class="fas fa-times"></i></a>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1">
+                            <i class="fas fa-search me-2"></i>Buscar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table align-middle mb-0 custom-table">
-                <thead class="bg-light">
+                <thead>
                     <tr>
-                        <th class="ps-4">Estudiante</th>
-                        <th>Categoría</th>
-                        <th>Detalles</th>
-                        <th>Fecha</th>
-                        <th class="text-end pe-4">Acción</th>
+                        <th class="ps-4" style="width: 25%;">Estudiante</th>
+                        <th style="width: 15%;">Categoría</th>
+                        <th style="width: 30%;">Detalles</th>
+                        <th style="width: 15%;">Autoridad</th>
+                        <th style="width: 10%;">Fecha</th>
+                        <th class="text-end pe-4" style="width: 5%;">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for obs in observaciones %}
                     <tr class="group-hover">
                         <td class="ps-4">
-                            <div class="fw-bold text-dark">{{ obs.estudiante.get_full_name }}</div>
-                            <div class="small text-muted">{{ obs.estudiante.username }}</div>
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative">
+                                    <div class="avatar-md rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold gradient-avatar" style="width: 42px; height: 42px;">
+                                        {{ obs.estudiante.first_name|slice:":1"|default:obs.estudiante.username|slice:":1" }}
+                                    </div>
+                                    <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
+                                </div>
+                                <div class="ms-3">
+                                    <div class="fw-bold text-dark">{{ obs.estudiante.get_full_name|default:obs.estudiante.username }}</div>
+                                    <div class="x-small text-muted d-flex align-items-center gap-1">
+                                        <i class="far fa-id-badge"></i> {{ obs.estudiante.username }}
+                                    </div>
+                                </div>
+                            </div>
                         </td>
+
                         <td>
-                            <span class="badge rounded-pill px-3 py-2 
-                                {% if obs.tipo == 'CONVIVENCIA' %}bg-warning-subtle text-warning border-warning
-                                {% elif 'ACADEMIC' in obs.tipo %}bg-info-subtle text-info border-info
-                                {% else %}bg-secondary-subtle text-secondary border-secondary{% endif %}">
-                                {{ obs.tipo }}
-                            </span>
+                            {% if obs.tipo == 'CONVIVENCIA' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-bullhorn"></i> Comportamiento
+                                </span>
+                            {% elif obs.tipo == 'ACADEMICO' or obs.tipo == 'ACADEMICA' %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-graduation-cap"></i> Académico
+                                </span>
+                            {% elif obs.tipo == 'PSICOLOGIA' or obs.tipo == 'PSICOLOGICA' %}
+                                <span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                    <i class="fas fa-brain"></i> Psicología
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">{{ obs.tipo }}</span>
+                            {% endif %}
                         </td>
+
                         <td>
-                            <div class="text-truncate" style="max-width: 300px;">{{ obs.descripcion }}</div>
+                            <div class="d-flex flex-column" style="max-width: 450px;">
+                                <span class="fw-bold text-dark mb-1 text-truncate">{{ obs.titulo|default:"Observación" }}</span>
+                                <p class="text-muted small mb-0 text-truncate-2" style="line-height: 1.4;">{{ obs.descripcion }}</p>
+                            </div>
                         </td>
-                        <td>{{ obs.fecha_creacion|date:"d M, Y" }}</td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border" style="width: 28px; height: 28px;">
+                                    <i class="fas fa-user-edit x-small"></i>
+                                </div>
+                                <span class="small fw-semibold text-dark">{{ obs.autor.get_full_name|default:obs.autor.username|truncatechars:15 }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark small">{{ obs.fecha_creacion|date:"d M, Y" }}</span>
+                                <span class="text-muted x-small d-flex align-items-center gap-1">
+                                    <i class="far fa-clock"></i> {{ obs.fecha_creacion|date:"H:i A" }}
+                                </span>
+                            </div>
+                        </td>
+
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-success rounded-pill fw-bold" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#modalSeguimiento" 
-                                    onclick="prepararSeguimiento('{{ obs.estudiante.id }}', '{{ obs.estudiante.get_full_name|escapejs }}')">
-                                <i class="fas fa-file-signature me-1"></i> Reportar
-                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-circle shadow-sm hover-scale border" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-h text-secondary"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 rounded-4 p-2 animate__animated animate__fadeIn">
+                                    <li><h6 class="dropdown-header text-uppercase x-small fw-bold text-muted ls-1">Acciones</h6></li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="{% url 'ver_observador' obs.estudiante.id %}">
+                                            <i class="fas fa-folder-open text-primary me-2"></i>Ver Expediente
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="#" data-bs-toggle="modal" data-bs-target="#modalSeguimiento" onclick="prepararSeguimiento('{{ obs.estudiante.id }}', '{{ obs.estudiante.get_full_name|escapejs }}')">
+                                            <i class="fas fa-file-contract text-success me-2"></i>📝 Reportar Seguimiento
+                                        </a>
+                                    </li>
+                                    {% if obs.tipo == 'ACADEMICO' %}
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 mb-1" href="#">
+                                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>Notificar Docente
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr><td colspan="5" class="text-center py-4">No hay registros recientes.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <div class="card-footer bg-white border-top py-3 px-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Mostrando <span class="fw-bold text-dark">{{ observaciones.count }}</span> registros en total.</small>
+            </div>
+        </div>
     </div>
 
-    <div id="historial-seguimientos-section" class="historial-seguimientos animate__animated animate__fadeInUp">
-        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
-            <h3 class="fw-bold m-0 text-dark"><i class="fas fa-history me-2 text-primary"></i>Historial de Seguimientos</h3>
-            <span class="badge bg-light text-muted border rounded-pill">{{ historial_seguimientos.count }} Registros</span>
+    <div id="historial-seguimientos-section" class="historial-seguimientos animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+        <div class="historial-header">
+            <h3 class="historial-title">
+                <i class="fas fa-history me-2"></i>Historial de Seguimientos
+            </h3>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 custom-table">
-                <thead class="bg-light">
+            <table class="historial-table">
+                <thead>
                     <tr>
-                        <th class="ps-4">Estudiante</th>
-                        <th>Tipo</th>
+                        <th>Estudiante</th>
+                        <th>Tipo de Seguimiento</th>
                         <th>Fecha</th>
                         <th>Profesional</th>
                         <th>Detalles</th>
-                        <th class="text-end pe-4">Acciones</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for seguimiento in historial_seguimientos %}
                     <tr>
-                        <td class="ps-4 fw-bold">{{ seguimiento.estudiante.get_full_name }}</td>
+                        <td>{{ seguimiento.estudiante.get_full_name }}</td>
                         <td>
-                            <span class="badge 
-                                {% if seguimiento.tipo == 'CONVIVENCIA' %}bg-warning-subtle text-warning border-warning
-                                {% elif seguimiento.tipo == 'ACADEMICO' %}bg-info-subtle text-info border-info
-                                {% else %}bg-purple-subtle text-purple border-purple{% endif %} 
-                                border rounded-pill px-3">
+                            <span class="badge
+                                {% if seguimiento.tipo == 'CONVIVENCIA' %}bg-warning-subtle text-warning
+                                {% elif seguimiento.tipo == 'ACADEMICO' %}bg-info-subtle text-info
+                                {% elif seguimiento.tipo == 'PSICOLOGIA' %}bg-purple-subtle text-purple
+                                {% endif %}
+                                border border-warning-subtle rounded-pill px-3 py-1">
                                 {{ seguimiento.get_tipo_display }}
                             </span>
                         </td>
                         <td>{{ seguimiento.fecha|date:"d M, Y" }}</td>
                         <td>{{ seguimiento.profesional.get_full_name }}</td>
+                        <td>{{ seguimiento.descripcion|truncatechars:50 }}</td>
                         <td>
-                            <span class="d-inline-block text-truncate" style="max-width: 250px;">
-                                {{ seguimiento.descripcion }}
-                            </span>
-                        </td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-danger rounded-pill shadow-sm"
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
                                     onclick="generarPDFHistorial(
                                         '{{ seguimiento.estudiante.get_full_name|escapejs }}',
                                         '{{ seguimiento.estudiante.id }}',
@@ -650,131 +563,89 @@
                                         '{{ seguimiento.tipo }}',
                                         '{{ seguimiento.fecha|date:"d \d\e F \d\e Y" }}'
                                     )">
-                                <i class="fas fa-file-pdf me-1"></i> PDF
+                                <i class="fas fa-file-pdf me-1"></i>Descargar PDF
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-5">
-                            <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
-                            <p>No hay seguimientos registrados en el historial.</p>
-                        </td>
+                        <td colspan="6" class="text-center text-muted py-4">No hay seguimientos registrados en el historial.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-   <div class="row mb-5 animate__animated animate__fadeIn" style="margin-top: 3rem;">
-       <div class="col-12 mb-4 d-flex align-items-center border-bottom pb-3">
-           <h4 class="fw-bold text-dark mb-0"><i class="fas fa-folder-tree me-3 text-secondary"></i>Gobierno Institucional</h4>
-           <span class="badge bg-light text-muted ms-3 border py-2 px-3 rounded-pill fw-bold">Archivo Maestro</span>
-       </div>
-        
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc pei-border rounded-5">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div class="icon-box-lg bg-purple-soft rounded-4 d-flex align-items-center justify-content-center text-purple shadow-sm">
-                            <i class="fas fa-university fa-lg"></i>
-                        </div>
-                        {% if institucion.archivo_pei %}
-                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Vigente</span>
-                        {% else %}
-                            <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3">Pendiente</span>
-                        {% endif %}
-                    </div>
-                    <h5 class="fw-bold text-dark mb-2">Proyecto Educativo (PEI)</h5>
-                    <p class="text-muted small">Marco pedagógico y horizonte institucional.</p>
-                    <div class="mt-auto pt-3">
-                        {% if institucion.archivo_pei %}
-                         <a href="{{ institucion.archivo_pei.url }}" target="_blank" class="btn btn-sm btn-outline-purple rounded-pill fw-bold py-2 shadow-sm w-100">
-                             <i class="fas fa-download me-2"></i> Descargar
-                         </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card h-100 border-0 shadow-sm hover-elevate card-doc manual-border rounded-5">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div class="icon-box-lg bg-orange-soft rounded-4 d-flex align-items-center justify-content-center text-orange shadow-sm">
-                            <i class="fas fa-gavel fa-lg"></i>
-                        </div>
-                        {% if institucion.archivo_manual_convivencia %}
-                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3">Activo</span>
-                        {% else %}
-                            <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3">Requerido</span>
-                        {% endif %}
-                    </div>
-                    <h5 class="fw-bold text-dark mb-2">Manual Convivencial</h5>
-                    <p class="text-muted small">Normas, derechos y deberes.</p>
-                    <div class="mt-auto pt-3">
-                        {% if institucion.archivo_manual_convivencia %}
-                         <a href="{{ institucion.archivo_manual_convivencia.url }}" target="_blank" class="btn btn-sm btn-outline-orange rounded-pill fw-bold py-2 shadow-sm w-100">
-                             <i class="fas fa-download me-2"></i> Descargar
-                         </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-   </div>
 </div>
 
-<div class="modal fade" id="modalSeguimiento" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header border-0 p-4 bg-primary text-white">
-                <div>
-                    <h5 class="modal-title fw-bold"><i class="fas fa-pen-fancy me-2"></i>Nuevo Seguimiento</h5>
-                    <p class="mb-0 small opacity-75">Generación de Acta y Registro en Historial</p>
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #0f9d58 0%, #20c997 100%); color: white;">
+                <div class="position-relative z-1 d-flex align-items-center w-100">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-clipboard-list fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold">Nuevo Seguimiento Documental</h5>
+                        <p class="mb-0 small opacity-75">Generación de Actas y Compromisos Institucionales</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body p-4 bg-light-subtle">
                 <form id="formSeguimiento">
                     {% csrf_token %}
-                    <div class="text-center mb-4">
-                        <h4 class="fw-black text-dark" id="nombreEstudianteModal">Cargando...</h4>
+                    
+                    <div class="mb-4 text-center">
+                        <h6 class="text-muted text-uppercase x-small fw-bold ls-1 mb-2">Estudiante Seleccionado</h6>
+                        <h3 class="fw-black text-dark mb-0" id="nombreEstudianteModal">Cargando...</h3>
                         <input type="hidden" id="idEstudianteModal" name="estudiante_id">
                     </div>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt1" value="CONVIVENCIA" checked>
-                            <label class="btn btn-outline-warning w-100 p-3 h-100 rounded-3 shadow-sm" for="opt1">
-                                <i class="fas fa-handshake fa-2x mb-2 d-block"></i>Convivencia
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-warning-subtle text-warning rounded-circle mx-auto mb-2"><i class="fas fa-handshake"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Acta de Convivencia</h6>
+                                    <small class="text-muted x-small">Mediación y Descargos</small>
+                                </div>
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt2" value="PSICOLOGIA">
-                            <label class="btn btn-outline-purple w-100 p-3 h-100 rounded-3 shadow-sm" for="opt2">
-                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>Psicología
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-purple-subtle text-purple rounded-circle mx-auto mb-2"><i class="fas fa-user-md"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Seguimiento Psico</h6>
+                                    <small class="text-muted x-small">Orientación Escolar</small>
+                                </div>
                             </label>
                         </div>
                         <div class="col-md-4">
-                            <input type="radio" class="btn-check" name="tipo_documento" id="opt3" value="ACADEMICO">
-                            <label class="btn btn-outline-info w-100 p-3 h-100 rounded-3 shadow-sm" for="opt3">
-                                <i class="fas fa-book fa-2x mb-2 d-block"></i>Académico
+                            <label class="form-check-label w-100 h-100">
+                                <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
+                                <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
+                                    <div class="icon-box bg-info-subtle text-info rounded-circle mx-auto mb-2"><i class="fas fa-book-reader"></i></div>
+                                    <h6 class="fw-bold text-dark mb-1">Compromiso Acad.</h6>
+                                    <small class="text-muted x-small">Plan de Mejoramiento</small>
+                                </div>
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Detalles y Acuerdos</label>
-                        <textarea id="contenidoSeguimiento" class="form-control shadow-sm" rows="8" placeholder="Describa la situación, los descargos y los compromisos adquiridos..."></textarea>
+                        <label class="form-label fw-bold text-secondary small">Detalles del Seguimiento</label>
+                        <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success rounded-pill px-5 fw-bold shadow-lg" onclick="procesarGuardado(event)">
-                            <i class="fas fa-save me-2"></i>Guardar y Generar PDF
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
+                            <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
                     </div>
                 </form>
@@ -788,17 +659,21 @@
         <table class="pdf-header-table">
             <tr>
                 <td rowspan="4" style="width: 20%;">
-                    <div style="font-size: 24px; font-weight: bold; color: #ccc;">LOGO</div>
+                    <div style="font-size: 30px; color: #ccc; font-weight: bold;">LOGO</div>
                 </td>
                 <td rowspan="2" style="width: 50%; font-weight: bold; font-size: 16px;">INSTITUCIÓN EDUCATIVA STRATOS</td>
                 <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
             </tr>
-            <tr><td style="font-size: 10px;">VERSIÓN: 2.0</td></tr>
+            <tr>
+                <td style="font-size: 10px;">VERSIÓN: 2.0</td>
+            </tr>
             <tr>
                 <td rowspan="2" style="font-weight: bold; font-size: 14px;" id="pdfTipoDoc">ACTA DE SEGUIMIENTO</td>
                 <td style="font-size: 10px;">FECHA: <span id="pdfFechaHeader"></span></td>
             </tr>
-            <tr><td style="font-size: 10px;">PÁGINA 1 DE 1</td></tr>
+            <tr>
+                <td style="font-size: 10px;">PÁGINA 1 DE 1</td>
+            </tr>
         </table>
 
         <div class="pdf-section-title">I. INFORMACIÓN GENERAL</div>
@@ -811,11 +686,22 @@
         </div>
 
         <div class="pdf-section-title">II. DESARROLLO DE LA SESIÓN Y COMPROMISOS</div>
-        <div class="pdf-content-area" id="pdfContenido"></div>
+        <div class="pdf-content-area" id="pdfContenido">
+        </div>
 
         <div class="pdf-signatures">
-            <div class="pdf-sig-box"><br><br>__________________________<br><strong>Firma del Estudiante</strong><br><span style="font-size: 10px;">CC/TI: ________________</span></div>
-            <div class="pdf-sig-box"><br><br>__________________________<br><strong>Firma del Profesional</strong><br><span style="font-size: 10px;">TP. No. ________________</span></div>
+            <div class="pdf-sig-box">
+                <br><br>
+                __________________________<br>
+                <strong>Firma del Estudiante</strong><br>
+                <span style="font-size: 10px;">CC/TI: ________________</span>
+            </div>
+            <div class="pdf-sig-box">
+                <br><br>
+                __________________________<br>
+                <strong>Firma del Profesional</strong><br>
+                <span style="font-size: 10px;">TP. No. ________________</span>
+            </div>
         </div>
 
         <div class="pdf-footer">
@@ -826,22 +712,37 @@
 </div>
 
 <div class="modal fade" id="modalIA" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content border-0 rounded-5 shadow-2xl overflow-hidden">
-            <div class="modal-header border-0 p-4 bg-gradient-ai text-white position-relative">
-                <h5 class="modal-title fw-black fs-4">Consultoría Estratégica Stratos AI</h5>
-                <button type="button" class="btn-close btn-close-white ms-auto shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-5 bg-light-subtle" style="min-height: 400px;">
-                 <div id="aiLoading" class="text-center py-5">
-                    <div class="spinner-grow text-primary mb-4" style="width: 4rem; height: 4rem;"></div>
-                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Escaneando Ecosistema Digital...</h5>
-                    <p class="text-muted" id="aiStatusText">Conectando con motor de Inteligencia Artificial...</p>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white;">
+                <div class="position-relative z-1 d-flex align-items-center w-100">
+                    <div class="icon-box bg-white-20 rounded-circle me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-robot fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold">IA Stratos: Consultor Educativo</h5>
+                        <p class="mb-0 small opacity-75">Análisis Predictivo Integral vs PEI y Manual de Convivencia</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
+            </div>
+
+            <div class="modal-body p-4 bg-light-subtle" style="min-height: 400px;">
+                <div id="aiLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h5 class="fw-bold text-dark animate__animated animate__fadeIn">Ejecutando Diagnóstico Profundo...</h5>
+                    <p class="text-muted small" id="aiStatusText">Cruzando métricas de comportamiento y academia...</p>
+                </div>
+
                 <div id="aiResults" class="d-none animate__animated animate__fadeIn">
-                    <div id="aiTextContent" class="markdown-body bg-white p-5 rounded-5 border shadow-xl transition-all" style="max-height: 550px; overflow-y: auto;"></div>
+                    <div class="bg-white p-4 rounded-3 border shadow-sm">
+                        <div id="aiTextContent" class="markdown-body"></div>
+                    </div>
                     <div class="mt-4 text-end">
-                        <button class="btn btn-outline-dark rounded-pill px-4 me-2 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-primary rounded-pill px-4 shadow-lg" onclick="window.print()">
+                            <i class="fas fa-download me-2"></i>Descargar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -850,18 +751,22 @@
 </div>
 
 <script>
-    // 1. Preparar el modal con datos del estudiante
+    // ============================================
+    // LOGICA 1: PREPARAR MODAL
+    // ============================================
     function prepararSeguimiento(id, nombre) {
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
         document.getElementById('contenidoSeguimiento').value = "";
     }
 
-    // 2. FUNCIÓN PRINCIPAL: Guardar -> Generar PDF -> Recargar
-    async function procesarGuardado(event) {
+    // ============================================
+    // LOGICA 2: PROCESAR SEGUIMIENTO (GUARDAR -> PDF)
+    // ============================================
+    async function procesarSeguimiento(event) {
         if (event) event.preventDefault();
 
-        // Recolectar datos
+        // 1. Obtener Datos
         const nombreEstudiante = document.getElementById('nombreEstudianteModal').textContent;
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const descripcion = document.getElementById('contenidoSeguimiento').value;
@@ -872,119 +777,199 @@
             return;
         }
 
-        // A. Enviamos a Django (Backend)
-        // 🔥 CORRECCIÓN: Usamos la URL reversa de Django para evitar errores 404
-        const urlBackend = "{% url 'guardar_seguimiento' %}"; 
+        // 2. GUARDAR EN BACKEND PRIMERO
+        const guardadoExitoso = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
+
+        if (guardadoExitoso) {
+            // 3. GENERAR PDF (Solo si guardó)
+            await generarPDFVisual(nombreEstudiante, idEstudiante, descripcion, tipoDoc);
+            
+            // 4. CERRAR Y RECARGAR
+            const modalElement = document.getElementById('modalSeguimiento');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            
+            // Recargar para ver el nuevo registro en la tabla
+            setTimeout(() => location.reload(), 1500); 
+        }
+    }
+
+    // ============================================
+    // LOGICA 3: ENVIAR A BACKEND
+    // ============================================
+    async function guardarEnBackend(estudianteId, tipo, descripcion) {
+        // 🔥 URL dinámica para evitar errores 404
+        const url = "{% url 'guardar_seguimiento' %}"; 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const formData = new FormData();
-        formData.append('estudiante_id', idEstudiante);
-        formData.append('tipo', tipoDoc);
-        // 🔥 CORRECCIÓN: Nos aseguramos de enviar 'descripcion' que es lo que espera la vista
-        formData.append('descripcion', contenido);
+        formData.append('estudiante_id', estudianteId);
+        formData.append('tipo', tipo);
+        // 🔥 IMPORTANTE: El campo debe llamarse 'descripcion' para coincidir con tu vista
+        formData.append('descripcion', descripcion); 
 
         try {
-            const response = await fetch(urlBackend, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrftoken },
                 body: formData
             });
-            
+
             const data = await response.json();
-
+            
             if (data.success) {
-                // B. Si guardó correctamente, generamos el PDF
-                await generarPDFVisual(nombreEstudiante, idEstudiante, descripcion, tipoDoc);
-
-                // C. Cerramos modal y recargamos para ver el historial actualizado
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSeguimiento'));
-                if (modal) modal.hide();
-                
-                alert("✅ Seguimiento guardado exitosamente.");
-                setTimeout(() => location.reload(), 1500);
+                return true;
             } else {
-                alert("❌ Error al guardar en base de datos: " + (data.error || "Error desconocido"));
+                alert("❌ Error al guardar: " + (data.error || "Error desconocido"));
+                console.error("Detalle error:", data);
+                return false;
             }
         } catch (error) {
+            alert("❌ Error de conexión al guardar el seguimiento.");
             console.error(error);
-            alert("❌ Error de conexión con el servidor.");
+            return false;
         }
     }
 
-    // 3. Generar PDF (Usando el contenedor invisible)
-    async function generarPDFVisual(nombre, id, texto, tipo, fechaOriginal = null) {
+    // ============================================
+    // LOGICA 4: GENERAR PDF VISUAL (SOLUCIÓN "FLASH")
+    // ============================================
+    async function generarPDFVisual(estudiante, idEstudiante, contenido, tipoDoc, fechaOriginal = null) {
+        // Fechas
         const fechaObj = new Date();
         const fechaLarga = fechaOriginal || fechaObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const fechaCorta = fechaObj.toLocaleDateString('es-ES');
 
-        // Llenar datos en la plantilla
-        document.getElementById('pdfEstudiante').textContent = nombre;
-        document.getElementById('pdfID').textContent = id;
+        // Llenar Plantilla
+        document.getElementById('pdfEstudiante').textContent = estudiante;
+        document.getElementById('pdfID').textContent = idEstudiante;
         document.getElementById('pdfFecha').textContent = fechaLarga;
         document.getElementById('pdfFechaHeader').textContent = fechaCorta;
-        document.getElementById('pdfContenido').innerHTML = texto.replace(/\n/g, '<br>'); // Respetar saltos de línea
+        document.getElementById('pdfContenido').innerHTML = contenido.replace(/\n/g, '<br>');
 
         let titulo = "ACTA DE SEGUIMIENTO GENERAL";
-        if (tipo === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
-        if (tipo === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
-        if (tipo === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO Y PEDAGÓGICO";
+        if (tipoDoc === "CONVIVENCIA") titulo = "ACTA DE COMPROMISO CONVIVENCIAL";
+        if (tipoDoc === "PSICOLOGIA") titulo = "REGISTRO DE ORIENTACIÓN ESCOLAR";
+        if (tipoDoc === "ACADEMICO") titulo = "COMPROMISO ACADÉMICO";
         document.getElementById('pdfTipoDoc').textContent = titulo;
 
-        // Configuración PDF
+        // Configuración html2pdf
         const element = document.getElementById('plantillaPDFContainer');
         
-        // Hacemos el elemento totalmente visible (opacidad 1) para la foto
-        element.style.opacity = '1'; 
+        // 🔥 TRUCO DEL FLASH: Traer al frente y hacer visible SOLO para la foto
+        const originalTop = element.style.top;
+        const originalLeft = element.style.left;
+        const originalZ = element.style.zIndex;
+        
+        element.style.top = "0px";
+        element.style.left = "0px";
+        element.style.zIndex = "10000";
+        element.style.opacity = "1";
 
         const opt = {
             margin: 0,
-            filename: `${tipo}_${nombre.replace(/\s+/g, '_')}.pdf`,
+            filename: `${tipoDoc}_${estudiante.replace(/\s+/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: '#ffffff' },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Generar y descargar
-        await html2pdf().set(opt).from(element).save();
-        
-        // Volver a ocultar
-        element.style.opacity = '0';
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } finally {
+            // Volver a esconder INMEDIATAMENTE
+            element.style.top = originalTop;
+            element.style.left = originalLeft;
+            element.style.zIndex = originalZ;
+            element.style.opacity = "0";
+        }
     }
 
-    // 4. Función auxiliar para el botón del historial
-    function generarPDFHistorial(nombre, id, texto, tipo, fecha) {
-        generarPDFVisual(nombre, id, texto, tipo, fecha);
+    // ============================================
+    // LOGICA 5: REIMPRESIÓN HISTORIAL
+    // ============================================
+    function generarPDFHistorial(estudiante, idEstudiante, descripcion, tipo, fechaOriginal) {
+        generarPDFVisual(estudiante, idEstudiante, descripcion, tipo, fechaOriginal);
     }
-    
-    // 5. Scripts originales para gráficos e IA
+
+    // ============================================
+    // LOGICA 6: GRÁFICOS E INICIALIZACIÓN
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-       const ctxRadar = document.getElementById('radarChartPro');
-       if (ctxRadar) {
-           new Chart(ctxRadar, {
-               type: 'radar',
-               data: {
-                   labels: JSON.parse('{{ chart_data.labels|safe|escapejs }}'),
-                   datasets: [{
-                       label: 'Rendimiento',
-                       data: JSON.parse('{{ chart_data.acad|safe|escapejs }}'),
-                       backgroundColor: 'rgba(67, 97, 238, 0.2)',
-                       borderColor: '#4361ee',
-                   }]
-               }
-           });
-       }
-       // ... (Resto de tus gráficos se mantienen aquí) ...
+        const total = {{ kpi.total|default:0 }};
+        const conv = {{ kpi.convivencia|default:0 }};
+        const acad = {{ kpi.academica|default:0 }};
+        const psico = {{ kpi.psicologia|default:0 }};
+
+        const ctxDistribucion = document.getElementById('chartDistribucion');
+        if (ctxDistribucion) {
+            new Chart(ctxDistribucion, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Comportamiento', 'Académico', 'Psicología'],
+                    datasets: [{
+                        data: [conv, acad, psico],
+                        backgroundColor: ['#ffc107', '#0dcaf0', '#6610f2'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        const ctxTendencia = document.getElementById('chartTendencia');
+        if (ctxTendencia) {
+            new Chart(ctxTendencia, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Casos Totales',
+                        data: [12, 19, 15, 25, 22, {{ kpi.total }}],
+                        borderColor: '#4361ee',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                            gradient.addColorStop(0, 'rgba(67, 97, 238, 0.2)');
+                            gradient.addColorStop(1, 'rgba(67, 97, 238, 0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: true, grid: { display: true, color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
     });
 
+    // ============================================
+    // LOGICA 7: IA SIMULADA
+    // ============================================
     function iniciarAnalisisIA() {
         const modal = new bootstrap.Modal(document.getElementById('modalIA'));
-        modal.show();
-        // Lógica de IA...
         const loading = document.getElementById('aiLoading');
         const results = document.getElementById('aiResults');
         const statusText = document.getElementById('aiStatusText');
         const contentDiv = document.getElementById('aiTextContent');
 
+        modal.show();
         loading.classList.remove('d-none');
         results.classList.add('d-none');
 
