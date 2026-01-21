@@ -6,23 +6,26 @@
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 2.5cm; /* Márgenes estándar para documentos oficiales */
             @bottom-center {
                 content: "Página " counter(page) " de " counter(pages);
-                font-size: 10px;
                 font-family: serif;
+                font-size: 10pt;
             }
         }
+        
         body {
             font-family: "Times New Roman", serif;
             font-size: 12pt;
             line-height: 1.5;
             color: #000;
         }
+
+        /* === HEADER / ENCABEZADO === */
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .header-table td {
             border: 1px solid #000;
@@ -30,11 +33,18 @@
             text-align: center;
             vertical-align: middle;
         }
+        .logo-img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: contain;
+        }
         .logo-placeholder {
             font-size: 20px;
             font-weight: bold;
-            color: #555;
+            color: #ccc;
         }
+
+        /* === SECCIONES === */
         .title-box {
             background-color: #f0f0f0;
             border: 1px solid #000;
@@ -42,51 +52,63 @@
             text-align: center;
             font-weight: bold;
             text-transform: uppercase;
-            margin-top: 15px;
+            margin-top: 20px;
+            margin-bottom: 15px;
             font-size: 11pt;
         }
+
         .info-grid {
             width: 100%;
-            margin-top: 10px;
             margin-bottom: 20px;
         }
         .info-row {
-            margin-bottom: 5px;
-            border-bottom: 1px dotted #ccc;
+            margin-bottom: 8px;
+            border-bottom: 1px dotted #999;
             padding-bottom: 2px;
+            display: block; /* Asegura estructura de bloque */
         }
         .label {
             font-weight: bold;
-            width: 150px;
+            width: 180px;
             display: inline-block;
         }
+
+        /* === CONTENIDO PRINCIPAL === */
         .content-box {
             border: 1px solid #000;
             padding: 15px;
-            min-height: 300px;
+            min-height: 350px; /* Altura mínima para que se vea formal */
             text-align: justify;
             margin-bottom: 40px;
-            white-space: pre-wrap; /* Respeta los saltos de línea de la BD */
+            white-space: pre-wrap; /* 🔥 CRÍTICO: Respeta los saltos de línea de la BD */
+            font-size: 12pt;
         }
+
+        /* === FIRMAS === */
         .signatures {
             width: 100%;
             margin-top: 80px;
+            page-break-inside: avoid; /* Evita que las firmas queden cortadas entre páginas */
         }
-        .sig-col {
-            width: 45%;
+        .sig-box {
+            width: 40%;
             float: left;
             text-align: center;
-        }
-        .sig-line {
             border-top: 1px solid #000;
-            width: 80%;
-            margin: 0 auto;
             padding-top: 5px;
         }
+        /* Utilidad para limpiar los floats */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        /* === FOOTER === */
         .footer {
             margin-top: 50px;
             text-align: center;
-            font-size: 8pt;
+            font-size: 9pt;
             color: #666;
             border-top: 1px solid #ccc;
             padding-top: 5px;
@@ -98,19 +120,23 @@
     <table class="header-table">
         <tr>
             <td rowspan="3" style="width: 20%;">
-                <div class="logo-placeholder">LOGO</div>
+                {% if institucion.logo %}
+                    <img src="{{ institucion.logo.url }}" class="logo-img" alt="Logo Institucional">
+                {% else %}
+                    <div class="logo-placeholder">LOGO</div>
+                {% endif %}
             </td>
-            <td rowspan="2" style="width: 50%; font-size: 16px; font-weight: bold;">
-                INSTITUCIÓN EDUCATIVA STRATOS
+            <td rowspan="2" style="width: 50%; font-size: 14pt; font-weight: bold;">
+                {{ institucion.nombre|default:"INSTITUCIÓN EDUCATIVA"|upper }}
             </td>
-            <td style="width: 30%; font-size: 10px;">CÓDIGO: G-SGC-001</td>
+            <td style="width: 30%; font-size: 9pt;">CÓDIGO: G-SGC-001</td>
         </tr>
         <tr>
-            <td style="font-size: 10px;">VERSIÓN: 2.0</td>
+            <td style="font-size: 9pt;">VERSIÓN: 2.0</td>
         </tr>
         <tr>
-            <td style="font-weight: bold;">ACTA DE SEGUIMIENTO: {{ seguimiento.get_tipo_display|upper }}</td>
-            <td style="font-size: 10px;">
+            <td style="font-weight: bold; font-size: 11pt;">ACTA DE SEGUIMIENTO: {{ seguimiento.get_tipo_display|upper }}</td>
+            <td style="font-size: 9pt;">
                 FECHA IMPRESIÓN:<br>{{ fecha_impresion|date:"d/m/Y H:i" }}
             </td>
         </tr>
@@ -123,44 +149,41 @@
             <span class="label">Estudiante:</span> {{ estudiante.get_full_name|default:estudiante.username|upper }}
         </div>
         <div class="info-row">
-            <span class="label">Identificación:</span> {{ estudiante.username }}
+            <span class="label">Identificación (ID):</span> {{ estudiante.username }}
         </div>
         <div class="info-row">
-            <span class="label">Fecha del Suceso:</span> {{ seguimiento.fecha|date:"d de F de Y" }}
+            <span class="label">Fecha del Suceso:</span> {{ seguimiento.fecha|date:"l, d \d\e F \d\e Y"|capfirst }}
         </div>
         <div class="info-row">
-            <span class="label">Profesional:</span> {{ profesional.get_full_name|default:profesional.username }}
+            <span class="label">Profesional a Cargo:</span> {{ profesional.get_full_name|default:profesional.username|upper }}
         </div>
         <div class="info-row">
-            <span class="label">Cargo/Rol:</span> {{ profesional.perfil.get_rol_display }}
+            <span class="label">Cargo/Rol:</span> {{ profesional.perfil.get_rol_display|default:"Docente/Administrativo" }}
         </div>
     </div>
 
     <div class="title-box">II. DESARROLLO DE LA SESIÓN Y COMPROMISOS</div>
     
     <div class="content-box">
-        {{ seguimiento.descripcion }}
+{{ seguimiento.descripcion }}
     </div>
 
-    <div class="signatures">
-        <div class="sig-col">
-            <div class="sig-line">
-                <strong>{{ estudiante.get_full_name }}</strong><br>
-                Firma del Estudiante
-            </div>
+    <div class="signatures clearfix">
+        <div class="sig-box">
+            <br>
+            <strong>{{ estudiante.get_full_name|default:"Estudiante" }}</strong><br>
+            Firma del Estudiante
         </div>
-        <div style="float: right;" class="sig-col">
-            <div class="sig-line">
-                <strong>{{ profesional.get_full_name }}</strong><br>
-                Firma del Profesional
-            </div>
+        <div class="sig-box" style="float: right;">
+            <br>
+            <strong>{{ profesional.get_full_name|default:"Profesional" }}</strong><br>
+            Firma del Profesional
         </div>
-        <div style="clear: both;"></div>
     </div>
 
     <div class="footer">
-        Este documento es confidencial y de uso exclusivo institucional.<br>
-        Generado electrónicamente por el Sistema de Gestión Stratos | ID Registro: {{ seguimiento.id }}
+        {{ institucion.direccion|default:"Dirección Principal" }} | {{ institucion.telefono|default:"Teléfono de Contacto" }} | {{ institucion.ciudad|default:"Ciudad" }}<br>
+        <em>Este documento es confidencial y de uso exclusivo institucional. Generado por Sistema Stratos. ID: {{ seguimiento.id }}</em>
     </div>
 
 </body>
