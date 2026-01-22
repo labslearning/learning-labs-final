@@ -758,6 +758,11 @@
                         <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary small">III. Observaciones Adicionales / Compromisos Finales</label>
+                        <textarea id="observacionesAdicionales" name="observaciones_adicionales" class="form-control border-0 bg-white shadow-sm p-3" rows="3" placeholder="Ingrese aquí los compromisos finales, acuerdos con padres o notas reservadas..."></textarea>
+                    </div>
+
                     <div class="text-end d-flex flex-column flex-md-row justify-content-end gap-2">
                         <button type="button" class="btn btn-outline-dark rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
@@ -817,6 +822,9 @@
         document.getElementById('idEstudianteModal').value = id;
         document.getElementById('nombreEstudianteModal').textContent = nombre;
         document.getElementById('contenidoSeguimiento').value = "";
+        
+        // 🔥 AGREGAR ESTA LÍNEA PARA LIMPIAR EL NUEVO CAMPO:
+        document.getElementById('observacionesAdicionales').value = ""; 
     }
 
     // ============================================
@@ -830,6 +838,9 @@
         const idEstudiante = document.getElementById('idEstudianteModal').value;
         const descripcion = document.getElementById('contenidoSeguimiento').value;
         
+        // 🔥 CAPTURAR EL NUEVO DATO
+        const observaciones = document.getElementById('observacionesAdicionales').value; 
+
         // CORRECCIÓN: Selección más robusta del radio button
         const tipoDocElement = document.querySelector('input[name="tipo_documento"]:checked');
         const tipoDoc = tipoDocElement ? tipoDocElement.value : 'CONVIVENCIA'; // Valor por defecto
@@ -840,7 +851,8 @@
         }
 
         // 2. GUARDAR EN BACKEND
-        const resultado = await guardarEnBackend(idEstudiante, tipoDoc, descripcion);
+        // 🔥 Pasamos también 'observaciones' a la función
+        const resultado = await guardarEnBackend(idEstudiante, tipoDoc, descripcion, observaciones);
 
         if (resultado && resultado.success) {
             // 3. ¡AQUÍ ESTÁ LA SOLUCIÓN! 
@@ -864,7 +876,7 @@
     // ============================================
     // LOGICA 3: ENVIAR A BACKEND
     // ============================================
-    async function guardarEnBackend(estudianteId, tipo, descripcion) {
+    async function guardarEnBackend(estudianteId, tipo, descripcion, observaciones) {
         const url = "{% url 'guardar_seguimiento' %}";
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -874,7 +886,11 @@
         const formData = new FormData();
         formData.append('estudiante_id', estudianteId);
         formData.append('tipo', tipo);
-        formData.append('descripcion', descripcion); // Asegúrate de que views.py lea 'descripcion'
+        formData.append('descripcion', descripcion); 
+        
+        // 🔥 ADJUNTAR EL NUEVO CAMPO AL ENVÍO
+        // Asegúrate que tu views.py busque 'observaciones_adicionales'
+        formData.append('observaciones_adicionales', observaciones); 
 
         try {
             const response = await fetch(url, {
