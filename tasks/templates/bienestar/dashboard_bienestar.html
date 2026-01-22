@@ -101,6 +101,7 @@
         font-size: 0.7rem;
         border: none;
         padding: 0 1.5rem 1rem 1.5rem;
+        white-space: nowrap; /* Evita quiebre de linea en headers */
     }
 
     .custom-table tbody tr {
@@ -155,11 +156,6 @@
     .chart-container-responsive {
         min-height: 350px;
     }
-    @media (max-width: 768px) {
-        .chart-container-responsive {
-            min-height: 400px; /* Más alto en móvil para que se vea mejor */
-        }
-    }
 
     /* === ESTILOS PARA LA SECCIÓN DE HISTORIAL DE SEGUIMIENTOS === */
     .historial-seguimientos {
@@ -177,6 +173,8 @@
         margin-bottom: 1.5rem;
         padding-bottom: 1rem;
         border-bottom: 1px solid #eee;
+        flex-wrap: wrap; /* Para movil */
+        gap: 1rem;
     }
 
     .historial-title {
@@ -189,6 +187,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        min-width: 800px; /* Asegura scroll horizontal */
     }
 
     .historial-table th {
@@ -224,23 +223,72 @@
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
+
+    /* =========================================
+       🔥🔥 CIRUGÍA MÓVIL (MEDIA QUERIES) 🔥🔥
+       ========================================= */
+    @media (max-width: 768px) {
+        .chart-container-responsive {
+            min-height: 400px; 
+        }
+        
+        /* Ajuste de botones en header para que sean full width */
+        .btn-pill-modern {
+            width: 100%; 
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ajuste de padding en contenedor */
+        .container-fluid {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        /* Títulos más pequeños */
+        h1.display-6 {
+            font-size: 1.8rem;
+        }
+        
+        .icon-box-xxl {
+            width: 60px; height: 60px; font-size: 1.4rem;
+        }
+
+        /* Historial header stack */
+        .historial-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .btn-generar-pdf {
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* Ocultar elementos decorativos en movil si es necesario */
+        .status-badge-container {
+            display: none !important;
+        }
+    }
 </style>
 
 <div class="container-fluid py-5" style="max-width: 1800px;">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
-        <div class="d-flex align-items-center gap-4">
-            <div class="icon-box-xxl bg-gradient-primary text-white d-flex align-items-center justify-content-center hover-lift transition-all">
+    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-5 animate__animated animate__fadeInDown">
+        <div class="d-flex align-items-center gap-3 mb-4 mb-xl-0">
+            <div class="icon-box-xxl bg-gradient-primary text-white d-flex align-items-center justify-content-center hover-lift transition-all flex-shrink-0">
                 <i class="fas fa-brain"></i>
             </div>
             <div>
                 <h6 class="text-uppercase text-primary fw-bold ls-2 mb-1">Panel de Inteligencia</h6>
                 <h1 class="fw-black text-dark mb-0 display-6">Seguimiento Estudiantil 360°</h1>
-                <p class="text-muted lead mb-0 fs-6 mt-1">Análisis predictivo de Comportamiento, Rendimiento Académico y Psico-Orientación.</p>
+                <p class="text-muted lead mb-0 fs-6 mt-1 d-none d-md-block">Análisis predictivo de Comportamiento, Rendimiento Académico y Psico-Orientación.</p>
+                <p class="text-muted small mb-0 mt-1 d-block d-md-none">Gestión integral académica y convivencial.</p>
             </div>
         </div>
 
-        <div class="d-flex gap-3 align-items-center mt-4 mt-xl-0">
-            <div class="text-end d-none d-lg-block border-end pe-4 me-2">
+        <div class="d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-stretch align-items-md-center mt-2 mt-xl-0 w-100 w-xl-auto">
+            <div class="text-end d-none d-lg-block border-end pe-4 me-2 status-badge-container">
                 <small class="d-block text-muted text-uppercase fw-bold x-small ls-1">Estado del Sistema</small>
                 <div class="d-inline-flex align-items-center gap-2 mt-1">
                     <span class="position-relative d-flex h-2 w-2">
@@ -258,13 +306,13 @@
             </a>
 
             <a href="{% url 'historial_global_observaciones' %}" class="btn btn-primary bg-gradient-primary border-0 btn-pill-modern shadow-lg text-white hover-lift">
-                 <i class="fas fa-rocket me-2"></i>Gestión & Bienestar
+                 <i class="fas fa-rocket me-2"></i>Gestión
             </a>
             <a href="#historial-seguimientos-section" class="btn btn-outline-primary bg-white border shadow-sm btn-pill-modern text-primary">
                 <i class="fas fa-history me-2"></i>Historial
             </a>
             <button onclick="window.print()" class="btn btn-dark bg-gradient-dark border-0 btn-pill-modern shadow-lg text-white">
-                <i class="fas fa-file-pdf me-2"></i>Reporte Oficial
+                <i class="fas fa-file-pdf me-2"></i>Reporte
             </button>
         </div>
     </div>
@@ -309,7 +357,7 @@
 
         <div class="col-xl-6 col-md-12">
             <div class="card card-premium h-100">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <h6 class="fw-bold text-dark mb-0">Analítica de Casos</h6>
                         <small class="text-muted x-small">Distribución y Tendencias</small>
@@ -321,7 +369,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center h-100">
-                        <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end pe-4">
+                        <div class="col-md-5 d-flex flex-column align-items-center justify-content-center border-end-md pe-md-4 mb-4 mb-md-0 border-end-0 border-bottom border-bottom-md-0 pb-4 pb-md-0">
                             <div style="height: 150px; width: 100%;">
                                 <canvas id="chartDistribucion"></canvas>
                             </div>
@@ -392,14 +440,14 @@
     </div>
 
     <div class="mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
-        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4 border-bottom pb-3 gap-3">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="fas fa-bolt text-danger me-2"></i>Radar de Riesgo Académico
                 </h5>
                 <p class="text-muted x-small mb-0">Estudiantes marcados para intervención inmediata según datos de desempeño recientes.</p>
             </div>
-            <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm">
+            <span class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold x-small text-uppercase ls-1 shadow-sm align-self-start align-self-md-center">
                 <i class="fas fa-bell me-1"></i>Intervención Requerida
             </span>
         </div>
@@ -457,15 +505,15 @@
                     <p class="text-muted x-small mb-0">Base de datos unificada de todas las interacciones y reportes estudiantiles.</p>
                 </div>
                 <div class="col-lg-7">
-                    <form method="GET" class="d-flex gap-2 justify-content-lg-end">
-                        <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white w-100" style="max-width: 450px;">
+                    <form method="GET" class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white w-100" style="max-width: 100%; width: 100% !important;">
                             <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="fas fa-filter"></i></span>
                             <input type="text" name="q" class="form-control bg-white border-0 shadow-none" placeholder="Buscar por nombre, ID..." value="{{ query|default:'' }}">
                             {% if query %}
                                 <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border-0 text-muted px-3"><i class="fas fa-times"></i></a>
                             {% endif %}
                         </div>
-                        <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1">
+                        <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold hover-lift x-small text-uppercase ls-1 w-sm-auto w-100">
                             <i class="fas fa-search me-2"></i>Buscar
                         </button>
                     </form>
@@ -474,7 +522,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle mb-0 custom-table">
+            <table class="table align-middle mb-0 custom-table" style="min-width: 900px;">
                 <thead>
                     <tr>
                         <th class="ps-4" style="width: 25%;">Estudiante</th>
@@ -582,7 +630,7 @@
         </div>
 
         <div class="card-footer bg-white border-top py-3 px-4">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center">
                 <small class="text-muted">Mostrando <span class="fw-bold text-dark">{{ observaciones.count }}</span> registros en total.</small>
             </div>
         </div>
@@ -673,7 +721,7 @@
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-4">
                             <label class="form-check-label w-100 h-100">
                                 <input type="radio" name="tipo_documento" value="CONVIVENCIA" class="btn-check" checked>
                                 <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
@@ -683,7 +731,7 @@
                                 </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-4">
                             <label class="form-check-label w-100 h-100">
                                 <input type="radio" name="tipo_documento" value="PSICOLOGIA" class="btn-check">
                                 <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
@@ -693,7 +741,7 @@
                                 </div>
                             </label>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-4">
                             <label class="form-check-label w-100 h-100">
                                 <input type="radio" name="tipo_documento" value="ACADEMICO" class="btn-check">
                                 <div class="card card-premium h-100 text-center p-3 border-0 shadow-sm hover-lift cursor-pointer">
@@ -710,8 +758,8 @@
                         <textarea id="contenidoSeguimiento" name="contenido" class="form-control border-0 bg-white shadow-sm p-3" rows="6" placeholder="Describa los acuerdos, observaciones y compromisos establecidos en esta sesión..."></textarea>
                     </div>
 
-                    <div class="text-end">
-                        <button type="button" class="btn btn-outline-dark rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+                    <div class="text-end d-flex flex-column flex-md-row justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-dark rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-success rounded-pill px-5 shadow-lg fw-bold" onclick="procesarSeguimiento(event)">
                             <i class="fas fa-file-pdf me-2"></i>Guardar y Generar PDF
                         </button>
