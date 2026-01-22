@@ -14,7 +14,7 @@ from django.db.models import Q
 from .models import (
     Question, Answer, ROLES_CHOICES, Observacion, Periodo, Matricula,
     MensajeInterno, Acudiente, Curso, AsignacionMateria,
-    Post, Comment, SocialGroup, Perfil # Aseguramos Perfil
+    Post, Comment, SocialGroup, Perfil, Seguimiento  # Aseguramos Perfil
 )
 
 # Definición del modelo User de forma segura
@@ -608,3 +608,36 @@ class MensajeForm(forms.ModelForm, ContentSecurityMixin):
 
         grupos.insert(0, ('', 'Seleccione un destinatario...'))
         return grupos
+
+# ===================================================================
+# FORMULARIO DE SEGUIMIENTO (Añadir al final de tasks/forms.py)
+# ===================================================================
+
+class SeguimientoForm(forms.ModelForm, ContentSecurityMixin):
+    class Meta:
+        model = Seguimiento
+        fields = ['tipo', 'descripcion', 'observaciones_adicionales'] # Aquí incluimos el campo nuevo
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 4, 
+                'placeholder': 'II. DETALLE DE LA OBSERVACIÓN, DESCARGOS Y COMPROMISOS...'
+            }),
+            # Este es el nuevo campo visual:
+            'observaciones_adicionales': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'III. OBSERVACIONES ADICIONALES / COMPROMISOS FINALES...'
+            }),
+        }
+        labels = {
+            'observaciones_adicionales': 'III. OBSERVACIONES ADICIONALES / COMPROMISOS FINALES'
+        }
+
+    # Validaciones de seguridad para evitar groserías en los campos
+    def clean_descripcion(self):
+        return self.validar_contenido_seguro(self.cleaned_data.get('descripcion'), 'Detalle')
+
+    def clean_observaciones_adicionales(self):
+        return self.validar_contenido_seguro(self.cleaned_data.get('observaciones_adicionales'), 'Observaciones Adicionales')
