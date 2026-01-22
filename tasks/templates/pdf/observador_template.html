@@ -158,17 +158,15 @@
     <header>
         <div class="header-container">
             <div class="header-left">
-                {% if institucion.logo %}
-                    <img src="{{ institucion.logo.url }}" class="logo" alt="Logo">
-                {% endif %}
+                <img src="https://res.cloudinary.com/dukiyxfvn/image/upload/v1768668244/WhatsApp_Image_2026-01-11_at_4.25.52_PM_p8aicp.jpg" class="logo" alt="Logo">
             </div>
             <div class="header-right">
-                <h1 class="inst-name">{{ institucion.nombre|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
-                <p class="inst-info">{{ institucion.lema|default:"" }}</p>
+                <h1 class="inst-name">LEARNING LABS</h1>
+                <p class="inst-info">Somos la evolucion de la educacion</p>
                 <p class="inst-info">
-                    NIT: {{ institucion.nit|default:"-" }} | 
-                    Tel: {{ institucion.telefono|default:"-" }} | 
-                    {{ institucion.ciudad|default:"" }}
+                    NIT: 900.555.5555 | 
+                    Tel: 3132533008 | 
+                    Chia
                 </p>
             </div>
         </div>
