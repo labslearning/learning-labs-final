@@ -364,37 +364,33 @@
 </head>
 <body>
 
-    {% if institucion.logo %}
     <div class="watermark">
-        <img src="{{ institucion.logo.url }}" alt="Sello de Agua">
+        <img src="https://res.cloudinary.com/dukiyxfvn/image/upload/v1768668244/WhatsApp_Image_2026-01-11_at_4.25.52_PM_p8aicp.jpg" alt="Sello de Agua">
     </div>
-    {% endif %}
 
     <header>
         <div class="header-left">
-            {% if institucion.logo %}
-                <img src="{{ institucion.logo.url }}" alt="Logo del colegio" class="logo">
-            {% endif %}
+            <img src="https://res.cloudinary.com/dukiyxfvn/image/upload/v1768668244/WhatsApp_Image_2026-01-11_at_4.25.52_PM_p8aicp.jpg" alt="Logo del colegio" class="logo">
         </div>
         <div class="header-right">
-            <h1>{{ institucion.nombre|upper|default:"NOMBRE DE LA INSTITUCIÓN" }}</h1>
+            <h1>LEARNING LABS</h1>
             
-            <p>{{ institucion.lema|default:"[Lema Institucional]" }}</p>
-            <p>{{ institucion.resolucion|default:"[Resolución Oficial]" }}</p>
+            <p>Somos la evolucion de la educacion</p>
+            <p>Resolución: 78965412</p>
             <p>
-                {{ institucion.direccion|default:"[Dirección]" }} | 
-                {{ institucion.ciudad|default:"[Ciudad]" }}
+                Cra 14 a 5 a 14 | 
+                Chia
             </p>
             <p>
-                Tel: {{ institucion.telefono|default:"N/A" }} | 
-                Email: {{ institucion.correo|default:"N/A" }} | 
-                NIT: {{ institucion.nit|default:"N/A" }}
+                Tel: 3132533008 | 
+                Email: learninglabs@gmail.com | 
+                NIT: 900.555.5555
             </p>
         </div>
     </header>
 
     <section class="info">
-        <h2>BOLETÍN ACADÉMICO - AÑO LECTIVO {{ institucion.anio_lectivo|default:"[Sin Año]" }}</h2>
+        <h2>BOLETÍN ACADÉMICO - AÑO LECTIVO 2026</h2>
         <table>
             <tr>
                 <td><strong>ESTUDIANTE:</strong></td>
