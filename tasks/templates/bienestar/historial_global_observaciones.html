@@ -40,14 +40,6 @@
                     <i class="fas fa-file-excel me-2"></i>Sábana
                 </a>
 
-                <a href="{% url 'historial_global_observaciones' %}" class="btn btn-white border shadow-sm text-primary fw-bold hover-scale px-4 py-2" title="Ver Historial de Procesos">
-                    <i class="fas fa-history me-2"></i>Historial
-                </a>
-
-                <a href="{% url 'ai_engine' %}?action=cumplimiento_pei" class="btn btn-white border shadow-sm text-purple fw-bold hover-scale px-4 py-2" title="Analizar PEI con IA">
-                    <i class="fas fa-robot me-2"></i>Auditoría IA
-                </a>
-                
                 <a href="{% url 'dashboard_academico' %}" class="btn btn-warning shadow-lg text-dark fw-bold hover-scale px-4 py-2">
                     <i class="fas fa-brain me-2"></i>IA Académica
                 </a>
@@ -119,7 +111,7 @@
                        <div style="height: 350px; width: 100%;">
                            <canvas id="radarChartPro"></canvas>
                        </div>
-                       <p class="small text-muted mt-3 text-center px-4">Desviación del rendimiento actual vs metas del PEI.</p>
+                       <p class="small text-muted mt-3 text-center px-4">Comparativa de rendimiento por grupos vs promedio global.</p>
                    </div>
                </div>
 
@@ -521,7 +513,7 @@
                                        </div>
                                    </td>
                                    <td class="text-center">
-                                       <span class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-2 fw-black shadow-sm">{{ alerta.nota_promedio|floatformat:2 }}</span>
+                                       <span class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-2 fw-black shadow-sm">{{ alerta.promedio|floatformat:2 }}</span>
                                    </td>
                                    <td class="text-end pe-4">
                                        <a href="{% url 'ver_observador' alerta.estudiante__id %}" class="btn btn-sm btn-light text-primary border rounded-circle transition-all"><i class="fas fa-pen-nib"></i></a>
@@ -715,8 +707,8 @@
                                    <td class="text-end pe-5">
                                        <div class="btn-group btn-group-sm shadow-sm rounded-pill overflow-hidden border">
                                            <a href="{% url 'ai_engine' %}?action=analisis_convivencia&target_id={{ obj_est.obj.id }}" class="btn btn-white text-purple" title="Analítica IA"><i class="fas fa-robot"></i></a>
-                                           <a href="{% url 'crear_observacion' obj_est.obj.id %}" class="btn btn-white text-primary" title="Generar Nota"><i class="fas fa-plus-circle"></i></a>
-                                           <a href="{% url 'ver_observador' obj_est.obj.id %}" class="btn btn-white text-dark" title="Abrir Historial"><i class="fas fa-folder-open"></i></a>
+                                           <a href="{% url 'crear_observacion' obj_est.obj.id }}" class="btn btn-white text-primary" title="Generar Nota"><i class="fas fa-plus-circle"></i></a>
+                                           <a href="{% url 'ver_observador' obj_est.obj.id }}" class="btn btn-white text-dark" title="Abrir Historial"><i class="fas fa-folder-open"></i></a>
                                        </div>
                                    </td>
                                </tr>
@@ -785,31 +777,37 @@
 <script>
    document.addEventListener('DOMContentLoaded', function() {
        
-       // 1. CONFIGURACIÓN DEL RADAR CHART ESTRATÉGICO
+       // 1. CONFIGURACIÓN DEL RADAR CHART ESTRATÉGICO (AHORA CON DATOS REALES DE CURSOS)
+       // Se cambia la lógica para mostrar el balance de cursos en vez de materias inventadas
        const ctxRadar = document.getElementById('radarChartPro');
        if (ctxRadar) {
+           // Usamos los mismos datos que el gráfico de barras para coherencia
+           const labelsCursos = JSON.parse('{{ chart_data.labels|safe }}');
+           const dataAcadCursos = JSON.parse('{{ chart_data.acad|safe }}');
+           const dataConvCursos = JSON.parse('{{ chart_data.conv|safe }}');
+
            new Chart(ctxRadar, {
                type: 'radar',
                data: {
-                   labels: ['Matemáticas', 'Español', 'Ciencias Nat.', 'C. Sociales', 'Inglés', 'Tecnología'],
+                   labels: labelsCursos, // AHORA SON LOS CURSOS REALES
                    datasets: [{
-                       label: 'Rendimiento Promedio Institucional',
-                       data: [3.8, 4.2, 3.1, 4.0, 3.4, 4.6],
+                       label: 'Rendimiento Académico',
+                       data: dataAcadCursos,
                        backgroundColor: 'rgba(67, 97, 238, 0.25)',
                        borderColor: '#4361ee',
-                       borderWidth: 4,
+                       borderWidth: 3,
                        pointBackgroundColor: '#4361ee',
                        pointBorderColor: '#fff',
-                       pointHoverRadius: 10,
                        fill: true
                    }, {
-                       label: 'Estándar PEI (Meta)',
-                       data: [4.0, 4.0, 4.0, 4.0, 4.0, 4.0],
-                       backgroundColor: 'rgba(25, 135, 84, 0.05)',
-                       borderColor: 'rgba(25, 135, 84, 0.5)',
-                       borderWidth: 2,
-                       borderDash: [5, 5],
-                       pointRadius: 0
+                       label: 'Convivencia',
+                       data: dataConvCursos,
+                       backgroundColor: 'rgba(255, 193, 7, 0.25)',
+                       borderColor: '#ffc107',
+                       borderWidth: 3,
+                       pointBackgroundColor: '#ffc107',
+                       pointBorderColor: '#fff',
+                       fill: true
                    }]
                },
                options: {
@@ -821,7 +819,7 @@
                            max: 5, 
                            grid: { color: 'rgba(0,0,0,0.05)' },
                            angleLines: { color: 'rgba(0,0,0,0.1)' },
-                           ticks: { display: false } 
+                           ticks: { backdropColor: 'transparent', font: {size: 9} } 
                        }
                    },
                    plugins: { 
@@ -920,13 +918,11 @@
        results.classList.add('d-none');
 
        // 1. RECOLECCIÓN DE DATOS DE TODA LA INSTITUCIÓN
-       // MODIFICACIÓN CRÍTICA: Eliminamos al solicitante para evitar sesgo de la IA.
        
        const datosContexto = {
-            tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL", // Nombre técnico que suena a "solo datos"
-            // solicitante: "{{ user.get_full_name }}...",  <-- ELIMINADO PARA QUE NO ANALICE AL ADMIN
+            tipo_reporte: "AUDITORIA_GLOBAL_INSTITUCIONAL", 
             
-            entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)", // Le decimos explícitamente a quién analizar
+            entidad_analizada: "COLEGIO COMPLETO (TODOS LOS ESTUDIANTES)", 
             
             indicadores_globales: {
                 total_alumnos: "{{ kpi.total_alumnos }}",
@@ -954,7 +950,8 @@
                 {
                     nombre_estudiante: "{{ alerta.estudiante__first_name|escapejs }} {{ alerta.estudiante__last_name|escapejs }}",
                     curso: "{{ alerta.materia__curso__nombre|escapejs }}",
-                    nota_conducta: "{{ alerta.nota_promedio|floatformat:2 }}"
+                    // CORREGIDO: Usar promedio real
+                    nota_conducta: "{{ alerta.promedio|floatformat:2 }}"
                 },
                 {% endfor %}
             ],
@@ -1115,5 +1112,3 @@
    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
 {% endblock %}
-
-

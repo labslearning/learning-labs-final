@@ -4066,6 +4066,16 @@ def dashboard_bienestar(request):
     # ===================================================================
     # 5. [AGREGADO] HISTORIAL DE SEGUIMIENTOS Y OBSERVACIONES
     # ===================================================================
+    
+    # --- 💉 CIRUGÍA: CÁLCULO DE TOTALES DE REPORTES (KPIs FALTANTES) ---
+    # Esto es lo que faltaba para que las tarjetas muestren números reales.
+    all_observaciones = Observacion.objects.all()
+    total_obs = all_observaciones.count()
+    count_convivencia = all_observaciones.filter(tipo='CONVIVENCIA').count()
+    count_academica = all_observaciones.filter(Q(tipo='ACADEMICO') | Q(tipo='ACADEMICA')).count()
+    count_psicologia = all_observaciones.filter(Q(tipo='PSICOLOGIA') | Q(tipo='PSICOLOGICA')).count()
+    # -------------------------------------------------------------------
+
     # Obtenemos los seguimientos para la tabla de historial inferior
     historial_seguimientos = Seguimiento.objects.select_related(
         'estudiante', 'profesional'
@@ -4096,6 +4106,13 @@ def dashboard_bienestar(request):
         'institucion': institucion,
         'top_riesgo_academico': riesgo_academico_total, 
         'kpi': {
+            # 🔥 INYECCIÓN DE KPIs DE OBSERVACIONES (Corrección solicitada)
+            'total': total_obs,
+            'convivencia': count_convivencia,
+            'academica': count_academica,
+            'psicologia': count_psicologia,
+            
+            # KPIs Generales existentes
             'total_alumnos': total_estudiantes_colegio,
             'prom_global_acad': prom_global_acad,
             'prom_global_conv': prom_global_conv,

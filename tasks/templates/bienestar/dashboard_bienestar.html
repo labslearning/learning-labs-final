@@ -301,10 +301,6 @@
                 </div>
             </div>
 
-            <a href="{% url 'dashboard_bienestar' %}" class="btn btn-white bg-white border shadow-sm btn-pill-modern text-secondary">
-                <i class="fas fa-chart-pie me-2"></i>Tablero
-            </a>
-
             <a href="{% url 'historial_global_observaciones' %}" class="btn btn-primary bg-gradient-primary border-0 btn-pill-modern shadow-lg text-white hover-lift">
                  <i class="fas fa-rocket me-2"></i>Gestión
             </a>
@@ -332,7 +328,7 @@
                                 <i class="fas fa-arrow-up me-1"></i>Activo
                             </span>
                         </div>
-                        <p class="text-muted small mb-0">Registros en seguimiento este periodo.</p>
+                        <p class="text-muted small mb-0">Se gestionan <strong>{{ kpi.total|default:"0" }}</strong> registros en este periodo.</p>
                     </div>
 
                     <div class="mt-4 border-top pt-3">
@@ -362,9 +358,8 @@
                         <h6 class="fw-bold text-dark mb-0">Analítica de Casos</h6>
                         <small class="text-muted x-small">Distribución y Tendencias</small>
                     </div>
-                    <div class="btn-group btn-group-sm rounded-pill shadow-sm" role="group">
-                        <button type="button" class="btn btn-light fw-bold active border">Mes</button>
-                        <button type="button" class="btn btn-light fw-bold border">Trimestre</button>
+                    <div class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm">
+                        <i class="far fa-calendar-alt me-1"></i> Vista Mensual
                     </div>
                 </div>
                 <div class="card-body">
@@ -431,15 +426,15 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold hover-lift">
-                        Ver Reportes Críticos <i class="fas fa-arrow-right ms-1"></i>
-                    </button>
+                    <a href="#radar-riesgo" class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold hover-lift text-decoration-none d-flex align-items-center justify-content-center">
+                        Ver Reportes Críticos <i class="fas fa-arrow-down ms-2"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+    <div id="radar-riesgo" class="mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4 border-bottom pb-3 gap-3">
             <div>
                 <h5 class="fw-bold text-dark mb-1">
