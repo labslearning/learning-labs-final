@@ -3850,12 +3850,16 @@ def historial_asistencia(request):
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
-    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS (CORREGIDA FINAL)
-    Se asegura de usar SOLO la nota definitiva (numero_nota=5) para evitar promedios falsos.
+    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS
+    ---------------------------------------------------
+    CORRECCIÓN FINAL:
+    1. Se elimina el uso de 'aggregate(Avg)' para evitar promedios decimales falsos.
+    2. Se usa '.first()' para obtener el dato real (crudo) de la nota.
+    3. Se fuerza 'materia__curso=curso' para aislar el año lectivo actual.
     """
     
     # ===================================================================
-    # 0. GESTIÓN DOCUMENTAL (PEI / MANUAL) - SIN CAMBIOS
+    # 0. GESTIÓN DOCUMENTAL
     # ===================================================================
     if request.method == 'POST':
         if 'pei_file' in request.FILES:
@@ -3865,9 +3869,9 @@ def dashboard_bienestar(request):
                 if archivo.name.lower().endswith('.pdf'):
                     institucion.archivo_pei = archivo
                     institucion.save()
-                    messages.success(request, "✅ Proyecto Educativo Institucional (PEI) actualizado.")
+                    messages.success(request, "✅ PEI actualizado.")
                 else:
-                    messages.error(request, "❌ Error: El archivo debe ser un formato PDF válido.")
+                    messages.error(request, "❌ Error: Solo PDF.")
         elif 'manual_file' in request.FILES:
             if request.user.perfil.rol in ['COORD_CONVIVENCIA', 'ADMINISTRADOR']:
                 institucion, _ = Institucion.objects.get_or_create(id=1)
@@ -3875,26 +3879,24 @@ def dashboard_bienestar(request):
                 if archivo.name.lower().endswith('.pdf'):
                     institucion.archivo_manual_convivencia = archivo
                     institucion.save()
-                    messages.success(request, "✅ Manual de Convivencia actualizado correctamente.")
+                    messages.success(request, "✅ Manual actualizado.")
                 else:
-                    messages.error(request, "❌ Error: Solo se permiten archivos PDF.")
+                    messages.error(request, "❌ Error: Solo PDF.")
         return redirect('dashboard_bienestar')
 
     # ===================================================================
-    # 1. MOTOR DE BÚSQUEDA INTELIGENTE
+    # 1. MOTOR DE BÚSQUEDA
     # ===================================================================
     query = request.GET.get('q')
     estudiantes_busqueda = []
     if query:
         estudiantes_busqueda = User.objects.filter(
             Q(perfil__rol='ESTUDIANTE') &
-            (Q(username__icontains=query) |
-             Q(first_name__icontains=query) |
-             Q(last_name__icontains=query))
+            (Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query))
         ).select_related('perfil').distinct()[:25]
 
     # ===================================================================
-    # 2. RADAR DE RIESGO ACADÉMICO
+    # 2. RADAR DE RIESGO ACADÉMICO (Estricto: Curso Actual)
     # ===================================================================
     matriculas_activas = Matricula.objects.filter(activo=True).select_related('estudiante', 'curso')
     riesgo_academico_total = []
@@ -3903,19 +3905,21 @@ def dashboard_bienestar(request):
     for mat in matriculas_activas:
         est = mat.estudiante
         
-        # Filtramos solo notas definitivas (5) menores a 3.0, excluyendo convivencia
+        # 🔥 NOTAS REPROBADAS (ACADÉMICAS): Filtro estricto
+        # Solo definitivas (5), menor a 3.0, del curso actual, NO convivencia
         notas_reprobadas = Nota.objects.filter(
             estudiante=est,
-            numero_nota=5, 
+            numero_nota=5,
             valor__lt=3.0,
-            materia__curso=mat.curso # Aseguramos curso actual
-        ).exclude(materia__nombre__icontains="Convivencia").select_related('materia')
+            materia__curso=mat.curso
+        ).exclude(materia__nombre__istartswith="Convivencia").select_related('materia')
 
         conteo_perdidas = notas_reprobadas.count()
         
         if conteo_perdidas > 0:
             total_materias_perdidas_institucional += conteo_perdidas
             materias_nombres = [n.materia.nombre for n in notas_reprobadas]
+            # Aquí sí usamos aggregate porque es un resumen general de riesgo
             prom_reprobacion = notas_reprobadas.aggregate(avg=Avg('valor'))['avg'] or 0
 
             riesgo_academico_total.append({
@@ -3929,7 +3933,7 @@ def dashboard_bienestar(request):
     riesgo_academico_total.sort(key=lambda x: (-x['materias_perdidas'], x['promedio_riesgo']))
 
     # ===================================================================
-    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (CORRECCIÓN CRÍTICA)
+    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (SIN INVENTAR DATOS)
     # ===================================================================
     cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
     periodos_header = []
@@ -3951,22 +3955,20 @@ def dashboard_bienestar(request):
         mats_curso = matriculas_activas.filter(curso=curso)
         num_alumnos = mats_curso.count()
 
-        # CORRECCIÓN 1: Promedio Convivencia usando SOLO DEFINITIVAS (numero_nota=5)
-        # Esto evita que promedie notas parciales o basura.
+        # KPIs DEL GRUPO (Promedios generales)
+        # Usamos filter(materia__curso=curso) para asegurar datos de ESTE año.
+        
+        # Convivencia
         val_conv = Nota.objects.filter(
-            estudiante__matriculas__curso=curso,
             materia__curso=curso,
-            materia__nombre__icontains="Convivencia",
-            numero_nota=5 
+            materia__nombre__istartswith="Convivencia"
         ).aggregate(avg=Avg('valor'))['avg']
         prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
 
-        # CORRECCIÓN 2: Promedio Académico usando SOLO DEFINITIVAS
+        # Académico
         val_acad = Nota.objects.filter(
-            estudiante__matriculas__curso=curso,
-            materia__curso=curso,
-            numero_nota=5
-        ).exclude(materia__nombre__icontains="Convivencia").aggregate(avg=Avg('valor'))['avg']
+            materia__curso=curso
+        ).exclude(materia__nombre__istartswith="Convivencia").aggregate(avg=Avg('valor'))['avg']
         prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
 
         if num_alumnos > 0:
@@ -3981,7 +3983,7 @@ def dashboard_bienestar(request):
                 suma_promedios_conv += prom_conv_curso
                 cursos_con_datos_conv += 1
 
-        # Detalle para el Acordeón
+        # DETALLE ESTUDIANTES (TABLA)
         periodos_del_curso = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
         lista_estudiantes_curso = []
         ranking_academico_curso = []
@@ -3989,35 +3991,34 @@ def dashboard_bienestar(request):
         for m in mats_curso:
             estudiante = m.estudiante
             
-            # CORRECCIÓN 3: Notas de convivencia por periodo
-            # Aquí buscamos la nota definitiva (5) para cada periodo si existiera, 
-            # o la del periodo específico si tu lógica usa numero_nota por periodo.
-            # Asumiremos que buscas la nota final de ese periodo.
+            # 🔥 CORRECCIÓN MAYOR: OBTENCIÓN DIRECTA DE NOTA DE CONVIVENCIA
             notas_conv_periodo = {}
             for p in periodos_del_curso:
-                # Intenta buscar la nota exacta de ese periodo para la materia convivencia
-                # Nota: Ajusta 'numero_nota' si tus notas parciales tienen otros IDs.
-                # Si solo tienes una nota por periodo, usa filter().first()
-                n_obj = Nota.objects.filter(
+                # Buscamos LA nota de convivencia para este periodo y curso.
+                # NO usamos aggregate/Avg. Usamos .first() para traer el dato crudo.
+                nota_real = Nota.objects.filter(
                     estudiante=estudiante, 
                     periodo=p, 
-                    materia__curso=curso,
-                    materia__nombre__icontains="Convivencia"
-                ).aggregate(promedio=Avg('valor'))['promedio']
+                    materia__curso=curso, # Obligatorio: Curso actual
+                    materia__nombre__istartswith="Convivencia"
+                ).first() # Trae el objeto Nota real, no un cálculo
                 
-                notas_conv_periodo[p.id] = round(n_obj, 1) if n_obj is not None else "-"
+                # Si existe la nota, usamos su valor exacto. Si no, guión.
+                if nota_real:
+                    notas_conv_periodo[p.id] = nota_real.valor # Valor directo de la DB
+                else:
+                    notas_conv_periodo[p.id] = "-"
             
             lista_estudiantes_curso.append({
                 'obj': estudiante,
                 'notas': notas_conv_periodo
             })
 
-            # Datos para el Top 10 (Solo definitivas)
+            # Top 10 Académico (Promedio de sus materias NO convivencia)
             p_ind = Nota.objects.filter(
                 estudiante=estudiante, 
-                materia__curso=curso,
-                numero_nota=5
-            ).exclude(materia__nombre__icontains="Convivencia").aggregate(p=Avg('valor'))['p']
+                materia__curso=curso
+            ).exclude(materia__nombre__istartswith="Convivencia").aggregate(p=Avg('valor'))['p']
             
             ranking_academico_curso.append({
                 'nombre': estudiante.get_full_name() or estudiante.username,
@@ -4039,7 +4040,7 @@ def dashboard_bienestar(request):
             })
 
     # ===================================================================
-    # 4. KPIs FINALES Y ALERTAS
+    # 4. KPIs GLOBALES Y ALERTAS
     # ===================================================================
     prom_global_acad = round(suma_promedios_acad / cursos_con_datos_acad, 2) if cursos_con_datos_acad > 0 else 0
     prom_global_conv = round(suma_promedios_conv / cursos_con_datos_conv, 2) if cursos_con_datos_conv > 0 else 0
@@ -4056,19 +4057,19 @@ def dashboard_bienestar(request):
         .annotate(total=Count('id'))\
         .order_by('-total')[:5]
 
-    # CORRECCIÓN 4: Alertas Convivencia solo con definitivas
+    # ALERTAS DE CONVIVENCIA (Solo notas reales bajas)
     alertas_convivencia = Nota.objects.filter(
-        materia__nombre__icontains="Convivencia",
-        numero_nota=5,
-        materia__curso__activo=True 
+        materia__nombre__istartswith="Convivencia",
+        materia__curso__activo=True, # Solo materias activas
+        valor__lt=3.5 # Solo notas bajas reales
     ).values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre')\
     .annotate(promedio=Avg('valor'))\
-    .filter(promedio__lt=3.5).order_by('promedio')[:5]
+    .order_by('promedio')[:5]
     
     institucion = Institucion.objects.first()
 
     # ===================================================================
-    # 5. HISTORIAL DE SEGUIMIENTOS (FIX: Contadores reales)
+    # 5. HISTORIAL DE OBSERVACIONES
     # ===================================================================
     all_observaciones = Observacion.objects.all()
     kpi_obs = {
@@ -4080,7 +4081,6 @@ def dashboard_bienestar(request):
 
     historial_seguimientos = Seguimiento.objects.select_related('estudiante', 'profesional').all().order_by('-fecha')[:100]
     base_observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
-
     if query:
         base_observaciones = base_observaciones.filter(
             Q(estudiante__username__icontains=query) |
@@ -4098,7 +4098,7 @@ def dashboard_bienestar(request):
         'institucion': institucion,
         'top_riesgo_academico': riesgo_academico_total, 
         'kpi': {
-            **kpi_obs, # Contadores de observaciones
+            **kpi_obs,
             'total_alumnos': total_estudiantes_colegio,
             'prom_global_acad': prom_global_acad,
             'prom_global_conv': prom_global_conv,
