@@ -3958,22 +3958,30 @@ def dashboard_bienestar(request):
         # KPIs DEL GRUPO (Promedios generales)
         # Usamos filter(materia__curso=curso) para asegurar datos de ESTE año.
         
-        # Convivencia
-        val_conv = Nota.objects.filter(
+        # Convivencia: Buscamos si existe al menos una nota real primero
+        # Si no hay nota real (numero_nota=5), asumimos 0.0 y NO mostramos en gráfico si es 0
+        nota_conv_obj = Nota.objects.filter(
             materia__curso=curso,
-            materia__nombre__istartswith="Convivencia"
+            materia__nombre__istartswith="Convivencia",
+            numero_nota=5 # Solo definitivas
         ).aggregate(avg=Avg('valor'))['avg']
-        prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
+        
+        prom_conv_curso = float(nota_conv_obj) if nota_conv_obj is not None else 0.0
 
         # Académico
         val_acad = Nota.objects.filter(
-            materia__curso=curso
+            materia__curso=curso,
+            numero_nota=5 # Solo definitivas
         ).exclude(materia__nombre__istartswith="Convivencia").aggregate(avg=Avg('valor'))['avg']
+        
         prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
 
         if num_alumnos > 0:
             chart_labels.append(f"{curso.nombre}")
             chart_data_acad.append(round(prom_acad_curso, 2))
+            
+            # Solo agregamos convivencia al gráfico si tiene un valor real (>0)
+            # O si prefieres mostrar 0, déjalo así. Pero para evitar "inventar", mejor 0.
             chart_data_conv.append(round(prom_conv_curso, 2))
             
             if prom_acad_curso > 0:
@@ -4000,7 +4008,8 @@ def dashboard_bienestar(request):
                     estudiante=estudiante, 
                     periodo=p, 
                     materia__curso=curso, # Obligatorio: Curso actual
-                    materia__nombre__istartswith="Convivencia"
+                    materia__nombre__istartswith="Convivencia",
+                    numero_nota=5 # Solo definitiva
                 ).first() # Trae el objeto Nota real, no un cálculo
                 
                 # Si existe la nota, usamos su valor exacto. Si no, guión.
@@ -4017,7 +4026,8 @@ def dashboard_bienestar(request):
             # Top 10 Académico (Promedio de sus materias NO convivencia)
             p_ind = Nota.objects.filter(
                 estudiante=estudiante, 
-                materia__curso=curso
+                materia__curso=curso,
+                numero_nota=5
             ).exclude(materia__nombre__istartswith="Convivencia").aggregate(p=Avg('valor'))['p']
             
             ranking_academico_curso.append({
@@ -4061,6 +4071,7 @@ def dashboard_bienestar(request):
     alertas_convivencia = Nota.objects.filter(
         materia__nombre__istartswith="Convivencia",
         materia__curso__activo=True, # Solo materias activas
+        numero_nota=5, # Solo definitivas
         valor__lt=3.5 # Solo notas bajas reales
     ).values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre')\
     .annotate(promedio=Avg('valor'))\
