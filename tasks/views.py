@@ -3850,21 +3850,17 @@ def historial_asistencia(request):
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
-    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS
+    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS (BLINDADA)
     ---------------------------------------------------
-    - Gestión Documental (PEI/Manual).
-    - Radar de Riesgo Académico Integral (Ranking de Reprobación).
-    - Analítica de Asistencia y Deserción.
-    - Control de Clima Escolar (Convivencia).
-    - Gestión por Grupos (Acordeones).
-    - [NUEVO] Historial de Seguimientos y Observaciones.
+    Corrección de lógica: Se agrega filtro 'materia__curso' para evitar
+    que notas de años anteriores contaminen el promedio actual.
     """
     
+    # ... (Se mantiene el código de Carga de Archivos igual) ...
     # ===================================================================
-    # 0. GESTIÓN DOCUMENTAL (PEI / MANUAL)
+    # 0. GESTIÓN DOCUMENTAL (PEI / MANUAL) - SIN CAMBIOS
     # ===================================================================
     if request.method == 'POST':
-        # Subida de PEI
         if 'pei_file' in request.FILES:
             if request.user.perfil.rol in ['COORD_ACADEMICO', 'ADMINISTRADOR']:
                 institucion, _ = Institucion.objects.get_or_create(id=1)
@@ -3875,8 +3871,6 @@ def dashboard_bienestar(request):
                     messages.success(request, "✅ Proyecto Educativo Institucional (PEI) actualizado.")
                 else:
                     messages.error(request, "❌ Error: El archivo debe ser un formato PDF válido.")
-        
-        # Subida de Manual de Convivencia (Expandido)
         elif 'manual_file' in request.FILES:
             if request.user.perfil.rol in ['COORD_CONVIVENCIA', 'ADMINISTRADOR']:
                 institucion, _ = Institucion.objects.get_or_create(id=1)
@@ -3887,9 +3881,9 @@ def dashboard_bienestar(request):
                     messages.success(request, "✅ Manual de Convivencia actualizado correctamente.")
                 else:
                     messages.error(request, "❌ Error: Solo se permiten archivos PDF.")
-        
         return redirect('dashboard_bienestar')
 
+    # ... (Búsqueda inteligente igual) ...
     # ===================================================================
     # 1. MOTOR DE BÚSQUEDA INTELIGENTE
     # ===================================================================
@@ -3903,10 +3897,10 @@ def dashboard_bienestar(request):
              Q(last_name__icontains=query))
         ).select_related('perfil').distinct()[:25]
 
+    # ... (Radar de Riesgo igual) ...
     # ===================================================================
-    # 2. RADAR DE RIESGO ACADÉMICO (EL MOTOR SOLICITADO)
+    # 2. RADAR DE RIESGO ACADÉMICO
     # ===================================================================
-    # Escaneamos TODA la población estudiantil activa
     matriculas_activas = Matricula.objects.filter(activo=True).select_related('estudiante', 'curso')
     riesgo_academico_total = []
     total_materias_perdidas_institucional = 0
@@ -3914,11 +3908,11 @@ def dashboard_bienestar(request):
     for mat in matriculas_activas:
         est = mat.estudiante
         
-        # Buscamos notas definitivas (Nota 5) menores a 3.0
-        # Excluimos Convivencia para que el radar sea puramente académico
+        # Filtramos notas de la materia ACTUAL (vinculada al curso de la matrícula)
         notas_reprobadas = Nota.objects.filter(
             estudiante=est,
-            numero_nota=5,
+            materia__curso=mat.curso,  # <--- CLAVE: Solo notas del curso actual
+            numero_nota=5, 
             valor__lt=3.0
         ).exclude(materia__nombre__icontains="Convivencia").select_related('materia')
 
@@ -3926,11 +3920,7 @@ def dashboard_bienestar(request):
         
         if conteo_perdidas > 0:
             total_materias_perdidas_institucional += conteo_perdidas
-            
-            # Recopilamos los nombres de las materias que está perdiendo
             materias_nombres = [n.materia.nombre for n in notas_reprobadas]
-            
-            # Calculamos promedio de las materias que pierde para desempatar riesgo
             prom_reprobacion = notas_reprobadas.aggregate(avg=Avg('valor'))['avg'] or 0
 
             riesgo_academico_total.append({
@@ -3941,11 +3931,10 @@ def dashboard_bienestar(request):
                 'promedio_riesgo': round(float(prom_reprobacion), 2)
             })
 
-    # ORDENAMIENTO MAESTRO: Por cantidad de materias (Desc) y luego por promedio más bajo (Asc)
     riesgo_academico_total.sort(key=lambda x: (-x['materias_perdidas'], x['promedio_riesgo']))
 
     # ===================================================================
-    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (KPIs Y GRÁFICOS)
+    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (CORREGIDO Y BLINDADO)
     # ===================================================================
     cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
     
@@ -3969,16 +3958,19 @@ def dashboard_bienestar(request):
         mats_curso = matriculas_activas.filter(curso=curso)
         num_alumnos = mats_curso.count()
 
-        # A. Promedio Convivencia del Curso
+        # ✅ FIX CRÍTICO 1: Promedio Convivencia
+        # Filtramos por materia__curso=curso para asegurar que es la materia de ESTE año.
         val_conv = Nota.objects.filter(
-            estudiante__matriculas__curso=curso,
-            materia__nombre__icontains="Convivencia"
+            materia__curso=curso,  # <--- ESTO EVITA LEER DATOS ANTIGUOS
+            materia__nombre__icontains="Convivencia",
+            numero_nota=5 
         ).aggregate(avg=Avg('valor'))['avg']
         prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
 
-        # B. Promedio Académico del Curso
+        # ✅ FIX CRÍTICO 2: Promedio Académico
         val_acad = Nota.objects.filter(
-            estudiante__matriculas__curso=curso
+            materia__curso=curso,  # <--- ESTO EVITA LEER DATOS ANTIGUOS
+            numero_nota=5
         ).exclude(materia__nombre__icontains="Convivencia").aggregate(avg=Avg('valor'))['avg']
         prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
 
@@ -4002,23 +3994,32 @@ def dashboard_bienestar(request):
         for m in mats_curso:
             estudiante = m.estudiante
             
-            # Notas de convivencia para la tabla
+            # ✅ FIX CRÍTICO 3: Tabla Individual
             notas_conv_periodo = {}
             for p in periodos_del_curso:
-                n_obj = Nota.objects.filter(
+                # Buscamos nota definitiva, del periodo correcto Y que pertenezca al curso actual
+                nota_obj = Nota.objects.filter(
                     estudiante=estudiante, 
-                    periodo=p, 
-                    materia__nombre__icontains="Convivencia"
-                ).aggregate(promedio=Avg('valor'))['promedio']
-                notas_conv_periodo[p.id] = round(n_obj, 1) if n_obj is not None else "-"
+                    periodo=p,
+                    materia__curso=curso,  # <--- Blindaje adicional
+                    materia__nombre__icontains="Convivencia",
+                    numero_nota=5
+                ).first()
+                
+                notas_conv_periodo[p.id] = round(nota_obj.valor, 1) if nota_obj else "-"
             
             lista_estudiantes_curso.append({
                 'obj': estudiante,
                 'notas': notas_conv_periodo
             })
 
-            # Datos para el Top 10 del grupo
-            p_ind = Nota.objects.filter(estudiante=estudiante, materia__curso=curso).exclude(materia__nombre__icontains="Convivencia").aggregate(p=Avg('valor'))['p']
+            # Datos para el Top 10
+            p_ind = Nota.objects.filter(
+                estudiante=estudiante, 
+                materia__curso=curso, # Esto ya estaba bien, lo mantenemos
+                numero_nota=5
+            ).exclude(materia__nombre__icontains="Convivencia").aggregate(p=Avg('valor'))['p']
+            
             ranking_academico_curso.append({
                 'nombre': estudiante.get_full_name() or estudiante.username,
                 'promedio': round(float(p_ind or 0), 2)
@@ -4056,23 +4057,25 @@ def dashboard_bienestar(request):
         .annotate(total=Count('id'))\
         .order_by('-total')[:5]
 
-    alertas_convivencia = Nota.objects.filter(materia__nombre__icontains="Convivencia")\
-        .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre')\
-        .annotate(promedio=Avg('valor'))\
-        .filter(promedio__lt=3.5).order_by('promedio')[:5]
+    # ✅ FIX CRÍTICO 4: Alertas Globales
+    # Solo traemos alertas de materias ACTIVAS (del año actual)
+    alertas_convivencia = Nota.objects.filter(
+        materia__nombre__icontains="Convivencia",
+        numero_nota=5,
+        materia__curso__activo=True  # <--- EVITA ALERTAS DE AÑOS PASADOS
+    ).values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre')\
+     .annotate(promedio=Avg('valor'))\
+     .filter(promedio__lt=3.5).order_by('promedio')[:5]
     
     institucion = Institucion.objects.first()
 
     # ===================================================================
-    # 5. [AGREGADO] HISTORIAL DE SEGUIMIENTOS Y OBSERVACIONES
+    # 5. HISTORIAL DE SEGUIMIENTOS (SIN CAMBIOS)
     # ===================================================================
-    # Obtenemos los seguimientos para la tabla de historial inferior
     historial_seguimientos = Seguimiento.objects.select_related(
         'estudiante', 'profesional'
     ).all().order_by('-fecha')[:100]
 
-    # Obtenemos las observaciones para la tabla maestra superior (Registro de casos)
-    # Filtramos si hay query de búsqueda
     base_observaciones = Observacion.objects.select_related(
         'estudiante', 'autor'
     ).all().order_by('-fecha_creacion')
@@ -4085,7 +4088,6 @@ def dashboard_bienestar(request):
             Q(descripcion__icontains=query)
         )
     
-    # Limitamos para no saturar la vista inicial
     observaciones = base_observaciones[:50]
 
     context = {
@@ -4110,10 +4112,8 @@ def dashboard_bienestar(request):
         'stats_asistencia': json.dumps(list(stats_asistencia.values())),
         'top_fallas': top_fallas,
         'alertas_convivencia': alertas_convivencia,
-        
-        # --- NUEVOS DATOS PARA HISTORIAL Y PDF ---
-        'historial_seguimientos': historial_seguimientos, # Para la tabla inferior
-        'observaciones': observaciones, # Para la tabla superior (Maestra)
+        'historial_seguimientos': historial_seguimientos,
+        'observaciones': observaciones,
     }
 
     return render(request, 'bienestar/dashboard_bienestar.html', context)
