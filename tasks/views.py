@@ -433,6 +433,7 @@ def answer_question(request, question_id):
 # 🎓 VISTA DASHBOARD ESTUDIANTE: PREMIUM (ANALÍTICA + ASISTENCIA)
 # ===================================================================
 
+
 @login_required
 @role_required('ESTUDIANTE')
 def dashboard_estudiante(request):
@@ -477,7 +478,26 @@ def dashboard_estudiante(request):
 
         # Obtener asignaciones (Optimizada para traer datos del docente)
         asignaciones = AsignacionMateria.objects.filter(curso=curso, activo=True).select_related('materia', 'docente')
-        materias = [a.materia for a in asignaciones]
+        
+        # -------------------------------------------------------------------------
+        # 🏥 CIRUGÍA MAYOR: CORRECCIÓN DE MATERIAS (INCLUYE CONVIVENCIA)
+        # -------------------------------------------------------------------------
+        # 1. Identificamos materias que tienen profesor asignado (Académicas)
+        ids_materias_asignadas = {a.materia.id for a in asignaciones}
+        
+        # 2. Identificamos materias que tienen NOTAS registradas (Transversales/Convivencia)
+        # Esto fuerza al sistema a reconocer Convivencia si existen notas, aunque no haya Asignación.
+        ids_materias_con_notas = set(Nota.objects.filter(
+            estudiante=estudiante,
+            periodo__curso=curso
+        ).values_list('materia_id', flat=True))
+
+        # 3. Unimos ambos conjuntos para obtener la lista definitiva de materias reales
+        ids_totales = ids_materias_asignadas | ids_materias_con_notas
+        
+        # 4. Recuperamos los objetos Materia
+        materias = Materia.objects.filter(id__in=ids_totales).order_by('nombre')
+        # -------------------------------------------------------------------------
 
         # --- LÓGICA DIRECTORIO DE DOCENTES ---
         docentes_vistos = set()
@@ -624,7 +644,6 @@ def dashboard_estudiante(request):
     }
 
     return render(request, 'dashboard_estudiante.html', context)
-
 
 ##Hasta aqui 
 # ===================================================================
@@ -3843,10 +3862,9 @@ def historial_asistencia(request):
 # 🩺 MÓDULO DE BIENESTAR: PANEL PRINCIPAL
 # ===================================================================
 
-# Roles permitidos para el módulo
+# Roles permiti
 #Desde aqui
 # ... (Importaciones anteriores se mantienen igual) ...
-
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
@@ -4129,7 +4147,9 @@ def dashboard_bienestar(request):
     }
 
     return render(request, 'bienestar/dashboard_bienestar.html', context)
-#Hasta Aqui 
+
+    
+#hasta aqui
 @role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
 def reporte_consolidado(request):
     """
