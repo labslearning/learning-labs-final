@@ -322,8 +322,7 @@ body {
 
                         
 
-                        <a href="{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}" 
-
+                        <a href="#" onclick="iniciarAnalisisAcudiente(event, '{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}', '{{ data.estudiante.get_full_name }}')"
                            class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm">
 
                             <i class="fas fa-robot me-2"></i>Guía de Apoyo Familiar
@@ -936,6 +935,93 @@ body {
 
 </div>
 
+<div class="modal fade" id="modalStratosAcudiente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl overflow-hidden" style="border-radius: 24px;">
+            <div class="modal-body p-0 text-center">
+                <div class="position-relative py-5 px-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    
+                    <div class="mb-4 position-relative d-inline-block">
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;"></div>
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 110px; height: 110px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.5s;"></div>
+                        
+                        <div class="bg-white rounded-circle position-relative d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px; z-index: 10;">
+                            <i class="fas fa-home fa-2x text-success animate__animated animate__pulse animate__infinite"></i>
+                        </div>
+                    </div>
 
+                    <h4 class="text-white fw-bold mb-2">Conectando con la Escuela...</h4>
+                    <p class="text-white-50 small mb-0">Stratos AI está preparando su guía familiar</p>
+                </div>
+
+                <div class="bg-white p-4">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <span class="spinner-border spinner-border-sm text-success me-2" role="status"></span>
+                        <span id="acudienteStatusText" class="fw-bold text-dark small text-uppercase ls-1">Iniciando análisis...</span>
+                    </div>
+                    
+                    <div class="progress" style="height: 6px; border-radius: 10px;">
+                        <div id="acudienteProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                    
+                    <p class="text-muted x-small mt-3 fst-italic">Analizando el progreso de su acudido.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variable global para el modal acudiente
+    let modalAcudiente;
+
+    // Inicializamos el modal cuando la página carga
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('modalStratosAcudiente');
+        if (modalEl) {
+            modalAcudiente = new bootstrap.Modal(modalEl);
+        }
+    });
+
+    // Función que controla la animación y redirección
+    function iniciarAnalisisAcudiente(event, url, nombreEstudiante) {
+        event.preventDefault(); // Evita que el link funcione de inmediato
+        
+        // Si por alguna razón el modal falla, redirigimos normal
+        if (!modalAcudiente) {
+            window.location.href = url; 
+            return;
+        }
+
+        // 1. Mostrar Modal
+        modalAcudiente.show();
+        
+        const statusText = document.getElementById('acudienteStatusText');
+        const progressBar = document.getElementById('acudienteProgressBar');
+        
+        // 2. Guión de pasos para el Acudiente
+        const pasos = [
+            { msg: `Recuperando notas de ${nombreEstudiante}...`, progress: 20 },
+            { msg: "Identificando áreas de mejora...", progress: 50 },
+            { msg: "Traduciendo datos a consejos prácticos...", progress: 80 },
+            { msg: "Generando guía de apoyo para el hogar...", progress: 100 }
+        ];
+
+        let pasoActual = 0;
+        
+        // 3. Ejecutar la secuencia
+        const intervalo = setInterval(() => {
+            if (pasoActual < pasos.length) {
+                statusText.innerText = pasos[pasoActual].msg;
+                progressBar.style.width = pasos[pasoActual].progress + "%";
+                pasoActual++;
+            } else {
+                clearInterval(intervalo);
+                // 4. Redirigir al terminar
+                setTimeout(() => { window.location.href = url; }, 500);
+            }
+        }, 900); // 900ms por cada paso
+    }
+</script>
 
 {% endblock %}

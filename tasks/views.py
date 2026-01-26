@@ -18,6 +18,7 @@ from pypdf import PdfReader #pdf
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 #Aqui importaciones para hacer el pdf con el reporte de la AI 
 import markdown # <--- NECESARIO
@@ -76,9 +77,9 @@ from .models import (
     Question, Answer, Perfil, Curso, Nota, Materia,
     Periodo, AsignacionMateria, Matricula, ComentarioDocente,
     ActividadSemanal, LogroPeriodo, Convivencia, GRADOS_CHOICES,
-    Post, Comment, AuditLog,Report, Acudiente, Institucion, 
+    Post, Comment, AuditLog,Report, Acudiente, Institucion, ActaInstitucional,
     Observacion, # <--- 🩺 CIRUGÍA: Modelo añadido previamente
-    Asistencia, MensajeInterno, Notificacion, Reaction, Follow, UserLogro, SocialGroup # <--- 🩺 FASE 4: NUEVOS MODELOS AÑADIDOS
+    Asistencia, MensajeInterno, Notificacion, Reaction, Follow, UserLogro,  # <--- 🩺 FASE 4: NUEVOS MODELOS AÑADIDOS
 )
 from django.contrib.contenttypes.models import ContentType
 # ===================================================================
@@ -102,6 +103,7 @@ from .forms import (
     Comment,
     CommentForm,
     SocialGroupForm, 
+    ActaInstitucionalForm,
      
      # <--- 🩺 FASE 4: FORMULARIO CHAT AÑADIDO
 )
@@ -5741,4 +5743,68 @@ def generar_seguimiento_pdf(request, seguimiento_id):
     # 'inline' abre el PDF en el navegador. Cambiar a 'attachment' para forzar descarga.
     response['Content-Disposition'] = f'inline; filename="{filename}"'
 
+    return response
+
+# ======================================================
+# GESTIÓN DE ACTAS INSTITUCIONALES (VERSIÓN PRO)
+# ======================================================
+
+@login_required
+def historial_actas(request):
+    # Filtro de permisos
+    if request.user.perfil.rol in ['ADMINISTRADOR', 'DIRECTOR_CURSO', 'PSICOLOGO', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+        actas = ActaInstitucional.objects.all()
+    else:
+        actas = ActaInstitucional.objects.filter(
+            models.Q(creador=request.user) | models.Q(participantes=request.user)
+        ).distinct()
+    
+    return render(request, 'bienestar/historial_actas.html', {'actas': actas})
+
+@login_required
+def crear_acta(request):
+    if request.method == 'POST':
+        form = ActaInstitucionalForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                acta = form.save(commit=False)
+                acta.creador = request.user
+                acta.save() # Aquí se dispara la transacción atómica del modelo
+                form.save_m2m() # ¡Crucial! Guarda los participantes seleccionados
+                
+                messages.success(request, f"Acta #{acta.consecutivo} generada y blindada correctamente.")
+                return redirect('historial_actas')
+            
+            except Exception as e:
+                # Capturamos errores graves (BD, Integridad, Conexión)
+                print(f"❌ ERROR CRÍTICO AL GUARDAR: {str(e)}") 
+                messages.error(request, f"Error del sistema al guardar el acta: {str(e)}")
+        else:
+            # === AQUÍ ESTÁ EL ARREGLO ===
+            # Esto imprimirá en tu consola negra (terminal) exactamente qué campo falló
+            print("⚠️ EL FORMULARIO NO ES VÁLIDO. ERRORES:", form.errors)
+            messages.error(request, "No se pudo guardar el acta. Revisa los errores marcados en rojo (verifica formato de fecha).")
+    else:
+        form = ActaInstitucionalForm(initial={'fecha': timezone.now()})
+    
+    return render(request, 'bienestar/crear_acta.html', {'form': form})
+@login_required
+def generar_acta_pdf(request, acta_id):
+    acta = get_object_or_404(ActaInstitucional, id=acta_id)
+    institucion = Institucion.objects.first()
+
+    html_string = render_to_string('pdf/acta_institucional_weasy.html', {
+        'acta': acta,
+        'institucion': institucion,
+        'request': request,
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    # Nombre de archivo seguro y descriptivo
+    filename = f"Acta_{acta.consecutivo:04d}_{acta.fecha.strftime('%Y%m%d')}.pdf"
+    
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(response)
+    
     return response

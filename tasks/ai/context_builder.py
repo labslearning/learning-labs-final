@@ -21,7 +21,7 @@ from .constants import (
     ACCION_ANALISIS_CONVIVENCIA,
     ACCION_CUMPLIMIENTO_PEI,
     ACCION_ANALISIS_GLOBAL_BIENESTAR, 
-    ACCION_RIESGO_ACADEMICO           
+    ACCION_RIESGO_ACADEMICO            
 )
 
 class ContextBuilder:
@@ -46,12 +46,12 @@ class ContextBuilder:
         # =========================================================
         # 2. DEFINICIÓN DE ACCIONES GLOBALES
         # =========================================================
+        # 🔥 CORRECCIÓN: Quitamos ACCION_RIESGO_ACADEMICO de aquí para que no sea global
         ACCIONES_GLOBALES = [
             ACCION_CUMPLIMIENTO_PEI,
             ACCION_MEJORA_STAFF_ACADEMICO,
             ACCION_ANALISIS_CONVIVENCIA,
-            ACCION_ANALISIS_GLOBAL_BIENESTAR,
-            ACCION_RIESGO_ACADEMICO
+            ACCION_ANALISIS_GLOBAL_BIENESTAR
         ]
 
         # =========================================================
@@ -160,7 +160,21 @@ class ContextBuilder:
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
 
-            if action_type == ACCION_MEJORAS_ESTUDIANTE:
+            # 👇 AQUÍ ESTÁ EL ARREGLO: Manejo individual de la acción de Riesgo Académico
+            if action_type == ACCION_RIESGO_ACADEMICO:
+                nombre_target = str(target_user.get_full_name() or target_user.username)
+                contexto["INSTRUCCIONES_ESTRICTAS_IA"] = {
+                    "ROL_ASIGNADO": "Consejero Académico y Orientador Vocacional (Director de Grupo).",
+                    "OBJETIVO": f"Analizar las causas raíz del bajo rendimiento de {nombre_target} y proponer un plan de rescate.",
+                    "ESTRUCTURA_RESPUESTA": [
+                        "1. 🚨 DIAGNÓSTICO DE RIESGO: Identifica las materias críticas (<3.0) y calcula si está en peligro de perder el año (según Numeral 7.1 del Manual).",
+                        "2. 🔍 ANÁLISIS DE CAUSAS: Cruza las notas con la asistencia. ¿Pierde por fallas o por dificultad académica?",
+                        "3. 🤝 ESTRATEGIA DE INTERVENCIÓN: Redacta 3 compromisos concretos (Académico, Disciplinario y Familiar).",
+                        "4. 📅 PLAN DE ACCIÓN INMEDIATO: Sugiere acciones para la próxima semana (Ej: 'Solicitar refuerzo en Matemáticas')."
+                    ]
+                }
+
+            elif action_type == ACCION_MEJORAS_ESTUDIANTE:
                 # 🔥 INSTRUCCIONES ESTRICTAS PARA EVITAR HORARIOS Y DAR ANÁLISIS DE DATOS
                 contexto["INSTRUCCIONES_ESTRICTAS_IA"] = {
                     "PROHIBICION_ABSOLUTA": "⛔ ESTÁ PROHIBIDO GENERAR HORARIOS, CALENDARIOS O RUTINAS POR HORAS (Ej: 'Lunes 8:00 AM...'). NO LO HAGAS.",
@@ -179,7 +193,6 @@ class ContextBuilder:
                 contexto["objetivo"] = "Traducir hallazgos en pautas de acompañamiento familiar."
             elif action_type == ACCION_CHAT_SOCRATICO:
                 contexto["objetivo"] = "Facilitar la autorreflexión del estudiante."
-            # (El pass anterior ya no es necesario porque inyectamos instrucciones arriba)
 
         return contexto
 

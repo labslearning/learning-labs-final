@@ -424,4 +424,8 @@ urlpatterns = [
     #path('seguimiento/pdf/<int:seguimiento_id>/', views.descargar_seguimiento_pdf, name='descargar_seguimiento_pdf'),
     path('seguimiento/pdf/<int:seguimiento_id>/', views.generar_seguimiento_pdf, name='generar_seguimiento_pdf'),
     #path('prueba-pdf/', views.prueba_pdf_directa, name='prueba_pdf_directa'),
+    # === 🚀 GESTIÓN DE ACTAS (NUEVO) ===
+    path('bienestar/actas/', views.historial_actas, name='historial_actas'),
+    path('bienestar/actas/crear/', views.crear_acta, name='crear_acta'),
+    path('bienestar/actas/pdf/<int:acta_id>/', views.generar_acta_pdf, name='generar_acta_pdf'),
 ]

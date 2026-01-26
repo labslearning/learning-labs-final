@@ -2,6 +2,7 @@
 # tasks/forms.py (COMPLETO, CORREGIDO Y BLINDADO)
 # ===================================================================
 
+from .models import ActaInstitucional
 from django import forms # 💡 CRÍTICO: Asegura la importación base de forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordChangeForm 
@@ -641,3 +642,88 @@ class SeguimientoForm(forms.ModelForm, ContentSecurityMixin):
 
     def clean_observaciones_adicionales(self):
         return self.validar_contenido_seguro(self.cleaned_data.get('observaciones_adicionales'), 'Observaciones Adicionales')
+
+
+class ActaInstitucionalForm(forms.ModelForm):
+    class Meta:
+        model = ActaInstitucional
+        # ✅ Agregamos 'implicado', 'orden_dia' y 'hora_fin'
+        fields = [
+            'titulo', 'tipo', 'implicado', 
+            'lugar', 'fecha', 'hora_fin', 
+            'participantes', 'asistentes_externos', 
+            'orden_dia', 'contenido', 'compromisos', 
+            'archivo_adjunto'
+        ]
+        widgets = {
+            # ✅ CORRECCIÓN: Solo Fecha (type='date')
+            'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'hora_fin': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            
+            'contenido': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
+            'compromisos': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'orden_dia': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Puntos a tratar...'}),
+            
+            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
+            'lugar': forms.TextInput(attrs={'class': 'form-control'}),
+            # ID 'tipoSelector' para que el JavaScript oculte/muestre el campo Implicado
+            'tipo': forms.Select(attrs={'class': 'form-select', 'id': 'tipoSelector'}),
+            'asistentes_externos': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # === MAGIA PRO: AGRUPAR USUARIOS POR ROL ===
+        User = get_user_model()
+        
+        # Traemos usuarios activos ordenados por nombre
+        users = User.objects.select_related('perfil').filter(is_active=True).order_by('first_name', 'last_name')
+        
+        # Listas para los grupos
+        docentes = []
+        directivos = []
+        estudiantes = []
+        acudientes = []
+        otros = []
+
+        for u in users:
+            # Formato: "Juan Perez (docente_juan)"
+            nombre_mostrar = f"{u.get_full_name()} ({u.username})"
+            user_id = u.id
+            
+            # Clasificación segura
+            try:
+                rol = u.perfil.rol
+                if rol in ['DOCENTE', 'DIRECTOR_CURSO']:
+                    docentes.append((user_id, nombre_mostrar))
+                elif rol in ['RECTOR', 'COORDINADOR', 'PSICOLOGO', 'ADMINISTRADOR', 'COORD_CONVIVENCIA', 'COORD_ACADEMICO']:
+                    directivos.append((user_id, nombre_mostrar))
+                elif rol == 'ESTUDIANTE':
+                    estudiantes.append((user_id, nombre_mostrar))
+                elif rol == 'ACUDIENTE':
+                    acudientes.append((user_id, nombre_mostrar))
+                else:
+                    otros.append((user_id, nombre_mostrar))
+            except:
+                otros.append((user_id, nombre_mostrar))
+
+        # Estructura de OptGroups para Select2 (Títulos en el desplegable)
+        grupos_usuarios = [
+            ('Estudiantes (Prioritario para Descargos)', estudiantes),
+            ('Directivos y Staff', directivos),
+            ('Docentes', docentes),
+            ('Acudientes / Padres', acudientes),
+            ('Otros', otros),
+        ]
+        
+        # ✅ Asignamos la lista agrupada a AMBOS campos
+        self.fields['participantes'].choices = grupos_usuarios
+        self.fields['implicado'].choices = grupos_usuarios
+        
+        # ✅ Clases CSS para activar el plugin de búsqueda (Select2)
+        self.fields['participantes'].widget.attrs.update({'class': 'select2-user-search form-control'})
+        self.fields['implicado'].widget.attrs.update({
+            'class': 'select2-user-search form-control',
+            'data-placeholder': 'Buscar persona citada o implicada...'
+        })

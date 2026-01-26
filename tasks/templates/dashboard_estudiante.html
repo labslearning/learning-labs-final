@@ -18,10 +18,14 @@
             </p>
 
             <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-4 mb-3">
-                <a href="{% url 'ai_engine' %}?action=mejoras_estudiante" class="btn btn-lg btn-primary-alt rounded-pill px-4 py-3 shadow-sm border-0 animate animated pulse infinite w-100 w-md-auto" style="background-image: var(--gradient-primary); color: white;">
+                <a href="#" onclick="iniciarAnalisisEstudiante(event, '{% url 'ai_engine' %}?action=mejoras_estudiante')" 
+                   class="btn btn-lg btn-primary-alt rounded-pill px-4 py-3 shadow-sm border-0 animate animated pulse infinite w-100 w-md-auto" 
+                   style="background-image: var(--gradient-primary); color: white;">
                     <i class="fas fa-robot me-2"></i>¿Cómo puedo mejorar?
                 </a>
-                <a href="{% url 'ai_engine' %}?action=chat_socratico" class="btn btn-lg btn-outline-primary rounded-pill px-4 py-3 shadow-sm border-2 w-100 w-md-auto">
+                
+                <a href="#" onclick="iniciarTutorSocratico(event, '{% url 'ai_engine' %}?action=chat_socratico')" 
+                   class="btn btn-lg btn-outline-primary rounded-pill px-4 py-3 shadow-sm border-2 w-100 w-md-auto">
                     <i class="fas fa-brain me-2"></i>Tutor Socrático
                 </a>
             </div>
@@ -366,6 +370,42 @@
     {% endif %}
 </div>
 
+<div class="modal fade" id="modalStratosEstudiante" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl overflow-hidden" style="border-radius: 24px;">
+            <div class="modal-body p-0 text-center">
+                <div class="position-relative py-5 px-4" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);">
+                    
+                    <div class="mb-4 position-relative d-inline-block">
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;"></div>
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 110px; height: 110px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.5s;"></div>
+                        
+                        <div class="bg-white rounded-circle position-relative d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px; z-index: 10;">
+                            <i class="fas fa-rocket fa-2x text-primary animate__animated animate__pulse animate__infinite"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="text-white fw-bold mb-2">Conectando con Stratos...</h4>
+                    <p class="text-white-50 small mb-0">Preparando tu entorno de aprendizaje personalizado</p>
+                </div>
+
+                <div class="bg-white p-4">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
+                        <span id="estudianteStatusText" class="fw-bold text-dark small text-uppercase ls-1">Iniciando sesión segura...</span>
+                    </div>
+                    
+                    <div class="progress" style="height: 6px; border-radius: 10px;">
+                        <div id="estudianteProgressBar" class="progress-bar bg-gradient-primary" role="progressbar" style="width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                    
+                    <p class="text-muted x-small mt-3 fst-italic">Estamos diseñando la mejor respuesta para ti.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalAsistencia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -430,6 +470,7 @@
 .border-primary-alt { border-color: var(--color-primary-alt) !important; }
 .bg-success-alt { background-color: var(--color-success) !important; }
 .bg-danger-alt { background-color: var(--color-danger) !important; }
+.bg-gradient-primary { background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); }
 
 .w-md-auto { width: auto !important; } /* Utilidad personalizada para escritorio */
 
@@ -443,6 +484,12 @@
 .collapse { transition: height 0.3s ease-in-out; }
 .rotate-on-collapse { transition: transform 0.3s ease-in-out; }
 .collapse-toggle-header[aria-expanded="true"] .rotate-on-collapse { transform: rotate(180deg); }
+
+/* Animación del Modal */
+@keyframes pulse-ring {
+    0% { transform: translate(-50%, -50%) scale(0.33); opacity: 1; }
+    80%, 100% { opacity: 0; }
+}
 
 /* NUEVOS ESTILOS PARA ANALÍTICA */
 .stat-card {
@@ -483,8 +530,17 @@ function getChartColor(index) {
     return customColors[index % customColors.length];
 }
 
+// Variables globales para el modal
+let modalEstudiante;
+
 document.addEventListener('DOMContentLoaded', function () {
     const notaAprobacion = 3.0;
+
+    // Inicializar Modal Estudiante
+    const modalEl = document.getElementById('modalStratosEstudiante');
+    if (modalEl) {
+        modalEstudiante = new bootstrap.Modal(modalEl);
+    }
 
     // #######################################################
     // # 1. LÓGICA DE GRÁFICAS DE ANALÍTICA (NUEVO)
@@ -675,5 +731,63 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+// ==========================================
+// FUNCIONES DE CONTROL DE IA
+// ==========================================
+
+function iniciarAnalisisEstudiante(event, url) {
+    event.preventDefault();
+    if (!modalEstudiante) { window.location.href = url; return; }
+    
+    modalEstudiante.show();
+    
+    // Configurar para Análisis
+    const statusText = document.getElementById('estudianteStatusText');
+    const progressBar = document.getElementById('estudianteProgressBar');
+    
+    const pasos = [
+        { msg: "Conectando con tu perfil académico...", progress: 20 },
+        { msg: "Identificando tus fortalezas y debilidades...", progress: 50 },
+        { msg: "Generando plan de mejora personalizado...", progress: 80 },
+        { msg: "¡Listo! Redirigiendo...", progress: 100 }
+    ];
+    
+    ejecutarSimulacion(pasos, statusText, progressBar, url);
+}
+
+function iniciarTutorSocratico(event, url) {
+    event.preventDefault();
+    if (!modalEstudiante) { window.location.href = url; return; }
+    
+    modalEstudiante.show();
+
+    // Configurar para Tutoría
+    const statusText = document.getElementById('estudianteStatusText');
+    const progressBar = document.getElementById('estudianteProgressBar');
+    
+    const pasos = [
+        { msg: "Activando Tutor Socrático...", progress: 15 },
+        { msg: "Cargando tu contexto de aprendizaje...", progress: 45 },
+        { msg: "Preparando entorno de preguntas...", progress: 90 },
+        { msg: "Iniciando sesión de mentoría...", progress: 100 }
+    ];
+    
+    ejecutarSimulacion(pasos, statusText, progressBar, url);
+}
+
+function ejecutarSimulacion(pasos, textoEl, barraEl, urlDestino) {
+    let pasoActual = 0;
+    const intervalo = setInterval(() => {
+        if (pasoActual < pasos.length) {
+            textoEl.innerText = pasos[pasoActual].msg;
+            barraEl.style.width = pasos[pasoActual].progress + "%";
+            pasoActual++;
+        } else {
+            clearInterval(intervalo);
+            setTimeout(() => { window.location.href = urlDestino; }, 500);
+        }
+    }, 800);
+}
 </script>
 {% endblock %}

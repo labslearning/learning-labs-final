@@ -1,7 +1,9 @@
 from django.db import models
+from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.db.models import Max    #importacion necesaria para el acta institucional 
 import os
 from datetime import timedelta
 from datetime import date
@@ -1361,3 +1363,127 @@ class Seguimiento(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.estudiante.username}"
+
+
+###observador del profesor 
+# tasks/models.py
+
+# Aseguúrate de tener estos imports al inicio del archivo
+from django.db import models, transaction
+from django.utils import timezone
+from django.conf import settings
+from django.db.models import Max
+
+# ... (otros modelos anteriores) ...
+
+class ActaInstitucional(models.Model):
+    """
+    Modelo profesional para la gestión documental institucional.
+    Soporta gobernanza escolar, procesos disciplinarios, académicos y descargos.
+    """
+    
+    TIPO_ACTA_CHOICES = (
+        # --- GOBIERNO ESCOLAR Y DIRECTIVOS ---
+        ('CONSEJO_DIRECTIVO', '🏛️ Consejo Directivo'),
+        ('CONSEJO_ACADEMICO', '🎓 Consejo Académico'),
+        ('RECTORIA', 'Despacho de Rectoría'),
+        ('COORDINACION', 'Reunión de Coordinación'),
+        
+        # --- COMITÉS Y COMISIONES ---
+        ('COMITE_CONVIVENCIA', '⚖️ Comité de Convivencia Escolar'),
+        ('COMISION_EVALUACION', '📊 Comisión de Evaluación y Promoción'),
+        ('COMITE_CALIDAD', '✅ Comité de Calidad / Gestión'),
+        ('COMITE_INCLUSION', '🌈 Comité de Inclusión'),
+
+        # --- GESTIÓN DOCENTE ---
+        ('REUNION_AREA', '📚 Reunión de Área / Departamento'),
+        ('CLAUSTRO', '👥 Claustro General de Docentes'),
+        ('JORNADA_PEDAGOGICA', '🧠 Jornada Pedagógica'),
+
+        # --- SEGUIMIENTO Y CASOS ---
+        ('DESCARGOS', '⚠️ Diligencia de Descargos'),
+        ('ACTA_COMPROMISO', '🤝 Acta de Compromiso (Académico/Convivencial)'),
+        ('MEDIACION', '🕊️ Acta de Mediación / Conciliación'),
+        ('SITUACION_ESPECIAL', '🚨 Protocolo de Situación Tipo II / III'),
+
+        # --- COMUNIDAD ---
+        ('REUNION_PADRES', '👨‍👩‍👧‍👦 Reunión de Padres de Familia'),
+        ('ASOCIACION_PADRES', 'Asociación de Padres (Asopadres)'),
+        ('CONSEJO_ESTUDIANTIL', 'Consejo Estudiantil'),
+        
+        ('OTRO', '📝 Otro / General'),
+    )
+
+    # 1. Identificación Única
+    consecutivo = models.PositiveIntegerField(
+        editable=False, 
+        unique=True, 
+        verbose_name="No. Acta",
+        db_index=True
+    )
+    titulo = models.CharField(max_length=255, verbose_name="Asunto / Título Oficial")
+    tipo = models.CharField(max_length=50, choices=TIPO_ACTA_CHOICES, default='OTRO')
+    
+    # 2. Detalles Logísticos
+    lugar = models.CharField(max_length=200, blank=True, null=True, verbose_name="Lugar o Sala")
+    fecha = models.DateTimeField(default=timezone.now, verbose_name="Fecha y Hora de Inicio")
+    hora_fin = models.TimeField(null=True, blank=True, verbose_name="Hora de Finalización")
+    
+    # 3. Personas Clave (Aquí agregamos al IMPLICADO)
+    creador = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name='actas_creadas',
+        verbose_name="Secretario(a) / Elaboró"
+    )
+    
+    # Nuevo campo vital para Descargos/Seguimiento
+    implicado = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='actas_implicado',
+        verbose_name="Persona Citada / Implicada"
+    )
+
+    participantes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        related_name='actas_participacion',
+        blank=True,
+        verbose_name="Asistentes Registrados"
+    )
+    
+    asistentes_externos = models.TextField(
+        blank=True, 
+        help_text="Nombres completos y cargos de invitados externos."
+    )
+
+    # 4. Contenido Estructurado
+    orden_dia = models.TextField(blank=True, verbose_name="Orden del Día")
+    contenido = models.TextField(verbose_name="Desarrollo y Discusiones")
+    compromisos = models.TextField(blank=True, null=True, verbose_name="Acuerdos y Tareas")
+    
+    # 5. Evidencias y Auditoría
+    archivo_adjunto = models.FileField(upload_to='actas/adjuntos/%Y/%m/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Acta Oficial"
+        verbose_name_plural = "Libro de Actas"
+        ordering = ['-consecutivo']
+
+    def __str__(self):
+        return f"Acta #{self.consecutivo:04d} - {self.titulo}"
+
+    def save(self, *args, **kwargs):
+        # Lógica atómica para garantizar consecutivos sin huecos ni duplicados
+        if self.consecutivo is None:
+            with transaction.atomic():
+                # Bloqueo de fila para evitar condiciones de carrera en sistemas con alto tráfico
+                max_val = ActaInstitucional.objects.select_for_update().aggregate(Max('consecutivo'))['consecutivo__max']
+                self.consecutivo = (max_val or 0) + 1
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)

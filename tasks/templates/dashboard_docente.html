@@ -62,7 +62,7 @@
                     </button>
                 </li>
                 <li class="nav-item m-0 m-md-1" role="presentation">
-                    <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="nav-link d-flex align-items-center justify-content-center py-3 py-md-2 px-3 rounded-pill text-primary border border-primary w-100 bg-white-hover">
+                    <a href="#" onclick="iniciarAnalisisDocente(event, '{% url 'ai_engine' %}?action=mejoras_docente')" class="nav-link d-flex align-items-center justify-content-center py-3 py-md-2 px-3 rounded-pill text-primary border border-primary w-100 bg-white-hover">
                         <i class="fas fa-brain me-2"></i>Plan de Mejora IA
                     </a>
                 </li>
@@ -91,7 +91,7 @@
                                 <small class="text-muted d-block">Utiliza la Inteligencia Artificial para generar estrategias de mejora para tus cursos.</small>
                             </div>
                             <div class="ms-md-auto w-100 w-md-auto">
-                                <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="btn btn-sm btn-primary rounded-pill px-4 w-100 w-md-auto">
+                                <a href="#" onclick="iniciarAnalisisDocente(event, '{% url 'ai_engine' %}?action=mejoras_docente')" class="btn btn-sm btn-primary rounded-pill px-4 w-100 w-md-auto">
                                     Generar Estrategia
                                 </a>
                             </div>
@@ -430,7 +430,7 @@
                                     <h5 class="mb-0 text-primary fw-bold text-break">
                                         {{ mat_data.materia_obj.nombre }}
                                     </h5>
-                                    <a href="{% url 'ai_engine' %}?action=mejoras_docente" class="btn btn-sm btn-outline-primary rounded-pill w-100 w-sm-auto">
+                                    <a href="#" onclick="iniciarAnalisisDocente(event, '{% url 'ai_engine' %}?action=mejoras_docente')" class="btn btn-sm btn-outline-primary rounded-pill w-100 w-sm-auto">
                                         <i class="fas fa-robot me-1"></i> Análisis General
                                     </a>
                                 </div>
@@ -508,6 +508,42 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalAnalisisDocente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl overflow-hidden" style="border-radius: 24px;">
+            <div class="modal-body p-0 text-center">
+                <div class="position-relative py-5 px-4" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);">
+                    
+                    <div class="mb-4 position-relative d-inline-block">
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;"></div>
+                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 110px; height: 110px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.5s;"></div>
+                        
+                        <div class="bg-white rounded-circle position-relative d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px; z-index: 10;">
+                            <i class="fas fa-network-wired fa-2x text-primary animate__animated animate__pulse animate__infinite"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="text-white fw-bold mb-2">Generando Estrategia...</h4>
+                    <p class="text-white-50 small mb-0">Stratos AI está auditando tus cursos</p>
+                </div>
+
+                <div class="bg-white p-4">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
+                        <span id="docenteStatusText" class="fw-bold text-dark small text-uppercase ls-1">Iniciando análisis pedagógico...</span>
+                    </div>
+                    
+                    <div class="progress" style="height: 6px; border-radius: 10px;">
+                        <div id="docenteProgressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                    
+                    <p class="text-muted x-small mt-3 fst-italic">Analizando notas, asistencia y patrones de aprendizaje.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .bg-gradient-primary {
         background: linear-gradient(to right, #007bff, #0056b3);
@@ -557,6 +593,12 @@
         border-radius: 50px;
     }
     
+    /* Animación del Modal */
+    @keyframes pulse-ring {
+        0% { transform: translate(-50%, -50%) scale(0.33); opacity: 1; }
+        80%, 100% { opacity: 0; }
+    }
+    
     /* === MOBILE OPTIMIZATIONS === */
     @media (max-width: 768px) {
         .card-body.p-md-5 {
@@ -578,7 +620,11 @@
 </style>
 
 <script>
+    // Variable global para el modal docente
+    let modalDocente;
+
     document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar Collapse
         var collapseElements = document.querySelectorAll('.collapse');
         collapseElements.forEach(function(collapseEl) {
             collapseEl.addEventListener('show.bs.collapse', function () {
@@ -595,10 +641,63 @@
             });
         });
 
+        // Inicializar Tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
+        });
+
+        // Inicializar Modal Docente
+        const modalEl = document.getElementById('modalAnalisisDocente');
+        if (modalEl) {
+            modalDocente = new bootstrap.Modal(modalEl);
+        }
     });
+
+    // ==========================================
+    // LÓGICA DEL CEREBRO DE IA (DOCENTE)
+    // ==========================================
+    function iniciarAnalisisDocente(event, urlDestino) {
+        event.preventDefault(); // Detenemos la navegación inmediata
+        
+        if (!modalDocente) {
+            window.location.href = urlDestino; // Fallback si falla el modal
+            return;
+        }
+
+        // 1. Abrir el Modal
+        modalDocente.show();
+        
+        // 2. Elementos visuales
+        const statusText = document.getElementById('docenteStatusText');
+        const progressBar = document.getElementById('docenteProgressBar');
+        
+        // 3. Guión Pedagógico
+        const pasos = [
+            { msg: "Conectando con el Núcleo Académico...", progress: 10 },
+            { msg: "Recopilando notas de todos tus cursos...", progress: 30 },
+            { msg: "Analizando tendencias de rendimiento...", progress: 55 },
+            { msg: "Correlacionando asistencia y calificaciones...", progress: 75 },
+            { msg: "Diseñando estrategias pedagógicas...", progress: 90 },
+            { msg: "Generando reporte ejecutivo...", progress: 100 }
+        ];
+
+        let pasoActual = 0;
+        
+        // Simulación de proceso (800ms por paso)
+        const intervalo = setInterval(() => {
+            if (pasoActual < pasos.length) {
+                statusText.innerText = pasos[pasoActual].msg;
+                progressBar.style.width = pasos[pasoActual].progress + "%";
+                pasoActual++;
+            } else {
+                clearInterval(intervalo);
+                // 4. Redirección final
+                setTimeout(() => {
+                    window.location.href = urlDestino;
+                }, 500);
+            }
+        }, 800);
+    }
 </script>
 {% endblock %}

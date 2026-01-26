@@ -229,3 +229,15 @@ else:
 CSRF_TRUSTED_ORIGINS = [
         "https://web-production-707fc.up.railway.app",
     ]
+
+# settings.py
+
+# ... Agrega esto al final si no existe, o añade las líneas con 'T' ...
+DATETIME_INPUT_FORMATS = [
+    '%Y-%m-%dT%H:%M:%S',    # Formato ISO (con T)
+    '%Y-%m-%dT%H:%M',       # Formato ISO corto (con T)
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M:%S.%f',
+    '%Y-%m-%d %H:%M',
+    '%m/%d/%Y %H:%M:%S',
+]
