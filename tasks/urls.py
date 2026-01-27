@@ -428,4 +428,5 @@ urlpatterns = [
     path('bienestar/actas/', views.historial_actas, name='historial_actas'),
     path('bienestar/actas/crear/', views.crear_acta, name='crear_acta'),
     path('bienestar/actas/pdf/<int:acta_id>/', views.generar_acta_pdf, name='generar_acta_pdf'),
+    path('acudiente/configurar-sms/', views.actualizar_configuracion_sms, name='actualizar_configuracion_sms'),
 ]

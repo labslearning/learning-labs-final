@@ -4,6 +4,9 @@ import json
 from .models import Observacion, Institucion # <--- Importante importar Observacion
 from .models import Seguimiento # Asegúrate que importas tus modelos correctamente
 from django.core.serializers.json import DjangoJSONEncoder
+#sms 
+from .forms import TelefonoAcudienteForm  # <--- IMPORTANTE: Agrega este import
+
 # --- AGREGA ESTO AL PRINCIPIO DE tasks/views.py ---
 from django.template.loader import get_template  # <--- FALTABA ESTO
 from django.template import TemplateDoesNotExist # <--- FALTABA ESTO
@@ -5808,3 +5811,41 @@ def generar_acta_pdf(request, acta_id):
     HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(response)
     
     return response
+
+
+#SMS
+
+@login_required
+def actualizar_configuracion_sms(request):
+    if request.method == 'POST':
+        perfil = request.user.perfil
+
+        nuevo_telefono = request.POST.get('telefono_sms')
+        # Checkbox: si no está marcado, no envía nada, por eso la comparación
+        recibir = request.POST.get('recibir_sms') == 'on'
+
+        if nuevo_telefono:
+            # Quitamos espacios y guiones para validar
+            limpio = ''.join(filter(str.isdigit, nuevo_telefono))
+            
+            # Validación estricta de longitud para Colombia
+            if len(limpio) == 10:
+                perfil.telefono_sms = limpio
+                perfil.recibir_sms = recibir
+                perfil.save()
+                
+                estado = "ACTIVADAS" if recibir else "DESACTIVADAS"
+                messages.success(request, f'✅ Configuración actualizada. Alertas {estado}.')
+            else:
+                messages.error(request, '⚠️ Error: El número debe tener 10 dígitos exactos (Ej: 3001234567).')
+        else:
+            # Si envía el campo vacío, asumimos que quiere borrar el número
+            perfil.telefono_sms = None
+            perfil.recibir_sms = False
+            perfil.save()
+            messages.info(request, 'Has eliminado tu número de alertas.')
+
+        return redirect('dashboard_acudiente')
+    
+    # Si intentan entrar por GET, los devolvemos
+    return redirect('dashboard_acudiente')

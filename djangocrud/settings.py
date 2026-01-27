@@ -240,4 +240,12 @@ DATETIME_INPUT_FORMATS = [
     '%Y-%m-%d %H:%M:%S.%f',
     '%Y-%m-%d %H:%M',
     '%m/%d/%Y %H:%M:%S',
+    
 ]
+
+# ==========================================
+# 📱 TWILIO CONFIGURATION (SMS)
+# ==========================================
+TWILIO_ACCOUNT_SID = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # Reemplaza con tu SID real
+TWILIO_AUTH_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'    # Reemplaza con tu Token real
+TWILIO_PHONE_NUMBER = '+1xxxxxxxxxx'                    # Reemplaza con tu número de Twilio

@@ -68,3 +68,6 @@ whitenoise==6.11.0
 zope.interface==8.1.1
 zopfli==0.2.3.post1
 uvicorn[standard]
+#DRXXL4XERVZCNUX8GBLH15QX clave de twilio para recuperar
+#account sid ACa2a73537d72ea781f09776eec9624a3b
+#auth token f1ea83ec2a5bbbb117a34fdb099d54c2

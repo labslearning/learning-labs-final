@@ -93,6 +93,30 @@ class Perfil(models.Model):
     # --- PRIVACIDAD ---
     perfil_publico = models.BooleanField(default=True, help_text="Si es falso, solo profesores y compañeros de curso pueden verlo.")
 
+    # ==========================================
+    # 📱 SISTEMA DE ALERTAS SMS (NUEVO)
+    # ==========================================
+    telefono_sms = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True,
+        verbose_name="Celular para Alertas",
+        help_text="Número para notificaciones urgentes (+57...)"
+    )
+    recibir_sms = models.BooleanField(
+        default=True,
+        verbose_name="Activar Notificaciones SMS",
+        help_text="Si se desactiva, no llegarán alertas al celular."
+    )
+    ultimo_sms_enviado = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Control de spam para no enviar mensajes repetidos el mismo día."
+    )
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+
     def __str__(self):
         return f'{self.user.username} ({self.get_rol_display()})'
 

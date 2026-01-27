@@ -727,3 +727,29 @@ class ActaInstitucionalForm(forms.ModelForm):
             'class': 'select2-user-search form-control',
             'data-placeholder': 'Buscar persona citada o implicada...'
         })
+
+
+##SMS 
+
+class TelefonoAcudienteForm(forms.ModelForm):
+    class Meta:
+        model = Perfil
+        fields = ['telefono_sms', 'recibir_sms']
+        labels = {
+            'telefono_sms': 'Número de Celular (Colombia)',
+            'recibir_sms': 'Autorización de Comunicaciones',
+        }
+        help_texts = {
+            'recibir_sms': 'Autorizo expresamente el envío de notificaciones SMS relacionadas con el desempeño académico, asistencia y novedades urgentes del estudiante a mi cargo.',
+        }
+        widgets = {
+            'telefono_sms': forms.TextInput(attrs={
+                'placeholder': 'Ej: 3001234567',
+                'class': 'form-control',
+                'pattern': '[0-9]{10}'
+            }),
+            'recibir_sms': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'style': 'cursor: pointer;'
+            })
+        }

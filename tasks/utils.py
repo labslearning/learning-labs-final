@@ -1,7 +1,14 @@
 # ===================================================================
 # tasks/utils.py (SENTINEL 3.0: CORRECCIÓN DE FALSOS POSITIVOS Y LÓGICA ROBUSTA)
 # ===================================================================
+#desde aqui 
+import threading
+import logging
+from django.conf import settings
+from django.utils import timezone
+from twilio.rest import Client
 
+#Hasta aqui importaciones de sms 
 import re
 import secrets
 import string
@@ -186,3 +193,94 @@ def security_scan(text: str) -> bool:
 def validar_lenguaje_apropiado(texto: str) -> bool:
     is_unsafe, _ = Sentinel.is_toxic(texto)
     return not is_unsafe
+
+
+#Implementacion de SMS 
+
+# ===================================================================
+# 5. INTEGRACIÓN SMS (THREADING + ANTI-SPAM) 📱
+# ===================================================================
+
+logger = logging.getLogger(__name__)
+
+class SMSThread(threading.Thread):
+    def __init__(self, numero, mensaje):
+        self.numero = numero
+        self.mensaje = mensaje
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            if not getattr(settings, 'TWILIO_ACCOUNT_SID', None):
+                return
+
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+            client.messages.create(
+                body=self.mensaje,
+                from_=settings.TWILIO_PHONE_NUMBER,
+                to=self.numero
+            )
+            logger.info(f"✅ SMS enviado a {self.numero}")
+        except Exception as e:
+            logger.error(f"❌ Error enviando SMS: {e}")
+
+def enviar_sms_twilio(numero_destino, mensaje_texto):
+    """
+    Formatea el número y lanza el envío en segundo plano.
+    """
+    if not numero_destino:
+        return
+
+    # Limpieza y formato Colombia (+57)
+    num_limpio = ''.join(filter(str.isdigit, str(numero_destino)))
+
+    if len(num_limpio) == 10 and num_limpio.startswith('3'):
+        numero_final = f"+57{num_limpio}"
+    elif not str(numero_destino).startswith('+'):
+        numero_final = f"+{num_limpio}"
+    else:
+        numero_final = numero_destino
+
+    # Disparar hilo (Fire and Forget)
+    SMSThread(numero_final, mensaje_texto).start()
+
+def verificar_y_alertar_acudiente(usuario):
+    """
+    Revisa si hay mensajes acumulados y envía SMS respetando COOLDOWN de 24h.
+    """
+    from .models import MensajeInterno, Notificacion  # Import local para evitar ciclos
+
+    try:
+        if not hasattr(usuario, 'perfil'):
+            return
+
+        perfil = usuario.perfil
+        if not perfil.telefono_sms or not perfil.recibir_sms:
+            return
+
+        # === REGLA DE ORO: PROTECCIÓN DE BOLSILLO ===
+        if perfil.ultimo_sms_enviado:
+            horas_pasadas = (timezone.now() - perfil.ultimo_sms_enviado).total_seconds() / 3600
+            if horas_pasadas < 24:
+                return  # ⛔ Stop: Ya se le avisó hoy.
+
+        # Verificar acumulados
+        UMBRAL = 2
+        mensajes = MensajeInterno.objects.filter(destinatario=usuario, leido=False).count()
+        notificaciones = Notificacion.objects.filter(usuario=usuario, leida=False).count()
+
+        texto_sms = ""
+
+        if mensajes > UMBRAL:
+            texto_sms = f"LearningLabs: Hola {usuario.first_name}, tienes {mensajes} mensajes sin leer. Ingresa para revisarlos."
+        elif notificaciones > UMBRAL:
+            texto_sms = f"LearningLabs: Hola {usuario.first_name}, tienes {notificaciones} novedades pendientes."
+
+        if texto_sms:
+            enviar_sms_twilio(perfil.telefono_sms, texto_sms)
+            # Marcar que ya se envió hoy
+            perfil.ultimo_sms_enviado = timezone.now()
+            perfil.save(update_fields=['ultimo_sms_enviado'])
+
+    except Exception as e:
+        logger.error(f"Error en verificación SMS: {e}")

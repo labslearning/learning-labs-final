@@ -268,6 +268,138 @@ body {
 
 
 
+    <div class="row justify-content-center mb-4" style="margin-top: -20px; position: relative; z-index: 10;">
+
+        <div class="col-md-10 col-lg-8">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center"
+
+                            style="width: 50px; height: 50px; background-color: {% if request.user.perfil.telefono_sms and request.user.perfil.recibir_sms %}#d1e7dd{% else %}#f8d7da{% endif %};">
+
+                            <i class="fas fa-sms fa-lg {% if request.user.perfil.telefono_sms and request.user.perfil.recibir_sms %}text-success{% else %}text-danger{% endif %}"></i>
+
+                        </div>
+
+                        <div>
+
+                            <h6 class="fw-bold mb-0 text-dark">Alertas al Celular</h6>
+
+                            <small class="text-muted">
+
+                                {% if request.user.perfil.telefono_sms and request.user.perfil.recibir_sms %}
+
+                                    Activo en: <strong>+57 {{ request.user.perfil.telefono_sms }}</strong>
+
+                                {% else %}
+
+                                    <span class="text-danger">⚠️ Servicio inactivo.</span>
+
+                                {% endif %}
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <button class="btn btn-outline-dark btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalSMS">
+
+                        <i class="fas fa-cog me-1"></i> Configurar
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="modal fade" id="modalSMS" tabindex="-1" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-header bg-dark text-white">
+
+                    <h5 class="modal-title"><i class="fas fa-mobile-alt me-2"></i>Ajustes de Notificación</h5>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+
+                </div>
+
+                <form action="{% url 'actualizar_configuracion_sms' %}" method="POST">
+
+                    {% csrf_token %}
+
+                    <div class="modal-body">
+
+                        <div class="alert alert-info border-0 shadow-sm small">
+
+                            <i class="fas fa-shield-alt me-1"></i>
+
+                            Recibirás alertas inmediatas por fallas de asistencia y recordatorios de mensajes acumulados.
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">Número de Celular (Colombia)</label>
+
+                            <div class="input-group input-group-lg">
+
+                                <span class="input-group-text bg-light text-muted border-end-0">+57</span>
+
+                                <input type="tel" name="telefono_sms" class="form-control border-start-0 ps-1"
+
+                                    placeholder="3001234567"
+
+                                    value="{{ request.user.perfil.telefono_sms|default:'' }}"
+
+                                    pattern="[0-9]{10}" maxlength="10" required>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+
+                            <input class="form-check-input" type="checkbox" name="recibir_sms" id="checkSMS"
+
+                                {% if request.user.perfil.recibir_sms %}checked{% endif %}>
+
+                            <label class="form-check-label" for="checkSMS">Autorizo recibir mensajes de texto</label>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light">
+
+                        <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+
+                        <button type="submit" class="btn btn-success px-4">Guardar Cambios</button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
     {% if estudiantes_data %}
 
         {% if estudiantes_data|length > 1 %}
