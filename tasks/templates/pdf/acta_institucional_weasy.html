@@ -9,7 +9,6 @@
            ========================================= */
         @page {
             size: Letter;
-            /* Aumentamos el margen superior para que el logo respire */
             margin-top: 4.5cm;    
             margin-bottom: 3cm; 
             margin-left: 2.5cm;
@@ -17,7 +16,6 @@
 
             @top-center { 
                 content: element(header); 
-                /* Ajuste fino para bajar el header un poco del borde del papel */
                 margin-top: 1cm; 
             }
             @bottom-center { 
@@ -30,7 +28,7 @@
         body {
             font-family: 'Times New Roman', Times, serif; 
             font-size: 11pt;
-            line-height: 1.6; /* Un poco más de aire entre líneas */
+            line-height: 1.6; 
             color: #1a1a1a;   
             text-align: justify;
             text-rendering: optimizeLegibility;
@@ -45,12 +43,9 @@
             text-align: center;
             border-bottom: 1px solid #000;
             padding-bottom: 15px;
-            /* Margen negativo inferior para acercarlo al borde de @page si es necesario, 
-               pero aquí le damos espacio */
             margin-bottom: 20px; 
         }
 
-        /* Doble línea elegante */
         header::after {
             content: "";
             display: block;
@@ -59,7 +54,7 @@
         }
 
         .header-logo {
-            height: 75px; /* Un poco más grande pero contenido */
+            height: 75px; 
             margin-bottom: 12px;
             object-fit: contain;
         }
@@ -142,7 +137,7 @@
         .label {
             font-family: 'Arial', sans-serif;
             font-weight: 700;
-            width: 25%; /* Un poco más ancho para que no se corte */
+            width: 25%;
             text-transform: uppercase;
             font-size: 8.5pt;
             color: #333;
@@ -208,7 +203,7 @@
 
         /* FIRMAS */
         .signatures-container {
-            margin-top: 90px; /* Buen espacio antes de firmar */
+            margin-top: 90px;
             page-break-inside: avoid;
         }
         .signature-row {
@@ -248,7 +243,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 550px;
-            opacity: 0.04; /* Aún más sutil */
+            opacity: 0.04;
             z-index: -1;
             filter: grayscale(100%);
         }
@@ -310,18 +305,26 @@
     </table>
 
     {% if acta.implicado %}
-    <div class="cited-box">
-        <table style="width: 100%; border: none;">
-            <tr>
-                <td style="width: 25%; font-family: 'Arial'; font-weight: 800; font-size: 9pt; color: #333;">PERSONA CITADA:</td>
-                <td style="font-size: 12pt; font-weight: bold; color: #000;">{{ acta.implicado.get_full_name|upper }}</td>
-            </tr>
-            <tr>
-                <td style="font-family: 'Arial'; font-weight: 800; font-size: 9pt; color: #333;">CALIDAD / ROL:</td>
-                <td style="font-style: italic;">{{ acta.implicado.perfil.get_rol_display }}</td>
-            </tr>
-        </table>
-    </div>
+        {% if acta.tipo == 'DESCARGOS' or acta.tipo == 'SITUACION_CONVIVENCIA' or acta.tipo == 'SITUACION_ESPECIAL' or acta.tipo == 'SEGUIMIENTO_ACADEMICO' %}
+        <div class="cited-box">
+            <table style="width: 100%; border: none;">
+                <tr>
+                    <td style="width: 25%; font-family: 'Arial'; font-weight: 800; font-size: 9pt; color: #333;">
+                        {% if acta.tipo == 'DESCARGOS' %}
+                            PERSONA CITADA A DESCARGOS:
+                        {% else %}
+                            ESTUDIANTE / IMPLICADO:
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 12pt; font-weight: bold; color: #000;">{{ acta.implicado.get_full_name|upper }}</td>
+                </tr>
+                <tr>
+                    <td style="font-family: 'Arial'; font-weight: 800; font-size: 9pt; color: #333;">CALIDAD / ROL:</td>
+                    <td style="font-style: italic;">{{ acta.implicado.perfil.get_rol_display }}</td>
+                </tr>
+            </table>
+        </div>
+        {% endif %}
     {% endif %}
 
     {% if acta.orden_dia %}
@@ -375,17 +378,19 @@
             </div>
 
             {% if acta.implicado %}
-            <div class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-name">{{ acta.implicado.get_full_name }}</div>
-                <div class="sig-role">
-                    {% if acta.tipo == 'DESCARGOS' %}
-                        En versión libre y espontánea
-                    {% else %}
-                        Citado / Interesado
-                    {% endif %}
+                {% if acta.tipo == 'DESCARGOS' or acta.tipo == 'SITUACION_CONVIVENCIA' or acta.tipo == 'SITUACION_ESPECIAL' or acta.tipo == 'SEGUIMIENTO_ACADEMICO' %}
+                <div class="sig-box">
+                    <div class="sig-line"></div>
+                    <div class="sig-name">{{ acta.implicado.get_full_name }}</div>
+                    <div class="sig-role">
+                        {% if acta.tipo == 'DESCARGOS' %}
+                            En versión libre y espontánea
+                        {% else %}
+                            Citado / Interesado
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
+                {% endif %}
             {% endif %}
 
             {% for p in acta.participantes.all|slice:":2" %}

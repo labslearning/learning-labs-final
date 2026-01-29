@@ -256,6 +256,24 @@ body {
 
 <div class="container mt-4 py-4">
 
+    
+    {% if messages %}
+    <div class="row justify-content-center mb-4" style="position: relative; z-index: 100;">
+        <div class="col-md-10">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} fa-lg me-3"></i>
+                        <div><strong>Aviso del Sistema:</strong> {{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
     <div class="acudiente-header text-center shadow-sm">
 
         <i class="fas fa-user-shield fa-4x mb-3"></i>
@@ -450,64 +468,106 @@ body {
 
 
 
-                    <div class="d-flex justify-content-end gap-2 mb-3 border-bottom pb-3 align-items-center">
+                    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(to right, #ffffff, #f8f9fa);">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mb-3 mb-lg-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-white p-2 rounded-circle shadow-sm border me-3">
+                                            <i class="fas fa-id-card fa-2x text-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted text-uppercase fw-bold ls-1" style="font-size: 0.7rem;">Documento de Identidad</small>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h3 class="fw-bold text-dark mb-0">
+                                                    {% if data.estudiante.perfil.numero_documento %}
+                                                        {{ data.estudiante.perfil.numero_documento }}
+                                                    {% else %}
+                                                        <span class="text-danger small">Sin registrar</span>
+                                                    {% endif %}
+                                                </h3>
+                                                <button class="btn btn-link btn-sm text-muted p-0" data-bs-toggle="modal" data-bs-target="#modalEditDoc_{{ data.estudiante.id }}" title="Editar Documento">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-success"><i class="fas fa-check-circle me-1"></i>Estudiante Activo</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        
+                                <div class="col-lg-6 text-lg-end">
+                                    <div class="d-flex justify-content-lg-end gap-2 flex-wrap">
+                                        
+                                        <a href="#" onclick="iniciarAnalisisAcudiente(event, '{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}', '{{ data.estudiante.get_full_name }}')"
+                                           class="btn btn-ai-acudiente rounded-pill px-3 shadow-sm fw-bold small">
+                                            <i class="fas fa-robot me-2"></i>Guía IA
+                                        </a>
 
-                        <a href="#" onclick="iniciarAnalisisAcudiente(event, '{% url 'ai_engine' %}?action=apoyo_acudiente&target_id={{ data.estudiante.id }}', '{{ data.estudiante.get_full_name }}')"
-                           class="btn btn-ai-acudiente rounded-pill px-4 shadow-sm">
+                                        {% if data.matricula %}
+                                            <a href="{% url 'generar_certificado_estudiantil' data.estudiante.id %}" target="_blank" class="btn btn-warning text-dark fw-bold shadow-sm rounded-pill px-3 small" title="Descargar Certificado Oficial">
+                                                <i class="fas fa-certificate me-2"></i>Certificado
+                                            </a>
+                                        {% endif %}
 
-                            <i class="fas fa-robot me-2"></i>Guía de Apoyo Familiar
+                                        {% if data.matricula and data.matricula.puede_generar_boletin %}
+                                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success rounded-pill px-3 small" target="_blank">
+                                                <i class="fas fa-file-pdf me-2"></i>Boletín
+                                            </a>
+                                        {% endif %}
 
-                        </a>
-
-
-
-                        {# 1. BOTÓN BOLETÍN #}
-
-                        {% if data.matricula and data.matricula.puede_generar_boletin %}
-
-                            <a href="{% url 'generar_boletin_acudiente' data.estudiante.id %}" class="btn btn-success" target="_blank" title="Ver boletín en PDF">
-
-                                <i class="fas fa-file-pdf me-2"></i>Boletín
-
-                            </a>
-
-                        {% else %}
-
-                            <button class="btn btn-secondary" disabled title="La generación de boletines no está habilitada.">
-
-                                <i class="fas fa-file-pdf me-2"></i>Boletín (No disp.)
-
-                            </button>
-
-                        {% endif %}
-
-
-
-                        {# 2. BOTÓN OBSERVADOR #}
-
-                        {% if data.matricula and data.matricula.puede_ver_observador %}
-
-                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary">
-
-                                <i class="fas fa-file-signature me-2"></i>Observador
-
-                            </a>
-
-                        {% else %}
-
-                            <button type="button" class="btn btn-outline-secondary" disabled title="Documento no disponible">
-
-                                <i class="fas fa-clock me-2"></i>Obs. (No disp.)
-
-                            </button>
-
-                        {% endif %}
-
+                                        {% if data.matricula and data.matricula.puede_ver_observador %}
+                                            <a href="{% url 'descargar_observador_acudiente' data.estudiante.id %}" target="_blank" class="btn btn-outline-primary rounded-pill px-3 small">
+                                                <i class="fas fa-file-signature me-2"></i>Obs.
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    <div class="modal fade" id="modalEditDoc_{{ data.estudiante.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg">
+                                <div class="modal-header bg-dark text-white">
+                                    <h5 class="modal-title fs-6"><i class="fas fa-edit me-2"></i>Actualizar Identificación</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{% url 'actualizar_documento_estudiante' %}" method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-body p-4">
+                                        <input type="hidden" name="estudiante_id" value="{{ data.estudiante.id }}">
+                                        
+                                        <div class="text-center mb-4">
+                                            <div class="avatar-md bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <span class="fs-2">🆔</span>
+                                            </div>
+                                            <h6 class="fw-bold">{{ data.estudiante.get_full_name }}</h6>
+                                            <p class="text-muted small">Ingrese el número de documento oficial para trámites y certificados.</p>
+                                        </div>
 
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="numero_documento" class="form-control fw-bold" id="floatingInput_{{ data.estudiante.id }}" 
+                                                   placeholder="Número de Documento" 
+                                                   value="{{ data.estudiante.perfil.numero_documento|default:'' }}" required>
+                                            <label for="floatingInput_{{ data.estudiante.id }}">Número de Documento</label>
+                                        </div>
+                                        
+                                        <div class="alert alert-warning border-0 d-flex align-items-center small">
+                                            <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
+                                            <div>
+                                                <strong>Nota Importante:</strong> Este cambio se reflejará inmediatamente en los certificados y boletines generados.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer bg-light border-0">
+                                        <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row mb-4">
 

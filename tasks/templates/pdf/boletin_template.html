@@ -210,19 +210,31 @@
             padding: 10px 15px;
             border-bottom: 1px solid #cccccc;
         }
+        
+        /* AJUSTE SOLICITADO: CABECERA DE MATERIA PROFESIONAL */
         .materia-header-titulo {
             display: table-cell;
             vertical-align: middle;
-            font-size: 12pt;
-            font-weight: 500; /* Medium */
+            font-size: 11.5pt;
+            font-weight: 700;
             color: #003366;
+            width: 40%; /* Proporción para el nombre de la materia */
+            text-transform: uppercase;
         }
         .materia-header-docente {
             display: table-cell;
             vertical-align: middle;
-            text-align: right;
-            font-size: 9pt;
+            text-align: center; /* CENTRADO SOLICITADO */
+            font-size: 10pt;
             color: #424242;
+            width: 60%;
+            font-weight: 500;
+        }
+        .materia-header-docente span {
+            font-weight: 300;
+            font-style: italic;
+            color: #757575;
+            margin-right: 5px;
         }
 
         .materia-detalle-tabla {
@@ -400,7 +412,13 @@
             </tr>
             <tr>
                 <td><strong>DOCUMENTO:</strong></td>
-                <td>{{ estudiante.username }}</td>
+                <td>
+                    {% if estudiante.perfil.numero_documento %}
+                        {{ estudiante.perfil.numero_documento }}
+                    {% else %}
+                        {{ estudiante.username }}
+                    {% endif %}
+                </td>
                 <td><strong>ACUDIENTE:</strong></td>
                 <td>{{ acudiente.get_full_name|upper|default:"-" }}</td>
             </tr>
@@ -440,7 +458,9 @@
         <div class="materia-block">
             <div class="materia-header">
                 <div class="materia-header-titulo">{{ materia.nombre }}</div>
-                <div class="materia-header-docente">Docente: {{ materia.docente|default:"-" }}</div>
+                <div class="materia-header-docente">
+                    <span>Docente:</span> {{ materia.docente|default:"Por asignar" }}
+                </div>
             </div>
             
             <table class="materia-detalle-tabla">

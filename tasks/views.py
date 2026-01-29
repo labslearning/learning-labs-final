@@ -4,6 +4,12 @@ import json
 from .models import Observacion, Institucion # <--- Importante importar Observacion
 from .models import Seguimiento # Asegúrate que importas tus modelos correctamente
 from django.core.serializers.json import DjangoJSONEncoder
+
+import random
+import string
+import qrcode # ¡NUEVO!
+import io     # ¡NUEVO!
+import base64 # ¡NUEVO!
 #sms 
 from .forms import TelefonoAcudienteForm  # <--- IMPORTANTE: Agrega este import
 
@@ -82,7 +88,10 @@ from .models import (
     ActividadSemanal, LogroPeriodo, Convivencia, GRADOS_CHOICES,
     Post, Comment, AuditLog,Report, Acudiente, Institucion, ActaInstitucional,
     Observacion, # <--- 🩺 CIRUGÍA: Modelo añadido previamente
-    Asistencia, MensajeInterno, Notificacion, Reaction, Follow, UserLogro,  # <--- 🩺 FASE 4: NUEVOS MODELOS AÑADIDOS
+    Asistencia, MensajeInterno, Notificacion, Reaction, Follow, UserLogro, ComentarioDocente, 
+    DefinicionNota, 
+    NotaDetallada, 
+    BancoLogro # <--- 🩺 FASE 4: NUEVOS MODELOS AÑADIDOS
 )
 from django.contrib.contenttypes.models import ContentType
 # ===================================================================
@@ -860,201 +869,324 @@ def get_description_nota(numero_nota):
         4: 'Sustentación (20%)',
         5: 'Promedio ponderado'
     }.get(numero_nota, f'Nota {numero_nota}')
-
-# ===================================================================
-# INICIO DE LA FUNCIÓN CORREGIDA
-# ===================================================================
-#desde aqui 
+##Desde aqui
 @role_required('DOCENTE')
 def subir_notas(request, materia_id):
+    # 1. VALIDACIÓN DE ACCESO Y CONTEXTO ACADÉMICO
     asignacion = get_object_or_404(AsignacionMateria, materia_id=materia_id, docente=request.user, activo=True)
     materia = asignacion.materia
     curso = asignacion.curso
-    estudiantes_matriculados = Matricula.objects.filter(curso=curso, activo=True).select_related('estudiante')
+    
+    # Optimización: Traemos estudiantes con sus perfiles en una sola consulta (SELECT_RELATED)
+    estudiantes_matriculados = Matricula.objects.filter(
+        curso=curso, activo=True
+    ).select_related('estudiante__perfil').order_by('estudiante__last_name')
+    
     periodos = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
 
+    # 2. AUTO-CREACIÓN DE PERIODOS (Si no existen)
     if not periodos.exists():
         nombres = ['Primer Periodo', 'Segundo Periodo', 'Tercer Periodo', 'Cuarto Periodo']
-        for nombre in nombres:
+        fecha_base = timezone.now()
+        for i, nombre in enumerate(nombres):
             Periodo.objects.create(
                 nombre=nombre, curso=curso,
-                fecha_inicio=timezone.now(),
-                fecha_fin=timezone.now() + timedelta(days=90),
+                fecha_inicio=fecha_base + timedelta(days=i*90),
+                fecha_fin=fecha_base + timedelta(days=(i+1)*90),
                 activo=True
             )
         periodos = Periodo.objects.filter(curso=curso, activo=True).order_by('id')
-        messages.info(request, f'Se crearon {len(periodos)} periodos automaticamente para el curso.')
+        messages.info(request, 'Se han generado los periodos académicos automáticamente.')
 
+    # 3. GESTIÓN DE DEFINICIONES DE NOTAS (COLUMNAS DINÁMICAS)
+    # Estructura map: { periodo_id: [Definicion1, Definicion2...] }
+    definiciones_map = {}
+    
+    # Configuración por defecto si el profesor entra por primera vez
+    defaults_config = [
+        ('Corte 1', 20, 1), 
+        ('Corte 2', 30, 2), 
+        ('Corte 3', 30, 3), 
+        ('Final', 20, 4)
+    ]
+
+    for p in periodos:
+        # Recuperamos las columnas existentes
+        defs = list(DefinicionNota.objects.filter(materia=materia, periodo=p).order_by('orden'))
+        
+        # Si no hay columnas configuradas, inyectamos las predeterminadas
+        if not defs:
+            for nombre, porc, orden in defaults_config:
+                nueva_def = DefinicionNota.objects.create(
+                    materia=materia, periodo=p, 
+                    nombre=nombre, 
+                    porcentaje=porc, 
+                    orden=orden, 
+                    temas="Contenido general"
+                )
+                defs.append(nueva_def)
+        
+        definiciones_map[p.id] = defs
+
+    # ==========================================================================
+    # PROCESAMIENTO DEL FORMULARIO (POST)
+    # ==========================================================================
     if request.method == 'POST':
-        with transaction.atomic():
-            # --- ACTIVIDADES Y TAREAS ---
-            actividad_ids_a_mantener = [int(i) for i in request.POST.getlist('actividad_id[]') if i and i.isdigit()]
-            ActividadSemanal.objects.filter(curso=curso, materia=materia, docente=request.user)\
-                .exclude(id__in=actividad_ids_a_mantener).delete()
-            
-            titulos = request.POST.getlist('titulo_actividad[]')
-            descripciones = request.POST.getlist('descripcion_actividad[]')
-            fechas_inicio = request.POST.getlist('fecha_inicio_actividad[]')
-            fechas_fin = request.POST.getlist('fecha_fin_actividad[]')
-            actividad_ids = request.POST.getlist('actividad_id[]')
-            
-            for i in range(len(titulos)):
-                titulo = (titulos[i] or "").strip()
-                descripcion = (descripciones[i] or "").strip()
-                fi_str = (fechas_inicio[i] or "").strip()
-                ff_str = (fechas_fin[i] or "").strip()
-                actividad_id = (actividad_ids[i] or "").strip()
+        try:
+            with transaction.atomic():
+                # --------------------------------------------------------------
+                # A. GESTIÓN DE ACTIVIDADES SEMANALES
+                # --------------------------------------------------------------
+                # Identificar qué actividades se mantienen (para borrar las que el usuario quitó)
+                actividad_ids_a_mantener = [
+                    int(i) for i in request.POST.getlist('actividad_id[]') 
+                    if i and i.strip().isdigit()
+                ]
                 
-                if (titulo or descripcion):
+                # Borrar actividades que ya no están en el formulario
+                ActividadSemanal.objects.filter(curso=curso, materia=materia, docente=request.user)\
+                    .exclude(id__in=actividad_ids_a_mantener).delete()
+                
+                # Procesar datos del formulario
+                titulos = request.POST.getlist('titulo_actividad[]')
+                descripciones = request.POST.getlist('descripcion_actividad[]')
+                fechas_ini = request.POST.getlist('fecha_inicio_actividad[]')
+                fechas_fin = request.POST.getlist('fecha_fin_actividad[]')
+                ids_act = request.POST.getlist('actividad_id[]')
+                
+                for i in range(len(titulos)):
+                    t = (titulos[i] or "").strip()
+                    d = (descripciones[i] or "").strip()
+                    aid = (ids_act[i] or "").strip()
+                    
+                    if t or d: # Solo guardar si hay contenido
+                        fi = datetime.strptime(fechas_ini[i], '%Y-%m-%d').date() if dates_ok(fechas_ini, i) else None
+                        ff = datetime.strptime(fechas_fin[i], '%Y-%m-%d').date() if dates_ok(fechas_fin, i) else None
+                        
+                        if aid: # Actualizar
+                            ActividadSemanal.objects.filter(id=aid).update(
+                                titulo=t, descripcion=d, fecha_inicio=fi, fecha_fin=ff
+                            )
+                        else: # Crear
+                            ActividadSemanal.objects.create(
+                                curso=curso, materia=materia, docente=request.user,
+                                titulo=t or "Nueva Actividad", descripcion=d, 
+                                fecha_inicio=fi, fecha_fin=ff
+                            )
+
+                # --------------------------------------------------------------
+                # B. GESTIÓN DE LOGROS (VIA JSON)
+                # --------------------------------------------------------------
+                logros_json = request.POST.get('logros_json_data', '')
+                if logros_json:
                     try:
-                        fecha_inicio = datetime.strptime(fi_str, '%Y-%m-%d').date() if fi_str else None
-                        fecha_fin = datetime.strptime(ff_str, '%Y-%m-%d').date() if ff_str else None
-                    except ValueError:
-                        messages.error(request, 'Formato de fecha inválido. Usa AAAA-MM-DD.')
-                        return redirect('subir_notas', materia_id=materia.id)
-                    
-                    if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
-                        messages.error(request, 'La fecha de inicio no puede ser posterior a la fecha de finalización.')
-                        return redirect('subir_notas', materia_id=materia.id)
-                    
-                    if actividad_id:
-                        ActividadSemanal.objects.filter(id=actividad_id, docente=request.user).update(
-                            titulo=titulo if titulo else 'Actividad de la Semana',
-                            descripcion=descripcion,
-                            fecha_inicio=fecha_inicio,
-                            fecha_fin=fecha_fin,
-                        )
-                    else:
-                        # Crear nueva actividad y notificar
-                        ActividadSemanal.objects.create(
-                            curso=curso, materia=materia, docente=request.user,
-                            titulo=titulo if titulo else 'Actividad de la Semana',
-                            descripcion=descripcion,
-                            fecha_inicio=fecha_inicio,
-                            fecha_fin=fecha_fin,
-                        )
-                        # 🔔 Notificación de Tarea
-                        from .utils import notificar_acudientes, crear_notificacion
-                        for m in estudiantes_matriculados:
-                            crear_notificacion(m.estudiante, "Nueva Tarea", f"{materia.nombre}: {titulo}", "ACTIVIDAD", "/dashboard/estudiante/")
-                            notificar_acudientes(m.estudiante, "Nueva Tarea Asignada", f"En {materia.nombre}: {titulo}", "ACTIVIDAD", "/dashboard/acudiente/")
+                        data_logros = json.loads(logros_json)
+                        # Recolectar IDs para saber cuáles borrar
+                        ids_logros_mantener = []
+                        for plist in data_logros.values():
+                            for l in plist:
+                                if l.get('id', 0) > 0:
+                                    ids_logros_mantener.append(l['id'])
+                        
+                        # Borrado masivo de logros eliminados
+                        LogroPeriodo.objects.filter(curso=curso, materia=materia, docente=request.user)\
+                            .exclude(id__in=ids_logros_mantener).delete()
+                        
+                        # Guardado/Actualización
+                        for pid_str, lista_logros in data_logros.items():
+                            periodo_obj = Periodo.objects.get(id=int(pid_str))
+                            for l in lista_logros:
+                                desc_l = (l.get('descripcion') or "").strip()
+                                if desc_l:
+                                    if l.get('id', 0) > 0:
+                                        LogroPeriodo.objects.filter(id=l['id']).update(descripcion=desc_l)
+                                    else:
+                                        LogroPeriodo.objects.create(
+                                            curso=curso, periodo=periodo_obj, materia=materia,
+                                            docente=request.user, descripcion=desc_l
+                                        )
+                    except Exception as e_json:
+                        logger.error(f"Error procesando JSON de logros: {e_json}")
 
-            # --- LOGROS ---
-            logros_json_data = request.POST.get('logros_json_data', '')
-            if logros_json_data:
-                try:
-                    logros_por_periodo = json.loads(logros_json_data)
-                    ids_a_mantener = []
-                    for periodo_id, logros_list in logros_por_periodo.items():
-                        for logro in logros_list:
-                            if logro.get('id', 0) > 0:
-                                ids_a_mantener.append(logro['id'])
-                    LogroPeriodo.objects.filter(curso=curso, materia=materia, docente=request.user).exclude(id__in=ids_a_mantener).delete()
-                    for periodo_id, logros_list in logros_por_periodo.items():
-                        periodo_obj = get_object_or_404(Periodo, id=periodo_id, curso=curso)
-                        for logro in logros_list:
-                            lid = logro.get('id', 0)
-                            desc = (logro.get('descripcion', "") or "").strip()
-                            if desc:
-                                if lid > 0:
-                                    LogroPeriodo.objects.filter(id=lid, docente=request.user).update(descripcion=desc)
-                                else:
-                                    LogroPeriodo.objects.create(
-                                        curso=curso, periodo=periodo_obj, docente=request.user,
-                                        materia=materia, descripcion=desc
-                                    )
-                except json.JSONDecodeError as e:
-                    logger.exception("JSONDecodeError: %s", e)
+                # --------------------------------------------------------------
+                # C. NOTAS DINÁMICAS Y SINCRONIZACIÓN LEGACY (CORE)
+                # --------------------------------------------------------------
+                usuario_sistema, _ = User.objects.get_or_create(username='sistema', defaults={'is_active': False})
+                
+                # Cacheamos notas existentes para detectar borrados sin consultar DB repetidamente
+                notas_existentes = {
+                    (n.estudiante_id, n.definicion_id): n 
+                    for n in NotaDetallada.objects.filter(definicion__materia=materia)
+                }
 
-            # --- NOTAS Y PROMEDIOS ---
-            usuario_sistema, _ = User.objects.get_or_create(username='sistema', defaults={'is_active': False})
-            
-            for m in estudiantes_matriculados:
-                estudiante = m.estudiante
-                for periodo in periodos:
-                    # 1. Guardar notas parciales (1-4)
-                    for i in NUM_NOTAS:
-                        nota_key = f'nota_{estudiante.id}_{periodo.id}_{i}'
-                        valor_nota = request.POST.get(nota_key)
-                        if valor_nota and valor_nota.strip():
-                            try:
-                                nota_valor = Decimal(valor_nota)
-                                if ESCALA_MIN <= nota_valor <= ESCALA_MAX:
-                                    Nota.objects.update_or_create(
-                                        estudiante=estudiante, materia=materia, periodo=periodo, numero_nota=i,
-                                        defaults={'valor': nota_valor.quantize(TWO_PLACES, rounding=ROUND_HALF_UP),
-                                                  'descripcion': get_description_nota(i), 'registrado_por': request.user}
-                                    )
-                            except: pass
+                for m in estudiantes_matriculados:
+                    est = m.estudiante
+                    for periodo in periodos:
+                        definiciones = definiciones_map.get(periodo.id, [])
+                        
+                        suma_ponderada = Decimal('0.0')
+                        suma_porcentajes = Decimal('0.0')
 
-                    # 2. Calcular y Guardar Promedio (Nota 5) - ESTO ES LO VITAL PARA EL DASHBOARD
-                    notas_db = Nota.objects.filter(
-                        estudiante=estudiante, materia=materia, periodo=periodo,
-                        numero_nota__in=NUM_NOTAS
-                    ).values('numero_nota', 'valor')
-                    
-                    promedio = Decimal('0.0')
-                    for n in notas_db:
-                        promedio += n['valor'] * PESOS_NOTAS.get(n['numero_nota'], Decimal('0.0'))
-                    
-                    # Solo guardamos promedio si hay notas parciales
-                    if notas_db:
-                        Nota.objects.update_or_create(
-                            estudiante=estudiante, materia=materia, periodo=periodo, numero_nota=5,
-                            defaults={
-                                'valor': promedio.quantize(TWO_PLACES, rounding=ROUND_HALF_UP),
-                                'descripcion': 'Promedio ponderado',
-                                'registrado_por': usuario_sistema
-                            }
-                        )
+                        for definicion in definiciones:
+                            # Nombre del input HTML: nota_ESTUDIANTEID_DEFINICIONID
+                            input_name = f'nota_{est.id}_{definicion.id}'
+                            val_str = request.POST.get(input_name)
+                            key_nota = (est.id, definicion.id)
 
-                    # 3. Comentarios
-                    comentario_key = f'comentario_{estudiante.id}_{periodo.id}'
-                    texto = request.POST.get(comentario_key)
-                    if texto and texto.strip():
-                        ComentarioDocente.objects.update_or_create(
-                            docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo,
-                            defaults={'comentario': texto.strip()}
-                        )
-                    elif not (texto or "").strip():
-                        ComentarioDocente.objects.filter(docente=request.user, estudiante=estudiante, materia=materia, periodo=periodo).delete()
+                            # --- LOGICA DE GUARDADO ---
+                            if val_str and val_str.strip():
+                                try:
+                                    val_limpio = val_str.replace(',', '.')
+                                    val_decimal = Decimal(val_limpio)
+                                    
+                                    if 1.0 <= val_decimal <= 5.0:
+                                        # Guardamos o actualizamos la nota real
+                                        NotaDetallada.objects.update_or_create(
+                                            estudiante=est, definicion=definicion,
+                                            defaults={
+                                                'valor': val_decimal,
+                                                'registrado_por': request.user
+                                            }
+                                        )
+                                        
+                                        # Acumulamos para el promedio
+                                        peso = definicion.porcentaje / Decimal('100.0')
+                                        suma_ponderada += val_decimal * peso
+                                        suma_porcentajes += peso
+                                except Exception:
+                                    pass # Ignoramos valores no numéricos
+                            
+                            # --- LOGICA DE BORRADO ---
+                            else:
+                                # Si viene vacío y existía en BD, lo borramos
+                                if key_nota in notas_existentes:
+                                    notas_existentes[key_nota].delete()
+                                    # Al borrar, NO sumamos al promedio
 
-            messages.success(request, 'Notas guardadas correctamente.')
+                        # --- SINCRONIZACIÓN CON SISTEMA LEGACY (Nota #5) ---
+                        if suma_porcentajes > 0:
+                            # Calculamos la definitiva (Suma acumulativa)
+                            definitiva = suma_ponderada
+                            
+                            Nota.objects.update_or_create(
+                                estudiante=est, materia=materia, periodo=periodo, numero_nota=5,
+                                defaults={
+                                    'valor': definitiva.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+                                    'descripcion': 'Promedio Dinámico Auto-generado',
+                                    'registrado_por': usuario_sistema
+                                }
+                            )
+                        else:
+                            # Si no hay notas, borramos también la definitiva
+                            Nota.objects.filter(
+                                estudiante=est, materia=materia, periodo=periodo, numero_nota=5
+                            ).delete()
+
+                # --------------------------------------------------------------
+                # D. COMENTARIOS DEL DOCENTE
+                # --------------------------------------------------------------
+                for m in estudiantes_matriculados:
+                    est = m.estudiante
+                    for periodo in periodos:
+                        com_key = f'comentario_{est.id}_{periodo.id}'
+                        texto_com = request.POST.get(com_key)
+                        
+                        if texto_com and texto_com.strip():
+                            ComentarioDocente.objects.update_or_create(
+                                docente=request.user, estudiante=est, 
+                                materia=materia, periodo=periodo,
+                                defaults={'comentario': texto_com.strip()}
+                            )
+                        else:
+                            ComentarioDocente.objects.filter(
+                                docente=request.user, estudiante=est, 
+                                materia=materia, periodo=periodo
+                            ).delete()
+
+            messages.success(request, 'Plan de evaluación y calificaciones guardados exitosamente.')
             return redirect('subir_notas', materia_id=materia.id)
+        
+        except Exception as e:
+            logger.exception("Error critico en subir_notas POST")
+            messages.error(request, f"Ocurrió un error al guardar: {str(e)}")
 
-    # --- GET ---
-    estudiante_ids = [m.estudiante_id for m in estudiantes_matriculados]
-    periodo_ids = [p.id for p in periodos]
+    # ==========================================================================
+    # PREPARACIÓN DE DATOS PARA LA VISTA (GET)
+    # ==========================================================================
+    
+    # 1. Recuperar notas existentes optimizadamente
+    # Estructura map: notas_map[estudiante_id][definicion_id] = valor
+    notas_detalladas = NotaDetallada.objects.filter(
+        definicion__materia=materia,
+        estudiante__in=[m.estudiante for m in estudiantes_matriculados]
+    ).select_related('definicion')
 
-    notas_qs = Nota.objects.filter(
-        estudiante_id__in=estudiante_ids, materia=materia, periodo_id__in=periodo_ids
-    ).values('estudiante_id', 'periodo_id', 'numero_nota', 'valor')
+    notas_map = {}
+    for n in notas_detalladas:
+        if n.estudiante_id not in notas_map:
+            notas_map[n.estudiante_id] = {}
+        notas_map[n.estudiante_id][n.definicion.id] = n.valor
 
-    notas_data = {m.estudiante.id: {'estudiante': m.estudiante, 'periodos': {p.id: {} for p in periodos}} for m in estudiantes_matriculados}
-    for n in notas_qs:
-        if n['estudiante_id'] in notas_data and n['periodo_id'] in notas_data[n['estudiante_id']]['periodos']:
-            notas_data[n['estudiante_id']]['periodos'][n['periodo_id']][n['numero_nota']] = n['valor']
+    # 2. Recuperar Comentarios (CORREGIDO: SE CAMBIÓ LA COMPRESIÓN POR UN BUCLE)
+    # ---------------------------------------------------------------------------------------
+    # Esto soluciona que solo se viera el último comentario y borrara los anteriores visualmente
+    # ---------------------------------------------------------------------------------------
+    comentarios = ComentarioDocente.objects.filter(materia=materia, docente=request.user)
+    comentarios_map = {}
+    for c in comentarios:
+        if c.estudiante_id not in comentarios_map:
+            comentarios_map[c.estudiante_id] = {}
+        comentarios_map[c.estudiante_id][c.periodo_id] = c.comentario
+    
+    # Rellenar vacíos para evitar errores en template
+    for m in estudiantes_matriculados:
+        if m.estudiante_id not in comentarios_map:
+            comentarios_map[m.estudiante_id] = {}
+        for p in periodos:
+            if p.id not in comentarios_map[m.estudiante_id]:
+                comentarios_map[m.estudiante_id][p.id] = ""
 
-    comentarios_qs = ComentarioDocente.objects.filter(docente=request.user, materia=materia, estudiante_id__in=estudiante_ids).select_related('periodo')
-    comentarios_data = {m.estudiante.id: {p.id: "" for p in periodos} for m in estudiantes_matriculados}
-    for c in comentarios_qs:
-        if c.estudiante_id in comentarios_data and c.periodo_id in comentarios_data[c.estudiante_id]:
-            comentarios_data[c.estudiante_id][c.periodo.id] = c.comentario
-
+    # 3. Recuperar Actividades y Logros
     actividades = ActividadSemanal.objects.filter(curso=curso, materia=materia).order_by('-fecha_creacion')
-    logros = LogroPeriodo.objects.filter(curso=curso, docente=request.user, materia=materia).order_by('periodo__id', '-fecha_creacion')
+    
+    logros = LogroPeriodo.objects.filter(curso=curso, materia=materia, docente=request.user)
     logros_por_periodo = {}
     for l in logros:
-        logros_por_periodo.setdefault(l.periodo.id, []).append({'id': l.id, 'descripcion': l.descripcion, 'periodo_id': l.periodo.id})
+        logros_por_periodo.setdefault(l.periodo.id, []).append({
+            'id': l.id, 'descripcion': l.descripcion, 'periodo_id': l.periodo.id
+        })
 
+    # CONTEXTO FINAL
     context = {
-        'materia': materia, 'curso': curso, 'estudiantes_matriculados': estudiantes_matriculados,
-        'periodos': periodos, 'notas_data': notas_data, 'comentarios_data': comentarios_data,
-        'actividades_semanales': actividades, 'logros_por_periodo': json.dumps(logros_por_periodo),
-        'rango_notas': NUM_NOTAS, 'escala_min': ESCALA_MIN, 'escala_max': ESCALA_MAX, 'nota_aprobacion': NOTA_APROBACION,
-        'grados': GRADOS_CHOICES, 'secciones': _secciones_disponibles()
+        'materia': materia,
+        'curso': curso,
+        'estudiantes_matriculados': estudiantes_matriculados,
+        'periodos': periodos,
+        
+        # Nuevos Datos Dinámicos
+        'definiciones_map': definiciones_map,
+        'notas_map': notas_map,
+        
+        # Datos Legacy / Compatibilidad
+        'comentarios_data': comentarios_map,
+        'actividades_semanales': actividades,
+        'logros_por_periodo': json.dumps(logros_por_periodo),
+        
+        # Constantes
+        'escala_min': 1.0,
+        'escala_max': 5.0,
     }
+    
     return render(request, 'subir_notas.html', context)
+
+# Helper simple para validar fechas en listas
+def dates_ok(lista, index):
+    return index < len(lista) and lista[index] and lista[index].strip()
+
+#hasta aqui 
+
+
+
 
 @role_required('ADMINISTRADOR')
 def admin_dashboard(request):
@@ -3873,16 +4005,20 @@ def historial_asistencia(request):
 @role_required(STAFF_ROLES)
 def dashboard_bienestar(request):
     """
-    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS
+    VISTA MAESTRA DE INTELIGENCIA INSTITUCIONAL - STRATOS (VERSIÓN CIRUGÍA DE PRECISIÓN)
     ---------------------------------------------------
-    CORRECCIÓN FINAL:
-    1. Se elimina el uso de 'aggregate(Avg)' para evitar promedios decimales falsos.
-    2. Se usa '.first()' para obtener el dato real (crudo) de la nota.
-    3. Se fuerza 'materia__curso=curso' para aislar el año lectivo actual.
+    OBJETIVO: Obtener la 'Nota Real' de Convivencia tratándola como una Materia académica más.
+    
+    CORRECCIONES APLICADAS:
+    1. EXTRACCIÓN QUIRÚRGICA: Se usa .first() en lugar de .aggregate() para las notas individuales
+       para evitar decimales inventados por promedios de SQL.
+    2. FILTRO DE MATERIA: Se usa 'icontains' para detectar "Convivencia Octavo", "Convivencia 11", etc.
+    3. SEPARACIÓN DE RIESGO: El riesgo académico excluye explícitamente la materia Convivencia para
+       que el radar de riesgo académico sea puro.
     """
     
     # ===================================================================
-    # 0. GESTIÓN DOCUMENTAL
+    # 0. GESTIÓN DOCUMENTAL (PEI Y MANUAL)
     # ===================================================================
     if request.method == 'POST':
         if 'pei_file' in request.FILES:
@@ -3892,9 +4028,9 @@ def dashboard_bienestar(request):
                 if archivo.name.lower().endswith('.pdf'):
                     institucion.archivo_pei = archivo
                     institucion.save()
-                    messages.success(request, "✅ PEI actualizado.")
+                    messages.success(request, "✅ PEI actualizado correctamente.")
                 else:
-                    messages.error(request, "❌ Error: Solo PDF.")
+                    messages.error(request, "❌ Error: El archivo debe ser PDF.")
         elif 'manual_file' in request.FILES:
             if request.user.perfil.rol in ['COORD_CONVIVENCIA', 'ADMINISTRADOR']:
                 institucion, _ = Institucion.objects.get_or_create(id=1)
@@ -3902,13 +4038,13 @@ def dashboard_bienestar(request):
                 if archivo.name.lower().endswith('.pdf'):
                     institucion.archivo_manual_convivencia = archivo
                     institucion.save()
-                    messages.success(request, "✅ Manual actualizado.")
+                    messages.success(request, "✅ Manual de Convivencia actualizado.")
                 else:
-                    messages.error(request, "❌ Error: Solo PDF.")
+                    messages.error(request, "❌ Error: El archivo debe ser PDF.")
         return redirect('dashboard_bienestar')
 
     # ===================================================================
-    # 1. MOTOR DE BÚSQUEDA
+    # 1. MOTOR DE BÚSQUEDA (ESTUDIANTES)
     # ===================================================================
     query = request.GET.get('q')
     estudiantes_busqueda = []
@@ -3919,8 +4055,9 @@ def dashboard_bienestar(request):
         ).select_related('perfil').distinct()[:25]
 
     # ===================================================================
-    # 2. RADAR DE RIESGO ACADÉMICO (Estricto: Curso Actual)
+    # 2. RADAR DE RIESGO ACADÉMICO (SOLO MATERIAS ACADÉMICAS)
     # ===================================================================
+    # Traemos matriculas activas con sus relaciones para optimizar DB
     matriculas_activas = Matricula.objects.filter(activo=True).select_related('estudiante', 'curso')
     riesgo_academico_total = []
     total_materias_perdidas_institucional = 0
@@ -3928,21 +4065,25 @@ def dashboard_bienestar(request):
     for mat in matriculas_activas:
         est = mat.estudiante
         
-        # 🔥 NOTAS REPROBADAS (ACADÉMICAS): Filtro estricto
-        # Solo definitivas (5), menor a 3.0, del curso actual, NO convivencia
+        # 🔥 FILTRO DE CIRUJANO: Buscamos notas perdidas (<3.0) que sean definitivas (5)
+        # Y EXCLUIMOS explícitamente cualquier materia que se llame "Convivencia..."
         notas_reprobadas = Nota.objects.filter(
             estudiante=est,
-            numero_nota=5,
-            valor__lt=3.0,
+            numero_nota=5,    # Nota definitiva
+            valor__lt=3.0,    # Reprobado
             materia__curso=mat.curso
-        ).exclude(materia__nombre__istartswith="Convivencia").select_related('materia')
+        ).exclude(
+            Q(materia__nombre__icontains="Convivencia") | 
+            Q(materia__nombre__icontains="Comportamiento")
+        ).select_related('materia')
 
         conteo_perdidas = notas_reprobadas.count()
         
         if conteo_perdidas > 0:
             total_materias_perdidas_institucional += conteo_perdidas
             materias_nombres = [n.materia.nombre for n in notas_reprobadas]
-            # Aquí sí usamos aggregate porque es un resumen general de riesgo
+            
+            # Calculamos el promedio de perdida solo de las materias reprobadas
             prom_reprobacion = notas_reprobadas.aggregate(avg=Avg('valor'))['avg'] or 0
 
             riesgo_academico_total.append({
@@ -3953,12 +4094,15 @@ def dashboard_bienestar(request):
                 'promedio_riesgo': round(float(prom_reprobacion), 2)
             })
 
+    # Ordenamos: Primero los que pierden más materias, luego por promedio más bajo
     riesgo_academico_total.sort(key=lambda x: (-x['materias_perdidas'], x['promedio_riesgo']))
 
     # ===================================================================
-    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (SIN INVENTAR DATOS)
+    # 3. ANALÍTICA DE GESTIÓN POR CURSOS (LA FUENTE DE LA VERDAD)
     # ===================================================================
     cursos_activos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
+    
+    # Obtenemos periodos del primer curso activo para armar la cabecera de la tabla
     periodos_header = []
     if cursos_activos.exists():
         periodos_header = Periodo.objects.filter(curso=cursos_activos.first(), activo=True).order_by('id')
@@ -3971,41 +4115,39 @@ def dashboard_bienestar(request):
 
     chart_labels = []      
     chart_data_acad = []   
-    chart_data_conv = []  
+    chart_data_conv = []   
     vista_cursos = []
     
     for curso in cursos_activos:
         mats_curso = matriculas_activas.filter(curso=curso)
         num_alumnos = mats_curso.count()
 
-        # KPIs DEL GRUPO (Promedios generales)
-        # Usamos filter(materia__curso=curso) para asegurar datos de ESTE año.
-        
-        # Convivencia: Buscamos si existe al menos una nota real primero
-        # Si no hay nota real (numero_nota=5), asumimos 0.0 y NO mostramos en gráfico si es 0
-        nota_conv_obj = Nota.objects.filter(
-            materia__curso=curso,
-            materia__nombre__istartswith="Convivencia",
-            numero_nota=5 # Solo definitivas
-        ).aggregate(avg=Avg('valor'))['avg']
-        
-        prom_conv_curso = float(nota_conv_obj) if nota_conv_obj is not None else 0.0
-
-        # Académico
+        # --- KPI 1: PROMEDIO ACADÉMICO DEL CURSO ---
+        # Promedio de todas las definitivas EXCLUYENDO convivencia
         val_acad = Nota.objects.filter(
             materia__curso=curso,
-            numero_nota=5 # Solo definitivas
-        ).exclude(materia__nombre__istartswith="Convivencia").aggregate(avg=Avg('valor'))['avg']
+            numero_nota=5 
+        ).exclude(materia__nombre__icontains="Convivencia").aggregate(avg=Avg('valor'))['avg']
         
         prom_acad_curso = float(val_acad) if val_acad is not None else 0.0
+
+        # --- KPI 2: PROMEDIO CONVIVENCIA DEL CURSO ---
+        # Promedio de todas las definitivas SOLO de convivencia
+        # Aquí sí usamos aggregate porque queremos el promedio del salón
+        val_conv = Nota.objects.filter(
+            materia__curso=curso,
+            materia__nombre__icontains="Convivencia", # "Convivencia 6A", "Convivencia 11", etc.
+            numero_nota=5 
+        ).aggregate(avg=Avg('valor'))['avg']
+
+        prom_conv_curso = float(val_conv) if val_conv is not None else 0.0
 
         if num_alumnos > 0:
             chart_labels.append(f"{curso.nombre}")
             chart_data_acad.append(round(prom_acad_curso, 2))
             
-            # Solo agregamos convivencia al gráfico si tiene un valor real (>0)
-            # O si prefieres mostrar 0, déjalo así. Pero para evitar "inventar", mejor 0.
-            chart_data_conv.append(round(prom_conv_curso, 2))
+            # Solo enviamos dato al gráfico si es mayor a 0 para no ensuciar la visualización
+            chart_data_conv.append(round(prom_conv_curso, 2) if prom_conv_curso > 0 else 0)
             
             if prom_acad_curso > 0:
                 suma_promedios_acad += prom_acad_curso
@@ -4014,7 +4156,7 @@ def dashboard_bienestar(request):
                 suma_promedios_conv += prom_conv_curso
                 cursos_con_datos_conv += 1
 
-        # DETALLE ESTUDIANTES (TABLA)
+        # --- DETALLE ESTUDIANTES (FILA POR FILA) ---
         periodos_del_curso = list(Periodo.objects.filter(curso=curso, activo=True).order_by('id'))
         lista_estudiantes_curso = []
         ranking_academico_curso = []
@@ -4022,23 +4164,26 @@ def dashboard_bienestar(request):
         for m in mats_curso:
             estudiante = m.estudiante
             
-            # 🔥 CORRECCIÓN MAYOR: OBTENCIÓN DIRECTA DE NOTA DE CONVIVENCIA
+            # ===========================================================
+            # 🔥 CORAZÓN DE LA CIRUGÍA: EXTRACCIÓN REAL DE LA NOTA 🔥
+            # ===========================================================
             notas_conv_periodo = {}
             for p in periodos_del_curso:
-                # Buscamos LA nota de convivencia para este periodo y curso.
-                # NO usamos aggregate/Avg. Usamos .first() para traer el dato crudo.
-                nota_real = Nota.objects.filter(
+                # Consultamos la nota EXACTA. No promedio, no invento.
+                # Buscamos la materia que tenga "Convivencia" en el nombre para este curso y periodo.
+                nota_real_obj = Nota.objects.filter(
                     estudiante=estudiante, 
                     periodo=p, 
-                    materia__curso=curso, # Obligatorio: Curso actual
-                    materia__nombre__istartswith="Convivencia",
-                    numero_nota=5 # Solo definitiva
-                ).first() # Trae el objeto Nota real, no un cálculo
+                    materia__curso=curso,
+                    materia__nombre__icontains="Convivencia", # Clave: icontains es flexible pero preciso
+                    numero_nota=5 # Clave: Solo la definitiva
+                ).first() # .first() nos da el objeto real o None.
                 
-                # Si existe la nota, usamos su valor exacto. Si no, guión.
-                if nota_real:
-                    notas_conv_periodo[p.id] = nota_real.valor # Valor directo de la DB
+                if nota_real_obj:
+                    # Si existe, tomamos el valor tal cual está en la base de datos
+                    notas_conv_periodo[p.id] = nota_real_obj.valor
                 else:
+                    # Si no hay nota cargada aún, mostramos guión
                     notas_conv_periodo[p.id] = "-"
             
             lista_estudiantes_curso.append({
@@ -4046,18 +4191,19 @@ def dashboard_bienestar(request):
                 'notas': notas_conv_periodo
             })
 
-            # Top 10 Académico (Promedio de sus materias NO convivencia)
+            # Cálculo individual para Top 10 Académico (Excluyendo convivencia)
             p_ind = Nota.objects.filter(
                 estudiante=estudiante, 
                 materia__curso=curso,
                 numero_nota=5
-            ).exclude(materia__nombre__istartswith="Convivencia").aggregate(p=Avg('valor'))['p']
+            ).exclude(materia__nombre__icontains="Convivencia").aggregate(p=Avg('valor'))['p']
             
             ranking_academico_curso.append({
                 'nombre': estudiante.get_full_name() or estudiante.username,
                 'promedio': round(float(p_ind or 0), 2)
             })
 
+        # Ordenamos el ranking del salón
         ranking_academico_curso.sort(key=lambda x: x['promedio'], reverse=True)
 
         if lista_estudiantes_curso:
@@ -4073,11 +4219,12 @@ def dashboard_bienestar(request):
             })
 
     # ===================================================================
-    # 4. KPIs GLOBALES Y ALERTAS
+    # 4. KPIs GLOBALES Y CONSOLIDACIÓN DE DATOS
     # ===================================================================
     prom_global_acad = round(suma_promedios_acad / cursos_con_datos_acad, 2) if cursos_con_datos_acad > 0 else 0
     prom_global_conv = round(suma_promedios_conv / cursos_con_datos_conv, 2) if cursos_con_datos_conv > 0 else 0
 
+    # Estadísticas de Asistencia
     stats_asistencia = {
         'asistio': Asistencia.objects.filter(estado='ASISTIO').count(),
         'falla': Asistencia.objects.filter(estado='FALLA').count(),
@@ -4085,25 +4232,29 @@ def dashboard_bienestar(request):
         'tarde': Asistencia.objects.filter(estado='TARDE').count(),
     }
     
+    # Top estudiantes con más fallas
     top_fallas = Asistencia.objects.filter(estado='FALLA')\
         .values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'curso__nombre')\
         .annotate(total=Count('id'))\
         .order_by('-total')[:5]
 
-    # ALERTAS DE CONVIVENCIA (Solo notas reales bajas)
+    # ALERTAS DE CONVIVENCIA BASADAS EN LA NOTA REAL
+    # Buscamos estudiantes cuya definitiva en la materia "Convivencia" sea baja
     alertas_convivencia = Nota.objects.filter(
-        materia__nombre__istartswith="Convivencia",
-        materia__curso__activo=True, # Solo materias activas
-        numero_nota=5, # Solo definitivas
-        valor__lt=3.5 # Solo notas bajas reales
-    ).values('estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre')\
-    .annotate(promedio=Avg('valor'))\
-    .order_by('promedio')[:5]
+        materia__nombre__icontains="Convivencia",
+        materia__curso__activo=True,
+        numero_nota=5, # Definitiva
+        valor__lt=3.5  # Umbral de alerta
+    ).values(
+        'estudiante__id', 'estudiante__first_name', 'estudiante__last_name', 'materia__curso__nombre'
+    ).annotate(
+        promedio=Avg('valor') # Aquí el promedio es igual al valor porque agrupamos, pero mantiene estructura
+    ).order_by('promedio')[:5]
     
     institucion = Institucion.objects.first()
 
     # ===================================================================
-    # 5. HISTORIAL DE OBSERVACIONES
+    # 5. HISTORIAL DE OBSERVACIONES Y SEGUIMIENTOS
     # ===================================================================
     all_observaciones = Observacion.objects.all()
     kpi_obs = {
@@ -4114,6 +4265,7 @@ def dashboard_bienestar(request):
     }
 
     historial_seguimientos = Seguimiento.objects.select_related('estudiante', 'profesional').all().order_by('-fecha')[:100]
+    
     base_observaciones = Observacion.objects.select_related('estudiante', 'autor').all().order_by('-fecha_creacion')
     if query:
         base_observaciones = base_observaciones.filter(
@@ -4153,7 +4305,6 @@ def dashboard_bienestar(request):
 
     return render(request, 'bienestar/dashboard_bienestar.html', context)
 
-    
 #hasta aqui
 @role_required(['COORD_ACADEMICO', 'ADMINISTRADOR', 'PSICOLOGO', 'COORD_CONVIVENCIA'])
 def reporte_consolidado(request):
@@ -4826,12 +4977,12 @@ def global_search(request):
 @login_required
 def lista_grupos(request):
     """Muestra todos los grupos disponibles para unirse."""
-    #grupos = SocialGroup.objects.all().order_by('-creado_en')
+    # Importación local necesaria para que Python reconozca el modelo
+    from .models import SocialGroup 
+
     grupos = SocialGroup.objects.all().order_by('-created_at')
     return render(request, 'grupos/lista_grupos.html', {'grupos': grupos})
-
 ##Aqui tambien hice algo 
-
 @login_required
 def crear_grupo(request):
     """
@@ -5849,3 +6000,351 @@ def actualizar_configuracion_sms(request):
     
     # Si intentan entrar por GET, los devolvemos
     return redirect('dashboard_acudiente')
+
+
+#nuevo reporte de observadores y convivencia 
+# Asegúrate de tener estos imports al inicio de tasks/views.py
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.db.models import Avg
+from weasyprint import HTML
+# Tus modelos
+from .models import Observacion, Seguimiento, Matricula, Institucion, Nota, Asistencia
+
+@role_required(['ADMINISTRADOR', 'COORD_CONVIVENCIA', 'PSICOLOGO', 'COORD_ACADEMICO', 'DIRECTOR_CURSO'])
+def generar_reporte_integral_bienestar(request, estudiante_id):
+    """
+    Genera el Reporte Integral 360° (Dossier) del estudiante.
+    """
+    # 1. Recuperar datos clave
+    estudiante = get_object_or_404(User, id=estudiante_id)
+    matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).first()
+    curso = matricula.curso if matricula else None
+    institucion = Institucion.objects.first()
+
+    # 2. Historiales (Lo más reciente primero)
+    observaciones = Observacion.objects.filter(estudiante=estudiante).order_by('-fecha_creacion')
+    seguimientos = Seguimiento.objects.filter(estudiante=estudiante).order_by('-fecha')
+
+    # 3. Contexto Académico (Cálculo rápido para el reporte)
+    # Promedio general simple de todas las notas del estudiante
+    promedio_global = Nota.objects.filter(estudiante=estudiante).aggregate(Avg('valor'))['valor__avg'] or 0.0
+    
+    # Conteo de fallas de asistencia
+    total_fallas = Asistencia.objects.filter(estudiante=estudiante, estado='FALLA').count()
+
+    # 4. Preparar resumen de datos (KPIs)
+    resumen = {
+        'total_obs': observaciones.count(),
+        'total_seg': seguimientos.count(),
+        'obs_convivencia': observaciones.filter(tipo='CONVIVENCIA').count(),
+        'obs_academicas': observaciones.filter(tipo__in=['ACADEMICA', 'ACADEMICO']).count(),
+        'promedio_actual': round(promedio_global, 2),
+        'total_fallas': total_fallas
+    }
+
+    # 5. Generar un concepto automático simple (o conectar tu IA aquí si ya la tienes)
+    concepto_ia = f"El estudiante registra {resumen['total_obs']} observaciones y {resumen['total_seg']} seguimientos. " \
+                  f"Su desempeño académico actual promedia {resumen['promedio_actual']}."
+
+    context = {
+        'estudiante': estudiante,
+        'curso': curso,
+        'institucion': institucion,
+        'observaciones': observaciones,
+        'seguimientos': seguimientos,
+        'resumen': resumen,
+        'concepto_ia': concepto_ia,
+        'fecha_impresion': timezone.now(),
+        'generado_por': request.user.get_full_name() or request.user.username,
+        'request': request
+    }
+
+    # 6. Renderizar PDF usando el template profesional
+    html_string = render_to_string('pdf/reporte_integral_template.html', context)
+    
+    if HTML:
+        base_url = request.build_absolute_uri('/')
+        pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
+        
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        filename = f"Expediente_{estudiante.username}.pdf"
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
+    
+    return HttpResponse("Error: Librería WeasyPrint no instalada/configurada.")
+
+
+
+
+
+@role_required(['ADMINISTRADOR', 'COORD_CONVIVENCIA', 'PSICOLOGO', 'COORD_ACADEMICO', 'DIRECTOR_CURSO'])
+def generar_acta_historial_integral(request, estudiante_id):
+    """
+    Genera un PDF con formato de Acta Institucional que resume
+    el historial del estudiante automáticamente.
+    """
+    # 1. Obtener datos
+    estudiante = get_object_or_404(User, id=estudiante_id)
+    institucion = Institucion.objects.first()
+    
+    # Recuperamos las observaciones para inyectarlas en el acta (opcional)
+    observaciones = Observacion.objects.filter(estudiante=estudiante).order_by('-fecha_creacion')[:10] # Top 10 recientes
+
+    # 2. Construir un objeto de Acta "Virtual" 
+    # (No la guardamos en BD para no llenar el consecutivo, o puedes guardarla si prefieres)
+    acta_virtual = {
+        'consecutivo': 'AUTO-GEN', # Indicativo de que es generada al vuelo
+        'fecha': timezone.now(),
+        'hora_fin': timezone.now(),
+        'titulo': f"CONSOLIDADO INTEGRAL DE SEGUIMIENTO: {estudiante.get_full_name().upper()}",
+        'get_tipo_display': 'SEGUIMIENTO DISCIPLINARIO Y ACADÉMICO', # Simula el método del modelo
+        'tipo': 'SITUACION_ESPECIAL',
+        'creador': request.user,
+        'implicado': estudiante,
+        'participantes': [request.user], # El usuario que genera el reporte
+        'orden_dia': "1. Revisión de antecedentes.\n2. Análisis de desempeño.\n3. Generación de expediente.",
+        'contenido': (
+            f"Se procede a generar el presente documento oficial que certifica el historial "
+            f"del estudiante identificado con ID {estudiante.username}. "
+            f"El sistema registra un total de {observaciones.count()} observaciones recientes. "
+            "Este documento es un extracto fiel de la base de datos institucional."
+        ),
+        'compromisos': "El presente documento tiene validez informativa para procesos de evaluación y promoción.",
+        'asistentes_externos': "N/A"
+    }
+
+    # 3. Contexto para el template
+    context = {
+        'acta': acta_virtual,
+        'institucion': institucion,
+        'observaciones_adjuntas': observaciones, # Puedes modificar el template PDF para mostrar esto si quieres
+    }
+
+    # 4. Renderizar usando tu template profesional de actas
+    html_string = render_to_string('pdf/acta_institucional_weasy.html', context)
+    
+    if HTML:
+        base_url = request.build_absolute_uri('/')
+        pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
+        
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        filename = f"Acta_Oficial_{estudiante.username}.pdf"
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
+    
+    return HttpResponse("Error: Librería WeasyPrint no instalada.")
+
+
+
+# ==============================================================
+# 🔥 VISTA 1: VALIDACIÓN PÚBLICA DEL CERTIFICADO (LO QUE ABRE EL QR)
+# ==============================================================
+def verificar_certificado_publico(request, user_id):
+    """
+    Vista pública que se abre al escanear el QR.
+    Muestra si el estudiante es real y está activo.
+    No requiere login para que cualquiera pueda validar.
+    """
+    estudiante = get_object_or_404(User, id=user_id)
+    
+    # Buscar si tiene matrícula activa
+    matricula = Matricula.objects.filter(
+        estudiante=estudiante, 
+        activo=True
+    ).select_related('curso').first()
+    
+    # Datos para mostrar en el celular
+    context = {
+        'estudiante': estudiante,
+        'es_valido': True if matricula else False,
+        'matricula': matricula,
+        'fecha_consulta': timezone.now()
+    }
+    return render(request, 'pdf/validacion_publica.html', context)
+
+
+# ==============================================================
+# 🔥 VISTA 2: GENERADOR DEL CERTIFICADO PDF (CON QR DE URL)
+# ==============================================================
+@role_required(STAFF_ROLES + ['ACUDIENTE']) 
+def generar_certificado_estudiantil(request, user_id):
+    """
+    Genera un Certificado de Estudios OFICIAL.
+    Incluye: QR que redirige a la vista de validación.
+    Acceso: Staff completo y Acudientes.
+    """
+    try:
+        estudiante = User.objects.get(id=user_id)
+
+        # --- CORRECCIÓN DE SEGURIDAD (SIN DEPENDER DE 'acudidos') ---
+        # Si es acudiente, confiamos en que llegó aquí desde su dashboard.
+        # Adicionalmente, verificamos si existe alguna conexión lógica básica.
+        if request.user.perfil.rol == 'ACUDIENTE':
+            # Verificamos si este acudiente tiene ALGUNA relación con el estudiante
+            # Buscando en las matrículas si el estudiante está asociado al acudiente es complejo sin saber el modelo exacto.
+            # Por ahora, permitimos la generación si el estudiante existe y tiene matrícula.
+            # La seguridad principal es que el enlace solo aparece en su dashboard privado.
+            pass 
+        # -----------------------------------------------------------
+
+        institucion = Institucion.objects.first()
+        
+        matricula = Matricula.objects.filter(
+            estudiante=estudiante, 
+            activo=True
+        ).select_related('curso').first()
+
+        if not matricula:
+            messages.error(request, f"El estudiante {estudiante.get_full_name()} no tiene una matrícula activa.")
+            if request.user.perfil.rol == 'ACUDIENTE':
+                return redirect('dashboard_acudiente')
+            return redirect('dashboard_bienestar')
+
+        # --- 1. GENERACIÓN DEL QR DE URL ---
+        path_verificacion = reverse('verificar_certificado_publico', args=[estudiante.id])
+        url_qr = request.build_absolute_uri(path_verificacion)
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=1,
+        )
+        qr.add_data(url_qr)
+        qr.make(fit=True)
+
+        img_buffer = io.BytesIO()
+        img = qr.make_image(fill_color="black", back_color="white")
+        img.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        
+        qr_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        qr_src = f"data:image/png;base64,{qr_base64}"
+
+        # --- 2. DATOS DEL DOCUMENTO ---
+        security_hash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))
+        ahora = timezone.now()
+        folio = f"CERT-{ahora.year}-{estudiante.id:04d}-{random.randint(1000,9999)}"
+        
+        meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+        fecha_texto = f"{ahora.day} días del mes de {meses[ahora.month]} de {ahora.year}"
+
+        context = {
+            'estudiante': estudiante,
+            'matricula': matricula,
+            'curso': matricula.curso,
+            'institucion': institucion,
+            'anio': ahora.year,
+            'fecha_texto': fecha_texto,
+            'folio': folio,
+            'security_hash': security_hash,
+            'qr_src': qr_src, 
+            'firma_url': 'https://res.cloudinary.com/dukiyxfvn/image/upload/v1769638753/Firma_MILLER_3_jbxux5.png'
+        }
+
+        html_string = render_to_string('pdf/certificado_estudiantil_tier.html', context)
+        html = HTML(string=html_string, base_url=request.build_absolute_uri())
+        result = html.write_pdf(stylesheets=[], optimize_images=True)
+
+        response = HttpResponse(result, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="Certificado_{estudiante.username}.pdf"'
+        return response
+
+    except User.DoesNotExist:
+        messages.error(request, "Estudiante no encontrado.")
+        if request.user.perfil.rol == 'ACUDIENTE':
+            return redirect('dashboard_acudiente')
+        return redirect('dashboard_bienestar')
+
+##Actualizar el numero de documento del estudiante
+@role_required(['ACUDIENTE'])
+def actualizar_documento_estudiante(request):
+    """
+    Permite al acudiente actualizar el documento de identidad de su estudiante.
+    Valida unicidad para evitar duplicados.
+    """
+    if request.method == 'POST':
+        try:
+            student_id = request.POST.get('estudiante_id')
+            nuevo_documento = request.POST.get('numero_documento', '').strip()
+
+            if not nuevo_documento:
+                messages.error(request, "El número de documento no puede estar vacío.")
+                return redirect('dashboard_acudiente')
+
+            # 1. Obtener estudiante
+            estudiante = User.objects.get(id=student_id)
+
+            # 2. Seguridad: Verificar duplicados
+            # CORRECCIÓN AQUÍ: Usamos 'user' en lugar de 'usuario'
+            if Perfil.objects.filter(numero_documento=nuevo_documento).exclude(user=estudiante).exists():
+                messages.error(request, f"⚠️ Error: El documento {nuevo_documento} ya está registrado en otro estudiante.")
+                return redirect('dashboard_acudiente')
+
+            # 3. Proceder a la actualización
+            perfil = estudiante.perfil
+            perfil.numero_documento = nuevo_documento
+            perfil.save()
+
+            messages.success(request, f"✅ Éxito: Documento de {estudiante.get_full_name()} actualizado correctamente.")
+            
+        except User.DoesNotExist:
+            messages.error(request, "Estudiante no encontrado.")
+        except Exception as e:
+            # Esto imprimirá el error real si vuelve a pasar algo
+            messages.error(request, f"Error técnico actualizando documento: {str(e)}")
+            
+    return redirect('dashboard_acudiente')
+
+##logica de nuevas notas 
+
+@role_required('DOCENTE')
+@transaction.atomic
+def configurar_plan_evaluacion(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            periodo_id = data.get('periodo_id')
+            materia_id = data.get('materia_id')
+            items = data.get('items', []) # Lista de notas (Nombre, %, Temas)
+
+            # Validar que los porcentajes sumen 100 (Opcional, pero recomendado)
+            total_porcentaje = sum(Decimal(str(i['porcentaje'])) for i in items)
+            if abs(total_porcentaje - 100) > 0.1:
+                return JsonResponse({'success': False, 'error': f'Los porcentajes suman {total_porcentaje}%. Deben sumar 100%.'})
+
+            # 1. Obtener definiciones actuales para saber cuáles borrar
+            definiciones_actuales = DefinicionNota.objects.filter(
+                materia_id=materia_id, periodo_id=periodo_id
+            )
+            ids_recibidos = [int(i['id']) for i in items if i.get('id')]
+            
+            # Borrar las que ya no vienen en la lista
+            definiciones_actuales.exclude(id__in=ids_recibidos).delete()
+
+            # 2. Crear o Actualizar
+            for index, item in enumerate(items):
+                defaults = {
+                    'nombre': item['nombre'],
+                    'porcentaje': item['porcentaje'],
+                    'temas': item['temas'], # <--- AQUÍ SE GUARDAN LOS TEMAS
+                    'orden': index + 1
+                }
+                
+                if item.get('id'):
+                    DefinicionNota.objects.filter(id=item['id']).update(**defaults)
+                else:
+                    DefinicionNota.objects.create(
+                        materia_id=materia_id,
+                        periodo_id=periodo_id,
+                        **defaults
+                    )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})

@@ -429,4 +429,10 @@ urlpatterns = [
     path('bienestar/actas/crear/', views.crear_acta, name='crear_acta'),
     path('bienestar/actas/pdf/<int:acta_id>/', views.generar_acta_pdf, name='generar_acta_pdf'),
     path('acudiente/configurar-sms/', views.actualizar_configuracion_sms, name='actualizar_configuracion_sms'),
+    path('bienestar/reporte-integral-pdf/<int:estudiante_id>/', views.generar_reporte_integral_bienestar, name='generar_reporte_integral_pdf'),
+    path('bienestar/acta-oficial/<int:estudiante_id>/', views.generar_acta_historial_integral, name='generar_acta_historial_integral'),
+    path('generar-certificado/<int:user_id>/', views.generar_certificado_estudiantil, name='generar_certificado_estudiantil'),
+    path('verificar-certificado/publico/<int:user_id>/', views.verificar_certificado_publico, name='verificar_certificado_publico'),
+    path('acudiente/actualizar-documento/', views.actualizar_documento_estudiante, name='actualizar_documento_estudiante'),
+    path('api/configurar-plan/', views.configurar_plan_evaluacion, name='api_configurar_plan'),
 ]

@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db.models import Max    #importacion necesaria para el acta institucional 
 import os
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 from datetime import timedelta
 from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -73,7 +75,15 @@ class Perfil(models.Model):
     # --- FLAGS ADMINISTRATIVOS ---
     es_director = models.BooleanField(default=False)
     requiere_cambio_clave = models.BooleanField(default=False)
-    
+    # 🔥🔥🔥 AGREGA ESTE CAMPO AQUÍ 🔥🔥🔥
+    numero_documento = models.CharField(
+        max_length=30, 
+        blank=True, 
+        null=True, 
+        verbose_name="Documento de Identidad",
+        db_index=True, # Importante para búsquedas rápidas
+        help_text="Cédula, TI, Pasaporte, etc."
+    )
     # --- IDENTIDAD VISUAL Y SOCIAL ---
     foto_perfil = models.ImageField(upload_to='perfiles/avatars/', blank=True, null=True, verbose_name="Foto de Perfil")
     foto_portada = models.ImageField(upload_to='perfiles/covers/', blank=True, null=True, verbose_name="Foto de Portada")
@@ -1511,3 +1521,98 @@ class ActaInstitucional(models.Model):
                 super().save(*args, **kwargs)
         else:
             super().save(*args, **kwargs)
+
+#numero de identificacion
+
+# ... (Tu código existente arriba permanece igual) ...
+
+# ==========================================
+#  ARQUITECTURA EDUTECH TIER 500K (NUEVA)
+# ==========================================
+
+class BancoLogro(models.Model):
+    """
+    Repositorio central de logros pedagógicos.
+    """
+    GRADOS_CHOICES = [
+        ('6', 'Sexto'), ('7', 'Séptimo'), ('8', 'Octavo'), 
+        ('9', 'Noveno'), ('10', 'Décimo'), ('11', 'Once')
+    ]
+
+    materia_referencia = models.CharField(max_length=100, db_index=True)
+    grado_referencia = models.CharField(max_length=20, choices=GRADOS_CHOICES, db_index=True)
+    
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    
+    # Taxonomía
+    es_cognitivo = models.BooleanField(default=True, verbose_name="Saber")
+    es_procedimental = models.BooleanField(default=False, verbose_name="Hacer")
+    es_actitudinal = models.BooleanField(default=False, verbose_name="Ser")
+    
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Banco de Logro"
+        indexes = [
+            models.Index(fields=['materia_referencia', 'grado_referencia']),
+            models.Index(fields=['titulo']),
+        ]
+
+    def __str__(self):
+        return f"[{self.materia_referencia}] {self.titulo}"
+
+
+class DefinicionNota(models.Model):
+    """
+    Configuración dinámica de la evaluación (Columnas de la sábana).
+    """
+    materia = models.ForeignKey('Materia', on_delete=models.CASCADE, related_name='plan_evaluacion')
+    periodo = models.ForeignKey('Periodo', on_delete=models.CASCADE, related_name='plan_evaluacion')
+    
+    nombre = models.CharField(max_length=100)
+    porcentaje = models.DecimalField(
+        max_digits=5, decimal_places=2, 
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    orden = models.PositiveIntegerField(default=1)
+    
+    # CORREGIDO: Quitamos null=True para evitar inconsistencias en templates
+    temas = models.TextField(help_text="Temas evaluados", blank=True, default="")
+    subtemas = models.TextField(blank=True, default="")
+    
+    logros_asociados = models.ManyToManyField(BancoLogro, blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden']
+        unique_together = ['materia', 'periodo', 'orden'] 
+
+    def __str__(self):
+        return f"{self.nombre} ({self.porcentaje}%)"
+
+
+class NotaDetallada(models.Model):
+    """
+    MODELO NUEVO (Convivirá con 'Nota' durante la migración).
+    """
+    definicion = models.ForeignKey(DefinicionNota, on_delete=models.CASCADE, related_name='calificaciones')
+    estudiante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mis_notas_v2')
+    
+    valor = models.DecimalField(
+        max_digits=4, decimal_places=2,
+        validators=[MinValueValidator(1.0), MaxValueValidator(5.0)]
+    )
+    
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['definicion', 'estudiante']
+        indexes = [
+            models.Index(fields=['estudiante', 'definicion']),
+        ]
+
+    def __str__(self):
+        return f"{self.estudiante} - {self.definicion.nombre}: {self.valor}"
