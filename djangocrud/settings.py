@@ -246,6 +246,8 @@ DATETIME_INPUT_FORMATS = [
 # ==========================================
 # 📱 TWILIO CONFIGURATION (SMS)
 # ==========================================
-TWILIO_ACCOUNT_SID = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # Reemplaza con tu SID real
-TWILIO_AUTH_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'    # Reemplaza con tu Token real
-TWILIO_PHONE_NUMBER = '+1xxxxxxxxxx'                    # Reemplaza con tu número de Twilio
+# Dentro de settings.py (al final del archivo)
+
+TWILIO_ACCOUNT_SID = 'ACa2a73537d72ea781f09776eec9624a3b'
+TWILIO_AUTH_TOKEN = '354bdf5d4dd88a585bb99c77f4066c3e'
+TWILIO_PHONE_NUMBER = '+13185438398'

@@ -1329,5 +1329,22 @@ ${soluciones}
         loading.classList.add('d-none');
         results.classList.remove('d-none');
     }
+
+<div class="d-flex justify-content-end mb-4">
+    <a href="{% url 'descargar_pdf_bienestar' %}" class="btn btn-lg px-4 py-2 shadow-sm d-flex align-items-center gap-3" 
+       style="background: linear-gradient(135deg, #002B5B 0%, #1A4270 100%); color: #C5A059; border: 1px solid #C5A059; border-radius: 8px; transition: transform 0.2s;">
+        
+        <div style="background: rgba(197, 160, 89, 0.2); padding: 8px; border-radius: 6px;">
+            <i class="fas fa-file-pdf fa-xl"></i>
+        </div>
+        
+        <div class="text-start">
+            <div class="small text-white-50 text-uppercase ls-1" style="font-size: 0.7rem; letter-spacing: 1px;">Documento Oficial</div>
+            <div class="fw-bold" style="font-family: 'Georgia', serif;">Descargar Informe Ejecutivo</div>
+        </div>
+    </a>
+</div>
+
+
 </script>
 {% endblock %}

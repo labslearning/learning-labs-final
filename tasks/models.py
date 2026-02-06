@@ -1359,21 +1359,43 @@ class AIDocumento(models.Model):
 # En tasks/models.py
 
 class ObservadorArchivado(models.Model):
+    """
+    Modelo histórico que almacena el PDF del observador disciplinario
+    en el momento exacto del retiro del estudiante.
+    """
     estudiante_nombre = models.CharField(max_length=200)
     estudiante_username = models.CharField(max_length=150)
+    
+    # [NUEVO] Campo CRÍTICO: Permite diferenciar el observador de 2024 del de 2025
+    # Se pone un default para que la migración no falle con datos existentes.
+    anio_lectivo_archivado = models.CharField(
+        max_length=20, 
+        default='2025-2026', 
+        verbose_name="Año Lectivo"
+    )
+    
     fecha_archivado = models.DateTimeField(auto_now_add=True)
+    
     # Usuario que realizó la eliminación (El admin)
-    eliminado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    eliminado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True
+    )
+    
     # El archivo PDF final
     archivo_pdf = models.FileField(upload_to='archivos/observadores_retirados/')
 
     class Meta:
         verbose_name = "Observador Archivado (Retirado)"
         verbose_name_plural = "Observadores Archivados"
+        # Optimización Nivel Dios: Índice compuesto para búsquedas ultra-rápidas
+        indexes = [
+            models.Index(fields=['estudiante_username', 'anio_lectivo_archivado']),
+        ]
 
     def __str__(self):
-        return f"Observador: {self.estudiante_nombre} - {self.fecha_archivado.strftime('%Y-%m-%d')}"
-
+        return f"Observador: {self.estudiante_nombre} ({self.anio_lectivo_archivado})"
 # En tasks/models.py
 
 class Seguimiento(models.Model):
@@ -1616,3 +1638,51 @@ class NotaDetallada(models.Model):
 
     def __str__(self):
         return f"{self.estudiante} - {self.definicion.nombre}: {self.valor}"
+
+
+##mejoras de la ia 
+
+# tasks/models.py
+
+from django.db import models
+
+class InstitucionKnowledgeBase(models.Model):
+    """
+    CEREBRO INSTITUCIONAL: Almacena la 'Verdad' del colegio de forma resumida.
+    Optimizada para ahorrar tokens (no se sube el PDF a la IA, sino el resumen_ia).
+    """
+    TIPO_CHOICES = [
+        ('PEI', 'Proyecto Educativo (Misión/Visión)'),
+        ('MANUAL', 'Manual de Convivencia (Reglas)'),
+        ('EVALUACION', 'Sistema de Evaluación (Escala Notas)'),
+    ]
+
+    tipo = models.CharField(
+        max_length=20, 
+        choices=TIPO_CHOICES, 
+        unique=True,
+        verbose_name="Tipo de Documento"
+    )
+    
+    contenido_texto = models.TextField(
+        verbose_name="Texto Legal Completo (Referencia)", 
+        blank=True,
+        help_text="Pega aquí el texto original del PDF por si necesitas consultarlo después."
+    )
+    
+    # 🔥 LA IA LEERÁ SOLO ESTE CAMPO (Ahorro de Tokens)
+    resumen_ia = models.TextField(
+        verbose_name="Instrucciones Lógicas para IA",
+        help_text="Reglas RESUMIDAS y CLARAS. Ej: 'Falta leve = Retardo. Aprueba con 3.0'.",
+        blank=False # Obligatorio, sin esto la IA no funciona
+    )
+    
+    ultima_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Cerebro Institucional (IA)"
+        verbose_name_plural = "Reglas Institucionales (IA)"
+        ordering = ['tipo']
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} (Actualizado: {self.ultima_actualizacion.strftime('%d/%m')})"

@@ -2,183 +2,272 @@
 
 {% block content %}
 <div class="container py-5">
-    <div class="card p-5 shadow-sm">
-        <h2 class="text-center mb-4"><i class="fas fa-chalkboard-teacher me-2"></i>Asignar Curso a Estudiante</h2>
+    <div class="card p-4 p-md-5 shadow-lg border-0">
+        <div class="card-header bg-white border-0 text-center pb-4">
+            <h2 class="fw-bold text-primary-dark">
+                <i class="fas fa-chalkboard-teacher me-2 text-primary"></i>
+                Gestión de Matrículas
+            </h2>
+            <p class="text-muted">Asignación de cursos y gestión de ciclo de vida del estudiante.</p>
+        </div>
 
-        <form method="POST" class="mb-4">
-            {% csrf_token %}
-            <div class="row align-items-end">
-                <div class="col-md-5">
-                    <label for="estudiante_select" class="form-label">Seleccionar Estudiante</label>
-                    <select name="estudiante" id="estudiante_select" class="form-select select2" required>
-                        <option value="">Seleccionar estudiante</option>
-                        {% for estudiante in todos_los_estudiantes %}
-                            <option value="{{ estudiante.id }}">{{ estudiante.last_name }} {{ estudiante.first_name }} ({{ estudiante.username }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label for="curso_select" class="form-label">Seleccionar Curso</label>
-                    <select name="curso" id="curso_select" class="form-select select2" required>
-                        <option value="">Seleccionar curso</option>
-                        {% for curso in cursos %}
-                            <option value="{{ curso.id }}">{{ curso.get_grado_display }} {{ curso.seccion }} ({{ curso.matriculados.count }}/{{ curso.capacidad_maxima }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-plus-circle"></i> Asignar
-                    </button>
-                </div>
-            </div>
-        </form>
+        <div class="card-body bg-light rounded-3 border mb-5 p-4">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3 align-items-start"> <div class="col-md-5">
+                        <label for="estudiante_select" class="form-label fw-bold small text-uppercase text-muted">
+                            Estudiantes (Selección Múltiple)
+                        </label>
+                        <select name="estudiantes" id="estudiante_select" class="form-select select2" multiple required>
+                            {% for estudiante in todos_los_estudiantes %}
+                                <option value="{{ estudiante.id }}">
+                                    {{ estudiante.last_name }} {{ estudiante.first_name }} ({{ estudiante.username }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text small text-muted mt-1">
+                            <i class="fas fa-info-circle"></i> Haz clic para añadir varios estudiantes.
+                        </div>
+                    </div>
 
-        <hr class="my-5">
+                    <div class="col-md-5">
+                        <label for="curso_select" class="form-label fw-bold small text-uppercase text-muted">Curso Destino</label>
+                        <select name="curso" id="curso_select" class="form-select select2" required>
+                            <option value="">Seleccionar curso...</option>
+                            {% for curso in cursos %}
+                                <option value="{{ curso.id }}">
+                                    {{ curso.get_grado_display }} {{ curso.seccion }} 
+                                    (Ocupación: {{ curso.matriculados.count }}/{{ curso.capacidad_maxima }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <h3 class="mb-3">Estudiantes Matriculados ({{ anio_escolar }})</h3>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
+                    <div class="col-md-2 align-self-center"> <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="height: 42px;">
+                            <i class="fas fa-users me-2"></i> Asignar Lote
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <hr class="border-secondary opacity-10 my-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0">Estudiantes Matriculados <span class="text-muted fs-6 fw-normal">({{ anio_escolar }})</span></h4>
+            <span class="badge bg-primary rounded-pill">{{ estudiantes_con_curso|length }} Activos</span>
+        </div>
+
+        <div class="table-responsive rounded-3 border">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white">
                     <tr>
-                        <th>Estudiante</th>
-                        <th>Usuario</th>
-                        <th>Acudiente</th>
-                        <th>Curso</th>
-                        <th class="text-center">PDFs</th> 
-                        <th class="text-center">Bol. (Visib.)</th> <th class="text-center">Obs. (Visib.)</th> <th class="text-center">Acciones</th>
+                        <th scope="col" class="ps-3">Estudiante</th>
+                        <th scope="col">Acudiente</th>
+                        <th scope="col">Curso</th>
+                        <th scope="col" class="text-center">Generar Docs</th> 
+                        <th scope="col" class="text-center">Visibilidad Boletín</th> 
+                        <th scope="col" class="text-center">Visibilidad Obs.</th> 
+                        <th scope="col" class="text-center">Retirar</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white">
                     {% for item in estudiantes_con_curso %}
                     <tr>
-                        <td>
-                            <strong>{{ item.user.last_name }} {{ item.user.first_name }}</strong>
-                        </td>
-                        <td><code>{{ item.user.username }}</code></td>
-                        <td>
-                            {{ item.acudiente_nombre }}<br>
-                            <small class="text-muted">{{ item.acudiente_username }}</small>
+                        <td class="ps-3">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark">{{ item.user.last_name }} {{ item.user.first_name }}</span>
+                                <code class="text-muted small">{{ item.user.username }}</code>
+                            </div>
                         </td>
                         <td>
-                            <span class="badge bg-info text-dark">
-                                {{ item.curso.get_grado_display }} {{ item.curso.seccion }}
+                            <div class="d-flex flex-column small">
+                                <span class="fw-semibold">{{ item.acudiente_nombre }}</span>
+                                <span class="text-muted">{{ item.acudiente_username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ item.curso.get_grado_display }} - {{ item.curso.seccion }}
                             </span>
                         </td>
                         
-                        <td class="text-center text-nowrap">
-                            <a href="{% url 'panel_generar_boletin' item.user.id %}" class="btn btn-sm btn-info me-1" target="_blank" title="Generar Boletín PDF">
-                                <i class="fas fa-file-pdf"></i>
-                            </a>
-                            <a href="{% url 'generar_observador_pdf' item.user.id %}" class="btn btn-sm btn-warning me-1" target="_blank" title="Generar Observador PDF">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'panel_generar_boletin' item.user.id %}" class="btn btn-outline-primary btn-sm" target="_blank" title="Ver Boletín Actual">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                                <a href="{% url 'generar_observador_pdf' item.user.id %}" class="btn btn-outline-dark btn-sm" target="_blank" title="Ver Observador Actual">
+                                    <i class="fas fa-user-shield"></i>
+                                </a>
+                            </div>
                         </td>
+
                         <td class="text-center">
                             {% if item.matricula %}
-                            <div class="form-check form-switch d-inline-block">
-                                <input class="form-check-input toggle-permiso" type="checkbox" 
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input toggle-permiso cursor-pointer" type="checkbox" 
                                        data-tipo="boletin" 
                                        data-estudiante-id="{{ item.user.id }}"
                                        id="bol-switch-{{ item.user.id }}"
                                        {% if item.matricula.puede_generar_boletin %}checked{% endif %}>
-                                <label class="form-check-label small d-block" for="bol-switch-{{ item.user.id }}" id="label-boletin-{{ item.user.id }}">
-                                    {% if item.matricula.puede_generar_boletin %}Visible{% else %}Bloq.{% endif %}
-                                </label>
                             </div>
                             {% else %}
-                            <span class="badge bg-secondary">--</span>
+                            <span class="text-muted small">-</span>
                             {% endif %}
                         </td>
 
                         <td class="text-center">
                             {% if item.matricula %}
-                            <div class="form-check form-switch d-inline-block">
-                                <input class="form-check-input toggle-permiso" type="checkbox" 
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input toggle-permiso cursor-pointer" type="checkbox" 
                                        data-tipo="observador" 
                                        data-estudiante-id="{{ item.user.id }}"
                                        id="obs-switch-{{ item.user.id }}"
                                        {% if item.matricula.puede_ver_observador %}checked{% endif %}>
-                                <label class="form-check-label small d-block" for="obs-switch-{{ item.user.id }}" id="label-observador-{{ item.user.id }}">
-                                    {% if item.matricula.puede_ver_observador %}Visible{% else %}Bloq.{% endif %}
-                                </label>
                             </div>
                             {% else %}
-                            <span class="badge bg-secondary">--</span>
+                            <span class="text-muted small">-</span>
                             {% endif %}
                         </td>
 
                         <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-danger btn-retirar"
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-retirar shadow-sm"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalRetirarEstudiante"
                                     data-estudiante-id="{{ item.user.id }}"
-                                    data-estudiante-nombre="{{ item.user.get_full_name|default:item.user.username }}"
-                                    title="Retirar y Archivar">
-                                <i class="fas fa-user-times"></i>
+                                    data-estudiante-nombre="{{ item.user.get_full_name|default:item.user.username }}">
+                                <i class="fas fa-user-times me-1"></i> Retirar
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No hay estudiantes matriculados activos para mostrar.</td>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fas fa-users-slash fa-3x mb-3 opacity-50"></i><br>
+                            No hay estudiantes matriculados en este periodo activo.
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-
-        <div class="text-center mt-4">
-            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
-        </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalRetirarEstudiante" tabindex="-1" aria-labelledby="modalRetirarLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade" id="modalRetirarEstudiante" tabindex="-1" aria-labelledby="modalRetirarLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="modalRetirarLabel">
-            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Retiro de Estudiante
+        <h5 class="modal-title fw-bold" id="modalRetirarLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>Zona de Peligro: Retiro
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <p>Estás a punto de **retirar** (desactivar) al estudiante:</p>
-        <h4 class="text-center fw-bold" id="nombreEstudianteModal"></h4>
-        
-        <div class="alert alert-warning mt-3">
-            <strong>¡Esto es un "Borrado Suave" profesional!</strong>
-            <ul class="mb-0 mt-2">
-                <li>El estudiante será movido al archivo de "Ex Alumnos".</li>
-                <li>Se generará un **respaldo en PDF** de su boletín por cada año cursado.</li>
-                <li>Su cuenta y la de su acudiente (si no tiene más estudiantes) serán desactivadas.</li>
-            </ul>
+      
+      <form method="POST" action="{% url 'admin_eliminar_estudiante' %}" id="formRetiro">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+            <div class="text-center mb-4">
+                <div class="avatar-placeholder bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-user-graduate fa-3x text-secondary"></i>
+                </div>
+                <h4 class="fw-bold text-dark" id="nombreEstudianteModal">Cargando...</h4>
+                <p class="text-muted small">Confirmación de salida institucional</p>
+            </div>
+            
+            <div class="alert alert-warning border-warning">
+                <h6 class="alert-heading fw-bold"><i class="fas fa-info-circle"></i> Protocolo de Retiro:</h6>
+                <ul class="mb-0 small text-dark">
+                    <li>El estudiante se moverá a <strong>Ex-Alumnos</strong>.</li>
+                    <li>Se generarán y archivarán sus <strong>Boletines</strong>.</li>
+                    <li>Se congelará su <strong>Observador Disciplinario</strong> actual.</li>
+                    <li>Se desactivará el acceso a la plataforma.</li>
+                </ul>
+            </div>
+            
+            <input type="hidden" name="estudiante_id" id="idEstudianteRetirar" value="">
+            
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="checkConfirm" required>
+                <label class="form-check-label small" for="checkConfirm">
+                    Confirmo que he verificado la identidad del estudiante y deseo proceder.
+                </label>
+            </div>
         </div>
-        <p class="mt-3">¿Estás seguro de que deseas continuar?</p>
-      </div>
-      <div class="modal-footer">
-        <form method="POST" action="{% url 'panel_eliminar_estudiante' %}">
-            {% csrf_token %}
-            <input type="hidden" name="estudiante_id" id="idEstudianteRetirar">
+        <div class="modal-footer bg-light">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger">Sí, Retirar Estudiante</button>
-        </form>
-      </div>
+            <button type="submit" class="btn btn-danger fw-bold" id="btnConfirmarRetiro" disabled>
+                <i class="fas fa-archive me-2"></i>Ejecutar Retiro
+            </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
+    /* Estilos para Select2 Single (Curso) */
+    .select2-container .select2-selection--single { 
+        height: 38px; 
+        border: 1px solid #ced4da; 
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { 
+        line-height: 36px; 
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { 
+        height: 36px; 
+    }
+
+    /* NUEVO: Estilos para Select2 Multiple (Estudiantes) */
+    .select2-container .select2-selection--multiple {
+        min-height: 38px;
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        color: #495057;
+    }
+
+    .cursor-pointer { cursor: pointer; }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Inicializar Select2 con tema Bootstrap 5 (si disponible) o default
-    $('.select2').select2({ width: '100%' });
+    // Inicializar Select2
+    $('.select2').select2({ width: '100%', dropdownParent: $('body') });
 
-    // --- LÓGICA DE TOGGLE UNIFICADA (Boletín y Observador) ---
+    // Lógica del Modal
+    var modalElement = document.getElementById('modalRetirarEstudiante');
+    var checkConfirm = document.getElementById('checkConfirm');
+    var btnConfirmar = document.getElementById('btnConfirmarRetiro');
+
+    if (modalElement) {
+        modalElement.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var id = button.getAttribute('data-estudiante-id');
+            var nombre = button.getAttribute('data-estudiante-nombre');
+            
+            document.getElementById('nombreEstudianteModal').textContent = nombre;
+            document.getElementById('idEstudianteRetirar').value = id;
+            
+            checkConfirm.checked = false;
+            btnConfirmar.disabled = true;
+        });
+    }
+
+    if(checkConfirm){
+        checkConfirm.addEventListener('change', function() {
+            btnConfirmar.disabled = !this.checked;
+        });
+    }
+
+    // Lógica Toggles (Permisos)
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -196,76 +285,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrftoken = getCookie('csrftoken');
 
     const toggles = document.querySelectorAll('.toggle-permiso');
-    
     toggles.forEach(switchEl => {
         switchEl.addEventListener('change', async function(e) {
             const estudianteId = e.target.dataset.estudianteId;
             const nuevoEstado = e.target.checked;
-            const tipo = e.target.dataset.tipo; // 'boletin' o 'observador'
+            const tipo = e.target.dataset.tipo;
             
-            // Determinamos ID del label y URL según el tipo
-            let labelId = '';
-            let urlApi = '';
+            let urlApi = (tipo === 'boletin') 
+                ? "{% url 'panel_api_toggle_boletin_permiso' %}" 
+                : "{% url 'panel_api_toggle_observador' %}";
 
-            if (tipo === 'boletin') {
-                labelId = `label-boletin-${estudianteId}`;
-                urlApi = "{% url 'panel_api_toggle_boletin_permiso' %}";
-            } else if (tipo === 'observador') {
-                labelId = `label-observador-${estudianteId}`;
-                urlApi = "{% url 'panel_api_toggle_observador' %}";
-            }
-
-            const label = document.getElementById(labelId);
-            if(label) label.textContent = '...';
-            
             try {
                 const response = await fetch(urlApi, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: JSON.stringify({
-                        'estudiante_id': estudianteId,
-                        'estado': nuevoEstado
-                    })
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify({ 'estudiante_id': estudianteId, 'estado': nuevoEstado })
                 });
-
                 const data = await response.json();
-
-                if (response.ok && data.status === 'ok') {
-                    if(label) label.textContent = data.nuevo_estado_texto;
-                } else {
-                    e.target.checked = !nuevoEstado; // Revertir visualmente
-                    if(label) label.textContent = nuevoEstado ? 'Bloqueado' : 'Visible'; // Restaurar texto aprox
-                    alert('Error: ' + (data.message || 'Error desconocido'));
-                }
+                if (!response.ok || data.status !== 'ok') throw new Error();
             } catch (error) {
-                console.error('Error en fetch:', error);
                 e.target.checked = !nuevoEstado;
-                if(label) label.textContent = nuevoEstado ? 'Bloqueado' : 'Visible';
-                alert('Error de conexión al actualizar el permiso.');
+                alert('No se pudo actualizar el permiso.');
             }
         });
     });
-
-    // --- LÓGICA DE MODAL DE RETIRO (INTACTA) ---
-    const modalRetirarEstudiante = document.getElementById('modalRetirarEstudiante');
-    if (modalRetirarEstudiante) {
-        modalRetirarEstudiante.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const estudianteId = button.dataset.estudianteId;
-            const estudianteNombre = button.dataset.estudianteNombre;
-            
-            const modalNombre = modalRetirarEstudiante.querySelector('#nombreEstudianteModal');
-            const modalInputId = modalRetirarEstudiante.querySelector('#idEstudianteRetirar');
-            
-            modalNombre.textContent = estudianteNombre;
-            modalInputId.value = estudianteId;
-        });
-    }
-
 });
 </script>
-
 {% endblock %}

@@ -98,7 +98,8 @@ from django.contrib.contenttypes.models import ContentType
 # 🩺 INICIO DE CIRUGÍA: Importaciones añadidas para el Plan
 # (Añadidas en pasos anteriores )
 # ===================================================================
-from .models import BoletinArchivado
+# Importamos AMBOS modelos de archivo
+from .models import BoletinArchivado, ObservadorArchivado 
 from django.core.files.base import ContentFile
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA
@@ -1186,27 +1187,82 @@ def dates_ok(lista, index):
 #hasta aqui 
 
 
-
-
+@login_required
 @role_required('ADMINISTRADOR')
 def admin_dashboard(request):
-    total_estudiantes = Perfil.objects.filter(rol='ESTUDIANTE').count()
-    # CORRECCIÓN: Se cambió 'Q(perfil__es_director=True)' a 'Q(es_director=True)' ya que la consulta es directamente sobre el modelo Perfil.
-    total_docentes = Perfil.objects.filter(Q(rol='DOCENTE') | Q(es_director=True)).distinct().count()
-    total_cursos = Curso.objects.filter(activo=True).count()
+    """
+    Dashboard Ejecutivo TIER GOD.
+    Analítica de datos, KPIs en tiempo real y gestión centralizada.
+    """
+    from .models import Curso, Materia, ObservadorArchivado, Perfil, Matricula, Observacion, User
+    from django.db.models import Q, Sum, Count
+    from django.utils import timezone
+    from datetime import timedelta
+    import json 
+
+    # --- 1. KPIs PRINCIPALES (Tarjetas Superiores) ---
+    st_activos = User.objects.filter(perfil__rol='ESTUDIANTE', is_active=True).count()
+    try:
+        st_archivados = ObservadorArchivado.objects.count()
+    except:
+        st_archivados = 0
+    
+    doc_activos = Perfil.objects.filter(
+        Q(rol='DOCENTE') | Q(es_director=True), 
+        user__is_active=True
+    ).distinct().count()
+    
+    cursos_qs = Curso.objects.filter(activo=True)
+    total_cursos = cursos_qs.count()
     total_materias = Materia.objects.count()
-    cursos_sin_director = Curso.objects.filter(director__isnull=True, activo=True).count()
-    cursos_activos = Curso.objects.filter(activo=True).only('id', 'capacidad_maxima')
-    cursos_completos = [curso for curso in cursos_activos if _curso_esta_completo(curso)]
+    
+    # Cálculo de Ocupación
+    capacidad = cursos_qs.aggregate(t=Sum('capacidad_maxima'))['t'] or 0
+    matriculados = Matricula.objects.filter(activo=True, curso__activo=True).count()
+    ocupacion = int((matriculados / capacidad) * 100) if capacidad > 0 else 0
+
+    # --- 2. INTELLIGENCE HUB (Datos para Gráficas) ---
+    distribucion = Matricula.objects.filter(activo=True).values('curso__grado').annotate(total=Count('id')).order_by('curso__grado')
+    chart_labels = [d['curso__grado'] for d in distribucion] 
+    chart_data = [d['total'] for d in distribucion]
+
+    # --- 3. TIMELINE & RIESGO ---
+    ultimos_logins = User.objects.filter(last_login__isnull=False).order_by('-last_login')[:50]
+    
+    mes_anterior = timezone.now() - timedelta(days=30)
+    estudiantes_riesgo = User.objects.filter(
+        observaciones__fecha_creacion__gte=mes_anterior
+    ).annotate(num_obs=Count('observaciones')).order_by('-num_obs')[:5]
+
+    # --- 4. EXTRAS ---
+    cursos_sin_director = cursos_qs.filter(director__isnull=True).count()
+    obs_hoy = Observacion.objects.filter(fecha_creacion__date=timezone.now().date()).count()
+
     context = {
-        'total_estudiantes': total_estudiantes,
-        'total_docentes': total_docentes,
+        # Métricas (Nombres compatibles con tu HTML anterior y el nuevo)
+        'kpi_estudiantes': st_activos,
+        'total_estudiantes': st_activos, 
+        'kpi_archivados': st_archivados,
+        'kpi_docentes': doc_activos,
+        'total_docentes': doc_activos,
+        'kpi_cursos': total_cursos,
         'total_cursos': total_cursos,
+        'kpi_materias': total_materias,
         'total_materias': total_materias,
+        
+        # Analítica
+        'ocupacion_global': ocupacion,
         'cursos_sin_director': cursos_sin_director,
-        'cursos_completos': len(cursos_completos),
+        'obs_hoy': obs_hoy,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'timeline_logins': ultimos_logins,
+        'estudiantes_riesgo': estudiantes_riesgo,
     }
+    
+    # CORRECCIÓN DE RUTA: Apunta directo a 'admin_dashboard.html'
     return render(request, 'admin_dashboard.html', context)
+
 
 @role_required('ADMINISTRADOR')
 def gestion_academica(request):
@@ -1969,82 +2025,114 @@ def mostrar_registro_individual(request):
 
 @role_required('ADMINISTRADOR')
 def asignar_curso_estudiante(request):
+    """
+    Vista para matricular estudiantes en cursos.
+    MEJORA: Soporta asignación masiva (Lotes) seleccionando múltiples alumnos.
+    """
+    # Ordenar cursos para el selector
     cursos = Curso.objects.filter(activo=True).order_by('grado', 'seccion')
 
     if request.method == 'POST':
-        # 🩺 CIRUGÍA B (admin_eliminar_estudiante) se ejecutará si se presiona el botón 'Eliminar'
-        # Esta parte maneja la asignación de curso (botón 'Asignar')
-        if 'estudiante' in request.POST and 'curso' in request.POST:
-            estudiante_id = request.POST.get('estudiante')
-            curso_id = request.POST.get('curso')
+        # 1. Capturamos la LISTA de estudiantes (getlist) y el curso destino
+        # Nota: El name en el HTML debe ser 'estudiantes' (plural)
+        estudiante_ids = request.POST.getlist('estudiantes') 
+        curso_id = request.POST.get('curso')
 
-            if not estudiante_id or not curso_id:
-                messages.error(request, 'Debes seleccionar tanto un estudiante como un curso.')
+        # Validación básica
+        if not estudiante_ids or not curso_id:
+            messages.error(request, 'Debes seleccionar al menos un estudiante y un curso.')
+            return redirect('asignar_curso_estudiante')
+
+        try:
+            curso = get_object_or_404(Curso, id=curso_id, activo=True)
+            
+            # 2. Validar capacidad masiva
+            # Calculamos cuántos cupos quedan
+            matriculados_actuales = curso.matriculados.filter(activo=True).count()
+            cupos_disponibles = curso.capacidad_maxima - matriculados_actuales
+            
+            cant_a_mover = len(estudiante_ids)
+
+            if cant_a_mover > cupos_disponibles:
+                messages.error(
+                    request, 
+                    f'No hay suficiente cupo. Intentas mover {cant_a_mover} estudiantes, '
+                    f'pero solo quedan {cupos_disponibles} cupos en {curso}.'
+                )
                 return redirect('asignar_curso_estudiante')
 
-            try:
-                estudiante = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE')
-                curso = get_object_or_404(Curso, id=curso_id, activo=True)
+            # 3. Procesamiento Masivo (Transacción Atómica)
+            procesados = 0
+            with transaction.atomic():
+                for est_id in estudiante_ids:
+                    # Obtenemos al estudiante (verificando que sea rol ESTUDIANTE por seguridad)
+                    estudiante = get_object_or_404(User, id=est_id, perfil__rol='ESTUDIANTE')
+                    
+                    # Desactivamos matrículas activas anteriores (si existen) en el mismo año
+                    # Esto evita que un alumno quede en 6A y 6B al mismo tiempo
+                    Matricula.objects.filter(
+                        estudiante=estudiante, 
+                        anio_escolar=curso.anio_escolar, 
+                        activo=True
+                    ).exclude(curso=curso).update(activo=False)
 
-                if _curso_esta_completo(curso):
-                    messages.error(request, f'El curso {curso} está lleno.')
-                else:
+                    # Creamos o actualizamos la nueva matrícula
                     Matricula.objects.update_or_create(
-                        estudiante=estudiante, anio_escolar=curso.anio_escolar,
+                        estudiante=estudiante, 
+                        anio_escolar=curso.anio_escolar,
                         defaults={'curso': curso, 'activo': True}
                     )
-                    messages.success(request, f'{estudiante.get_full_name() or estudiante.username} fue asignado a {curso}.')
-            except Exception as e:
-                messages.error(request, f"Ocurrió un error al procesar la asignación: {e}")
+                    procesados += 1
+
+            # Mensaje de éxito
+            if procesados > 1:
+                messages.success(request, f'✅ Éxito: {procesados} estudiantes fueron asignados al curso {curso}.')
+            else:
+                messages.success(request, f'✅ Estudiante asignado correctamente al curso {curso}.')
+
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error al procesar la asignación masiva: {e}")
 
         return redirect('asignar_curso_estudiante')
 
-    # --- LÓGICA MEJORADA PARA OBTENER Y ORDENAR DATOS ---
+    # --- LÓGICA DE VISUALIZACIÓN (TABLA) ---
 
-    # 1. Obtenemos todas las matrículas activas, ordenadas por curso y luego por apellido del estudiante.
+    # 1. Obtenemos todas las matrículas activas para mostrar en la tabla
     matriculas_ordenadas = Matricula.objects.filter(activo=True).select_related(
         'estudiante__perfil', 'curso'
     ).order_by('curso__grado', 'curso__seccion', 'estudiante__last_name')
 
-    # 2. Preparamos una lista de IDs de estudiantes para buscar sus acudientes de forma eficiente.
+    # 2. Optimizamos la búsqueda de acudientes (evitar N+1 queries)
     student_ids = [m.estudiante_id for m in matriculas_ordenadas]
-
-    # 3. Buscamos todos los acudientes en una sola consulta para evitar sobrecargar la base de datos.
     vinculos_acudientes = Acudiente.objects.filter(estudiante_id__in=student_ids).select_related('acudiente')
     acudiente_map = {vinculo.estudiante_id: vinculo.acudiente for vinculo in vinculos_acudientes}
 
-    # 4. Construimos la lista final con toda la información.
+    # 3. Construimos la lista final para el template
     estudiantes_con_curso = []
     for matricula in matriculas_ordenadas:
         estudiante = matricula.estudiante
         acudiente = acudiente_map.get(estudiante.id)
-
-        # ===================================================================
-        # 🩺 INICIO DE CIRUGÍA: Añadir 'acudiente_username' al contexto
-        # ===================================================================
+        
         estudiantes_con_curso.append({
             'user': estudiante,
             'curso': matricula.curso,
             'rol': 'Estudiante',
             'acudiente_nombre': acudiente.get_full_name() if acudiente else "Sin asignar",
-            'acudiente_username': acudiente.username if acudiente else "-", # 👈 LÍNEA AÑADIDA
+            'acudiente_username': acudiente.username if acudiente else "-",
             'matricula': matricula
         })
-        # ===================================================================
-        # 🩺 FIN DE CIRUGÍA
-        # ===================================================================
 
-    # Para el menú desplegable, obtenemos todos los estudiantes ACTIVOS sin importar si tienen matrícula
+    # 4. Para el menú desplegable: Todos los estudiantes ACTIVOS
     todos_los_estudiantes = User.objects.filter(perfil__rol='ESTUDIANTE', is_active=True).order_by('last_name')
 
     context = {
-        'todos_los_estudiantes': todos_los_estudiantes, # Para el menú desplegable de asignación
-        'estudiantes_con_curso': estudiantes_con_curso, # Para la tabla ordenada
+        'todos_los_estudiantes': todos_los_estudiantes, # Para el select múltiple
+        'estudiantes_con_curso': estudiantes_con_curso, # Para la tabla
         'cursos': cursos,
         'anio_escolar': _anio_escolar_actual()
     }
+    
     return render(request, 'admin/asignar_curso_estudiante.html', context)
-
 # ########################################################################## #
 # ############### FIN DEL BLOQUE DE CÓDIGO CORREGIDO ######################### #
 # ########################################################################## #
@@ -2056,201 +2144,65 @@ def asignar_curso_estudiante(request):
 # ===================================================================
 #Desde aqui 
 
-@role_required('ADMINISTRADOR')
+@login_required
 @require_POST
-@csrf_protect
+@transaction.atomic
 def admin_eliminar_estudiante(request):
-    """
-    "Retira" a un estudiante (Soft Delete) y archiva sus boletines.
-    1. Genera un boletín por CADA AÑO (matrícula) cursado.
-    2. [NUEVO] Genera y archiva el Observador del Alumno.
-    3. Guarda los PDFs en BoletinArchivado y ObservadorArchivado.
-    4. Desactiva al Estudiante (User.is_active = False).
-    5. Desactiva al Acudiente (si queda huérfano).
-    """
-    # Imports necesarios para la generación del PDF dentro de la vista
-    from .models import ObservadorArchivado, Observacion, Institucion
-
-    estudiante_id = request.POST.get('estudiante_id')
-    if not estudiante_id:
-        messages.error(request, "No se proporcionó un ID de estudiante.")
-        return redirect('asignar_curso_estudiante')
-
     try:
-        estudiante_a_retirar = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE', is_active=True)
-        estudiante_nombre = estudiante_a_retirar.get_full_name() or estudiante_a_retirar.username
+        estudiante_id = request.POST.get('estudiante_id')
+        estudiante = get_object_or_404(get_user_model(), id=estudiante_id)
 
-        # 2. Encontrar TODAS sus matrículas (pasadas y presente)
-        todas_las_matriculas = Matricula.objects.filter(
-            estudiante=estudiante_a_retirar
-        ).select_related('curso').order_by('anio_escolar')
+        # 1️⃣ Obtener matrícula ACTIVA
+        matricula = Matricula.objects.select_related(
+            'curso'
+        ).get(user=estudiante, activo=True)
 
-        if not todas_las_matriculas.exists():
-            messages.warning(request, f"El estudiante {estudiante_nombre} no tiene matrículas. Se procederá a desactivar.")
+        # 2️⃣ GENERAR BOLETÍN FINAL (ANTES DE TOCAR NADA)
+        boletin_pdf = generar_boletin_pdf_admin(request, estudiante.id, return_file=True)
 
-        boletines_generados = 0
-        boletines_fallidos = 0
-        observador_archivado = False # Bandera para controlar el mensaje final
+        boletin_archivado = BoletinArchivado.objects.create(
+            estudiante=estudiante,
+            nombre_estudiante=estudiante.get_full_name(),
+            username_estudiante=estudiante.username,
+            grado_archivado=matricula.curso.grado,
+            seccion_archivada=matricula.curso.seccion,
+            anio_lectivo_archivado=timezone.now().year,
+            eliminado_por=request.user,
+            archivo_pdf=boletin_pdf
+        )
 
-        # Usamos una transacción para todo el proceso de retiro
-        with transaction.atomic():
+        # 3️⃣ GENERAR OBSERVADOR FINAL
+        observador_pdf = generar_observador_pdf(request, estudiante.id, return_file=True)
 
-            # --- 3. Generación de Boletines Históricos ---
-            for matricula in todas_las_matriculas:
-                try:
-                    # Usamos el service refactorizado para obtener el contexto de CADA matrícula
-                    contexto_historico = get_student_report_context(matricula.id)
+        ObservadorArchivado.objects.create(
+            estudiante=estudiante,
+            archivo_pdf=observador_pdf,
+            fecha_archivado=timezone.now()
+        )
 
-                    if not contexto_historico:
-                        logger.warning(f"No se pudo obtener contexto para {estudiante_nombre} en {matricula.anio_escolar}. Omitiendo boletín.")
-                        boletines_fallidos += 1
-                        continue
+        # 4️⃣ DESACTIVAR MATRÍCULA
+        matricula.activo = False
+        matricula.fecha_retiro = timezone.now()
+        matricula.save()
 
-                    # (Re-usamos la lógica de _generar_boletin_pdf_logica pero sin la respuesta HTTP)
-                    contexto_historico['request'] = request
-                    html_string = render_to_string('pdf/boletin_template.html', contexto_historico)
-                    base_url = request.build_absolute_uri('/')
-                    pdf_content = HTML(string=html_string, base_url=base_url).write_pdf()
+        # 5️⃣ DESACTIVAR USUARIO
+        estudiante.is_active = False
+        estudiante.save()
 
-                    # ===================================================================
-                    # 🩺 INICIO DE LA CIRUGÍA: Corregir discrepancia de nombres
-                    # ===================================================================
-                    
-                    # 1. Usamos el username (ej: 'rmorales')
-                    student_username = estudiante_a_retirar.username
-                    
-                    # 2. Reemplazamos el guion '-' del año por '_'
-                    anio_con_guion = matricula.anio_escolar # (ej: "2025-2026")
-                    anio_con_guion_bajo = anio_con_guion.replace('-', '_') # (ej: "2025_2026")
-                    
-                    # 3. Creamos el nombre de archivo sincronizado
-                    nombre_archivo_sincronizado = f"boletin_{student_username}_{anio_con_guion_bajo}.pdf"
-                    
-                    # 4. Usamos el nombre corregido en el ContentFile
-                    pdf_file = ContentFile(pdf_content, name=nombre_archivo_sincronizado)
-                    
-                    # ===================================================================
-                    # 🩺 FIN DE LA CIRUGÍA
-                    # ===================================================================
+        # 6️⃣ AUDITORÍA
+        AuditLog.objects.create(
+            usuario=request.user,
+            accion="RETIRO_ESTUDIANTE",
+            descripcion=f"Retiro definitivo de {estudiante.username}"
+        )
 
-                    curso_obj = contexto_historico.get('curso')
+        messages.success(request, "Estudiante retirado y archivado correctamente.")
+        return redirect('admin_ex_estudiantes')
 
-                    # Guardar en el modelo BoletinArchivado
-                    BoletinArchivado.objects.create(
-                        nombre_estudiante=estudiante_nombre,
-                        username_estudiante=estudiante_a_retirar.username,
-                        grado_archivado=curso_obj.grado,
-                        seccion_archivada=curso_obj.seccion,
-                        anio_lectivo_archivado=curso_obj.anio_escolar,
-                        eliminado_por=request.user,
-                        archivo_pdf=pdf_file # pdf_file ahora tiene el nombre sincronizado
-                    )
-                    boletines_generados += 1
-
-                except Exception as e:
-                    logger.exception(f"Fallo al generar boletín histórico para {estudiante_nombre} (Año: {matricula.anio_escolar}): {e}")
-                    boletines_fallidos += 1
-
-            # ===================================================================
-            # 🩺 CIRUGÍA NUEVA: GENERAR Y ARCHIVAR OBSERVADOR
-            # ===================================================================
-            try:
-                # 1. Obtener datos para el observador
-                observaciones = Observacion.objects.filter(estudiante=estudiante_a_retirar).order_by('fecha_creacion')
-                institucion = Institucion.objects.first()
-                # Tomamos el último curso conocido para el encabezado
-                ultimo_curso = todas_las_matriculas.last().curso if todas_las_matriculas.exists() else None
-
-                # 2. Preparar contexto (mismo usado en ver_observador)
-                ctx_observador = {
-                    'estudiante': estudiante_a_retirar,
-                    'observaciones': observaciones,
-                    'institucion': institucion,
-                    'curso': ultimo_curso,
-                    'fecha_impresion': timezone.now(),
-                    'generado_por': request.user.get_full_name(),
-                    'es_oficial': True,
-                    'es_archivo_retiro': True, # Marca para indicar que es el archivo final
-                    'request': request
-                }
-
-                # 3. Generar PDF del Observador
-                html_obs = render_to_string('pdf/observador_template.html', ctx_observador)
-                base_url_obs = request.build_absolute_uri('/')
-                pdf_content_obs = HTML(string=html_obs, base_url=base_url_obs).write_pdf()
-
-                # 4. Crear archivo en memoria
-                nombre_archivo_obs = f"OBSERVADOR_FINAL_{estudiante_a_retirar.username}.pdf"
-                pdf_file_obs = ContentFile(pdf_content_obs, name=nombre_archivo_obs)
-
-                # 5. Guardar en el modelo ObservadorArchivado
-                ObservadorArchivado.objects.create(
-                    estudiante_nombre=estudiante_nombre,
-                    estudiante_username=estudiante_a_retirar.username,
-                    eliminado_por=request.user,
-                    archivo_pdf=pdf_file_obs
-                )
-                observador_archivado = True
-            
-            except Exception as e:
-                # Logueamos el error pero NO detenemos el retiro, para asegurar que el alumno se vaya
-                logger.error(f"Error generando Observador Archivado para {estudiante_nombre}: {e}")
-            
-            # ===================================================================
-            # 🩺 FIN CIRUGÍA OBSERVADOR
-            # ===================================================================
-
-
-            # --- 4. Desactivación (Retiro) ---
-
-            # Desactivar todas las matrículas
-            todas_las_matriculas.update(activo=False)
-
-            # Desactivar el usuario Estudiante (Soft Delete)
-            estudiante_a_retirar.is_active = False
-            estudiante_a_retirar.save(update_fields=['is_active'])
-
-            # Desactivar Acudiente (si queda huérfano)
-            acudientes_retirados_nombres = []
-            vinculos = Acudiente.objects.filter(estudiante=estudiante_a_retirar).select_related('acudiente')
-            acudiente_users_a_revisar = [v.acudiente for v in vinculos]
-
-            for acudiente_user in acudiente_users_a_revisar:
-                # Revisar si el acudiente tiene OTROS estudiantes *ACTIVOS*
-                if not Matricula.objects.filter(
-                    estudiante__acudientes_asignados__acudiente=acudiente_user,
-                    activo=True
-                ).exists():
-                    # Si no tiene más estudiantes ACTIVOS, desactivamos al acudiente
-                    acudiente_nombre = acudiente_user.get_full_name() or acudiente_user.username
-                    acudiente_user.is_active = False
-                    acudiente_user.save(update_fields=['is_active'])
-                    acudientes_retirados_nombres.append(acudiente_nombre)
-
-            # 5. Mensajes de Éxito
-            messages.success(request, f"Estudiante '{estudiante_nombre}' retirado y movido a 'Ex Alumnos' exitosamente.")
-            
-            if boletines_generados > 0:
-                messages.info(request, f"Se generaron y archivaron {boletines_generados} boletines de respaldo.")
-            
-            if observador_archivado:
-                messages.info(request, "✅ Observador del Alumno generado y archivado correctamente.")
-            else:
-                messages.warning(request, "⚠️ No se pudo archivar el Observador (verificar logs).")
-
-            if boletines_fallidos > 0:
-                messages.warning(request, f"Falló la generación de {boletines_fallidos} boletines históricos (revisar logs).")
-            
-            if acudientes_retirados_nombres:
-                messages.info(request, f"Acudientes retirados (por no tener más estudiantes activos): {', '.join(acudientes_retirados_nombres)}")
-
-    except Http404:
-        messages.error(request, "El estudiante seleccionado no existe o ya no está activo.")
     except Exception as e:
-        logger.exception(f"Error al retirar estudiante {estudiante_id}: {e}")
-        messages.error(request, f"Ocurrió un error inesperado al retirar al estudiante: {e}")
-
-    return redirect('asignar_curso_estudiante')
+        transaction.set_rollback(True)
+        messages.error(request, f"Error crítico en el retiro: {str(e)}")
+        return redirect('gestionar_cursos')
 
 #Hasta aqui 
 # ===================================================================
@@ -2997,20 +2949,100 @@ def _generar_boletin_pdf_logica(request, matricula_id: int):
 
 @login_required
 @role_required('ADMINISTRADOR')
-def generar_boletin_pdf_admin(request, estudiante_id):
+def generar_boletin_pdf_admin(request, estudiante_id, return_file=False):
     """
-    Vista para que el Administrador genere un boletín en PDF.
-    (Versión modificada que usa la matrícula ACTIVA)
+    Genera el Boletín Académico.
+    CORRECCIÓN APLICADA: Nombre del template corregido.
     """
+    # Imports necesarios
+    from .models import Matricula, AsignacionMateria, Nota, Materia, Convivencia, Periodo, Institucion
+    from django.template.loader import render_to_string
+    from django.core.files.base import ContentFile
     try:
-        # Encontrar la matrícula ACTIVA de este estudiante
-        matricula = get_object_or_404(Matricula, estudiante_id=estudiante_id, activo=True)
-        return _generar_boletin_pdf_logica(request, matricula.id) # 👈 Pasa el matricula_id
+        from weasyprint import HTML
+    except ImportError:
+        HTML = None
+
+    try:
+        # 1. Obtener Estudiante
+        estudiante = get_object_or_404(User, id=estudiante_id)
+
+        # 2. Obtener Matrícula (Flexible: Activa o Histórica)
+        matricula = Matricula.objects.filter(estudiante=estudiante, activo=True).select_related('curso').first()
+        
+        if not matricula:
+            # Si no hay activa, busca la última histórica
+            matricula = Matricula.objects.filter(estudiante=estudiante).select_related('curso').order_by('-id').first()
+
+        if not matricula:
+            if return_file: return None
+            messages.error(request, "Este estudiante nunca ha sido matriculado.")
+            return redirect('admin_dashboard')
+
+        curso = matricula.curso
+
+        # 3. Datos Académicos
+        periodos = Periodo.objects.filter(curso=curso).order_by('id')
+        
+        materias_ids = set(AsignacionMateria.objects.filter(curso=curso).values_list('materia_id', flat=True))
+        materias_ids.update(Nota.objects.filter(estudiante=estudiante, periodo__curso=curso).values_list('materia_id', flat=True))
+        materias = Materia.objects.filter(id__in=materias_ids).order_by('nombre')
+
+        notas_por_materia = {}
+        for materia in materias:
+            notas_materia = {}
+            for periodo in periodos:
+                qs = Nota.objects.filter(estudiante=estudiante, materia=materia, periodo=periodo).order_by('numero_nota')
+                if qs.exists():
+                    notas_materia[periodo] = qs
+            if notas_materia:
+                notas_por_materia[materia] = notas_materia
+
+        # Convivencia
+        convivencia_data = {}
+        convivencias = Convivencia.objects.filter(estudiante=estudiante, curso=curso).select_related('periodo')
+        for c in convivencias:
+            convivencia_data[c.periodo.id] = {'valor': c.valor, 'comentario': c.comentario}
+
+        # 4. Renderizado
+        context = {
+            'institucion': Institucion.objects.first(),
+            'estudiante': estudiante,
+            'curso': curso,
+            'matricula': matricula,
+            'periodos': periodos,
+            'materias': materias,
+            'notas_por_materia': notas_por_materia,
+            'convivencia_notas': convivencia_data,
+            'fecha_emision': timezone.now(),
+            'request': request
+        }
+
+        # --- AQUÍ ESTABA EL ERROR: CAMBIADO A 'boletin_template.html' ---
+        html_string = render_to_string('pdf/boletin_template.html', context)
+
+        if HTML is None:
+            if return_file: return None
+            return HttpResponse("Error: Librería PDF no instalada.", status=500)
+
+        pdf_bytes = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
+
+        # 5. Retorno
+        filename = f"Boletin_{estudiante.username}.pdf"
+        
+        if return_file:
+            return ContentFile(pdf_bytes, name=filename)
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
 
     except Exception as e:
-        logger.exception(f"Error al generar boletín PDF (Admin) para estudiante {estudiante_id}: {e}")
-        messages.error(request, f"No se pudo generar el boletín. Error: {e}")
-        return redirect('admin_dashboard') # Redirige a un lugar seguro
+        print(f"❌ ERROR: {e}") # Dejamos el print por seguridad
+        if return_file: return None
+        messages.error(request, f"Error generando boletín: {e}")
+        return redirect('admin_dashboard')
+
 
 
 @login_required
@@ -3098,67 +3130,146 @@ def toggle_boletin_permiso(request):
 # (Añadido en el paso anterior )
 # ===================================================================
 
-@login_required
+# Asegúrese de que estos imports existan al inicio del archivo
 @role_required('ADMINISTRADOR')
-def admin_ex_estudiantes(request):
+@require_POST
+@csrf_protect
+def admin_eliminar_estudiante(request):
     """
-    Vista para que el Administrador vea, filtre y descargue
-    los boletines de los estudiantes retirados (Exalumnos).
+    "Retira" a un estudiante (Soft Delete) con integridad histórica total.
+    
+    PASO 2: INYECCIÓN DE AÑO LECTIVO
+    Se asegura de que el Observador Disciplinario quede etiquetado con el
+    año escolar correcto para permitir el filtrado histórico exacto.
     """
-    
-    # 1. Obtener todos los boletines, optimizados con 'select_related'
-    #    para traer los datos del admin que eliminó 
-    boletines_list = BoletinArchivado.objects.select_related('eliminado_por').all()
+    # Imports locales para evitar referencias circulares
+    from .models import ObservadorArchivado, Observacion, Institucion, Acudiente
+    try:
+        from weasyprint import HTML
+    except ImportError:
+        logger.error("CRITICAL: WeasyPrint no instalado. El archivo de retiro fallará.")
+        messages.error(request, "Error de configuración: Falta librería PDF. No se puede procesar el retiro.")
+        return redirect('asignar_curso_estudiante')
 
-    # 2. Aplicar filtros de búsqueda (GET params) 
-    query = request.GET.get('q', '').strip()
-    grado_filtro = request.GET.get('grado', '').strip()
-    anio_filtro = request.GET.get('anio', '').strip()
+    estudiante_id = request.POST.get('estudiante_id')
+    if not estudiante_id:
+        messages.error(request, "Solicitud inválida: Falta ID.")
+        return redirect('asignar_curso_estudiante')
 
-    if query:
-        # Búsqueda por nombre o username
-        boletines_list = boletines_list.filter(
-            Q(nombre_estudiante__icontains=query) |
-            Q(username_estudiante__icontains=query)
-        )
-    
-    if grado_filtro:
-        boletines_list = boletines_list.filter(grado_archivado=grado_filtro)
-        
-    if anio_filtro:
-        boletines_list = boletines_list.filter(anio_lectivo_archivado=anio_filtro)
+    try:
+        # Validación estricta del estudiante
+        estudiante_a_retirar = get_object_or_404(User, id=estudiante_id, perfil__rol='ESTUDIANTE', is_active=True)
+        estudiante_nombre = estudiante_a_retirar.get_full_name() or estudiante_a_retirar.username
+        estudiante_username = estudiante_a_retirar.username
 
-    # 3. Obtener los valores únicos para los menús desplegables de filtro
-    #    Optimizamos esto para que solo consulte los valores distintos
-    anios_disponibles = BoletinArchivado.objects.order_by('-anio_lectivo_archivado') \
-                                                    .values_list('anio_lectivo_archivado', flat=True).distinct()
-    
-    # Usamos los GRADOS_CHOICES para los grados
-    grados_disponibles = GRADOS_CHOICES
+        # Obtener historial de matrículas para determinar años cursados
+        todas_las_matriculas = Matricula.objects.filter(
+            estudiante=estudiante_a_retirar
+        ).select_related('curso').order_by('anio_escolar')
 
-    # 4. Paginación (Escalabilidad) 
-    #    Mostramos 25 resultados por página
-    paginator = Paginator(boletines_list, 25)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        boletines_generados = 0
+        observador_exitoso = False
 
-    context = {
-        'page_obj': page_obj,
-        'total_boletines': paginator.count,
-        
-        # Valores para los filtros
-        'anios_disponibles': anios_disponibles,
-        'grados_disponibles': grados_disponibles,
-        
-        # Valores actuales para mantenerlos en el formulario
-        'current_q': query,
-        'current_grado': grado_filtro,
-        'current_anio': anio_filtro,
-    }
-    
-    # Usaremos una nueva plantilla que crearemos en el Paso 5
-    return render(request, 'admin/ex_estudiantes.html', context)
+        # Transacción Atómica: Todo se guarda o nada se guarda
+        with transaction.atomic():
 
+            # -------------------------------------------------------------------
+            # FASE 1: SNAPSHOT ACADÉMICO (Boletines por año)
+            # -------------------------------------------------------------------
+            base_url = request.build_absolute_uri('/')
+            
+            for matricula in todas_las_matriculas:
+                try:
+                    contexto = get_student_report_context(matricula.id)
+                    if not contexto: continue
+
+                    contexto['request'] = request
+                    html = render_to_string('pdf/boletin_template.html', contexto)
+                    pdf_content = HTML(string=html, base_url=base_url).write_pdf()
+
+                    nombre_archivo = f"boletin_{estudiante_username}_{matricula.anio_escolar.replace('-', '_')}.pdf"
+                    
+                    BoletinArchivado.objects.create(
+                        nombre_estudiante=estudiante_nombre,
+                        username_estudiante=estudiante_username,
+                        grado_archivado=contexto['curso'].grado,
+                        seccion_archivada=contexto['curso'].seccion,
+                        anio_lectivo_archivado=matricula.anio_escolar,
+                        eliminado_por=request.user,
+                        archivo_pdf=ContentFile(pdf_content, name=nombre_archivo)
+                    )
+                    boletines_generados += 1
+                except Exception as e:
+                    logger.error(f"Error boletin {matricula.anio_escolar}: {e}")
+
+            # -------------------------------------------------------------------
+            # FASE 2 (EL CAMBIO CLAVE): SNAPSHOT DISCIPLINARIO CON AÑO
+            # -------------------------------------------------------------------
+            try:
+                observaciones = Observacion.objects.filter(estudiante=estudiante_a_retirar).order_by('fecha_creacion')
+                
+                # Determinamos el "Año del Retiro" basándonos en su última matrícula
+                ultimo_curso = todas_las_matriculas.last().curso if todas_las_matriculas.exists() else None
+                anio_retiro = ultimo_curso.anio_escolar if ultimo_curso else '2025-2026' # Fallback seguro
+
+                ctx_obs = {
+                    'estudiante': estudiante_a_retirar,
+                    'observaciones': observaciones,
+                    'institucion': Institucion.objects.first(),
+                    'curso': ultimo_curso,
+                    'fecha_impresion': timezone.now(),
+                    'generado_por': request.user.get_full_name(),
+                    'es_archivo_retiro': True,
+                    'request': request
+                }
+
+                html_obs = render_to_string('pdf/observador_template.html', ctx_obs)
+                pdf_obs = HTML(string=html_obs, base_url=base_url).write_pdf()
+
+                nombre_obs = f"OBS_FINAL_{estudiante_username}_{timezone.now().strftime('%Y%m%d')}.pdf"
+
+                # GUARDADO CON EL CAMPO NUEVO
+                ObservadorArchivado.objects.create(
+                    estudiante_nombre=estudiante_nombre,
+                    estudiante_username=estudiante_username,
+                    
+                    # AQUÍ ESTÁ LA MAGIA DEL PASO 2:
+                    anio_lectivo_archivado=anio_retiro, 
+                    
+                    eliminado_por=request.user,
+                    archivo_pdf=ContentFile(pdf_obs, name=nombre_obs)
+                )
+                observador_exitoso = True
+                
+            except Exception as e:
+                logger.error(f"Fallo crítico archivando observador: {e}", exc_info=True)
+
+            # -------------------------------------------------------------------
+            # FASE 3: DESACTIVACIÓN (Soft Delete)
+            # -------------------------------------------------------------------
+            todas_las_matriculas.update(activo=False)
+            
+            estudiante_a_retirar.is_active = False
+            estudiante_a_retirar.save(update_fields=['is_active'])
+
+            # Limpieza de Acudientes huérfanos
+            acudientes_ids = Acudiente.objects.filter(estudiante=estudiante_a_retirar).values_list('acudiente_id', flat=True)
+            for acudiente_id in acudientes_ids:
+                tiene_otros_hijos = Matricula.objects.filter(
+                    estudiante__acudientes_asignados__acudiente_id=acudiente_id,
+                    activo=True
+                ).exclude(estudiante_id=estudiante_id).exists()
+                
+                if not tiene_otros_hijos:
+                    User.objects.filter(id=acudiente_id).update(is_active=False)
+
+            messages.success(request, f"Estudiante {estudiante_nombre} retirado. Docs generados: {boletines_generados} Boletines + Observador ({anio_retiro}).")
+
+    except Exception as e:
+        logger.critical(f"Error inesperado en retiro: {e}")
+        messages.error(request, "Error del sistema al procesar el retiro.")
+
+    return redirect('asignar_curso_estudiante')
 # ===================================================================
 # 🩺 FIN DE CIRUGÍA: PASO 3
 # ===================================================================
@@ -6348,3 +6459,190 @@ def configurar_plan_evaluacion(request):
             return JsonResponse({'success': False, 'error': str(e)})
             
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+
+# --- PEGAR AL FINAL DE tasks/views.py ---
+
+@login_required
+@role_required('ADMINISTRADOR')
+def admin_ex_estudiantes(request):
+    """
+    Vista de Archivo Histórico (Lectura) - NIVEL DIOS.
+    """
+    # --- IMPORTACIÓN CRÍTICA AQUÍ ---
+    from .models import BoletinArchivado, ObservadorArchivado, GRADOS_CHOICES
+    
+    # 1. Query Base (Optimizada con select_related)
+    boletines_qs = BoletinArchivado.objects.select_related('eliminado_por').all().order_by('-fecha_eliminado')
+
+    # 2. Filtros
+    query = request.GET.get('q', '').strip()
+    grado_filtro = request.GET.get('grado', '').strip()
+    anio_filtro = request.GET.get('anio', '').strip()
+
+    if query:
+        boletines_qs = boletines_qs.filter(
+            Q(nombre_estudiante__icontains=query) |
+            Q(username_estudiante__icontains=query)
+        )
+    
+    if grado_filtro:
+        boletines_qs = boletines_qs.filter(grado_archivado=grado_filtro)
+        
+    if anio_filtro:
+        boletines_qs = boletines_qs.filter(anio_lectivo_archivado=anio_filtro)
+
+    # 3. Paginación
+    paginator = Paginator(boletines_qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # =================================================================
+    # 4. CIRUGÍA: VINCULACIÓN EXACTA (Usuario + Año)
+    # =================================================================
+    
+    # A. Identificamos las "Huellas Digitales" únicas en esta página
+    identificadores_en_pantalla = set(
+        (b.username_estudiante, b.anio_lectivo_archivado) 
+        for b in page_obj
+    )
+
+    if identificadores_en_pantalla:
+        # B. Construimos la consulta para traer SOLO los observadores necesarios
+        query_obs = Q()
+        for username, anio in identificadores_en_pantalla:
+            query_obs |= Q(
+                estudiante_username=username,
+                anio_lectivo_archivado=anio
+            )
+
+        observadores_qs = ObservadorArchivado.objects.filter(query_obs)
+
+        # C. Mapa de Memoria: (username, anio) -> Objeto Observador
+        observadores_map = {
+            (obs.estudiante_username, obs.anio_lectivo_archivado): obs 
+            for obs in observadores_qs
+        }
+
+        # D. INYECCIÓN DIRECTA: Pegamos el observador al boletín
+        for boletin in page_obj:
+            clave = (boletin.username_estudiante, boletin.anio_lectivo_archivado)
+            boletin.observador_vinculado = observadores_map.get(clave)
+    
+    else:
+        for boletin in page_obj:
+            boletin.observador_vinculado = None
+
+    # 5. Contexto para filtros
+    anios_disponibles = BoletinArchivado.objects.order_by('-anio_lectivo_archivado')\
+                                                .values_list('anio_lectivo_archivado', flat=True).distinct()
+
+    context = {
+        'page_obj': page_obj,
+        'total_boletines': paginator.count,
+        'anios_disponibles': anios_disponibles,
+        'grados_disponibles': GRADOS_CHOICES,
+        'current_q': query,
+        'current_grado': grado_filtro,
+        'current_anio': anio_filtro,
+    }
+    
+    return render(request, 'admin/ex_estudiantes.html', context)
+
+
+# ==========================================================================
+# 👇 PEGA ESTO AL FINAL DE TU ARCHIVO tasks/views.py
+# ==========================================================================
+
+# ==========================================================================
+# REEMPLAZA LA FUNCIÓN EN tasks/views.py CON ESTA VERSIÓN ROBUSTA
+# ==========================================================================
+
+import markdown
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from weasyprint import HTML, CSS
+from io import BytesIO  # <--- IMPORTANTE: Para manejar el archivo en memoria
+
+from .ai.orchestrator import ai_orchestrator
+from .ai.constants import ACCION_ANALISIS_GLOBAL_BIENESTAR
+
+@login_required
+def generar_pdf_bienestar(request):
+    """
+    Genera el PDF Profesional de Bienestar usando WeasyPrint + Buffer de Memoria.
+    """
+    try:
+        print("1. Iniciando generación de PDF...") # Debug en terminal
+
+        # 1. Ejecutar Stratos AI
+        respuesta_ia = ai_orchestrator.process_request(
+            user=request.user,
+            action_type=ACCION_ANALISIS_GLOBAL_BIENESTAR,
+            user_query="",
+            params={}
+        )
+
+        if not respuesta_ia.get('success'):
+            print("Error: La IA falló.")
+            return HttpResponse(f"Error IA: {respuesta_ia.get('content')}", status=500)
+
+        print("2. IA respondió correctamente. Procesando HTML...")
+
+        # 2. Convertir Markdown a HTML
+        texto_markdown = respuesta_ia.get('content', '')
+        contenido_html = markdown.markdown(
+            texto_markdown,
+            extensions=['extra', 'nl2br', 'sane_lists']
+        )
+
+        # 3. Datos para el Template
+        contexto = {
+            'contenido_html': contenido_html,
+            'objetivo': request.user,
+            'solicitante': request.user,
+            'tipo_reporte': 'AUDITORÍA ESTRATÉGICA DE BIENESTAR',
+            'fecha_impresion': timezone.now(),
+            'query_original': 'Diagnóstico de Clima Escolar y Rutas de Mejora'
+        }
+
+        # 4. Renderizar HTML a string
+        html_string = render_to_string('tasks/templates/pdf/ai_report_template.html', contexto, request=request)
+
+        # 5. Generar PDF en Memoria (Buffer)
+        # Esto evita errores de "Broken Pipe" o archivos corruptos
+        pdf_buffer = BytesIO()
+        
+        # Base URL es vital para cargar las fuentes de Google y las imágenes
+        HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(
+            target=pdf_buffer, 
+            presentational_hints=True,
+            zoom=1  # Asegura escala correcta
+        )
+
+        # 6. Preparar respuesta HTTP
+        pdf_value = pdf_buffer.getvalue()
+        pdf_buffer.close()
+
+        response = HttpResponse(pdf_value, content_type='application/pdf')
+        filename = f"Informe_Bienestar_{timezone.now().strftime('%Y%m%d_%H%M')}.pdf"
+        # 'attachment' fuerza la descarga. Si quieres verlo en el navegador usa 'inline'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        print("3. PDF generado y enviado con éxito.")
+        return response
+
+    except Exception as e:
+        # Esto imprimirá el error REAL en tu terminal donde corre 'runserver'
+        print(f"❌ ERROR CRÍTICO GENERANDO PDF: {str(e)}")
+        
+        # Devolvemos el error en pantalla para que sepas qué pasó
+        return HttpResponse(f"""
+            <h1 style='color:red'>Error al generar el PDF</h1>
+            <p>El sistema reportó el siguiente error:</p>
+            <pre>{str(e)}</pre>
+            <p><strong>Posible solución:</strong> Verifica que instalaste las librerías del sistema (libcairo2, libpango, etc).</p>
+        """, status=500)

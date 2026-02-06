@@ -6,6 +6,7 @@ from django.urls import path
 
 from . import views
 
+from tasks.views_pdf import generar_pdf_bienestar
 from tasks import ai_views
 
 from .views import (
@@ -174,7 +175,8 @@ urlpatterns = [
 
     # Retiro de estudiantes
 
-    path('panel/eliminar-estudiante/', views.admin_eliminar_estudiante, name='panel_eliminar_estudiante'),
+    #path('panel/eliminar-estudiante/', views.admin_eliminar_estudiante, name='panel_eliminar_estudiante'),
+    path('panel/eliminar-estudiante/', views.admin_eliminar_estudiante, name='admin_eliminar_estudiante'),
 
     
 
@@ -406,7 +408,7 @@ urlpatterns = [
 
     #path('orientacion/inteligente/', views.orientacion_inteligente_view, name='orientacion_inteligente'),
 
-    path('api/chat-socratico/', ai_views.chat_socratico_api, name='api_chat_socratico'),
+    #path('api/chat-socratico/', ai_views.chat_socratico_api, name='api_chat_socratico'),
 
     path('ia/engine/', views.ai_analysis_engine, name='ai_engine'),
 
@@ -435,4 +437,7 @@ urlpatterns = [
     path('verificar-certificado/publico/<int:user_id>/', views.verificar_certificado_publico, name='verificar_certificado_publico'),
     path('acudiente/actualizar-documento/', views.actualizar_documento_estudiante, name='actualizar_documento_estudiante'),
     path('api/configurar-plan/', views.configurar_plan_evaluacion, name='api_configurar_plan'),
+    #path('api/ai-agent/', ai_views.ai_agent, name='ai_agent'),
+    path('api/ai-agent/', ai_views.api_ai_agent, name='api_ai_agent'),
+    path('reportes/bienestar/descargar/', views.generar_pdf_bienestar, name='descargar_pdf_bienestar'),
 ]

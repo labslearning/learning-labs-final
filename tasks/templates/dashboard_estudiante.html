@@ -5,9 +5,11 @@
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <div class="container py-5">
-    <div class="card p-4 p-md-5 border-0 shadow-lg animate animated fadeInUp mb-5" style="background-color: var(--color-bg-light);">
+    
+    <div class="card p-4 p-md-5 border-0 shadow-lg animate animated fadeInUp mb-5" style="background-color: var(--color-bg-light); border-radius: 20px;">
         <div class="text-center mb-4">
             <i class="fas fa-user-graduate fa-4x fa-md-5x mb-3 text-primary-alt animated animate zoomIn"></i>
             <h1 class="display-5 display-md-4 fw-bold" style="color: var(--color-text-dark);">
@@ -18,19 +20,26 @@
             </p>
 
             <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-4 mb-3">
-                <a href="#" onclick="iniciarAnalisisEstudiante(event, '{% url 'ai_engine' %}?action=mejoras_estudiante')" 
+                <button onclick="activarIA('est_mejoras')" 
                    class="btn btn-lg btn-primary-alt rounded-pill px-4 py-3 shadow-sm border-0 animate animated pulse infinite w-100 w-md-auto" 
                    style="background-image: var(--gradient-primary); color: white;">
                     <i class="fas fa-robot me-2"></i>¿Cómo puedo mejorar?
-                </a>
+                </button>
                 
-                <a href="#" onclick="iniciarTutorSocratico(event, '{% url 'ai_engine' %}?action=chat_socratico')" 
+                <button onclick="abrirModalPareto()" 
                    class="btn btn-lg btn-outline-primary rounded-pill px-4 py-3 shadow-sm border-2 w-100 w-md-auto">
-                    <i class="fas fa-brain me-2"></i>Tutor Socrático
-                </a>
+                    <i class="fas fa-brain me-2"></i>Tutor Socrático (80/20)
+                </button>
+
+                 <button onclick="activarIA('est_nivelacion')" 
+                    class="btn btn-lg btn-danger rounded-pill px-4 py-3 shadow-sm border-0 w-100 w-md-auto text-white">
+                     <i class="fas fa-ambulance me-2"></i>Plan de Rescate
+                 </button>
             </div>
             
-            <small class="text-muted d-block mt-2 px-3">Nuestra IA analizará tu boletín y comportamiento para guiarte según el PEI.</small>
+            <small class="text-muted d-block mt-2 px-3">
+                <i class="fas fa-info-circle me-1"></i> Nuestra IA analizará tu boletín y el Manual de Convivencia en tiempo real.
+            </small>
         </div>
 
         {% if curso %}
@@ -370,36 +379,43 @@
     {% endif %}
 </div>
 
-<div class="modal fade" id="modalStratosEstudiante" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-2xl overflow-hidden" style="border-radius: 24px;">
-            <div class="modal-body p-0 text-center">
-                <div class="position-relative py-5 px-4" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);">
-                    
-                    <div class="mb-4 position-relative d-inline-block">
-                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;"></div>
-                        <div class="position-absolute top-50 start-50 translate-middle" style="width: 110px; height: 110px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 0.5s;"></div>
-                        
-                        <div class="bg-white rounded-circle position-relative d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px; z-index: 10;">
-                            <i class="fas fa-rocket fa-2x text-primary animate__animated animate__pulse animate__infinite"></i>
-                        </div>
-                    </div>
-
-                    <h4 class="text-white fw-bold mb-2">Conectando con Stratos...</h4>
-                    <p class="text-white-50 small mb-0">Preparando tu entorno de aprendizaje personalizado</p>
+<div class="modal fade" id="modalIA" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 bg-primary text-white" style="border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-robot me-2"></i>Asistente Institucional</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-4 bg-light" id="modalBodyIA" style="min-height: 200px; overflow-y: auto; max-height: 60vh;">
                 </div>
 
-                <div class="bg-white p-4">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
-                        <span id="estudianteStatusText" class="fw-bold text-dark small text-uppercase ls-1">Iniciando sesión segura...</span>
-                    </div>
-                    
-                    <div class="progress" style="height: 6px; border-radius: 10px;">
-                        <div id="estudianteProgressBar" class="progress-bar bg-gradient-primary" role="progressbar" style="width: 0%; transition: width 0.5s ease;"></div>
-                    </div>
-                    
-                    <p class="text-muted x-small mt-3 fst-italic">Estamos diseñando la mejor respuesta para ti.</p>
+            <div class="modal-footer bg-white border-top-0">
+                <div class="input-group">
+                    <input type="text" id="chatInputUser" class="form-control rounded-pill" placeholder="Escribe tu respuesta o pregunta aquí...">
+                    <button class="btn btn-primary rounded-pill ms-2" onclick="enviarRespuestaChat()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalParetoInput" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                <h4 class="fw-bold mb-3">¿Qué quieres aprender hoy?</h4>
+                <p class="text-muted small">El método Pareto te enseñará el 20% clave para entender el 80%.</p>
+                
+                <input type="text" id="inputParetoTema" class="form-control form-control-lg mb-3 text-center" placeholder="Ej: Revolución Francesa, Álgebra, Células...">
+                
+                <div class="d-grid">
+                    <button onclick="ejecutarPareto()" class="btn btn-primary btn-lg rounded-pill">
+                        <i class="fas fa-magic me-2"></i> Enseñame
+                    </button>
                 </div>
             </div>
         </div>
@@ -472,10 +488,10 @@
 .bg-danger-alt { background-color: var(--color-danger) !important; }
 .bg-gradient-primary { background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); }
 
-.w-md-auto { width: auto !important; } /* Utilidad personalizada para escritorio */
+.w-md-auto { width: auto !important; } 
 
 @media (max-width: 768px) {
-    .w-md-auto { width: 100% !important; } /* En móvil ocupa todo el ancho */
+    .w-md-auto { width: 100% !important; }
 }
 
 .shadow-hover { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
@@ -485,13 +501,7 @@
 .rotate-on-collapse { transition: transform 0.3s ease-in-out; }
 .collapse-toggle-header[aria-expanded="true"] .rotate-on-collapse { transform: rotate(180deg); }
 
-/* Animación del Modal */
-@keyframes pulse-ring {
-    0% { transform: translate(-50%, -50%) scale(0.33); opacity: 1; }
-    80%, 100% { opacity: 0; }
-}
-
-/* NUEVOS ESTILOS PARA ANALÍTICA */
+/* ESTILOS PARA ANALÍTICA */
 .stat-card {
     background: #fff;
     border-radius: 1rem;
@@ -511,7 +521,9 @@
 </style>
 
 <script>
-// Mapeo de colores para Chart.js
+// ==========================================
+// CONFIGURACIÓN DE GRÁFICOS (CHART.JS)
+// ==========================================
 const CHART_COLORS = {
     primary: '#3498db',
     danger: '#e74c3c',
@@ -530,21 +542,10 @@ function getChartColor(index) {
     return customColors[index % customColors.length];
 }
 
-// Variables globales para el modal
-let modalEstudiante;
-
 document.addEventListener('DOMContentLoaded', function () {
     const notaAprobacion = 3.0;
 
-    // Inicializar Modal Estudiante
-    const modalEl = document.getElementById('modalStratosEstudiante');
-    if (modalEl) {
-        modalEstudiante = new bootstrap.Modal(modalEl);
-    }
-
-    // #######################################################
-    // # 1. LÓGICA DE GRÁFICAS DE ANALÍTICA (NUEVO)
-    // #######################################################
+    // --- GRÁFICA DE DONA (Estado) ---
     const chartStatusCanvas = document.getElementById('chartStatusNew');
     if (chartStatusCanvas) {
         new Chart(chartStatusCanvas.getContext('2d'), {
@@ -552,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data: {
                 labels: ['Ganando', 'Perdiendo'],
                 datasets: [{
-                    data: {{ stats.distribucion_data|safe }},
+                    data: {{ stats.distribucion_data|safe|default:"[0,0]" }},
                     backgroundColor: [CHART_COLORS.success, CHART_COLORS.danger],
                     borderWidth: 2,
                     borderColor: '#ffffff'
@@ -562,34 +563,34 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- GRÁFICA DE BARRAS (Promedio por Materia) ---
     const chartMateriasCanvas = document.getElementById('chartMateriasNew');
     if (chartMateriasCanvas) {
-        const rawData = {{ stats.materias_data|safe }};
-        const bgColors = rawData.map(val => val < 3.5 ? CHART_COLORS.danger : CHART_COLORS.success);
-        
-        new Chart(chartMateriasCanvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: {{ stats.materias_labels|safe }},
-                datasets: [{
-                    label: 'Promedio',
-                    data: rawData,
-                    backgroundColor: bgColors,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { min: 0, max: 5 } },
-                plugins: { legend: { display: false } }
-            }
-        });
+        const rawData = {{ stats.materias_data|safe|default:"[]" }};
+        if(rawData.length > 0) {
+            const bgColors = rawData.map(val => val < 3.5 ? CHART_COLORS.danger : CHART_COLORS.success);
+            new Chart(chartMateriasCanvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.materias_labels|safe|default:"[]" }},
+                    datasets: [{
+                        label: 'Promedio',
+                        data: rawData,
+                        backgroundColor: bgColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 5 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
     }
 
-    // #######################################################
-    // # 2. Lógica para el Gráfico Global (Original)
-    // #######################################################
+    // --- GRÁFICA DE LÍNEA (Progreso Global) ---
     const globalDataContainer = document.getElementById('globalChartData');
     if (globalDataContainer) {
         try {
@@ -616,10 +617,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const ctxGlobal = document.getElementById('progresoAcademicoChart').getContext('2d');
             new Chart(ctxGlobal, {
                 type: 'line',
-                data: {
-                    labels: periodosLabels,
-                    datasets: datasets
-                },
+                data: { labels: periodosLabels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false, 
@@ -654,9 +652,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) { console.error("Error al inicializar el gráfico global:", e); }
     }
 
-    // #######################################################
-    // # 3. Lógica para los Gráficos de Barras por Periodo (Original)
-    // #######################################################
+    // --- LÓGICA DE ACORDEÓN (Gráficas Individuales) ---
     const handleCollapseShow = function(e) {
         const collapseElement = e.target;
         const chartDataContainers = collapseElement.querySelectorAll('.chart-data');
@@ -715,13 +711,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    const collapseElements = document.querySelectorAll('.collapse');
-    collapseElements.forEach(element => {
-        element.addEventListener('shown.bs.collapse', handleCollapseShow);
-    });
-
-    const collapseToggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
-    collapseToggles.forEach(toggle => {
+    document.querySelectorAll('.collapse').forEach(el => el.addEventListener('shown.bs.collapse', handleCollapseShow));
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(toggle => {
         toggle.addEventListener('click', function() {
             const icon = this.querySelector('.fas');
             if (icon) {
@@ -733,61 +724,138 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ==========================================
-// FUNCIONES DE CONTROL DE IA
+// FUNCIONES DE CONTROL DE IA (CHAT CONTINUO)
 // ==========================================
 
-function iniciarAnalisisEstudiante(event, url) {
-    event.preventDefault();
-    if (!modalEstudiante) { window.location.href = url; return; }
-    
-    modalEstudiante.show();
-    
-    // Configurar para Análisis
-    const statusText = document.getElementById('estudianteStatusText');
-    const progressBar = document.getElementById('estudianteProgressBar');
-    
-    const pasos = [
-        { msg: "Conectando con tu perfil académico...", progress: 20 },
-        { msg: "Identificando tus fortalezas y debilidades...", progress: 50 },
-        { msg: "Generando plan de mejora personalizado...", progress: 80 },
-        { msg: "¡Listo! Redirigiendo...", progress: 100 }
-    ];
-    
-    ejecutarSimulacion(pasos, statusText, progressBar, url);
-}
+// Memoria simple del lado del cliente
+let historialChat = [];
 
-function iniciarTutorSocratico(event, url) {
-    event.preventDefault();
-    if (!modalEstudiante) { window.location.href = url; return; }
+async function llamarIA(action, query, params={}) {
+    const modal = new bootstrap.Modal(document.getElementById('modalIA'));
+    const body = document.getElementById('modalBodyIA');
     
-    modalEstudiante.show();
+    // Si se activa con botón, limpiamos el chat
+    if(action) {
+        body.innerHTML = `
+            <div class="text-center py-5" id="loadingInitial">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                <h5 class="fw-bold text-dark">Analizando datos...</h5>
+            </div>
+        `;
+        historialChat = [];
+    }
+    
+    modal.show();
 
-    // Configurar para Tutoría
-    const statusText = document.getElementById('estudianteStatusText');
-    const progressBar = document.getElementById('estudianteProgressBar');
-    
-    const pasos = [
-        { msg: "Activando Tutor Socrático...", progress: 15 },
-        { msg: "Cargando tu contexto de aprendizaje...", progress: 45 },
-        { msg: "Preparando entorno de preguntas...", progress: 90 },
-        { msg: "Iniciando sesión de mentoría...", progress: 100 }
-    ];
-    
-    ejecutarSimulacion(pasos, statusText, progressBar, url);
-}
+    try {
+        const payload = { 
+            action_type: action, 
+            query: query, 
+            params: params,
+            historial: historialChat // Enviamos memoria al backend
+        };
 
-function ejecutarSimulacion(pasos, textoEl, barraEl, urlDestino) {
-    let pasoActual = 0;
-    const intervalo = setInterval(() => {
-        if (pasoActual < pasos.length) {
-            textoEl.innerText = pasos[pasoActual].msg;
-            barraEl.style.width = pasos[pasoActual].progress + "%";
-            pasoActual++;
+        const res = await fetch("{% url 'api_ai_agent' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        
+        // Quitar loader inicial
+        const loading = document.getElementById('loadingInitial');
+        if(loading) loading.remove();
+
+        if (data.success) {
+            // Guardar contexto
+            if(query) historialChat.push({ role: "user", content: query });
+            historialChat.push({ role: "assistant", content: data.content });
+
+            // Mostrar respuesta
+            body.innerHTML += `
+                <div class="d-flex justify-content-start mb-3 animate__animated animate__fadeIn">
+                    <div class="bg-white border p-3 rounded-3 shadow-sm" style="max-width: 90%;">
+                        <i class="fas fa-robot text-primary me-2"></i>
+                        <div class="markdown-body text-dark" style="font-size: 1.05rem;">
+                            ${marked.parse(data.content)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            body.scrollTop = body.scrollHeight;
         } else {
-            clearInterval(intervalo);
-            setTimeout(() => { window.location.href = urlDestino; }, 500);
+            body.innerHTML += `<div class="alert alert-danger">Error: ${data.content}</div>`;
         }
-    }, 800);
+        
+    } catch(e) {
+        console.error(e);
+        body.innerHTML += `<div class="alert alert-danger">Error de conexión.</div>`;
+    }
+}
+
+// Función para enviar respuestas manuales (input)
+async function enviarRespuestaChat() {
+    const input = document.getElementById('chatInputUser');
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+
+    const body = document.getElementById('modalBodyIA');
+    
+    // UI Optimista
+    body.innerHTML += `
+        <div class="d-flex justify-content-end mb-3 animate__animated animate__fadeIn">
+            <div class="bg-primary text-white p-3 rounded-3 shadow-sm" style="max-width: 80%;">
+                ${mensaje}
+            </div>
+        </div>
+        <div class="text-center my-2" id="loadingChat">
+            <div class="spinner-border spinner-border-sm text-muted"></div>
+        </div>
+    `;
+    body.scrollTop = body.scrollHeight;
+    input.value = '';
+
+    // Llamada al backend (sin action_type, solo query)
+    try {
+        const res = await fetch("{% url 'api_ai_agent' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ query: mensaje, historial: historialChat })
+        });
+        
+        const data = await res.json();
+        document.getElementById('loadingChat').remove();
+
+        if (data.success) {
+            historialChat.push({ role: "user", content: mensaje });
+            historialChat.push({ role: "assistant", content: data.content });
+
+            body.innerHTML += `
+                <div class="d-flex justify-content-start mb-3 animate__animated animate__fadeIn">
+                    <div class="bg-white border p-3 rounded-3 shadow-sm" style="max-width: 90%;">
+                        <i class="fas fa-robot text-primary me-2"></i>
+                        <div class="markdown-body text-dark" style="font-size: 1.05rem;">
+                            ${marked.parse(data.content)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            body.scrollTop = body.scrollHeight;
+        }
+    } catch(e) {
+        if(document.getElementById('loadingChat')) document.getElementById('loadingChat').remove();
+    }
+}
+
+// Wrappers
+function activarIA(accion) { llamarIA(accion, ""); }
+function abrirModalPareto() { new bootstrap.Modal(document.getElementById('modalParetoInput')).show(); }
+function ejecutarPareto() {
+    const tema = document.getElementById('inputParetoTema').value;
+    if(!tema) return alert("Escribe un tema.");
+    bootstrap.Modal.getInstance(document.getElementById('modalParetoInput')).hide();
+    llamarIA('est_pareto', tema);
 }
 </script>
 {% endblock %}
