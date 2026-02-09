@@ -1,5 +1,5 @@
 # tasks/urls.py
-
+from . import views, views_pdf, views_shadow  # <--- AGREGA views_shadow AQUÍ
 
 
 from django.urls import path
@@ -440,4 +440,11 @@ urlpatterns = [
     #path('api/ai-agent/', ai_views.ai_agent, name='ai_agent'),
     path('api/ai-agent/', ai_views.api_ai_agent, name='api_ai_agent'),
     path('reportes/bienestar/descargar/', views.generar_pdf_bienestar, name='descargar_pdf_bienestar'),
+
+
+    #==========================================
+    # 🦄 RUTAS SHADOW TENANT (VENTAS/RECTOR)
+    # ==========================================
+    path('shadow-demo/', views_shadow.shadow_tenant_dashboard, name='shadow_tenant'),
+    path('shadow-demo/caso/<int:acta_id>/', views_shadow.shadow_case_detail, name='shadow_case_detail'),
 ]

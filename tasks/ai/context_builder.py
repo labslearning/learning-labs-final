@@ -1,7 +1,7 @@
 # tasks/ai/context_builder.py
 
-# Importamos Avg para cálculos de rendimiento
-from django.db.models import Avg, Count
+# Importamos Avg para cálculos de rendimiento, Count y Q
+from django.db.models import Avg, Count, Q
 # Importamos modelos necesarios
 from tasks.models import (
     Nota, Observacion, PEIResumen, 
@@ -52,6 +52,67 @@ class ContextBuilder:
         except:
             return "Eres un asistente educativo experto."
 
+    # -------------------------------------------------------------------------
+    # 🧠 MÉTODO NUEVO: CEREBRO FORENSE (CRÍTICO PARA EL PLAN UNICORNIO)
+    # -------------------------------------------------------------------------
+    def build_forensic_context(self, estudiante):
+        """
+        RADIOGRAFÍA FORENSE (CRÍTICO PARA RETENCIÓN)
+        Cruza: Rendimiento (Notas) + Comportamiento (Observador) + Asistencia.
+        Detecta patrones invisibles de deserción y genera evidencia para demandas/retiros.
+        """
+        try:
+            # 1. ACADÉMICO: Promedio y materias perdidas
+            notas = Nota.objects.filter(estudiante=estudiante)
+            promedio = notas.aggregate(Avg('valor'))['valor__avg'] or 0
+            perdidas = notas.filter(valor__lt=3.5).count()
+            
+            # 2. DISCIPLINARIO: Conteo por tipo de falta
+            observaciones = Observacion.objects.filter(estudiante=estudiante)
+            total_obs = observaciones.count()
+            # Asumiendo tipos '2' (Grave) y '3' (Gravísima)
+            graves = observaciones.filter(tipo__in=['2', '3']).count()
+            
+            # 3. ASISTENCIA: Fallas injustificadas
+            fallas = Asistencia.objects.filter(estudiante=estudiante, estado='FALLA').count()
+
+            # 4. DIAGNÓSTICO AUTOMÁTICO (Riesgo Calculado)
+            nivel_riesgo = "BAJO"
+            razones = []
+            if perdidas >= 3:
+                nivel_riesgo = "ALTO (POSIBLE PÉRDIDA DE AÑO - Numeral 7.1)"
+                razones.append("Rendimiento Académico Crítico")
+            if graves >= 1:
+                nivel_riesgo = "ALTO (RIESGO DISCIPLINARIO)" if nivel_riesgo == "BAJO" else "CRÍTICO (ACADÉMICO + DISCIPLINARIO)"
+                razones.append("Faltas Graves Recurrentes")
+            if fallas >= 5:
+                nivel_riesgo = "ALTO (AUSENTISMO)"
+                razones.append("Abandono Escolar Potencial")
+
+            return {
+                "PERFIL_FORENSE": {
+                    "estudiante": estudiante.get_full_name(),
+                    "riesgo_detectado": nivel_riesgo,
+                    "factores_riesgo": ", ".join(razones),
+                    "metricas_clave": {
+                        "promedio_global": round(promedio, 2),
+                        "materias_reprobadas": perdidas,
+                        "reportes_disciplina": total_obs,
+                        "faltas_graves": graves,
+                        "fallas_asistencia": fallas
+                    },
+                    "evidencia_reciente": [
+                        f"{obs.get_tipo_display()}: {obs.descripcion[:100]}..." 
+                        for obs in observaciones.order_by('-fecha_creacion')[:5]
+                    ]
+                }
+            }
+        except Exception as e:
+            return {"ERROR_FORENSE": str(e)}
+
+    # -------------------------------------------------------------------------
+    # 🚀 MÉTODO PRINCIPAL
+    # -------------------------------------------------------------------------
     def get_context(self, usuario, action_type=None, **kwargs):
         """
         Punto de entrada universal para generar contexto IA.
@@ -74,13 +135,19 @@ class ContextBuilder:
             ACCION_CUMPLIMIENTO_PEI,
             ACCION_MEJORA_STAFF_ACADEMICO,
             ACCION_ANALISIS_CONVIVENCIA,
-            ACCION_ANALISIS_GLOBAL_BIENESTAR
+            # Mantenemos Bienestar aquí, pero lo filtraremos abajo si es individual
+            ACCION_ANALISIS_GLOBAL_BIENESTAR 
         ]
 
         # =========================================================
         # 3. CONTEXTO INSTITUCIONAL GLOBAL (COLEGIO COMPLETO)
         # =========================================================
-        if action_type in ACCIONES_GLOBALES:
+        
+        # Validamos si es una acción global Y si NO se está pidiendo un análisis individual específico
+        # (Si target_user es diferente al usuario y la accion es bienestar, es un análisis forense individual)
+        es_analisis_forense_individual = (action_type == ACCION_ANALISIS_GLOBAL_BIENESTAR and target_user != usuario)
+
+        if action_type in ACCIONES_GLOBALES and not es_analisis_forense_individual:
             # 🔥 PASO 1: Obtener la evidencia objetiva (Datos Reales)
             try:
                 datos_radiografia = InteligenciaInstitucionalService.get_radiografia_completa()
@@ -276,6 +343,20 @@ class ContextBuilder:
 
         # B. ROL ESTUDIANTE (O Admin analizando estudiante)
         else:
+            # 🔥 AQUÍ OCURRE LA MAGIA DEL UNICORNIO:
+            # Si se pide Análisis de Bienestar Individual, inyectamos el PERFIL FORENSE.
+            if action_type == ACCION_ANALISIS_GLOBAL_BIENESTAR:
+                contexto.update(self.build_forensic_context(target_user))
+                contexto["INSTRUCCIONES_ESTRICTAS_IA"] = {
+                    "ROL_ASIGNADO": "Perito Legal Educativo y Auditor ISO 21001.",
+                    "OBJETIVO": "Generar Dictamen Forense basado en evidencia (PERFIL_FORENSE).",
+                    "ESTRUCTURA_RESPUESTA": [
+                        "1. 🚨 DICTAMEN DE RIESGO: (Alto/Medio/Bajo) y la razón jurídica/académica.",
+                        "2. ⚖️ EVIDENCIA PROBATORIA: Cita textualmente las notas, fallas o faltas.",
+                        "3. 🛡️ PLAN DE PROTECCIÓN: 3 Acciones inmediatas (Citación, Ruta de Atención)."
+                    ]
+                }
+
             contexto["dimension_academica"] = self._get_rendimiento_integral(target_user)
             contexto["dimension_convivencial"] = self._get_resumen_convivencia(target_user)
             contexto["dimension_asistencia"] = self._get_resumen_asistencia(target_user)
@@ -443,9 +524,11 @@ class ContextBuilder:
         if not notas.exists(): return {}
         reporte = {}
         for nota in notas:
-            m = str(nota.materia.nombre)
-            p = str(nota.periodo.nombre)
-            if m not in reporte: reporte[m] = {}
+            m_nombre = str(nota.materia.nombre)
+            p_nombre = str(nota.periodo.nombre)
+            if m_nombre not in reporte: reporte[m_nombre] = {}
+            
+            # 🔥 CORRECCIÓN DEL BUG CRÍTICO DE VARIABLES AQUÍ 👇
             if p_nombre not in reporte[m_nombre]:
                 notas_periodo = [float(n.valor) for n in notas if n.materia_id == nota.materia_id and n.periodo_id == nota.periodo_id]
                 promedio = sum(notas_periodo) / len(notas_periodo) if notas_periodo else 0
