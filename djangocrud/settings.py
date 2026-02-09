@@ -12,7 +12,7 @@
 import os
 import dj_database_url
 from pathlib import Path
-from decouple import config 
+from decouple import config, Csv
 
     # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
     # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
     # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g)e7^67qy$r*nsd+0iy!-vl=k1a9sgg3+!(wddt)h(j^r1j6%p'
+    # 🛡️ CIRUGÍA REALIZADA: Clave extraída a variable de entorno
+SECRET_KEY = config('SECRET_KEY')
 
     # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+    # 🛡️ CIRUGÍA REALIZADA: Ahora respeta el .env (por defecto True si no existe)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 
 
     # Application definition
@@ -110,11 +112,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default=''),
-            'USER': config('DB_USER', default=''),
+            'NAME': config('DB_NAME', default='learning_labs_db'),
+            'USER': config('DB_USER', default='postgres'),
             'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': config('DB_HOST', default=''),
-            'PORT': config('DB_PORT', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
         }
     }
 
@@ -184,8 +186,8 @@ DEFAULT_TEMP_PASSWORD = '123456'
     # ==============================================================
     # CONFIGURACIÓN DE INTELIGENCIA ARTIFICIAL (Fase 4)
     # ==============================================================
-    # Dejamos tu llave tal cual la tenías (Hardcoded)
-DEEPSEEK_API_KEY = "sk-f4b636146a9147feb7c4e73e6e24d8f3"
+    # 🛡️ CIRUGÍA REALIZADA: Clave protegida
+DEEPSEEK_API_KEY = config('DEEPSEEK_API_KEY')
 AI_MODEL_NAME = "deepseek-chat"
 
 
@@ -200,7 +202,8 @@ if config('RAILWAY_ENVIRONMENT', default='') != '':
         ALLOWED_HOSTS = ['*']
         CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 else:
-        DEBUG = True
+        # En local, respetamos lo que diga el .env o True por defecto
+        DEBUG = config('DEBUG', default=True, cast=bool)
         ALLOWED_HOSTS = ['*']
 
 DATABASE_URL = config('DATABASE_URL', default=None)
@@ -244,10 +247,10 @@ DATETIME_INPUT_FORMATS = [
 ]
 
 # ==========================================
-# 📱 TWILIO CONFIGURATION (SMS)
+# 📱 TWILIO CONFIGURATION (SMS/WHATSAPP)
 # ==========================================
-# Dentro de settings.py (al final del archivo)
-
-TWILIO_ACCOUNT_SID = 'ACa2a73537d72ea781f09776eec9624a3b'
-TWILIO_AUTH_TOKEN = '354bdf5d4dd88a585bb99c77f4066c3e'
-TWILIO_PHONE_NUMBER = '+13185438398'
+# 🛡️ CIRUGÍA REALIZADA: Credenciales protegidas con config()
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+# Usamos el número de WhatsApp definido en .env, si no existe, busca PHONE_NUMBER
+TWILIO_PHONE_NUMBER = config('TWILIO_WHATSAPP_NUMBER', default=config('TWILIO_PHONE_NUMBER', default=''))
