@@ -254,3 +254,11 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='dummy-sid')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='dummy-token')
 # Usamos el número de WhatsApp definido en .env, si no existe, busca PHONE_NUMBER
 TWILIO_PHONE_NUMBER = config('TWILIO_WHATSAPP_NUMBER', default=config('TWILIO_PHONE_NUMBER', default=''))
+
+
+
+
+
+# Opcional: Aumentar el límite de subida para archivos históricos grandes (50MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800

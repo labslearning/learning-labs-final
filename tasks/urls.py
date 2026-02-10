@@ -451,9 +451,24 @@ urlpatterns = [
 
 
     # == SUITE DE IMPORTACIÓN ENTERPRISE ==
+    #path('importar/subir/', views_import.import_upload_view, name='import_upload'),
+    #path('importar/mapeo/', views_import.import_mapping_view, name='import_mapping'),
+    #path('importar/historial/', views_import.import_history_view, name='import_history'),
+    #path('importar/revertir/<uuid:batch_id>/', views_import.import_rollback_view, name='import_rollback'),
+
+    # --- RUTAS NUEVAS DE GESTIÓN INDUSTRIAL ---
+    #path('admin/import/inspect/<int:batch_id>/', views_import.import_inspect_view, name='import_inspect'),
+    #path('admin/import/rollback/<int:batch_id>/', views_import.import_rollback_view, name='import_rollback'),
+    # ======================================================
+    # SUITE DE IMPORTACIÓN ENTERPRISE (LIMPIO Y CORREGIDO)
+    # ======================================================
     path('importar/subir/', views_import.import_upload_view, name='import_upload'),
     path('importar/mapeo/', views_import.import_mapping_view, name='import_mapping'),
     path('importar/historial/', views_import.import_history_view, name='import_history'),
+    
+    # Rutas de Acción con UUID (Indispensables para el botón "Ver Datos" y "Borrar")
+    path('importar/inspect/<uuid:batch_id>/', views_import.import_inspect_view, name='import_inspect'),
     path('importar/revertir/<uuid:batch_id>/', views_import.import_rollback_view, name='import_rollback'),
+    path('certificado/descargar/<int:historial_id>/', views_pdf.download_certificate_view, name='download_certificate'),
 
 ]

@@ -17,3 +17,12 @@ def multiply(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return 0
+
+
+
+# tasks/templatetags/dict_filters.py
+register = template.Library()
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)

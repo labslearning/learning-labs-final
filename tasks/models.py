@@ -1,3 +1,12 @@
+
+import uuid
+import hashlib
+import os
+from django.db import models
+from django.conf import settings
+from django.core.validators import FileExtensionValidator
+from django.utils.translation import gettext_lazy as _
+
 from django.db import models
 from django.db import transaction
 from django.utils import timezone
@@ -1854,3 +1863,184 @@ class HistorialAcademico(models.Model):
 
     def __str__(self):
         return f"{self.estudiante} - {self.anio_lectivo} (v{self.version})"
+
+
+
+
+def documento_path_builder(instance, filename):
+    """
+    Genera una ruta de almacenamiento segura, particionada y aislada por tipo de riesgo.
+    
+    Estrategia de Seguridad:
+    - Los archivos ejecutables se aíslan en carpetas '/binaries/' para facilitar 
+      reglas de firewall o antivirus a nivel de servidor.
+    - Se usa UUID v4 para impedir la predicción de nombres de archivo.
+    """
+    ext = filename.split('.')[-1].lower()
+    filename_secure = f"{instance.uuid}.{ext}"
+    
+    # Aislamiento de contenido riesgoso
+    subfolder = instance.tipo
+    if ext in ['exe', 'msi', 'bat', 'sh', 'bin']:
+        subfolder = f"{instance.tipo}/quarantine_binaries"
+    
+    return f"historico/{instance.anio_lectivo}/{subfolder}/{filename_secure}"
+
+class DocumentoHistorico(models.Model):
+    """
+    🏢 REPOSITORIO DOCUMENTAL INDUSTRIAL (EDMS Tier-1)
+    
+    Infraestructura diseñada para la preservación digital de activos académicos,
+    incluyendo soporte para formatos legacy (Software antiguo) y Data (Excel).
+    """
+    
+    TIPOS_DOCUMENTO = [
+        ('OBSERVADOR', '📜 Observador / Disciplina'),
+        ('BOLETIN', '📊 Boletín de Calificaciones'),
+        ('ACTA', '⚖️ Acta de Comisión/Promoción'),
+        ('CERTIFICADO', '🎓 Certificado de Estudio'),
+        ('MATRICULA', '📝 Ficha de Matrícula'),
+        ('PAZ_SALVO', '💰 Paz y Salvo'),
+        ('DOCUMENTO_ID', '🆔 Documento de Identidad'),
+        ('CLINICO', '🏥 Soporte Clínico/Médico'),
+        ('LEGAL', '⚖️ Soporte Legal/Jurídico'),
+        ('SOFTWARE_LEGACY', '💾 Software Educativo / Ejecutable'), # Soporte EXE
+        ('DATA_DUMP', '🗃️ Base de Datos / Excel'),               # Soporte Excel
+        ('OTRO', '📁 Otro Documento'),
+    ]
+
+    # --- IDENTIFICACIÓN ÚNICA ---
+    uuid = models.UUIDField(
+        default=uuid.uuid4, 
+        editable=False, 
+        unique=True, 
+        db_index=True, 
+        help_text="Identificador inmutable para referencias seguras (Anti-Enumeration)"
+    )
+    
+    # --- RELACIONES JERÁRQUICAS ---
+    estudiante = models.ForeignKey(
+        'Perfil', 
+        on_delete=models.CASCADE, 
+        related_name='documentos_historicos', 
+        null=True, 
+        blank=True, 
+        db_index=True
+    )
+    
+    # --- CLASIFICACIÓN ---
+    anio_lectivo = models.IntegerField(
+        _("Año Lectivo"), 
+        help_text="Año histórico del activo (ej: 1998)", 
+        db_index=True
+    )
+    tipo = models.CharField(
+        max_length=20, 
+        choices=TIPOS_DOCUMENTO, 
+        default='OTRO', 
+        db_index=True
+    )
+    
+    # --- EL ACTIVO DIGITAL (CORE) ---
+    archivo = models.FileField(
+        upload_to=documento_path_builder,
+        validators=[FileExtensionValidator(allowed_extensions=[
+            # Documentación Estándar
+            'pdf', 'doc', 'docx', 'txt', 'rtf',
+            # Evidencia Gráfica
+            'jpg', 'jpeg', 'png', 'svg', 'webp',
+            # Archivos Comprimidos
+            'zip', 'rar', '7z', 'tar', 'gz',
+            # Data & Hojas de Cálculo (Solicitado)
+            'xlsx', 'xls', 'csv', 'json', 'xml',
+            # Ejecutables Legacy (Solicitado - Manejo con Precaución)
+            'exe', 'msi' 
+        ])],
+        help_text="Soporta Documentos, Imágenes, Excel y Ejecutables Legacy. Máx 100MB."
+    )
+    
+    # --- METADATOS DE INTEGRIDAD & AUDITORÍA ---
+    nombre_original = models.CharField(max_length=255, help_text="Nombre original sanitizado")
+    extension = models.CharField(max_length=10, blank=True, editable=False)
+    peso_kb = models.PositiveIntegerField(default=0, editable=False, help_text="Peso en Kilobytes")
+    
+    # Hash SHA-256: Huella digital criptográfica para verificar que el EXE/Excel no ha sido alterado (Integridad)
+    hash_sha256 = models.CharField(max_length=64, blank=True, editable=False, db_index=True)
+    
+    # Metadata JSON: Para almacenar versión del software, autor del Excel, OCR, etc.
+    metadata = models.JSONField(default=dict, blank=True)
+
+    # --- TRAZABILIDAD ---
+    subido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    fecha_subida = models.DateTimeField(auto_now_add=True, db_index=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    # --- FLAGS DE SISTEMA ---
+    procesado_automaticamente = models.BooleanField(default=False)
+    es_confidencial = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Documento Histórico"
+        verbose_name_plural = "Repositorio Digital"
+        ordering = ['-anio_lectivo', 'tipo', 'nombre_original']
+        indexes = [
+            models.Index(fields=['estudiante', 'anio_lectivo', 'tipo']),
+            models.Index(fields=['hash_sha256']),
+        ]
+
+    def __str__(self):
+        return f"[{self.anio_lectivo}] {self.get_tipo_display()} - {self.nombre_original}"
+
+    def save(self, *args, **kwargs):
+        """
+        Sobreescritura Industrial:
+        1. Sanitiza nombres.
+        2. Calcula huella SHA-256 (Integridad).
+        3. Calcula peso.
+        """
+        if self.archivo and not self.hash_sha256:
+            # Captura nombre original si es nuevo
+            self.nombre_original = self.nombre_original or os.path.basename(self.archivo.name)
+            self.extension = self.nombre_original.split('.')[-1].lower()
+            
+            # Cálculo de Hash (Stream-safe para archivos grandes como .exe de 100MB)
+            md5 = hashlib.sha256()
+            for chunk in self.archivo.chunks():
+                md5.update(chunk)
+            
+            self.hash_sha256 = md5.hexdigest()
+            self.peso_kb = self.archivo.size // 1024
+
+        super().save(*args, **kwargs)
+
+    @property
+    def es_riesgoso(self):
+        """Retorna True si el archivo requiere advertencia de seguridad al descargar"""
+        return self.extension in ['exe', 'msi', 'bat', 'xlsm']
+
+    @property
+    def icon_class(self):
+        """Retorna clase de FontAwesome para UI según el tipo de archivo"""
+        icons = {
+            'pdf': 'fa-file-pdf text-danger',
+            'zip': 'fa-file-archive text-warning',
+            'rar': 'fa-file-archive text-warning',
+            '7z':  'fa-file-archive text-warning',
+            
+            # Imágenes
+            'jpg':  'fa-file-image text-info',
+            'jpeg': 'fa-file-image text-info',
+            'png':  'fa-file-image text-info',
+            
+            # Data / Excel
+            'xlsx': 'fa-file-excel text-success',
+            'xls':  'fa-file-excel text-success',
+            'csv':  'fa-file-csv text-success',
+            'xml':  'fa-file-code text-secondary',
+            
+            # Ejecutables / Software
+            'exe': 'fa-microchip text-dark',
+            'msi': 'fa-box-open text-dark',
+        }
+        return icons.get(self.extension, 'fa-file text-secondary')

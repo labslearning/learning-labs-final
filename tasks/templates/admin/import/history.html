@@ -2,6 +2,7 @@
 
 {% block content %}
 <style>
+    /* Estilos Específicos para Dashboard Industrial */
     .avatar-xs { width: 32px; height: 32px; font-size: 0.8rem; }
     .fw-medium { font-weight: 500; }
     .font-mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; letter-spacing: -0.5px; }
@@ -10,6 +11,8 @@
     tr:hover .hover-actions { opacity: 1; }
     .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .cursor-pointer { cursor: pointer; }
+    
+    /* Paleta Suave (Soft UI) */
     .bg-soft-primary { background-color: rgba(59, 125, 221, 0.1); color: #3b7ddd; }
     .bg-soft-success { background-color: rgba(28, 187, 140, 0.1); color: #1cbb8c; }
     .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
@@ -31,7 +34,7 @@
         <div class="col-md-6">
             <h1 class="h3 mb-1 text-gray-800 fw-bold">Auditoría de Datos</h1>
             <p class="text-muted small mb-0">
-                <i class="fas fa-shield-alt me-1 text-success"></i> Sistema de Bitácora Inmutable v2.4
+                <i class="fas fa-shield-alt me-1 text-success"></i> Sistema de Bitácora Inmutable v3.0
             </p>
         </div>
         <div class="col-md-6">
@@ -76,9 +79,9 @@
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center mb-1">
                                 <span class="font-mono text-dark fw-bold small me-2" id="id-{{ lote.id }}">
-                                    #{{ lote.id|truncatechars:9|slice:"1:" }}
+                                    #{{ lote.id }}
                                 </span>
-                                <button class="btn btn-link p-0 text-muted hover-actions" onclick="copyToClipboard('{{ lote.id }}')" title="Copiar ID Completo">
+                                <button class="btn btn-link p-0 text-muted hover-actions" onclick="copyToClipboard('{{ lote.id }}')" title="Copiar ID">
                                     <i class="far fa-copy small"></i>
                                 </button>
                             </div>
@@ -95,7 +98,7 @@
                                 </div>
                                 <div>
                                     <div class="fw-medium text-dark small">{{ lote.usuario.username }}</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">Staff Admin</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Operador</div>
                                 </div>
                             </div>
                         </td>
@@ -103,7 +106,11 @@
                         <td>
                             <div class="d-flex align-items-start">
                                 <div class="me-2 mt-1">
-                                    <i class="fas fa-file-excel text-success fs-5"></i>
+                                    {% if 'zip' in lote.nombre_archivo|lower %}
+                                        <i class="fas fa-file-archive text-warning fs-5"></i>
+                                    {% else %}
+                                        <i class="fas fa-file-excel text-success fs-5"></i>
+                                    {% endif %}
                                 </div>
                                 <div>
                                     <div class="text-dark fw-medium small text-truncate" style="max-width: 200px;" title="{{ lote.nombre_archivo }}">
@@ -114,7 +121,7 @@
                                             {{ lote.tipo_modelo|upper }}
                                         </span>
                                         <span class="text-muted small" style="font-size: 0.7rem;">
-                                            {{ lote.total_filas }} items
+                                            {{ lote.total_filas }} filas
                                         </span>
                                     </div>
                                 </div>
@@ -123,14 +130,14 @@
 
                         <td>
                             <div class="d-flex justify-content-between small mb-1 px-1">
-                                <span class="text-muted" style="font-size: 0.75rem;">Procesado:</span>
-                                <span class="fw-bold font-mono">{{ lote.filas_procesadas }}/{{ lote.total_filas }}</span>
+                                <span class="text-muted" style="font-size: 0.75rem;">Progreso:</span>
+                                <span class="fw-bold font-mono">{{ lote.filas_exitosas }} OK / {{ lote.total_filas }} Total</span>
                             </div>
                             <div class="progress rounded-pill" style="height: 6px; background-color: #e9ecef;">
                                 {% if lote.estado == 'ROLLED_BACK' %}
                                     <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%"></div>
                                 {% elif lote.estado == 'FAILED' %}
-                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ lote.filas_procesadas|default:15 }}%"></div>
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
                                 {% else %}
                                     <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
                                 {% endif %}
@@ -143,7 +150,7 @@
                                     <span class="status-dot bg-success"></span>Exitoso
                                 </span>
                             {% elif lote.estado == 'ROLLED_BACK' %}
-                                <span class="badge bg-soft-dark border border-secondary-subtle rounded-pill py-2 px-3">
+                                <span class="badge bg-soft-dark border border-secondary-subtle rounded-pill py-2 px-3 text-decoration-line-through">
                                     <span class="status-dot bg-dark"></span>Revertido
                                 </span>
                             {% elif lote.estado == 'FAILED' %}
@@ -152,28 +159,55 @@
                                 </span>
                             {% else %}
                                 <span class="badge bg-soft-warning border border-warning-subtle rounded-pill py-2 px-3">
-                                    <span class="status-dot bg-warning pulse-active"></span>{{ lote.get_estado_display }}
+                                    <span class="status-dot bg-warning pulse-active"></span>{{ lote.estado }}
                                 </span>
                             {% endif %}
                         </td>
 
                         <td class="text-end pe-4">
-                            {% if lote.estado == 'COMPLETED' or lote.estado == 'PARTIAL_SUCCESS' or lote.estado == 'FAILED' %}
-                                <div class="dropdown">
-                                    <button class="btn btn-white btn-sm border shadow-sm rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v text-muted"></i>
+                            {% if lote.estado == 'COMPLETED' %}
+                                <div class="btn-group">
+                                    <a href="{% url 'import_inspect' lote.id %}" class="btn btn-outline-primary btn-sm border-0 bg-soft-primary" title="Inspeccionar Datos">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <button type="button" class="btn btn-outline-danger btn-sm border-0 bg-soft-danger ms-1" 
+                                            data-bs-toggle="modal" data-bs-target="#rollbackModal{{ lote.id }}" title="Revertir Carga">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><h6 class="dropdown-header text-uppercase small">Opciones de Lote</h6></li>
-                                        <li><a class="dropdown-item small" href="#"><i class="fas fa-download me-2 text-muted"></i>Descargar Reporte</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item small text-danger fw-bold" href="#" onclick="confirmRollback('{{ lote.id }}', '{{ lote.nombre_archivo }}', '{{ lote.creado_en|date:'d/m/Y' }}')">
-                                                <i class="fas fa-history me-2"></i>Revertir (Rollback)
-                                            </a>
-                                        </li>
-                                    </ul>
                                 </div>
+
+                                <div class="modal fade" id="rollbackModal{{ lote.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                                            <div class="modal-header border-0 bg-danger-subtle text-danger">
+                                                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Rollback</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <p class="mb-0">
+                                                    Estás a punto de <strong>ELIMINAR</strong> todos los registros creados en el lote <strong>#{{ lote.id }}</strong>.
+                                                    <br><br>
+                                                    <ul class="text-muted small">
+                                                        <li>Archivo: {{ lote.nombre_archivo }}</li>
+                                                        <li>Registros afectados: <strong>{{ lote.filas_exitosas }}</strong></li>
+                                                    </ul>
+                                                    <span class="text-danger fw-bold">Esta acción es irreversible.</span>
+                                                </p>
+                                            </div>
+                                            <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                                                <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                                                <form action="{% url 'import_rollback' lote.id %}" method="POST" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger fw-bold px-4">
+                                                        <i class="fas fa-trash-alt me-2"></i> Sí, Revertir
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             {% else %}
                                 <span class="text-muted small opacity-50"><i class="fas fa-lock"></i></span>
                             {% endif %}
@@ -188,8 +222,8 @@
                                         <i class="fas fa-inbox fa-2x"></i>
                                     </div>
                                 </div>
-                                <h5 class="text-dark">No se encontraron registros</h5>
-                                <p class="text-muted small">Realiza tu primera importación masiva para ver la auditoría.</p>
+                                <h5 class="text-dark">No hay registros de auditoría</h5>
+                                <p class="text-muted small">Realiza tu primera importación masiva para ver datos aquí.</p>
                                 <a href="{% url 'import_upload' %}" class="btn btn-primary btn-sm rounded-pill mt-2">Comenzar Ahora</a>
                             </div>
                         </td>
@@ -210,11 +244,9 @@
                         </a>
                     </li>
                     {% endif %}
-                    
                     <li class="page-item disabled">
                         <span class="page-link border-0 text-dark fw-bold">Página {{ lotes.number }}</span>
                     </li>
-                    
                     {% if lotes.has_next %}
                     <li class="page-item">
                         <a class="page-link border-0 text-muted" href="?page={{ lotes.next_page_number }}">
@@ -229,10 +261,6 @@
     </div>
 </div>
 
-<form method="POST" id="rollbackForm" action="">
-    {% csrf_token %}
-</form>
-
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
   <div id="liveToast" class="toast align-items-center text-white bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
@@ -245,23 +273,7 @@
 </div>
 
 <script>
-// 1. Lógica de Rollback Segura
-function confirmRollback(batchId, fileName, date) {
-    const msg = `⚠️ PROTOCOLO DE SEGURIDAD ⚠️\n\n` +
-                `Estás a punto de EJECUTAR UN ROLLBACK sobre:\n` +
-                `📄 Archivo: ${fileName}\n` +
-                `📅 Fecha: ${date}\n\n` +
-                `Esta acción es DESTRUCTIVA e IRREVERSIBLE para los datos creados en esta sesión.\n` +
-                `¿Deseas proceder?`;
-
-    if (confirm(msg)) {
-        const form = document.getElementById('rollbackForm');
-        form.action = `/tasks/importar/revertir/${batchId}/`; 
-        form.submit();
-    }
-}
-
-// 2. Utilidad Copiar ID (SaaS UX)
+// Utilidad UX: Copiar ID
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
         const toastEl = document.getElementById('liveToast');
