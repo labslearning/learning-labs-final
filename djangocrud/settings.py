@@ -21,8 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
     # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
     # SECURITY WARNING: keep the secret key used in production secret!
-    # 🛡️ CIRUGÍA REALIZADA: Clave extraída a variable de entorno
-SECRET_KEY = config('SECRET_KEY')
+    # 🛡️ CIRUGÍA REALIZADA: Se agregó default para permitir el build en Railway sin .env
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-build-key-temporal-123')
 
     # SECURITY WARNING: don't run with debug turned on in production!
     # 🛡️ CIRUGÍA REALIZADA: Ahora respeta el .env (por defecto True si no existe)
@@ -186,8 +186,8 @@ DEFAULT_TEMP_PASSWORD = '123456'
     # ==============================================================
     # CONFIGURACIÓN DE INTELIGENCIA ARTIFICIAL (Fase 4)
     # ==============================================================
-    # 🛡️ CIRUGÍA REALIZADA: Clave protegida
-DEEPSEEK_API_KEY = config('DEEPSEEK_API_KEY')
+    # 🛡️ CIRUGÍA REALIZADA: Clave protegida con default para build
+DEEPSEEK_API_KEY = config('DEEPSEEK_API_KEY', default='dummy-ai-key')
 AI_MODEL_NAME = "deepseek-chat"
 
 
@@ -249,8 +249,8 @@ DATETIME_INPUT_FORMATS = [
 # ==========================================
 # 📱 TWILIO CONFIGURATION (SMS/WHATSAPP)
 # ==========================================
-# 🛡️ CIRUGÍA REALIZADA: Credenciales protegidas con config()
-TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+# 🛡️ CIRUGÍA REALIZADA: Credenciales protegidas con config() y default para build
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='dummy-sid')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='dummy-token')
 # Usamos el número de WhatsApp definido en .env, si no existe, busca PHONE_NUMBER
 TWILIO_PHONE_NUMBER = config('TWILIO_WHATSAPP_NUMBER', default=config('TWILIO_PHONE_NUMBER', default=''))
