@@ -1,5 +1,6 @@
 # tasks/urls.py
 from . import views, views_pdf, views_shadow  # <--- AGREGA views_shadow AQUÍ
+from . import views_import  # <--- AGREGA ESTA LÍNEA
 
 
 from django.urls import path
@@ -447,4 +448,12 @@ urlpatterns = [
     # ==========================================
     path('shadow-demo/', views_shadow.shadow_tenant_dashboard, name='shadow_tenant'),
     path('shadow-demo/caso/<int:acta_id>/', views_shadow.shadow_case_detail, name='shadow_case_detail'),
+
+
+    # == SUITE DE IMPORTACIÓN ENTERPRISE ==
+    path('importar/subir/', views_import.import_upload_view, name='import_upload'),
+    path('importar/mapeo/', views_import.import_mapping_view, name='import_mapping'),
+    path('importar/historial/', views_import.import_history_view, name='import_history'),
+    path('importar/revertir/<uuid:batch_id>/', views_import.import_rollback_view, name='import_rollback'),
+
 ]

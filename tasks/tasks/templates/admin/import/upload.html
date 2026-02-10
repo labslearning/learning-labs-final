@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-dark">Importación Masiva Inteligente</h2>
+                <p class="text-muted">
+                    Sube tus archivos históricos o listas de estudiantes. 
+                    <span class="badge bg-success-subtle text-success border border-success p-1">
+                        <i class="fas fa-brain me-1"></i>IA Activada
+                    </span>
+                    El sistema aprenderá de tus columnas.
+                </p>
+            </div>
+
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="progress" style="height: 4px;">
+                    <div class="progress-bar bg-gradient-primary w-100" role="progressbar"></div>
+                </div>
+
+                <div class="card-body p-5">
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
+                                {% if message.tags == 'success' %}<i class="fas fa-check-circle me-2"></i>
+                                {% elif message.tags == 'error' %}<i class="fas fa-exclamation-triangle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        {% csrf_token %}
+                        
+                        <div class="upload-zone rounded-4 border-2 border-dashed p-5 text-center position-relative transition-all" id="dropZone">
+                            <input type="file" name="archivo" id="archivoInput" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" 
+                                   accept=".xlsx, .xls, .xlsm" required>
+                            
+                            <div class="default-content transition-all" id="dropContent">
+                                <div class="icon-box mb-3 text-primary bg-primary-subtle rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-file-excel fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark">Arrastra tu archivo aquí</h5>
+                                <p class="text-secondary small mb-3">o haz clic para explorar en tu equipo</p>
+                                <span class="badge bg-light text-muted border">Soporta .XLSX, .XLS (Max 10MB)</span>
+                            </div>
+
+                            <div class="file-selected-content d-none" id="fileContent">
+                                <div class="icon-box mb-3 text-success bg-success-subtle rounded-circle d-inline-flex align-items-center justify-content-center animate__animated animate__bounceIn" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-check fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark text-truncate px-4" id="fileNameDisplay">nombre_archivo.xlsx</h5>
+                                <p class="text-success small fw-bold" id="fileSizeDisplay">2.5 MB</p>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2 z-index-10 position-relative" id="btnRemoveFile">
+                                    <i class="fas fa-times me-1"></i> Cambiar archivo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-3 rounded-3 shadow-sm disabled-cursor" id="btnUpload" disabled>
+                                <span class="normal-state">
+                                    <i class="fas fa-rocket me-2"></i>Analizar e Importar
+                                </span>
+                                <span class="loading-state d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Procesando datos con IA...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light p-4 border-top-0">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-1 small text-uppercase text-muted">¿Necesitas ayuda?</h6>
+                            <a href="#" class="text-decoration-none small text-primary fw-bold">
+                                <i class="fas fa-download me-1"></i> Descargar plantilla de ejemplo
+                            </a>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted d-block">Zero-Failure Architecture v2.0</small>
+                            <small class="text-muted opacity-75">Secured by SSL & DataGuard</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Quirúrgicos Personalizados */
+    .upload-zone {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        background-color: #e9ecef;
+        border-color: #0d6efd;
+        transform: scale(1.01);
+    }
+    .icon-box {
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .upload-zone:hover .icon-box {
+        transform: scale(1.1);
+    }
+    .cursor-pointer { cursor: pointer; }
+    
+    /* Animación suave para el cambio de estado */
+    .transition-all { transition: all 0.3s ease-in-out; }
+    
+    .z-index-10 { z-index: 10; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const input = document.getElementById('archivoInput');
+    const dropContent = document.getElementById('dropContent');
+    const fileContent = document.getElementById('fileContent');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+    const btnRemove = document.getElementById('btnRemoveFile');
+    const btnUpload = document.getElementById('btnUpload');
+    const form = document.getElementById('uploadForm');
+
+    // 1. Manejo de Drag & Drop Visual
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) { dropZone.classList.add('dragover'); }
+    function unhighlight(e) { dropZone.classList.remove('dragover'); }
+
+    // 2. Manejo de Selección de Archivo (Input o Drop)
+    dropZone.addEventListener('drop', handleDrop, false);
+    input.addEventListener('change', function() { validateAndShow(this.files[0]); });
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length) {
+            input.files = files; // Asignar al input
+            validateAndShow(files[0]);
+        }
+    }
+
+    // 3. Validación y UI Update
+    function validateAndShow(file) {
+        if (!file) return;
+
+        // Validar Extensión
+        const validExtensions = ['xlsx', 'xls', 'xlsm'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(extension)) {
+            alert('⛔ Formato no válido. Solo se permiten archivos Excel (.xlsx, .xls).');
+            resetForm();
+            return;
+        }
+
+        // Validar Tamaño (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('⛔ El archivo es demasiado grande. El límite es 10MB.');
+            resetForm();
+            return;
+        }
+
+        // Mostrar UI de éxito
+        dropContent.classList.add('d-none');
+        fileContent.classList.remove('d-none');
+        fileNameDisplay.textContent = file.name;
+        fileSizeDisplay.textContent = formatBytes(file.size);
+        btnUpload.disabled = false; // Habilitar botón subir
+    }
+
+    // 4. Reset
+    btnRemove.addEventListener('click', function(e) {
+        e.preventDefault(); // Evitar abrir el explorador de archivos
+        resetForm();
+    });
+
+    function resetForm() {
+        input.value = ''; // Limpiar input
+        dropContent.classList.remove('d-none');
+        fileContent.classList.add('d-none');
+        btnUpload.disabled = true;
+    }
+
+    // 5. Submit Animation
+    form.addEventListener('submit', function() {
+        btnUpload.disabled = true;
+        btnUpload.querySelector('.normal-state').classList.add('d-none');
+        btnUpload.querySelector('.loading-state').classList.remove('d-none');
+    });
+
+    // Helper formato bytes
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+});
+</script>
+{% endblock %}

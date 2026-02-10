@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load dict_filters %} 
+
+{% block content %}
+<div class="container-fluid mt-4 px-4 pb-5 mb-5"> <div class="row justify-content-center">
+        <div class="col-12 col-xl-11">
+            
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1">Conecta tus Datos</h3>
+                    <p class="text-muted mb-0">
+                        Archivo: <span class="badge bg-light text-dark border">{{ batch.nombre_archivo }}</span> 
+                        &bull; {{ batch.total_filas }} filas detectadas.
+                    </p>
+                </div>
+                <div class="d-none d-md-block">
+                    <div class="d-flex align-items-center">
+                        <span class="badge rounded-pill bg-success me-2 opacity-50"><i class="fas fa-check"></i> Subida</span>
+                        <div style="width: 30px; height: 2px; background: #dee2e6;"></div>
+                        <span class="badge rounded-pill bg-primary ms-2 px-3 py-2 shadow-sm"><i class="fas fa-map-signs me-1"></i> Mapeo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4 bg-light">
+                <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center w-100 me-4">
+                        <span class="fw-bold text-primary me-3 text-nowrap" id="progressText">0% Completado</span>
+                        <div class="progress w-100" style="height: 10px; border-radius: 5px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                 id="progressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch text-nowrap">
+                        <input class="form-check-input" type="checkbox" id="toggleMapped">
+                        <label class="form-check-label small fw-bold text-muted" for="toggleMapped">Ocultar mapeados</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+                <div class="card-body p-0">
+                    <form method="POST" id="mappingForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="mapping_data" id="mappingDataInput">
+
+                        <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0" id="mappingTable">
+                                <thead class="bg-white sticky-top shadow-sm" style="z-index: 1020; top: 0;">
+                                    <tr>
+                                        <th class="py-3 ps-4 bg-light" width="25%">Columna Excel</th>
+                                        <th class="py-3 bg-light" width="25%">Previsualización</th>
+                                        <th class="py-3 text-center bg-light" width="10%">IA Confianza</th>
+                                        <th class="py-3 pe-4 bg-light" width="40%">Campo en el Sistema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for col_name, meta in suggestions.items %}
+                                    <tr class="mapping-row transition-all" id="row-{{ forloop.counter }}">
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark font-monospace">{{ col_name }}</div>
+                                            {% if meta.tipo == 'POSIBLE_MATERIA' %}
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Posible Nota</span>
+                                            {% endif %}
+                                        </td>
+                                        
+                                        <td>
+                                            <div class="bg-light rounded px-2 py-1 text-muted small text-truncate border" style="max-width: 220px;">
+                                                <i class="fas fa-eye me-1 opacity-50"></i>
+                                                {% with preview_val=preview|get_item:col_name %}
+                                                    {{ preview_val|default:"(Vacío)" }}
+                                                {% endwith %}
+                                            </div>
+                                        </td>
+
+                                        <td class="text-center">
+                                            {% if meta.tipo == 'APRENDIDO' %}
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <span class="badge bg-success-subtle text-success border border-success rounded-pill mb-1">
+                                                        <i class="fas fa-brain"></i> Aprendido
+                                                    </span>
+                                                </div>
+                                            {% elif meta.confianza > 0.8 %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill">Alta</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle text-secondary border rounded-pill">Baja</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="pe-4">
+                                            <div class="position-relative">
+                                                <select class="form-select mapping-selector shadow-none border-secondary-subtle" 
+                                                        data-col-origin="{{ col_name }}"
+                                                        onchange="validateRow(this)">
+                                                    
+                                                    <option value="" class="text-muted">-- Ignorar esta columna --</option>
+                                                    
+                                                    <optgroup label="🔐 Identificación (Crítico)">
+                                                        <option value="CODIGO_ESTUDIANTE" 
+                                                            {% if meta.campo_sugerido == 'CODIGO_ESTUDIANTE' %}selected{% endif %}
+                                                            class="fw-bold">
+                                                            🆔 Documento / Código Estudiante
+                                                        </option>
+                                                    </optgroup>
+
+                                                    <optgroup label="📚 Materias Académicas">
+                                                        {% for materia in materias %}
+                                                            <option value="MATERIA:{{ materia }}"
+                                                                {% if meta.campo_sugerido == 'MATERIA:'|add:materia %}selected{% endif %}>
+                                                                📘 {{ materia }}
+                                                            </option>
+                                                        {% endfor %}
+                                                        
+                                                        {% if meta.tipo == 'POSIBLE_MATERIA' %}
+                                                            <option value="{{ meta.campo_sugerido }}" selected>
+                                                                ✨ {{ meta.campo_sugerido|slice:"8:" }} (Detectada)
+                                                            </option>
+                                                        {% endif %}
+                                                    </optgroup>
+                                                </select>
+                                                <div class="position-absolute top-50 end-0 translate-middle-y me-4 pe-2 status-icon d-none">
+                                                    <i class="fas fa-check-circle text-success animate__animated animate__fadeIn"></i>
+                                                </div>
+                                            </div>
+                                            <div class="error-msg text-danger small mt-1 d-none fw-bold">
+                                                <i class="fas fa-exclamation-circle"></i> Este campo ya fue seleccionado
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom bg-white border-top shadow-lg py-3 animate__animated animate__slideInUp" style="z-index: 1050;">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center">
+            <div class="col-md-6 d-none d-md-block">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i> Asegúrate de asignar <strong>'Documento / Código'</strong> antes de continuar.
+                </small>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{% url 'import_upload' %}" class="btn btn-outline-secondary me-2 rounded-pill">Cancelar</a>
+                <button type="button" onclick="submitMapping()" id="btnSubmit" class="btn btn-success btn-lg px-5 rounded-pill shadow hover-elevate disabled-cursor">
+                    <span class="normal-state"><i class="fas fa-rocket me-2"></i> Procesar Importación</span>
+                    <span class="loading-state d-none"><span class="spinner-border spinner-border-sm me-2"></span> Importando...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Premium */
+    .transition-all { transition: all 0.3s ease; }
+    .mapping-row.mapped { background-color: #f0fff4 !important; border-left: 4px solid #198754; }
+    .mapping-row:hover { background-color: #f8f9fa; }
+    .hover-elevate { transition: transform 0.2s; }
+    .hover-elevate:hover { transform: translateY(-2px); }
+    
+    /* Scrollbar bonito */
+    .table-responsive::-webkit-scrollbar { width: 8px; }
+    .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; }
+    .table-responsive::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+    .table-responsive::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    
+    .mapped select { border-color: #198754 !important; color: #0f5132; font-weight: 500; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar validación al cargar (para las sugerencias automáticas)
+    document.querySelectorAll('.mapping-selector').forEach(sel => validateRow(sel, false));
+    updateProgress();
+});
+
+// Función central de validación por fila
+function validateRow(selectElement, animate = true) {
+    const row = selectElement.closest('tr');
+    const statusIcon = row.querySelector('.status-icon');
+    
+    // 1. Detección de duplicados
+    checkDuplicates();
+
+    // 2. Estado visual de la fila
+    if (selectElement.value) {
+        row.classList.add('mapped');
+        statusIcon.classList.remove('d-none');
+        if(animate) statusIcon.querySelector('i').classList.add('animate__heartBeat');
+    } else {
+        row.classList.remove('mapped');
+        statusIcon.classList.add('d-none');
+    }
+    
+    updateProgress();
+}
+
+// Prevención de duplicados (No permitir mapear 2 columnas al mismo campo sistema)
+function checkDuplicates() {
+    const selectors = document.querySelectorAll('.mapping-selector');
+    const values = {}; // Mapa de valores seleccionados
+
+    // Resetear errores
+    selectors.forEach(s => {
+        s.closest('td').querySelector('.error-msg').classList.add('d-none');
+        s.classList.remove('is-invalid');
+    });
+
+    selectors.forEach(sel => {
+        const val = sel.value;
+        if (val) {
+            if (values[val]) {
+                // DUPLICADO DETECTADO
+                // Marcar el actual
+                showError(sel);
+                // Marcar el original
+                showError(values[val]);
+            } else {
+                values[val] = sel;
+            }
+        }
+    });
+}
+
+function showError(el) {
+    el.classList.add('is-invalid');
+    el.closest('td').querySelector('.error-msg').classList.remove('d-none');
+}
+
+// Filtro para ocultar mapeados
+document.getElementById('toggleMapped').addEventListener('change', function() {
+    const rows = document.querySelectorAll('.mapping-row');
+    const hide = this.checked;
+    
+    rows.forEach(row => {
+        if (hide && row.classList.contains('mapped')) {
+            row.style.display = 'none';
+        } else {
+            row.style.display = '';
+        }
+    });
+});
+
+// Barra de progreso y actualización de botón
+function updateProgress() {
+    const total = document.querySelectorAll('.mapping-selector').length;
+    const mapped = document.querySelectorAll('.mapping-row.mapped').length;
+    const percent = Math.round((mapped / total) * 100);
+    
+    const bar = document.getElementById('progressBar');
+    const text = document.getElementById('progressText');
+    
+    bar.style.width = percent + '%';
+    text.innerText = percent + '% Completado';
+    
+    // Validar si tenemos ID
+    const hasId = Array.from(document.querySelectorAll('.mapping-selector'))
+                       .some(s => s.value === 'CODIGO_ESTUDIANTE');
+    
+    const btn = document.getElementById('btnSubmit');
+    if (hasId) {
+        btn.classList.remove('btn-secondary', 'disabled');
+        btn.classList.add('btn-success');
+    } else {
+        // Opcional: Deshabilitar visualmente o dejarlo activo para que salte la alerta
+    }
+}
+
+// Envío Final
+function submitMapping() {
+    // Verificar si hay errores visuales
+    if (document.querySelector('.is-invalid')) {
+        alert('⛔ Tienes campos duplicados (marcados en rojo). Por favor corrige antes de continuar.');
+        return;
+    }
+
+    const selectors = document.querySelectorAll('.mapping-selector');
+    let mapping = {};
+    let hasStudentId = false;
+    let mappedCount = 0;
+
+    selectors.forEach(sel => {
+        if (sel.value) {
+            mapping[sel.getAttribute('data-col-origin')] = sel.value;
+            mappedCount++;
+            if (sel.value === 'CODIGO_ESTUDIANTE') hasStudentId = true;
+        }
+    });
+
+    if (mappedCount === 0) return alert('⚠️ Selecciona al menos una columna para importar.');
+    if (!hasStudentId) return alert('⛔ ERROR CRÍTICO: Falta la columna "Documento / Código Estudiante". Es obligatoria.');
+
+    // UI Loading
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.querySelector('.normal-state').classList.add('d-none');
+    btn.querySelector('.loading-state').classList.remove('d-none');
+
+    document.getElementById('mappingDataInput').value = JSON.stringify(mapping);
+    document.getElementById('mappingForm').submit();
+}
+</script>
+{% endblock %}

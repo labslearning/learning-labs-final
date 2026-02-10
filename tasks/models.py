@@ -7,6 +7,16 @@ from django.db.models import Max    #importacion necesaria para el acta instituc
 import os
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
+
+import uuid
+import hashlib
+from django.db import models
+from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
+
+
+
 from datetime import timedelta
 from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -1686,3 +1696,161 @@ class InstitucionKnowledgeBase(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} (Actualizado: {self.ultima_actualizacion.strftime('%d/%m')})"
+
+
+
+# ==========================================
+# ARQUITECTURA DE IMPORTACIÓN (ZERO-FAILURE V2)
+# ==========================================
+
+class ImportBatch(models.Model):
+    """
+    LA BÓVEDA DE AUDITORÍA:
+    Rastrea cada intento de subida.
+    MEJORA: Incluye Hash MD5 para evitar duplicados y lógica de bloqueo.
+    """
+    ESTADOS = [
+        ('PENDING', '⏳ Analizando Estructura'),
+        ('MAPPING', '🗺️ Esperando Mapeo de Columnas'),
+        ('STAGING', '🛡️ En Cuarentena (Validando)'),
+        ('READY', '✅ Listo para Importar'),
+        ('IMPORTING', '🚀 Escribiendo en Producción'),
+        ('COMPLETED', '🏆 Finalizado con Éxito'),
+        ('FAILED', '❌ Fallido'),
+        ('ROLLED_BACK', '⏪ Revertido (Deshecho)'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='cargas_masivas')
+    archivo_original = models.FileField(upload_to='imports/%Y/%m/%d/')
+    
+    # CRÍTICO: Huella digital del archivo para prevenir duplicados exactos
+    file_hash = models.CharField(max_length=64, db_index=True, null=True, blank=True)
+    
+    nombre_archivo = models.CharField(max_length=255)
+    tipo_modelo = models.CharField(max_length=50, db_index=True, help_text="Ej: 'Estudiante', 'Profesor', 'Nota'")
+    
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDING', db_index=True)
+    log_errores = models.JSONField(default=list, blank=True, encoder=DjangoJSONEncoder)
+    
+    # Métricas de rendimiento (KPIs)
+    total_filas = models.IntegerField(default=0)
+    filas_procesadas = models.IntegerField(default=0)
+    filas_exitosas = models.IntegerField(default=0)
+    filas_con_error = models.IntegerField(default=0)
+    
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-creado_en']
+        indexes = [
+            models.Index(fields=['usuario', 'creado_en']),
+            models.Index(fields=['estado']),
+            models.Index(fields=['file_hash']), # Búsqueda rápida de duplicados
+        ]
+        verbose_name = "Lote de Importación"
+
+    def __str__(self):
+        return f"[{self.get_estado_display()}] {self.tipo_modelo} - {self.nombre_archivo}"
+
+    def save(self, *args, **kwargs):
+        # Auto-calculo del Hash MD5 al guardar si es nuevo
+        if not self.pk and self.archivo_original:
+            md5 = hashlib.md5()
+            for chunk in self.archivo_original.chunks():
+                md5.update(chunk)
+            self.file_hash = md5.hexdigest()
+        super().save(*args, **kwargs)
+
+
+class StagingRow(models.Model):
+    """
+    EL ÁREA DE CUARENTENA:
+    MEJORA: Agregamos 'snapshot_backup' para permitir Rollback de actualizaciones (UPDATES),
+    no solo de creaciones (INSERTS).
+    """
+    batch = models.ForeignKey(ImportBatch, on_delete=models.CASCADE, related_name='filas_staging')
+    numero_fila = models.IntegerField(db_index=True)
+    
+    data_original = models.JSONField(help_text="Datos crudos del Excel")
+    data_normalizada = models.JSONField(null=True, blank=True, help_text="Datos limpios tras pasar por DataGuard")
+    
+    es_valido = models.BooleanField(default=False, db_index=True)
+    errores = models.JSONField(default=list, blank=True)
+    
+    # TRAZABILIDAD Y ROLLBACK
+    # 1. Si creamos un objeto nuevo, guardamos su ID aquí.
+    id_objeto_creado = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    
+    # 2. Si ACTUALIZAMOS un objeto existente, guardamos cómo estaba ANTES aquí.
+    # Esto permite el "Undo" verdadero.
+    snapshot_backup = models.JSONField(null=True, blank=True, help_text="Copia de seguridad del registro antes de ser modificado")
+
+    class Meta:
+        ordering = ['numero_fila']
+        verbose_name = "Fila en Staging"
+
+class ColumnMapping(models.Model):
+    """
+    EL CEREBRO (MEMORIA DEL SISTEMA):
+    Aprende de las decisiones del usuario.
+    """
+    institucion_id = models.IntegerField(null=True, blank=True, db_index=True)
+    modelo_objetivo = models.CharField(max_length=50)
+    nombre_columna_csv = models.CharField(max_length=255) # "Apellido 1"
+    campo_sistema = models.CharField(max_length=100)      # "last_name"
+    
+    confianza = models.FloatField(default=1.0) # 1.0 = Humano, <1.0 = IA
+    usado_veces = models.IntegerField(default=1, help_text="Peso para el algoritmo de sugerencia")
+    
+    last_used = models.DateTimeField(auto_now=True) # Para saber si el mapeo es obsoleto
+
+    class Meta:
+        unique_together = ('modelo_objetivo', 'nombre_columna_csv', 'institucion_id')
+        verbose_name = "Memoria de Mapeo"
+
+    def __str__(self):
+        return f"{self.nombre_columna_csv} -> {self.campo_sistema} (x{self.usado_veces})"
+
+
+
+# --- AGREGAR AL FINAL DE tasks/models.py ---
+
+class HistorialAcademico(models.Model):
+    """
+    BÓVEDA HISTÓRICA (Tabla de Destino):
+    Aquí es donde aterrizan los datos finales después de la importación.
+    Soporta versionado para poder hacer 'Deshacer' (Rollback).
+    """
+    # Relación con el estudiante (Ajusta 'Perfil' si tu modelo de usuario se llama diferente)
+    estudiante = models.ForeignKey('Perfil', on_delete=models.CASCADE, related_name='historiales')
+    
+    # Contexto Académico
+    anio_lectivo = models.IntegerField(db_index=True)
+    nombre_institucion = models.CharField(max_length=255, default="Sistema")
+    
+    # LAS NOTAS: Guardadas en JSON para flexibilidad total (Matemáticas, Inglés, etc.)
+    calificaciones_json = models.JSONField(default=dict)
+    
+    # Auditoría y Trazabilidad
+    meta_confianza = models.JSONField(default=dict, help_text="Evidencia de los valores originales del Excel")
+    lote_origen = models.ForeignKey(ImportBatch, on_delete=models.PROTECT, null=True, related_name='registros_creados')
+    
+    # Sistema de Versionado (Snapshot Pattern)
+    version = models.IntegerField(default=1)
+    is_active = models.BooleanField(default=True, db_index=True) # Soft Delete
+    parent_version = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-anio_lectivo', '-version']
+        indexes = [
+            models.Index(fields=['estudiante', 'anio_lectivo', 'is_active']),
+        ]
+        verbose_name = "Historial Académico"
+        verbose_name_plural = "Historiales Académicos"
+
+    def __str__(self):
+        return f"{self.estudiante} - {self.anio_lectivo} (v{self.version})"
