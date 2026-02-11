@@ -1825,46 +1825,131 @@ class ColumnMapping(models.Model):
 
 
 # --- AGREGAR AL FINAL DE tasks/models.py ---
-
-class HistorialAcademico(models.Model):
+#Version vieja antes del cierre del ano 
+#class HistorialAcademico(models.Model):
     """
     BÓVEDA HISTÓRICA (Tabla de Destino):
     Aquí es donde aterrizan los datos finales después de la importación.
     Soporta versionado para poder hacer 'Deshacer' (Rollback).
     """
     # Relación con el estudiante (Ajusta 'Perfil' si tu modelo de usuario se llama diferente)
-    estudiante = models.ForeignKey('Perfil', on_delete=models.CASCADE, related_name='historiales')
+    #estudiante = models.ForeignKey('Perfil', on_delete=models.CASCADE, related_name='historiales')
     
     # Contexto Académico
-    anio_lectivo = models.IntegerField(db_index=True)
-    nombre_institucion = models.CharField(max_length=255, default="Sistema")
+    #anio_lectivo = models.IntegerField(db_index=True)
+    #nombre_institucion = models.CharField(max_length=255, default="Sistema")
     
     # LAS NOTAS: Guardadas en JSON para flexibilidad total (Matemáticas, Inglés, etc.)
-    calificaciones_json = models.JSONField(default=dict)
+    #calificaciones_json = models.JSONField(default=dict)
     
     # Auditoría y Trazabilidad
-    meta_confianza = models.JSONField(default=dict, help_text="Evidencia de los valores originales del Excel")
-    lote_origen = models.ForeignKey(ImportBatch, on_delete=models.PROTECT, null=True, related_name='registros_creados')
+    #meta_confianza = models.JSONField(default=dict, help_text="Evidencia de los valores originales del Excel")
+    #lote_origen = models.ForeignKey(ImportBatch, on_delete=models.PROTECT, null=True, related_name='registros_creados')
+    
+    # Sistema de Versionado (Snapshot Pattern)
+    #version = models.IntegerField(default=1)
+    #is_active = models.BooleanField(default=True, db_index=True) # Soft Delete
+    #parent_version = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
+    
+    #created_at = models.DateTimeField(auto_now_add=True)
+
+    
+    #class Meta:
+        #ordering = ['-anio_lectivo', '-version']
+        #indexes = [
+            #models.Index(fields=['estudiante', 'anio_lectivo', 'is_active']),
+        #]
+        #verbose_name = "Historial Académico"
+        #verbose_name_plural = "Historiales Académicos"
+
+    #def __str__(self):
+        #return f"{self.estudiante} - {self.anio_lectivo} (v{self.version})"
+
+class HistorialAcademico(models.Model):
+    """
+    📚 BÓVEDA HISTÓRICA (Snapshot Inmutable)
+    Guarda el estado congelado del estudiante al final del año lectivo.
+    Incluye datos crudos (JSON), métricas (Promedio) y evidencia física (PDF).
+    """
+    
+    # 1. IDENTIFICACIÓN Y RELACIONES
+    # Relación con el Perfil del estudiante (Asegúrate que 'Perfil' exista en tu app)
+    estudiante = models.ForeignKey(
+        'Perfil', 
+        on_delete=models.CASCADE, 
+        related_name='historiales',
+        help_text="Perfil del estudiante al momento del cierre."
+    )
+    
+    # 2. CONTEXTO ACADÉMICO (FOTO DEL MOMENTO)
+    anio_lectivo = models.IntegerField(db_index=True, help_text="Año escolar cerrado (Ej: 2026)")
+    nombre_institucion = models.CharField(max_length=255, default="Sistema Stratos")
+    curso_snapshot = models.CharField(
+        max_length=100, 
+        help_text="Nombre del curso en el momento exacto del cierre (Ej: 601, Transición)."
+    )
+    
+    # 3. KPIS Y MÉTRICAS (PARA REPORTES RÁPIDOS)
+    promedio_final = models.FloatField(default=0.0, db_index=True)
+    puesto_ocupado = models.IntegerField(null=True, blank=True, help_text="Puesto en el curso según promedio.")
+    
+    # 4. VEREDICTO FINAL (SIEE)
+    ESTADOS = [
+        ('PROMOVIDO', 'Promovido'),  # Pasa al siguiente grado
+        ('REPROBADO', 'Reprobado'),  # Repite el grado
+        ('GRADUADO', 'Graduado'),    # Termina ciclo (Grado 11)
+        ('PENDIENTE', 'Pendiente'),  # Requiere revisión manual
+        ('RETIRADO', 'Retirado')     # Se fue antes del cierre
+    ]
+    estado_final = models.CharField(
+        max_length=20, 
+        choices=ESTADOS, 
+        default='PENDIENTE', 
+        db_index=True
+    )
+
+    # 5. DATA CAPSULE (LA "CAJA NEGRA")
+    # Guarda las notas exactas en formato JSON para no depender de tablas externas.
+    # Ejemplo: {"Matemáticas": 4.5, "Español": 3.2, "Convivencia": 5.0}
+    calificaciones_json = models.JSONField(default=dict)
+    
+    # 6. EVIDENCIA FÍSICA (EL PDF) 🔥 CRÍTICO PARA TU REQUERIMIENTO
+    archivo_boletin = models.FileField(
+        upload_to='historiales/boletines/%Y/', 
+        null=True, 
+        blank=True,
+        help_text="Copia digital inmutable del boletín entregado a los padres."
+    )
+    
+    # 7. AUDITORÍA Y TRAZABILIDAD (VERSIONADO)
+    meta_confianza = models.JSONField(
+        default=dict, 
+        help_text="Metadatos técnicos: materias perdidas, usuario que ejecutó el cierre, fecha exacta."
+    )
     
     # Sistema de Versionado (Snapshot Pattern)
     version = models.IntegerField(default=1)
-    is_active = models.BooleanField(default=True, db_index=True) # Soft Delete
+    is_active = models.BooleanField(default=True, db_index=True) # Soft Delete para "Deshacer"
     parent_version = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Descomenta si usas ImportBatch en otro lado
+    # lote_origen = models.ForeignKey('ImportBatch', on_delete=models.PROTECT, null=True, related_name='registros_creados')
+
     class Meta:
         ordering = ['-anio_lectivo', '-version']
         indexes = [
+            # Índices compuestos para búsquedas ultra-rápidas
             models.Index(fields=['estudiante', 'anio_lectivo', 'is_active']),
         ]
+        # Evita duplicados: Un estudiante solo puede tener UN historial activo por año y versión
+        unique_together = ('estudiante', 'anio_lectivo', 'version')
         verbose_name = "Historial Académico"
         verbose_name_plural = "Historiales Académicos"
 
     def __str__(self):
-        return f"{self.estudiante} - {self.anio_lectivo} (v{self.version})"
-
-
+        return f"{self.estudiante} - {self.anio_lectivo} [{self.estado_final}] (PDF: {'✅' if self.archivo_boletin else '❌'})"
 
 
 def documento_path_builder(instance, filename):
@@ -2044,3 +2129,101 @@ class DocumentoHistorico(models.Model):
             'msi': 'fa-box-open text-dark',
         }
         return icons.get(self.extension, 'fa-file text-secondary')
+
+
+class CierreAnualLog(models.Model):
+    """
+    🦅 BITÁCORA DEL PROTOCOLO FÉNIX
+    Registro forense de la ejecución del cierre de año.
+    """
+    anio_cerrado = models.IntegerField()
+    anio_nuevo = models.IntegerField()
+    fecha_ejecucion = models.DateTimeField(auto_now_add=True)
+    ejecutado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    
+    # Métricas de Impacto
+    total_procesados = models.IntegerField(default=0)
+    promovidos = models.IntegerField(default=0)
+    reprobados = models.IntegerField(default=0)
+    graduados = models.IntegerField(default=0)
+    
+    # The Data Capsule (Backup)
+    archivo_backup = models.FileField(upload_to='security/backups/', null=True, blank=True)
+    
+    # Logs Técnicos
+    exitoso = models.BooleanField(default=False)
+    log_detalle = models.TextField(help_text="Traza técnica paso a paso")
+
+    def __str__(self):
+        return f"Cierre {self.anio_cerrado} -> {self.anio_nuevo}"
+
+
+
+class BovedaSeguridad(models.Model):
+    """
+    🏦 BÓVEDA DIGITAL DE GRADO INDUSTRIAL
+    Sistema de custodia de activos digitales con verificación de integridad 
+    y sellado criptográfico.
+    """
+    # 1. TRAZABILIDAD DINÁMICA
+    uuid_operacion = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    nombre_identificador = models.CharField(max_length=150, db_index=True)
+    fecha_generacion = models.DateTimeField(auto_now_add=True, db_index=True)
+    generado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name="respaldos_custodiados"
+    )
+    
+    # 2. ALMACENAMIENTO RESILIENTE
+    archivo_zip = models.FileField(
+        upload_to='security/vault/%Y/%m/',
+        help_text="Paquete encriptado de activos institucionales."
+    )
+    tamanio_mb = models.DecimalField(max_digits=12, decimal_places=2)
+
+    # 3. VERIFICACIÓN CRIPTOGRÁFICA (The Integrity Shield)
+    # Para asegurar que nadie modificó el ZIP directamente en el servidor
+    checksum_sha256 = models.CharField(
+        max_length=64, 
+        editable=False, 
+        help_text="Firma digital única del archivo para auditorías de integridad."
+    )
+    
+    # 4. METADATOS DE AUDITORÍA (Snapshot Metadata)
+    METADATOS_ESTRUCTURA = {
+        'total_boletines': 0,
+        'incluye_db': True,
+        'version_sistema': '2.4.0',
+        'engine': 'Fenix-Core-Industrial'
+    }
+    stats_contenido = models.JSONField(default=dict, help_text="Resumen detallado del contenido del paquete.")
+
+    # 5. SEGURIDAD DE ACCESO
+    ip_origen = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True, help_text="Dispositivo desde donde se ordenó el respaldo.")
+
+    class Meta:
+        verbose_name = "Activo de Bóveda"
+        verbose_name_plural = "Bóveda de Seguridad Institucional"
+        ordering = ['-fecha_generacion']
+        permissions = [
+            ("can_restore_vault", "Puede ejecutar restauraciones desde la bóveda"),
+            ("can_export_external", "Puede exportar archivos fuera del servidor"),
+        ]
+
+    def __str__(self):
+        return f"REF: {self.uuid_operacion} | {self.nombre_identificador}"
+
+    def verificar_integridad(self):
+        """
+        Calcula el hash del archivo actual y lo compara con el original.
+        Si no coinciden, el archivo fue alterado o está corrupto.
+        """
+        sha256_hash = hashlib.sha256()
+        with self.archivo_zip.open('rb') as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest() == self.checksum_sha256
+
+

@@ -3,7 +3,7 @@
 from django.contrib import admin
 # AGREGAMOS 're_path' AQUÍ ABAJO PARA PODER USAR LA LLAVE MAESTRA
 from django.urls import path, include, re_path
-
+from tasks import views_admin  # <--- Agrega esto
 # ===================================================================
 # 🩺 INICIO DE LA CIRUGÍA (SOLUCIÓN AL ERROR 404 de PDF)
 # ===================================================================
@@ -26,6 +26,9 @@ urlpatterns = [
     # Django ahora buscará en 'tasks.urls' CUALQUIER OTRA ruta (incluyendo 'panel/...')
     path('', include('tasks.urls')),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw.js'),
+    path('panel/cierre-anual/', views_admin.panel_cierre_anual, name='panel_cierre_anual'),
+    # 2. NUEVA RUTA: Reversión (Time Machine)
+    path('panel/cierre-anual/revertir/<int:log_id>/', views_admin.revertir_cierre_anual, name='revertir_cierre'),
 ]
 
 

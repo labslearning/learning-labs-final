@@ -1,7 +1,7 @@
 # tasks/urls.py
 from . import views, views_pdf, views_shadow  # <--- AGREGA views_shadow AQUÍ
 from . import views_import  # <--- AGREGA ESTA LÍNEA
-
+from tasks import views_admin  # <--- Agrega esto
 
 from django.urls import path
 
@@ -470,5 +470,14 @@ urlpatterns = [
     path('importar/inspect/<uuid:batch_id>/', views_import.import_inspect_view, name='import_inspect'),
     path('importar/revertir/<uuid:batch_id>/', views_import.import_rollback_view, name='import_rollback'),
     path('certificado/descargar/<int:historial_id>/', views_pdf.download_certificate_view, name='download_certificate'),
+    # 1. RUTA PARA EL CIERRE ANUAL (PROTOCOLO FÉNIX)
+    path('panel/cierre-anual/', views_admin.panel_cierre_anual, name='panel_cierre_anual'),
+    path('panel/cierre-anual/revertir/<int:log_id>/', views_admin.revertir_cierre_anual, name='revertir_cierre'),
+
+    # 2. RUTA PARA LA BÓVEDA DIGITAL (RESPALDOS MANUALES)
+    # Esta es la que te está causando el error NoReverseMatch
+    path('panel/boveda/', views_admin.panel_boveda, name='panel_boveda'),
+    path('panel/boveda/verificar/<uuid:uuid_operacion>/', views_admin.verificar_integridad_respaldo, name='verificar_integridad'),
+
 
 ]
